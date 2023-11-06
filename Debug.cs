@@ -6,60 +6,11 @@ namespace Cutulu
     public static class Debug
     {
         #region Rendering 3D Functions
-        public static MeshInstance3D DrawRay(this Node node, Vector3 source, Vector3 dir, Color color) => DrawLine(node, new List<Vector3>() { source, source + dir }, color);
-        public static MeshInstance3D DrawLine(this Node node, Vector3 from, Vector3 to, Color color) => DrawLine(node, new List<Vector3>() { from, to }, color);
-        public static MeshInstance3D DrawLine(this Node node, List<Vector3> points, Color color)
-        {
-            if (color.A <= 0 || points.IsEmpty())
-            {
-                Debug.LogError($"CannotDrawLine: No points have been given");
-                return null;
-            }
+        public static MeshInstance3D Point(this Node node, Vector3 point, Color color, float radius = .05f) => Render.DrawPoint(node, point, color, radius);
 
-            if (points.Count < 2) return DrawPoint(node, points[0], color);
-
-            MeshInstance3D mesh_instance = new MeshInstance3D();
-            ImmediateMesh immediate_mesh = new ImmediateMesh();
-            OrmMaterial3D material = new OrmMaterial3D();
-
-            mesh_instance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
-            mesh_instance.Mesh = immediate_mesh;
-
-            immediate_mesh.SurfaceBegin(Mesh.PrimitiveType.Lines, material);
-            for (int i = 1; i < points.Count; i++)
-            {
-                immediate_mesh.SurfaceAddVertex(points[i - 1]);
-                immediate_mesh.SurfaceAddVertex(points[i]);
-            }
-            immediate_mesh.SurfaceEnd();
-
-            material.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
-            material.AlbedoColor = color;
-
-            node.AddChild(mesh_instance);
-            return mesh_instance;
-        }
-
-        public static MeshInstance3D DrawPoint(this Node node, Vector3 point, Color color, float radius = .05f)
-        {
-            MeshInstance3D mesh_instance = new MeshInstance3D();
-            OrmMaterial3D material = new OrmMaterial3D();
-            SphereMesh sphere_mesh = new SphereMesh();
-
-            mesh_instance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
-            mesh_instance.Mesh = sphere_mesh;
-            mesh_instance.Position = point;
-
-            sphere_mesh.Radius = radius;
-            sphere_mesh.Height = radius * 2;
-            sphere_mesh.Material = material;
-
-            material.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
-            material.AlbedoColor = color;
-
-            node.AddChild(mesh_instance);
-            return mesh_instance;
-        }
+        public static MeshInstance3D Line(this Node node, Vector3 from, Vector3 to, Color color) => Render.DrawLine(node, new List<Vector3>() { from, to }, color);
+        public static MeshInstance3D Ray(this Node node, Vector3 source, Vector3 dir, Color color) => Render.DrawRay(node, source, dir, color);
+        public static MeshInstance3D Line(this Node node, List<Vector3> path, Color color) => Render.DrawLine(node, path, color);
         #endregion
 
         #region Logging

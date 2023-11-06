@@ -56,15 +56,21 @@ namespace Cutulu
 
 		#region Node Functions
 		public static void Clear(this Node parent, bool forceInstant = false)
-		{
-			foreach (Node child in parent.GetChildren())
-			{
-				child.Destroy(forceInstant);
+        {
+            if (parent.IsNull()) return;
+
+            foreach (Node child in parent.GetChildren())
+            {
+                if (child.IsNull()) continue;
+
+                child.Destroy(forceInstant);
 			}
 		}
 
 		public static void Destroy(this Node node, bool forceInstant = false)
 		{
+			if (node.IsNull()) return;
+
 			if (forceInstant) node.Free();
 			else node.QueueFree();
 		}
@@ -462,6 +468,7 @@ namespace Cutulu
 		{
 			if (action == null) return;
 
+			// Create Wait Handler if not existant yet
 			if (wh == null)
 			{
 				if (rootParent == null)
