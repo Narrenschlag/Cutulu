@@ -31,10 +31,6 @@ namespace Cutulu
         #region Caching
         private static Dictionary<string, Dictionary<string, object>> Cache;
 
-        /// <summary>Load preferably modded file from local path at folder of T's name</summary>
-        public static bool TryLoadCached<T>(this string localPath, out T value, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
-            => TryLoadCached(localPath, typeof(T).ToString(), out value, preferMod, assetFolder, modFolder);
-
         /// <summary>Load preferably modded file from local path at folder</summary>
         public static bool TryLoadCached<T>(this string localPath, string folder, out T value, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
         {
