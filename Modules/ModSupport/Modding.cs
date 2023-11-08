@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System;
 
 namespace Cutulu
 {
@@ -7,8 +6,8 @@ namespace Cutulu
     {
         #region File Management (IO)
         // Constant deault values
-        private const string DefaultAssetsFolder = "assets/";
-        private const string DefaultModFolder = "mods/";
+        private const string DefaultAssetsFolder = "Assets/";
+        private const string DefaultModFolder = "Mods/";
 
         /// <summary>Load asset from file system, decide if you prefer the mod version</summary>
         public static bool TryLoad<T>(this string local, out T asset, bool preferMod, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
@@ -30,24 +29,32 @@ namespace Cutulu
         #endregion
 
         #region Caching
-        private static Dictionary<Type, Dictionary<string, object>> Cache;
+        private static Dictionary<string, Dictionary<string, object>> Cache;
 
+        /// <summary>Load preferably modded file from local path at folder of T's name</summary>
         public static bool TryLoadCached<T>(this string localPath, out T value, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
+            => TryLoadCached(localPath, typeof(T).ToString(), out value, preferMod, assetFolder, modFolder);
+
+        /// <summary>Load preferably modded file from local path at folder</summary>
+        public static bool TryLoadCached<T>(this string localPath, string folder, out T value, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
         {
-            if (Cache == null) Cache = new Dictionary<Type, Dictionary<string, object>>();
-            if (!Cache.TryGetValue(typeof(T), out Dictionary<string, object> _cache))
+            folder = folder.Trim();
+            localPath.Trim();
+
+            if (Cache == null) Cache = new Dictionary<string, Dictionary<string, object>>();
+            if (!Cache.TryGetValue(folder, out Dictionary<string, object> _cache))
             {
                 _cache = new Dictionary<string, object>();
-                Cache.Add(typeof(T), _cache);
+                Cache.Add(folder, _cache);
             }
 
-            if (_cache.TryGetValue(localPath.Trim(), out object _value))
+            if (_cache.TryGetValue(localPath, out object _value))
             {
                 value = _value as T;
                 return value != null;
             }
 
-            return TryLoad($"{typeof(T)}/{localPath.Trim()}", out value, preferMod, assetFolder, modFolder);
+            return TryLoad($"{typeof(T)}/{localPath}", out value, preferMod, assetFolder, modFolder);
         }
         #endregion
     }
