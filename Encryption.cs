@@ -5,7 +5,7 @@ using System;
 
 namespace Cutulu
 {
-    public static class EncryptionUtility
+    public static class Encryption
     {
         /// <summary>Encrypts a string</summary>
         public static string EncryptString(this string plaintext, string encryption_key)

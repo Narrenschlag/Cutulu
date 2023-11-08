@@ -118,7 +118,7 @@ namespace Cutulu
 			if (Exists(path)) DirAccess.RemoveAbsolute(path);
 		}
 
-		public static bool TryLoad<T>(string path, out T asset) where T : class
+		public static bool TryLoad<T>(this string path, out T asset) where T : class
 		{
 			path = path.Trim();
 

@@ -1,7 +1,11 @@
+using System.Collections.Generic;
+using System;
+
 namespace Cutulu
 {
-    public static class ModUtility
+    public static class Modding
     {
+        #region File Management (IO)
         // Constant deault values
         private const string DefaultAssetsFolder = "assets/";
         private const string DefaultModFolder = "mods/";
@@ -23,5 +27,28 @@ namespace Cutulu
         /// <summary>Load asset from asset folder<summary>
         public static bool TryLoadAsset<T>(this string local, out T asset, string assetFolder = DefaultAssetsFolder) where T : class
             => IO.TryLoad($"{IO.USER_PATH}{assetFolder}{local}", out asset);
+        #endregion
+
+        #region Caching
+        private static Dictionary<Type, Dictionary<string, object>> Cache;
+
+        public static bool TryLoadCached<T>(string localPath, out T value, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
+        {
+            if (Cache == null) Cache = new Dictionary<Type, Dictionary<string, object>>();
+            if (!Cache.TryGetValue(typeof(T), out Dictionary<string, object> _cache))
+            {
+                _cache = new Dictionary<string, object>();
+                Cache.Add(typeof(T), _cache);
+            }
+
+            if (_cache.TryGetValue(localPath, out object _value))
+            {
+                value = _value as T;
+                return value != null;
+            }
+
+            return TryLoad($"{typeof(T)}/{localPath.Trim()}", out value, preferMod, assetFolder, modFolder);
+        }
+        #endregion
     }
 }
