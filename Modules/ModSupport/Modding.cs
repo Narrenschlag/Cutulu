@@ -26,7 +26,7 @@ namespace Cutulu
 
         /// <summary>Load asset from asset folder<summary>
         public static bool TryLoadAsset<T>(this string local, out T asset, string assetFolder = DefaultAssetsFolder) where T : class
-            => IO.TryLoad($"{IO.USER_PATH}{assetFolder}{local}", out asset);
+            => IO.TryLoad($"{IO.PROJECT_PATH}{assetFolder}{local}", out asset);
         #endregion
 
         #region Caching
