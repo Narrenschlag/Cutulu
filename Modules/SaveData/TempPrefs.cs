@@ -3,7 +3,7 @@ using Godot;
 
 namespace Cutulu
 {
-	public partial class GlobalValues : Node
+	public partial class TempPrefs : Node
 	{
 		private static Dictionary<string, object> values;
 		public static Dictionary<string, object> Values
@@ -13,6 +13,12 @@ namespace Cutulu
 				if (values == null) values = new Dictionary<string, object>();
 				return values;
 			}
+		}
+
+		public static TempPrefs Local;
+		public override void _EnterTree()
+		{
+			Local = this;
 		}
 
 		public static void Set<T>(string key, T value) { if (!TryAdd(key, value)) Values[key.Trim()] = value; }

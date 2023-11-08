@@ -33,6 +33,8 @@ namespace Cutulu
 
             Log(result + " }");
         }
+
+        public static void Throw(this string message) => throw new System.Exception(message);
         #endregion
     }
 }

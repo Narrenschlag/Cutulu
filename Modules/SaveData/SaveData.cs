@@ -8,14 +8,14 @@ namespace Cutulu
 		private static string CurrentSavePath;
 		private static SaveCache _cache;
 
-		public const string FILE_ENDING = "narren";
+		public const string FILE_ENDING = "cutulu";
 
 		#region Cross References
-		public static void SimpleSave<T>(this string path, T content, string encryption_key = "") => path.SaveString(content.jsonCurrentFormat(), encryption_key);
-		public static void SimpleSave(this string path, string content, string encryption_key = "") => path.SaveString(content, encryption_key);
+		public static void SimpleSave<T>(this string path, T content, string encryption_key = "") => path.WriteText(content.jsonCurrentFormat(), encryption_key);
+		public static void SimpleSave(this string path, string content, string encryption_key = "") => path.WriteText(content, encryption_key);
 
-		public static T SimpleLoad<T>(this string path, string encryption_key = "") => path.LoadString(encryption_key).jsonCurrentFormat<T>();
-		public static string SimpleLoad(this string path, string encryption_key = "") => path.LoadString(encryption_key);
+		public static T SimpleLoad<T>(this string path, string encryption_key = "") => path.ReadText(encryption_key).jsonCurrentFormat<T>();
+		public static string SimpleLoad(this string path, string encryption_key = "") => path.ReadText(encryption_key);
 		#endregion
 
 		#region Help functions
@@ -146,7 +146,7 @@ namespace Cutulu
 			{
 				if (!IO.Exists(path)) return new SaveCache();
 
-				return path.LoadString(encryption_key).json<SaveCache>();
+				return path.ReadText(encryption_key).json<SaveCache>();
 			}
 
 			public void WriteToFile(string encryption_key = "")
@@ -162,7 +162,7 @@ namespace Cutulu
 					if (!RAMJtemp.ContainsKey(key)) RAMJtemp.Add(key, RAMJ[key]);
 
 				RAMJ = RAMJtemp;
-				Path.SaveString(this.json(), encryption_key);
+				Path.WriteText(this.json(), encryption_key);
 			}
 
 			public bool TrySave(object obj, string key)
