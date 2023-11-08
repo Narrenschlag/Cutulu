@@ -32,7 +32,7 @@ namespace Cutulu
         #region Caching
         private static Dictionary<Type, Dictionary<string, object>> Cache;
 
-        public static bool TryLoadCached<T>(string localPath, out T value, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
+        public static bool TryLoadCached<T>(this string localPath, out T value, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
         {
             if (Cache == null) Cache = new Dictionary<Type, Dictionary<string, object>>();
             if (!Cache.TryGetValue(typeof(T), out Dictionary<string, object> _cache))
@@ -41,7 +41,7 @@ namespace Cutulu
                 Cache.Add(typeof(T), _cache);
             }
 
-            if (_cache.TryGetValue(localPath, out object _value))
+            if (_cache.TryGetValue(localPath.Trim(), out object _value))
             {
                 value = _value as T;
                 return value != null;
