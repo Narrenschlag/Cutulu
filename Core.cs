@@ -154,8 +154,8 @@ namespace Cutulu
 			return false;
 		}
 
-		public static bool IsNull(this Node node) => node == null || !GodotObject.IsInstanceValid(node);
-		public static bool NotNull(this Node node) => !IsNull(node);
+		public static bool IsNull(this GodotObject node) => node == null || !GodotObject.IsInstanceValid(node);
+		public static bool NotNull(this GodotObject node) => !IsNull(node);
 		#endregion
 
 		#region Signal Functions

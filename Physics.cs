@@ -6,6 +6,18 @@ namespace Cutulu
 {
 	public static class Physics
 	{
+		#region Values
+		private static float _gravity2D, _gravity3D;
+		private static Vector2 _gravity2DV;
+		private static Vector3 _gravity3DV;
+
+		public static Vector2 Gravity2DVector { get { if (_gravity2DV.Equals(default)) _gravity2DV = ProjectSettings.GetSetting("physics/2d/default_gravity_vector", Vector2.Down).AsVector2() * Gravity2D; return _gravity2DV; } }
+		public static float Gravity2D { get { if (_gravity2D.Equals(default)) _gravity2D = ProjectSettings.GetSetting("physics/2d/default_gravity", 980).AsSingle(); return _gravity2D; } }
+
+		public static Vector3 Gravity3DVector { get { if (_gravity3DV.Equals(default)) _gravity3DV = ProjectSettings.GetSetting("physics/3d/default_gravity_vector", Vector3.Down).AsVector3() * Gravity3D; return _gravity3DV; } }
+		public static float Gravity3D { get { if (_gravity3D.Equals(default)) _gravity3D = ProjectSettings.GetSetting("physics/3d/default_gravity", 9.8f).AsSingle(); return _gravity3D; } }
+		#endregion
+
 		#region Raycast Functions
 		public static bool Linecast(this Node3D node, Vector3 fromGlobal, Vector3 toGlobal, out RaycastHit hit)
 			=> Raycast(node, fromGlobal, toGlobal - fromGlobal, out hit, fromGlobal.DistanceTo(toGlobal));
@@ -58,12 +70,12 @@ namespace Cutulu
 		#endregion
 
 		#region Curved Raycast Functions
-		public static bool RaycastCurve(Vector3 origin, Vector3 direction, out RaycastHit hit, Color color, float gravity, float resolution, float length) 
+		public static bool RaycastCurve(Vector3 origin, Vector3 direction, out RaycastHit hit, Color color, float gravity, float resolution, float length)
 			=> Core.Main3D.RaycastCurve(origin, direction, out hit, color, gravity, resolution, length);
-			
+
 		public static bool RaycastCurve(this Node3D node, out RaycastHit hit, Color color, float gravity, float resolution, float length)
 			=> RaycastCurve(node, node.GlobalPosition, node.Forward(), out hit, color, gravity, resolution, length);
-			
+
 		public static bool RaycastCurve(this Node3D node, Vector3 origin, Vector3 direction, out RaycastHit hit, Color color, float gravity, float resolution, float length)
 		{
 			hit = default;

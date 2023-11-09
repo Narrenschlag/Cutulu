@@ -28,6 +28,19 @@ namespace Cutulu
             => IO.TryLoad($"{IO.PROJECT_PATH}{assetFolder}{local}", out asset);
         #endregion
 
+        #region Json
+        public static bool TryLoadJson<T>(this string local, out T asset, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder)
+            => preferMod ?
+                TryLoadModJson(local, out asset, modFolder) ? true : TryLoadAssetJson(local, out asset, assetFolder) :  // Check mod folder then asset folder
+                TryLoadAssetJson(local, out asset, assetFolder) ? true : TryLoadModJson(local, out asset, modFolder);   // Check asset folder then mod folder
+
+        public static bool TryLoadModJson<T>(this string local, out T asset, string modFolder = DefaultModFolder)
+            => IO.TryLoadJson($"{IO.USER_PATH}{modFolder}{local}", out asset);
+
+        public static bool TryLoadAssetJson<T>(this string local, out T asset, string assetFolder = DefaultAssetsFolder)
+            => IO.TryLoadJson($"{IO.PROJECT_PATH}{assetFolder}{local}", out asset);
+        #endregion
+
         #region Caching
         private static Dictionary<string, Dictionary<string, object>> Cache;
 
@@ -50,7 +63,15 @@ namespace Cutulu
                 return value != null;
             }
 
-            return TryLoad($"{typeof(T)}/{localPath}", out value, preferMod, assetFolder, modFolder);
+            if (TryLoad($"{folder}/{localPath}", out _value, preferMod, assetFolder, modFolder))
+            {
+                value = _value as T;
+                _cache.Add(localPath, value);
+                return value != null;
+            }
+
+            value = default(T);
+            return false;
         }
         #endregion
     }

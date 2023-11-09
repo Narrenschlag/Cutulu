@@ -118,6 +118,18 @@ namespace Cutulu
 			if (Exists(path)) DirAccess.RemoveAbsolute(path);
 		}
 
+		public static bool TryLoadJson<T>(this string path, out T asset)
+		{
+			if (Exists(path = path.Trim()))
+			{
+				asset = ReadText(path).json<T>();
+				return !asset.Equals(default(T));
+			}
+
+			asset = default(T);
+			return false;
+		}
+
 		public static bool TryLoad<T>(this string path, out T asset) where T : class
 		{
 			path = path.Trim();
