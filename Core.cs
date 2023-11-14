@@ -19,8 +19,6 @@ namespace Cutulu
 
 		public static Node Main { get { if (_main == null) _main = (Engine.GetMainLoop() as SceneTree).CurrentScene; return _main; } }
 		private static Node _main;
-
-		public static void Quit() => Main.GetTree().Quit();
 		#endregion
 
 		#region General Functions
