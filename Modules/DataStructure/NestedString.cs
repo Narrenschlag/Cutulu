@@ -12,12 +12,18 @@ namespace Cutulu
         public string Key { get; set; }
         public int Depth { get; set; }
 
+        public int StartX { get; set; }
+        public int LastX { get; set; }
+
         public bool emptyValue() => Value.IsEmpty();
 
-        public NestedString(string Key, NestedString parent = null, int depth = 0)
+        public NestedString(string Key, int Start, int Last, NestedString parent = null, int depth = 0)
         {
             Children = new List<NestedString>();
             this.Key = Key;
+
+            StartX = Start;
+            LastX = Last;
 
             Parent = parent;
             Value = "";
@@ -63,7 +69,7 @@ namespace Cutulu
             if (openKeys.IsEmpty()) openKeys = new string[1] { "$" };
 
             // Define result value to be given back
-            NestedString result = new NestedString("");
+            NestedString result = new NestedString("", 0, plain.Length - 1);
 
             // Variable values
             NestedString current = result;
@@ -78,9 +84,10 @@ namespace Cutulu
                     add(last, i - last);
 
                     i += key.Length + 1;
+                    int start = last;
                     last = i;
 
-                    deeper(key);
+                    deeper(key, start, last);
                 }
 
                 // Close nested
@@ -116,9 +123,9 @@ namespace Cutulu
             }
 
             #region Depth
-            void deeper(string key)
+            void deeper(string key, int start, int last)
             {
-                NestedString nested = new NestedString(key, current, depth + 1);
+                NestedString nested = new NestedString(key, start, last, current, depth + 1);
 
                 current.Children.Add(nested);
                 current = nested;
@@ -275,12 +282,32 @@ namespace Cutulu
             key = key.Trim();
 
             loop(nestedString, ref values);
-            return values.ToArray();
+            return values.IsEmpty() ? null : values.ToArray();
 
             void loop(NestedString nestedString, ref List<string> values)
             {
                 if (nestedString.Key.Equals(key))
                     values.Add(nestedString.Value);
+
+                if (nestedString.Children.NotEmpty())
+                    for (int i = nestedString.Children.Count - 1; i >= 0; i--)
+                        loop(nestedString.Children[i], ref values);
+            }
+        }
+
+        public (string value, int start, int last)[] ReadValues2(string key) => ReadValues2(this, key);
+        public static (string value, int start, int last)[] ReadValues2(NestedString nestedString, string key)
+        {
+            List<(string value, int start, int last)> values = new List<(string value, int start, int last)>();
+            key = key.Trim();
+
+            loop(nestedString, ref values);
+            return values.IsEmpty() ? null : values.ToArray();
+
+            void loop(NestedString nestedString, ref List<(string value, int start, int last)> values)
+            {
+                if (nestedString.Key.Equals(key))
+                    values.Add((nestedString.Value, nestedString.StartX, nestedString.LastX));
 
                 if (nestedString.Children.NotEmpty())
                     for (int i = nestedString.Children.Count - 1; i >= 0; i--)

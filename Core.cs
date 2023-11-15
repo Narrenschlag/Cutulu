@@ -405,6 +405,7 @@ namespace Cutulu
 		public static bool IsEmpty(this string str) => string.IsNullOrEmpty(str);
 		public static bool NotEmpty(this string str) => !IsEmpty(str);
 
+		// Kind of splits up a string to only write down the contents between the signals. Nice for a lot of stuff.
 		public static string Extract(this string source, char signal, out string[] extracted, bool removeSignal = true) => Extract(source, new List<char>() { signal }, out extracted, removeSignal);
 		public static string Extract(this string source, List<char> signals, out string[] extracted, bool removeSignals = true)
 		{
