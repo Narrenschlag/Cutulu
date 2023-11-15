@@ -35,10 +35,16 @@ namespace Cutulu
                 TryLoadAssetJson(local, out asset, assetFolder) ? true : TryLoadModJson(local, out asset, modFolder);   // Check asset folder then mod folder
 
         public static bool TryLoadModJson<T>(this string local, out T asset, string modFolder = DefaultModFolder)
-            => IO.TryLoadJson($"{IO.USER_PATH}{modFolder}{local}", out asset);
+            => IO.TryLoadJson(local.LocalToGlobal(IO.USER_PATH + modFolder), out asset);
 
         public static bool TryLoadAssetJson<T>(this string local, out T asset, string assetFolder = DefaultAssetsFolder)
-            => IO.TryLoadJson($"{IO.PROJECT_PATH}{assetFolder}{local}", out asset);
+            => IO.TryLoadJson(local.LocalToGlobal(IO.PROJECT_PATH + assetFolder), out asset);
+
+        public static string LocalToGlobal(this string local, bool mod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder)
+            => $"{(mod ? IO.USER_PATH : IO.PROJECT_PATH)}{(mod ? modFolder : assetFolder)}{local}";
+
+        public static string LocalToGlobal(this string local, string folder)
+            => $"{folder}{local}";
         #endregion
 
         #region Caching

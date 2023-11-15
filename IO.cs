@@ -94,13 +94,16 @@ namespace Cutulu
 		#region File Managment
 		public static Error mkDir(this string path) => DirAccess.MakeDirAbsolute(path.TrimToDirectory());
 
-		public static void WriteText(this string path, string content, string encryptionKey = "")
+		public static void WriteText(this string path, string content, string encryptionKey = "", bool instantFlush = true)
 		{
 			if (path.IsEmpty()) "No path assigned!".Throw();
+			
+			mkDir(path = path.Trim());
 
-			mkDir(path);
-			FileAccessG.Open(path.Trim(), FileAccessG.ModeFlags.Write).
-			StoreString(encryptionKey.IsEmpty() ? content : content.EncryptString(encryptionKey));
+			FileAccess file = FileAccessG.Open(path, FileAccessG.ModeFlags.Write);
+			file.StoreString(encryptionKey.IsEmpty() ? content : content.EncryptString(encryptionKey));
+
+			if (instantFlush) file.Flush();
 		}
 
 		public static string ReadText(this string path, string encryptionKey = "")
@@ -123,10 +126,15 @@ namespace Cutulu
 			if (Exists(path = path.Trim()))
 			{
 				asset = ReadText(path).json<T>();
-				return !asset.Equals(default(T));
+
+				try
+				{
+					return !asset.Equals(default(T));
+				}
+				catch { return false; }
 			}
 
-			asset = default(T);
+			asset = default;
 			return false;
 		}
 
@@ -140,7 +148,7 @@ namespace Cutulu
 				return asset != default(T);
 			}
 
-			asset = default(T);
+			asset = default;
 			return false;
 		}
 		#endregion
