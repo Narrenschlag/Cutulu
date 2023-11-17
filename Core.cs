@@ -188,18 +188,15 @@ namespace Cutulu
         #region Bit Functions
 		public static bool GetBitAt(this int number, int bitIndex)
         {
-            // Check if the bitIndex is valid
             if (bitIndex < 0 || bitIndex >= 32) // C# Integer have 32 bits
                 throw new ArgumentOutOfRangeException(nameof(bitIndex), "Bit index is out of range.");
 
-            // Bit an der BitIndex-Position isolieren und zurückgeben
             return ((number >> bitIndex) & 1) == 1;
         }
 
 		public static int SetBitAt(ref int number, int bitIndex, bool newValue) => number = SetBitAt(number, bitIndex, newValue);
 		public static int SetBitAt(this int number, int bitIndex, bool newValue)
 		{
-			// Check if the bitIndex is valid
 			if (bitIndex < 0 || bitIndex >= 32) // C# Integer have 32 bits
 				throw new ArgumentOutOfRangeException(nameof(bitIndex), "Bit index is out of range.");
 
