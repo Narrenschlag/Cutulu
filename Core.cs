@@ -87,9 +87,21 @@ namespace Cutulu
 			return t;
 		}
 
-		public static void SetActive(this Node node, bool active) => node.SetProcess(active);
+        public static void SetActive(this Node node, bool active, bool includeChildren = false)
+        {
+            node.ProcessMode = active ? Node.ProcessModeEnum.Pausable : Node.ProcessModeEnum.Disabled;
+            if (node is CollisionObject3D) (node as CollisionObject3D).DisableMode = active ? CollisionObject3D.DisableModeEnum.KeepActive : CollisionObject3D.DisableModeEnum.Remove;
+            if (node is CollisionShape3D) (node as CollisionShape3D).Disabled = !active;
+            if (node is Node3D) (node as Node3D).Visible = active;
+            if (node is Node2D) (node as Node2D).Visible = active;
+            if (includeChildren)
+            {
+                foreach (Node child in node.GetNodesInChildren<Node>(false))
+                    SetActive(child, false);
+            }
+        }
 
-		public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true) where T : Node
+        public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true) where T : Node
 		{
 			List<T> list = new List<T>();
 			loop(node, includeSelf);
@@ -171,10 +183,52 @@ namespace Cutulu
 
 		public static void ConnectButton(this Node node, Node nodeToConnect, string functionName) => Connect(node, "pressed", nodeToConnect, functionName);
 		public static void DisconnectButton(this Node node, Node nodeToConnect, string functionName) => Disconnect(node, "pressed", nodeToConnect, functionName);
-		#endregion
+        #endregion
 
-		#region Array Functions
-		public static bool NotEmpty<T>(this T[] array) => array != null && array.Length > 0;
+        #region Bit Functions
+		public static bool GetBitAt(this int number, int bitIndex)
+        {
+            // Check if the bitIndex is valid
+            if (bitIndex < 0 || bitIndex >= 32) // C# Integer have 32 bits
+                throw new ArgumentOutOfRangeException(nameof(bitIndex), "Bit index is out of range.");
+
+            // Bit an der BitIndex-Position isolieren und zurückgeben
+            return ((number >> bitIndex) & 1) == 1;
+        }
+
+		public static int SetBitAt(ref int number, int bitIndex, bool newValue) => number = SetBitAt(number, bitIndex, newValue);
+		public static int SetBitAt(this int number, int bitIndex, bool newValue)
+		{
+			// Check if the bitIndex is valid
+			if (bitIndex < 0 || bitIndex >= 32) // C# Integer have 32 bits
+				throw new ArgumentOutOfRangeException(nameof(bitIndex), "Bit index is out of range.");
+
+			// Set bit to 0
+			number &= ~(1 << bitIndex);
+
+			// If newValue is true, set bit to 1
+			if (newValue) number |= (1 << bitIndex);
+
+			return number;
+		}
+
+		public static bool[] GetBitsArray(this int number)
+        {
+            int numBits = 32; // Annahme: Ein int hat 32 Bits in C#
+            bool[] bits = new bool[numBits];
+
+            for (int i = 0; i < numBits; i++)
+            {
+                bits[i] = ((number >> i) & 1) == 1;
+            }
+
+            System.Array.Reverse(bits); // Umkehrung, um die richtige Reihenfolge zu erhalten
+            return bits;
+        }
+        #endregion
+
+        #region Array Functions
+        public static bool NotEmpty<T>(this T[] array) => array != null && array.Length > 0;
 		public static bool IsEmpty<T>(this T[] array) => !NotEmpty(array);
 
 		public static T RandomElement<T>(this T[] array, T @default = default(T)) => array.NotEmpty() ? array[Random.RangeInt(0, array.Length)] : @default;
@@ -225,6 +279,7 @@ namespace Cutulu
 		public static Vector2 setX(this Vector2 v2, float value) => new Vector2(value, v2.Y);
 		public static Vector2 setY(this Vector2 v2, float value) => new Vector2(v2.X, value);
 
+
 		public static void pasteX(this float value, ref Vector2 v2) => v2.X = value;
 		public static void pasteY(this float value, ref Vector2 v2) => v2.Y = value;
 
@@ -241,12 +296,15 @@ namespace Cutulu
 
 		#region Vector3 Functions
 		public static void SetForward(this Node3D node, Vector3 direction, bool global = true) => node.LookAt((global ? node.GlobalPosition : node.Position) + direction);
-
+        
 		public static Vector3 setX(this Vector3 v3, float value) => new Vector3(value, v3.Y, v3.Z);
-		public static Vector3 setY(this Vector3 v3, float value) => new Vector3(v3.X, value, v3.Z);
-		public static Vector3 setZ(this Vector3 v3, float value) => new Vector3(v3.X, v3.Y, value);
+        public static Vector3 setY(this Vector3 v3, float value) => new Vector3(v3.X, value, v3.Z);
+        public static Vector3 setZ(this Vector3 v3, float value) => new Vector3(v3.X, v3.Y, value);
+        public static Vector3 multX(this Vector3 v3, float value) => new Vector3(v3.X * value, v3.Y, v3.Z);
+        public static Vector3 multY(this Vector3 v3, float value) => new Vector3(v3.X, v3.Y * value, v3.Z);
+        public static Vector3 multZ(this Vector3 v3, float value) => new Vector3(v3.X, v3.Y, v3.Z * value);
 
-		public static void pasteX(this float value, ref Vector3 v3) => v3.X = value;
+        public static void pasteX(this float value, ref Vector3 v3) => v3.X = value;
 		public static void pasteY(this float value, ref Vector3 v3) => v3.Y = value;
 		public static void pasteZ(this float value, ref Vector3 v3) => v3.Z = value;
 
