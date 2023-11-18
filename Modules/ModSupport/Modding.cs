@@ -1,84 +1,140 @@
 using System.Collections.Generic;
+using Godot;
 
 namespace Cutulu
 {
     public static class Modding
     {
-        #region File Management (IO)
-        // Constant deault values
-        private const string DefaultAssetsFolder = "Assets/";
-        private const string DefaultModFolder = "Mods/";
-
-        /// <summary>Load asset from file system, decide if you prefer the mod version</summary>
-        public static bool TryLoad<T>(this string local, out T asset, bool preferMod, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
-            => preferMod ?
-                TryLoadMod(local, out asset, modFolder) ? true : TryLoadAsset(local, out asset, assetFolder) :  // Check mod folder then asset folder
-                TryLoadAsset(local, out asset, assetFolder) ? true : TryLoadMod(local, out asset, modFolder);   // Check asset folder then mod folder
-
-        /// <summary>Load asset from file system, preferes the mod folder<summary>
-        public static bool TryLoadM<T>(this string local, out T asset, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
-            => TryLoad(local, out asset, true, assetFolder, modFolder);
-
-        /// <summary>Load asset from mod folder<summary>
-        public static bool TryLoadMod<T>(this string local, out T asset, string modFolder = DefaultModFolder) where T : class
-            => IO.TryLoad($"{IO.USER_PATH}{modFolder}{local}", out asset);
-
-        /// <summary>Load asset from asset folder<summary>
-        public static bool TryLoadAsset<T>(this string local, out T asset, string assetFolder = DefaultAssetsFolder) where T : class
-            => IO.TryLoad($"{IO.PROJECT_PATH}{assetFolder}{local}", out asset);
-        #endregion
-
-        #region Json
-        public static bool TryLoadJson<T>(this string local, out T asset, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder)
-            => preferMod ?
-                TryLoadModJson(local, out asset, modFolder) ? true : TryLoadAssetJson(local, out asset, assetFolder) :  // Check mod folder then asset folder
-                TryLoadAssetJson(local, out asset, assetFolder) ? true : TryLoadModJson(local, out asset, modFolder);   // Check asset folder then mod folder
-
-        public static bool TryLoadModJson<T>(this string local, out T asset, string modFolder = DefaultModFolder)
-            => IO.TryLoadJson(local.LocalToGlobal(IO.USER_PATH + modFolder), out asset);
-
-        public static bool TryLoadAssetJson<T>(this string local, out T asset, string assetFolder = DefaultAssetsFolder)
-            => IO.TryLoadJson(local.LocalToGlobal(IO.PROJECT_PATH + assetFolder), out asset);
-
-        public static string LocalToGlobal(this string local, bool mod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder)
-            => $"{(mod ? IO.USER_PATH : IO.PROJECT_PATH)}{(mod ? modFolder : assetFolder)}{local}";
-
-        public static string LocalToGlobal(this string local, string folder)
-            => $"{folder}{local}";
-        #endregion
-
-        #region Caching
-        private static Dictionary<string, Dictionary<string, object>> Cache;
-
-        /// <summary>Load preferably modded file from local path at folder</summary>
-        public static bool TryLoadCached<T>(this string localPath, string folder, out T value, bool preferMod = true, string assetFolder = DefaultAssetsFolder, string modFolder = DefaultModFolder) where T : class
+        private static Dictionary<char, FilePortal> _portals;
+        public static Dictionary<char, FilePortal> Portals
         {
-            folder = folder.Trim();
-            localPath.Trim();
-
-            if (Cache == null) Cache = new Dictionary<string, Dictionary<string, object>>();
-            if (!Cache.TryGetValue(folder, out Dictionary<string, object> _cache))
+            get
             {
-                _cache = new Dictionary<string, object>();
-                Cache.Add(folder, _cache);
+                if (_portals == null) setup();
+                return _portals;
             }
-
-            if (_cache.TryGetValue(localPath, out object _value))
-            {
-                value = _value as T;
-                return value != null;
-            }
-
-            if (TryLoad($"{folder}/{localPath}", out _value, preferMod, assetFolder, modFolder))
-            {
-                value = _value as T;
-                _cache.Add(localPath, value);
-                return value != null;
-            }
-
-            value = default(T);
-            return false;
         }
-        #endregion
+
+        public static FilePortal Assets => Portals['A'];
+        public static FilePortal Mods => Portals['M'];
+        private static void setup()
+        {
+            _portals = new Dictionary<char, FilePortal>();
+
+            Register('M', IO.PROJECT_PATH + "Mods/");
+            Register('A', IO.PROJECT_PATH + "Assets/");
+        }
+
+        public static FilePortal Custom(char key)
+            => TryGetCustom(key, out var portal) ? portal : default;
+
+        public static bool TryGetCustom(char key, out FilePortal portal)
+            => Portals.TryGetValue(key, out portal);
+
+        public static void Register(this char key, string path)
+        {
+            if (Portals.ContainsKey(key)) return;
+            Portals.Add(key, new FilePortal(path));
+        }
+
+        public static List<FilePortal> Find(this string localFile) => TryFind(localFile, out var portals) ? portals : default;
+        public static bool TryFind(this string localFile, out List<FilePortal> list, string mask = null)
+        {
+            var _list = new List<FilePortal>();
+
+            // First consider mods...
+            if (mask.IsEmpty() || mask.Contains('M'))
+                loop('M');
+
+            // ...then assets
+            if (mask.IsEmpty() || mask.Contains('A'))
+                loop('A');
+
+            foreach (char c in Portals.Keys)
+            {
+                if (c.Equals('M') || c.Equals('A')) continue;
+
+                loop(c);
+            }
+
+            void loop(char c)
+            {
+                if (mask.NotEmpty() && !mask.Contains(c))
+                    return;
+
+                if (Portals[c].Contains(localFile))
+                    _list.Add(Portals[c]);
+            }
+
+            list = _list.IsEmpty() ? null : _list;
+            return list.NotEmpty();
+        }
+
+        public struct FilePortal
+        {
+            public string DefaultPathSuffix;
+            public string PathPrefix;
+
+            public bool Valid => !Equals(default);
+
+            #region Construction
+            public FilePortal() : this(IO.USER_PATH) { }
+            public FilePortal(string path, string defaultEnding = ".txt")
+            {
+                PathPrefix = path.EndsWith('/') ? path : path + '/';
+                DefaultPathSuffix = defaultEnding;
+            }
+            #endregion
+
+            #region Foundation
+            private string fix(ref string localPath)
+            {
+                if (!(localPath = localPath.Trim()).Contains('.')) localPath += DefaultPathSuffix;
+                if (!localPath.StartsWith(PathPrefix)) localPath = PathPrefix + localPath;
+                return localPath;
+            }
+
+            public void Write(string localPath, string text, string encryptionKey = null)
+            {
+                IO.WriteText(fix(ref localPath), text, encryptionKey);
+            }
+
+            public string Read(string localPath, string encryptionKey = null)
+                => TryRead(localPath, out string text, encryptionKey) ? text : default;
+            public bool TryRead(string localPath, out string text, string encryptionKey = null)
+                => IO.TryLoadTxt(fix(ref localPath), out text, encryptionKey);
+            #endregion
+
+            #region Advanced
+            public T ReadResource<T>(string localPath) where T : class
+                => TryReadResource(localPath, out T result) ? result : default;
+            public bool TryReadResource<T>(string localPath, out T result) where T : class
+                => IO.TryLoad(fix(ref localPath), out result);
+
+            public T ReadJson<T>(string localPath)
+                => TryReadJson(localPath, out T result) ? result : default;
+            public bool TryReadJson<T>(string localPath, out T result)
+            {
+                bool success = TryRead(fix(ref localPath), out string json);
+
+                result = json.json<T>();
+                return success;
+            }
+
+            public void WriteJson<T>(string localPath, T value, string encryptionKey = null)
+            {
+                if (value.Equals(default)) Write(fix(ref localPath), "", encryptionKey);
+                else Write(fix(ref localPath), value.json(), encryptionKey);
+            }
+            #endregion
+
+            #region Utility
+            public string[] ReadFileRelatives(string localPath)
+                => DirAccess.GetFilesAt(fix(ref localPath));
+
+            public bool Contains(string localPath)
+                => IO.Exists(fix(ref localPath));
+            #endregion
+        }
     }
 }

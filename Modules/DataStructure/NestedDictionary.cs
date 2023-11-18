@@ -43,5 +43,11 @@ namespace Cutulu
 
         public void Remove(TRootKey rootKey, TKey key) => dic[rootKey].Remove(key);
         public void Remove(TRootKey rootKey) => dic.Remove(rootKey);
+
+        public bool IsNull() => dic == null;
+        public bool NotNull() => !IsNull();
+
+        public bool IsEmpty() => IsNull() || dic.IsEmpty();
+        public bool NotEmpty() => !IsEmpty();
     }
 }

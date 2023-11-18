@@ -59,7 +59,7 @@ namespace Cutulu
 		#endregion
 
 		#region From Json
-		public static T json<T>(this string json) => json<T>(json, "");
+		public static T json<T>(this string json) => json<T>(json, currentFormat);
 		public static T json<T>(this string json, bool simpleFormat = true, bool indentFormat = false) => json<T>(json, default, simpleFormat, indentFormat);
 		public static T json<T>(this string json, string encryptionKey = default, bool simpleFormat = true, bool indentFormat = false)
 			=> json.IsEmpty() ? default : JsonSerializer.Deserialize<T>(encryptionKey.IsEmpty() ? json : json.DecryptString(encryptionKey), JsonOptions(simpleFormat, indentFormat)).wasJson();
@@ -123,22 +123,30 @@ namespace Cutulu
 
 		public static bool TryLoadJson<T>(this string path, out T asset)
 		{
-			if (Exists(path = path.Trim()))
+			if (TryLoadTxt(path, out string json))
 			{
-				asset = ReadText(path).json<T>();
+				asset = json.json<T>();
 
-				try
-				{
-					return !asset.Equals(default(T));
-				}
-				catch { return false; }
+				return !asset.Equals(default(T));
 			}
 
 			asset = default;
 			return false;
 		}
 
-		public static bool TryLoad<T>(this string path, out T asset) where T : class
+        public static bool TryLoadTxt(this string path, out string text, string encyptionKey = null)
+        {
+            if (Exists(path = path.Trim()))
+            {
+                text = ReadText(path, encyptionKey);
+				return true;
+            }
+
+            text = "";
+            return false;
+        }
+
+        public static bool TryLoad<T>(this string path, out T asset) where T : class
 		{
 			path = path.Trim();
 
