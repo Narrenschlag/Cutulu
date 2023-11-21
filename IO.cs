@@ -1,11 +1,12 @@
 using System.Text.Json;
-using System;
 
 using Cutulu.JsonConverter;
 using Godot;
 
 using JsonEncoder = System.Text.Encodings.Web.JavaScriptEncoder;
-using FileAccessG = Godot.FileAccess;
+using FA = Godot.FileAccess;
+using DA = Godot.DirAccess;
+using System;
 
 namespace Cutulu
 {
@@ -15,149 +16,171 @@ namespace Cutulu
 		public const string USER_PATH = "user://";
 
 		#region JSON Utility
-		#region Godot Extension
-		public static T jsonG<T>(this string json) where T : Type => jsonG(json).Obj as T;
-		public static Variant jsonG(this string json) => Json.ParseString(json);
-		public static string jsonG(this Variant obj) => Json.Stringify(obj);
-		#endregion
-
-		#region Json Core
-		private static JsonSerializerOptions options;
-		private static bool currentFormat;
+		private static Dictionary<bool, bool, JsonSerializerOptions> options;
+		private static bool currentFormat, currentIndent;
 
 		public static JsonSerializerOptions JsonOptions(bool simpleFormat = true, bool indentFormat = false)
 		{
-			if (options == null)
+			if (options.IsNull()) options = new Dictionary<bool, bool, JsonSerializerOptions>();
+			if (!options.TryGetValue(simpleFormat, indentFormat, out var _options))
 			{
-				options = new JsonSerializerOptions();
+				_options = new JsonSerializerOptions()
+				{
+					Encoder = simpleFormat ? JsonEncoder.UnsafeRelaxedJsonEscaping : JsonEncoder.Default,
+					WriteIndented = indentFormat
+				};
 
-				// Register types
-				options.Converters.Add(new Vector2I_Json());
-				options.Converters.Add(new Vector3I_Json());
-
-				// Force format update
-				currentFormat = !simpleFormat;
+				options.Add(simpleFormat, indentFormat, _options);
 			}
 
-			if (options.WriteIndented != indentFormat)
-				options.WriteIndented = indentFormat;
+			currentFormat = simpleFormat;
+			currentIndent = indentFormat;
 
-			// Update Format
-			if (currentFormat != simpleFormat)
-			{
-				currentFormat = simpleFormat;
-				options.Encoder = simpleFormat ? JsonEncoder.UnsafeRelaxedJsonEscaping : JsonEncoder.Default;
-			}
-
-			return options;
+			return _options;
 		}
 
 		public static void RegisterJsonConverter(System.Text.Json.Serialization.JsonConverter converter)
 		{
 			JsonOptions(currentFormat).Converters.Add(converter);
 		}
-		#endregion
 
 		#region From Json
 		public static T json<T>(this string json) => json<T>(json, currentFormat);
 		public static T json<T>(this string json, bool simpleFormat = true, bool indentFormat = false) => json<T>(json, default, simpleFormat, indentFormat);
-		public static T json<T>(this string json, string encryptionKey = default, bool simpleFormat = true, bool indentFormat = false)
-			=> json.IsEmpty() ? default : JsonSerializer.Deserialize<T>(encryptionKey.IsEmpty() ? json : json.DecryptString(encryptionKey), JsonOptions(simpleFormat, indentFormat)).wasJson();
-
-		public static T jsonCurrentFormat<T>(this string json, string encryptionKey = default)
-			=> json.IsEmpty() ? default : JsonSerializer.Deserialize<T>(encryptionKey.IsEmpty() ? json : json.DecryptString(encryptionKey), JsonOptions(currentFormat, options.WriteIndented)).wasJson();
-
-		private static T wasJson<T>(this T t)
+		public static T json<T>(this string json, string decryptionKey = null, bool simpleFormat = true, bool indentFormat = false)
 		{
-			if (!t.Equals(default) && t is WasJson)
-				(t as WasJson).OnReadFromJson();
+			// No json
+			if (json.IsEmpty()) return default;
+
+			// Decryption
+			if (decryptionKey.NotEmpty())
+				json = json.DecryptString(decryptionKey);
+
+			// Read T from json
+			T t;
+			try
+			{
+				t = JsonSerializer.Deserialize<T>(json, JsonOptions(simpleFormat, indentFormat));
+			}
+			catch (Exception error)
+			{
+				$"json: {json}\n{error.Message}".Throw();
+				return default;
+			}
+
+			// Update custom json setup
+			if (t is WasJson) (t as WasJson).OnReadFromJson();
 
 			return t;
 		}
+
+		public static T jsonCurrentFormat<T>(this string json, string decryptionKey = null)
+		=> json<T>(json, decryptionKey, currentFormat, currentIndent);
 		#endregion
 
 		#region To Json
 		public static string json(this object obj) => json(obj, "");
 		public static string json(this object obj, bool simpleFormat = true, bool indentFormat = false) => json(obj, default, simpleFormat, indentFormat);
-		public static string json(this object obj, string encryptionKey = default, bool simpleFormat = true, bool indentFormat = false)
-			=> obj == null ? "" : encryptionKey.IsEmpty() ?
-			JsonSerializer.Serialize(obj, JsonOptions(simpleFormat, indentFormat)) :
-			JsonSerializer.Serialize(obj, JsonOptions(simpleFormat, indentFormat)).EncryptString(encryptionKey);
+		public static string json(this object obj, string encryptionKey = null, bool simpleFormat = true, bool indentFormat = false)
+		{
+			if (obj == null) return null;
 
-		public static string jsonCurrentFormat(this object obj, string encryptionKey = default)
-			=> obj == null ? "" : encryptionKey.IsEmpty() ?
-			JsonSerializer.Serialize(obj, JsonOptions(currentFormat, options.WriteIndented)) :
-			JsonSerializer.Serialize(obj, JsonOptions(currentFormat, options.WriteIndented));
+			string json = JsonSerializer.Serialize(obj, JsonOptions(simpleFormat, indentFormat));
+
+			if (encryptionKey.NotEmpty())
+				json.EncryptString(encryptionKey);
+
+			return json;
+		}
+
+		public static string jsonCurrentFormat(this object obj, string encryptionKey = null)
+		=> json(obj, encryptionKey, currentFormat, currentIndent);
 		#endregion
 		#endregion
 
 		#region File Managment
+		/// <summary>
+		/// Load json from path. Throws errors if something fails.
+		/// Recommended usage: try,catch
+		/// </summary>
+		public static T LoadJson<T>(this string path, string decryptionKey = null)
+		{
+			string json = Read(path, decryptionKey);
+			return json.json<T>();
+		}
+
+		/// <summary>
+		/// Try load class from path.
+		/// </summary>
+		public static bool TryLoad<T>(this string path, out T asset) where T : class
+		{
+			if (Exists(path = path.Trim()))
+			{
+				asset = GD.Load<T>(path);
+				return true;
+			}
+
+			asset = default;
+			return false;
+		}
+
+		/// <summary>
+		/// Creates directory if not existant already.
+		/// </summary>
 		public static Error mkDir(this string path) => DirAccess.MakeDirAbsolute(path.TrimToDirectory());
 
-		public static void WriteText(this string path, string content, string encryptionKey = "", bool instantFlush = true)
+		/// <summary>
+		/// Writes text down in a file opened/created on the run.
+		/// </summary>
+		public static void Write(this string path, string content, string encryptionKey = null, bool instantFlush = true)
 		{
+			// Check if the path is valid and create dir if non existant
 			if (path.IsEmpty()) "No path assigned!".Throw();
-			
 			mkDir(path = path.Trim());
 
-			FileAccess file = FileAccessG.Open(path, FileAccessG.ModeFlags.Write);
-			file.StoreString(encryptionKey.IsEmpty() ? content : content.EncryptString(encryptionKey));
+			// Encrypt content
+			if (encryptionKey.NotEmpty())
+				content = content.EncryptString(encryptionKey);
 
+			// Create/Open file
+			FA file = FA.Open(path, FA.ModeFlags.Write);
+			file.StoreString(content);
+
+			// Flush and thereby finally write file to storage
 			if (instantFlush) file.Flush();
 		}
 
-		public static string ReadText(this string path, string encryptionKey = "")
+		/// <summary>
+		/// Writes text down in a file opened/created on the run.
+		/// </summary>
+		public static string Read(this string path, string decryptionKey = null)
 		{
+			// Check if the path is valid and create dir if non existant
 			if (path.IsEmpty()) "No path assigned!".Throw();
+			if (!Exists(path)) $"Path '{path}' does not exists.".Throw();
 
-			string content = FileAccessG.Open(path, FileAccessG.ModeFlags.Read).GetAsText();
-			return encryptionKey.NotEmpty() ? content.DecryptString(encryptionKey) : content;
+			// Open file
+			FA file = FA.Open(path, FA.ModeFlags.Read);
+			string content = file.GetAsText();
+
+			// Decrypt content
+			if (decryptionKey.NotEmpty())
+				content = content.DecryptString(decryptionKey);
+
+			return content;
 		}
 
-		public static bool Exists(this string path) => FileAccessG.FileExists(path);
+		/// <summary>
+		/// Check if file exists
+		/// </summary>
+		public static bool Exists(this string path) => FA.FileExists(path);
 
+		/// <summary>
+		/// Ereases file from directory
+		/// </summary>
 		public static void DeleteFile(this string path)
 		{
-			if (Exists(path)) DirAccess.RemoveAbsolute(path);
-		}
-
-		public static bool TryLoadJson<T>(this string path, out T asset)
-		{
-			if (TryLoadTxt(path, out string json))
-			{
-				asset = json.json<T>();
-
-				return !asset.Equals(default(T));
-			}
-
-			asset = default;
-			return false;
-		}
-
-        public static bool TryLoadTxt(this string path, out string text, string encyptionKey = null)
-        {
-            if (Exists(path = path.Trim()))
-            {
-                text = ReadText(path, encyptionKey);
-				return true;
-            }
-
-            text = "";
-            return false;
-        }
-
-        public static bool TryLoad<T>(this string path, out T asset) where T : class
-		{
-			path = path.Trim();
-
-			if (Exists(path))
-			{
-				asset = GD.Load<T>(path);
-				return asset != default(T);
-			}
-
-			asset = default;
-			return false;
+			if (Exists(path)) DA.RemoveAbsolute(path);
 		}
 		#endregion
 	}

@@ -96,13 +96,24 @@ namespace Cutulu
 
             public void Write(string localPath, string text, string encryptionKey = null)
             {
-                IO.WriteText(fix(ref localPath), text, encryptionKey);
+                IO.Write(fix(ref localPath), text, encryptionKey);
             }
 
             public string Read(string localPath, string encryptionKey = null)
                 => TryRead(localPath, out string text, encryptionKey) ? text : default;
-            public bool TryRead(string localPath, out string text, string encryptionKey = null)
-                => IO.TryLoadTxt(fix(ref localPath), out text, encryptionKey);
+            public bool TryRead(string localPath, out string text, string decryptionKey = null)
+            {
+                try
+                {
+                    text =IO.Read(fix(ref localPath), decryptionKey);
+                    return true;
+                }
+                catch
+                {
+                    text = null;
+                    return false;
+                }
+            }
             #endregion
 
             #region Advanced

@@ -34,13 +34,13 @@ namespace Cutulu
         }
 
         /// <summary>Decrypts a string</summary>
-        public static string DecryptString(this string encrypted, string encryption_key)
+        public static string DecryptString(this string encrypted, string decryption_key)
         {
             // Convert the encrypted string to a byte array
             byte[] encryptedBytes = Convert.FromBase64String(encrypted);
 
             // Derive the password using the PBKDF2 algorithm
-            Rfc2898DeriveBytes passwordBytes = new Rfc2898DeriveBytes(encryption_key, 20);
+            Rfc2898DeriveBytes passwordBytes = new Rfc2898DeriveBytes(decryption_key, 20);
 
             // Use the password to decrypt the encrypted string
             Aes encryptor = Aes.Create();
