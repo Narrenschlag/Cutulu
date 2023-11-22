@@ -173,7 +173,7 @@ namespace Cutulu
             bool closes(int i)
             {
                 if (!plain[i].Equals(closePrefix)) return false;
-                if (plain.Length - (i + 1) < closeKey.Length + 1) return false;
+                if (plain.Length - (i + 1) < closeKey.Length) return false;
 
                 return plain.Substring(i + 1, closeKey.Length).Equals(closeKey);
             }
