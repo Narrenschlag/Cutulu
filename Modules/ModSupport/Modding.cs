@@ -37,6 +37,54 @@ namespace Cutulu
             Portals.Add(key, new FilePortal(path));
         }
 
+        public static bool TryLoadResource<T>(this string localFile, out T resource) where T : class
+        {
+            List<FilePortal> list = Find(localFile);
+            if (list.NotEmpty())
+            {
+                foreach (FilePortal portal in list)
+                {
+                    if (portal.TryReadResource(localFile, out resource))
+                        return true;
+                }
+            }
+
+            resource = null;
+            return false;
+        }
+
+        public static bool TryLoadJson<T>(this string localFile, out T resource)
+        {
+            List<FilePortal> list = Find(localFile);
+            if (list.NotEmpty())
+            {
+                foreach (FilePortal portal in list)
+                {
+                    if (portal.TryReadJson(localFile, out resource))
+                        return true;
+                }
+            }
+
+            resource = default;
+            return false;
+        }
+
+        public static bool TryLoadText<T>(this string localFile, out string text)
+        {
+            List<FilePortal> list = Find(localFile);
+            if (list.NotEmpty())
+            {
+                foreach (FilePortal portal in list)
+                {
+                    if (portal.TryRead(localFile, out text))
+                        return true;
+                }
+            }
+
+            text = default;
+            return false;
+        }
+
         public static List<FilePortal> Find(this string localFile) => TryFind(localFile, out var portals) ? portals : default;
         public static bool TryFind(this string localFile, out List<FilePortal> list, string mask = null)
         {
@@ -105,7 +153,7 @@ namespace Cutulu
             {
                 try
                 {
-                    text =IO.Read(fix(ref localPath), decryptionKey);
+                    text = IO.Read(fix(ref localPath), decryptionKey);
                     return true;
                 }
                 catch
