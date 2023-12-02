@@ -5,6 +5,8 @@ namespace Walhalla
         public TcpHandler Tcp;
         public UdpHandler Udp;
 
+        public bool Connected => Tcp.Connected;
+
         public Network(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
             Tcp = new TcpHandler(tcpHost, tcpPort, receiveTcp, Disconnect);
