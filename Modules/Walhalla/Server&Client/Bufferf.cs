@@ -1,14 +1,14 @@
 using System.IO;
 using System;
-using Cutulu;
 
 using Enc = System.Text.Encoding;
+using Cutulu;
 namespace Walhalla
 {
     public static class Bufferf
     {
         #region Translation
-        public static byte[] toBytes<T>(this T? value, out BufferType typeId)
+        public static byte[] toBytes<T>(this T value, out BufferType typeId)
         {
             if (value == null)
             {
@@ -50,7 +50,7 @@ namespace Walhalla
             byte[] @default() => new byte[0];
         }
 
-        public static T? fromBytes<T>(this byte[]? bytes)
+        public static T fromBytes<T>(this byte[] bytes)
         {
             if (bytes == null)
             {
@@ -64,10 +64,10 @@ namespace Walhalla
                 case BufferType.Byte: return (T)(object)bytes[0];
 
                 case BufferType.Short: return (T)(object)BitConverter.ToInt16(bytes);
-                case BufferType.UnsignedShort: return (T)(object)(BitConverter.ToInt16(bytes) + short.MaxValue + 1);
+                case BufferType.UnsignedShort: return (T)(object)BitConverter.ToUInt16(bytes);
 
                 case BufferType.Integer: return (T)(object)BitConverter.ToInt32(bytes);
-                case BufferType.UnsignedInteger: return (T)(object)(BitConverter.ToInt32(bytes) + int.MaxValue + 1);
+                case BufferType.UnsignedInteger: return (T)(object)BitConverter.ToUInt32(bytes);
 
                 case BufferType.Float: return (T)(object)BitConverter.ToSingle(bytes);
                 case BufferType.Double: return (T)(object)BitConverter.ToDouble(bytes);
@@ -105,6 +105,30 @@ namespace Walhalla
 
             return BufferType.None;
         }
+
+        public static Type getType(this BufferType type)
+        {
+            // Boolean + Byte
+            switch (type)
+            {
+                case BufferType.Boolean: return typeof(bool);
+                case BufferType.Byte: return typeof(byte);
+
+                case BufferType.Short: return typeof(short);
+                case BufferType.UnsignedShort: return typeof(ushort);
+
+                case BufferType.Integer: return typeof(int);
+                case BufferType.UnsignedInteger: return typeof(uint);
+
+                case BufferType.Float: return typeof(float);
+                case BufferType.Double: return typeof(double);
+
+                case BufferType.String: return typeof(string);
+                case BufferType.Char: return typeof(char);
+
+                default: return typeof(object);
+            }
+        }
         #endregion
 
         #region Sending
@@ -134,7 +158,7 @@ namespace Walhalla
 
         #region Receiving
         /// <returns> Length, type, key and bytes, transmitted by buffer
-        public static byte[]? decodeBytes(this byte[] buffer, out int length, out BufferType type, out byte key)
+        public static byte[] decodeBytes(this byte[] buffer, out int length, out BufferType type, out byte key)
         {
             if (buffer == null || buffer.Length < 6)
             {

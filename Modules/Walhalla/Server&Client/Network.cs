@@ -1,3 +1,5 @@
+using Cutulu;
+
 namespace Walhalla
 {
     public class Network
@@ -28,7 +30,7 @@ namespace Walhalla
 
         public virtual void Disconnect()
         {
-
+            "disconnected.".LogError();
         }
     }
 }
