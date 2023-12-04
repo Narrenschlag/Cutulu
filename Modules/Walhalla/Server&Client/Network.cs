@@ -11,15 +11,15 @@ namespace Walhalla
 
         public Network(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
-            Tcp = new TcpHandler(tcpHost, tcpPort, receiveTcp, Disconnect);
+            Tcp = new TcpHandler(udpHost, tcpPort, receiveTcp, Disconnect);
             Udp = new UdpHandler(udpHost, udpPort, receiveUdp);
         }
 
-        private void receiveUdp(BufferType type, byte key, byte[] data) => Receive(type, key, data, false);
-        private void receiveTcp(BufferType type, byte key, byte[] data) => Receive(type, key, data, true);
+        private void receiveUdp(byte key, BufferType type, byte[] data) => Receive(type, key, data, false);
+        private void receiveTcp(byte key, BufferType type, byte[] data) => Receive(type, key, data, true);
         public virtual void Receive(BufferType type, byte key, byte[] data, bool tcp)
         {
-
+            $"[{(tcp ? "TCP" : "UDP")}] ".Log();
         }
 
         public virtual void Send<T>(byte key, T value, bool tcp)

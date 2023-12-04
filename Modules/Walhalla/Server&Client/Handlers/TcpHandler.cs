@@ -11,7 +11,7 @@ namespace Walhalla
         public NetworkStream stream;
         public TcpClient client;
 
-        public Empty? onDisconnect;
+        public Empty onDisconnect;
 
         /// <summary> Creates handle on server side </summary>
         public TcpHandler(ref TcpClient client, uint welcome, Packet onReceive, Empty onDisconnect, int receiveTimeout = 5) : base(0, onReceive)
@@ -118,7 +118,7 @@ namespace Walhalla
             Array.Copy(bytes, 0, buffer, 4, length);
 
             bytes = Bufferf.decodeBytes(buffer, out length, out BufferType type, out byte key);
-            if (onReceive != null && type != BufferType.None) onReceive(type, key, bytes);
+            if (onReceive != null && type != BufferType.None) onReceive(key, type, bytes);
         }
         #endregion
 

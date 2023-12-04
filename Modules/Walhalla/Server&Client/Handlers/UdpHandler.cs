@@ -1,19 +1,36 @@
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using System.Net;
 using System;
 
 namespace Walhalla
 {
     public class UdpHandler : HandlerBase
     {
+        public delegate void UdpPacket(byte key, BufferType type, byte[] bytes, IPEndPoint source);
+        public UdpPacket serverSideReceive;
+
+        private bool isServerClient;
         public UdpClient client;
 
         /// <summary> Creates handle on server side </summary>
-        public UdpHandler(int port, Packet onReceive) : base(port, onReceive)
+        public UdpHandler(int port, UdpPacket onReceive) : base(port, null)
         {
+            serverSideReceive = onReceive;
+            isServerClient = true;
+
             try
             {
-                client = new UdpClient(port);
+                client = new UdpClient();
+
+                // Set the UDP client to reuse the address and port (optional)
+                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+                // Bind the UDP client to a specific port
+                client.Client.Bind(new IPEndPoint(IPAddress.Any, port));
+
+                // Listens to udp signals
+                _listen();
             }
             catch (Exception ex)
             {
@@ -26,19 +43,25 @@ namespace Walhalla
         /// <summary> Creates handle on client side </summary>
         public UdpHandler(string host, int port, Packet onReceive) : base(port, onReceive)
         {
+            serverSideReceive = null;
+            isServerClient = false;
+
             client = new UdpClient();
-            client.Connect(host, port);
+            client.Connect(host, port); // Use the same port as the UDP listener and the same adress as tcp endpoint
 
             _listen();
         }
 
-        /// <summary> Returns if the client is connected </summary>
-        public override bool Connected => client != null && client.Client != null && client.Client.Connected;
+        public override bool Connected => client != null && client.Client.Connected;
 
         /// <summary> Closes local network elements </summary>
         public override void Close()
         {
-            if (client != null) client.Close();
+            if (client != null)
+            {
+                client.Close();
+                client = null;
+            }
 
             base.Close();
         }
@@ -49,7 +72,8 @@ namespace Walhalla
         {
             base.send(key, value);
 
-            client.Send(value.encodeBytes(key));
+            if (Connected && client != null)
+                client.Send(value.encodeBytes(key));
         }
 
         /// <summary> Sends data through connection </summary>
@@ -57,8 +81,11 @@ namespace Walhalla
         {
             base.send(key, type, bytes);
 
-            if (bytes == null) bytes = new byte[0];
-            client.Send(bytes.encodeBytes(type, key));
+            if (Connected && client != null)
+            {
+                if (bytes == null) bytes = new byte[0];
+                client.Send(bytes.encodeBytes(type, key));
+            }
         }
         #endregion
 
@@ -74,12 +101,17 @@ namespace Walhalla
 
         private async Task _receive()
         {
+            if (client == null) return;
+
             // Read length
             UdpReceiveResult result = await client.ReceiveAsync();
             byte[] buffer = result.Buffer;
 
             byte[] bytes = Bufferf.decodeBytes(buffer, out int length, out BufferType type, out byte key);
-            if (onReceive != null && type != BufferType.None) onReceive(type, key, bytes);
+            if (type == BufferType.None) return;
+
+            if (isServerClient && serverSideReceive != null) serverSideReceive(key, type, bytes, result.RemoteEndPoint);
+            else if (onReceive != null) onReceive(key, type, bytes);
         }
         #endregion
     }
