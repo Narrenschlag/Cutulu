@@ -52,7 +52,7 @@ namespace Walhalla
             _listen();
         }
 
-        public override bool Connected => client != null && client.Client.Connected;
+        public override bool Connected => client != null && (isServerClient ? true : client.Client.Connected);
 
         /// <summary> Closes local network elements </summary>
         public override void Close()
