@@ -16,7 +16,7 @@ namespace Walhalla
                 return @default();
             }
 
-            typeId = getTypeId(value);
+            typeId = getTypeId<T>();
             object obj = value;
 
             if (typeId == BufferType.None)
@@ -50,58 +50,61 @@ namespace Walhalla
             byte[] @default() => new byte[0];
         }
 
-        public static T fromBytes<T>(this byte[] bytes)
+        public static T fromBytes<T>(this byte[] bytes) => (T)fromBytes(bytes, getTypeId<T>());
+        public static object fromBytes(this byte[] bytes, BufferType type)
         {
             if (bytes == null)
             {
                 "!!! WARNING !!!\nWas unable to fetch data from package due to it being emtpy".Log();
-                return default(T);
+                return default;
             }
 
-            switch (getTypeId(default(T)))
+            switch (type)
             {
-                case BufferType.Boolean: return (T)(object)BitConverter.ToBoolean(bytes);
-                case BufferType.Byte: return (T)(object)bytes[0];
+                case BufferType.Boolean: return BitConverter.ToBoolean(bytes);
+                case BufferType.Byte: return bytes[0];
 
-                case BufferType.Short: return (T)(object)BitConverter.ToInt16(bytes);
-                case BufferType.UnsignedShort: return (T)(object)BitConverter.ToUInt16(bytes);
+                case BufferType.Short: return BitConverter.ToInt16(bytes);
+                case BufferType.UnsignedShort: return BitConverter.ToUInt16(bytes);
 
-                case BufferType.Integer: return (T)(object)BitConverter.ToInt32(bytes);
-                case BufferType.UnsignedInteger: return (T)(object)BitConverter.ToUInt32(bytes);
+                case BufferType.Integer: return BitConverter.ToInt32(bytes);
+                case BufferType.UnsignedInteger: return BitConverter.ToUInt32(bytes);
 
-                case BufferType.Float: return (T)(object)BitConverter.ToSingle(bytes);
-                case BufferType.Double: return (T)(object)BitConverter.ToDouble(bytes);
+                case BufferType.Float: return BitConverter.ToSingle(bytes);
+                case BufferType.Double: return BitConverter.ToDouble(bytes);
 
-                case BufferType.String: return (T)(object)Enc.UTF8.GetString(bytes);
-                case BufferType.Char: return (T)(object)BitConverter.ToChar(bytes);
+                case BufferType.String: return Enc.UTF8.GetString(bytes);
+                case BufferType.Char: return BitConverter.ToChar(bytes);
 
-                default: return Enc.UTF8.GetString(bytes).json<T>();
+                default: return default;
             }
         }
 
-        public static BufferType getTypeId<T>(this T value)
+        public static BufferType getTypeId<T>()
         {
+            Type t = typeof(T);
+
             // Boolean + Byte
-            if (value is bool) return BufferType.Boolean;
-            else if (value is byte) return BufferType.Byte;
+            if (t == typeof(bool)) return BufferType.Boolean;
+            else if (t == typeof(byte)) return BufferType.Byte;
 
             // Short
-            if (value is short) return BufferType.Short;
-            else if (value is ushort) return BufferType.UnsignedShort;
+            if (t == typeof(short)) return BufferType.Short;
+            else if (t == typeof(ushort)) return BufferType.UnsignedShort;
 
             // Integer
-            if (value is int) return BufferType.Integer;
-            else if (value is uint) return BufferType.UnsignedInteger;
+            if (t == typeof(int)) return BufferType.Integer;
+            else if (t == typeof(uint)) return BufferType.UnsignedInteger;
 
             // Float
-            else if (value is float) return BufferType.Float;
+            else if (t == typeof(float)) return BufferType.Float;
 
             // Double
-            else if (value is double) return BufferType.Double;
+            else if (t == typeof(double)) return BufferType.Double;
 
             // String + Char
-            else if (value is string) return BufferType.String;
-            else if (value is char) return BufferType.Char;
+            else if (t == typeof(string)) return BufferType.String;
+            else if (t == typeof(char)) return BufferType.Char;
 
             return BufferType.None;
         }
@@ -132,35 +135,38 @@ namespace Walhalla
         #endregion
 
         #region Sending
+        /// <summary> assignLength is for udp packets </summary>
         /// <returns> Buffer with byte[] length, type, key and then the bytes </returns>
-        public static byte[] encodeBytes<T>(this T value, byte key) => encodeBytes(value.toBytes(out BufferType typeId), typeId, key);
+        public static byte[] encodeBytes<T>(this T value, byte key, bool assignLength = true) => encodeBytes(value.toBytes(out BufferType typeId), typeId, key, assignLength);
 
+        /// <summary> assignLength is for udp packets </summary>
         /// <returns> Buffer with byte[] length, type, key and then the bytes </returns>
-        public static byte[] encodeBytes(this byte[] bytes, BufferType type, byte key)
+        public static byte[] encodeBytes(this byte[] bytes, BufferType type, byte key, bool assignLength = true)
         {
-            byte[] buffer = new byte[bytes.Length + 6];
+            byte[] buffer = new byte[bytes.Length + (assignLength ? 6 : 2)];
 
             // Writes length of array into size array
             using (MemoryStream mem = new MemoryStream(buffer))
             {
                 using (BinaryWriter BW = new BinaryWriter(mem))
                 {
-                    BW.Write(bytes.Length);
+                    if (assignLength) BW.Write(bytes.Length);
                     BW.Write((byte)type);
                     BW.Write(key);
                 }
             }
 
-            Array.Copy(bytes, 0, buffer, 6, bytes.Length);
+            Array.Copy(bytes, 0, buffer, assignLength ? 6 : 2, bytes.Length);
             return buffer;
         }
         #endregion
 
         #region Receiving
-        /// <returns> Length, type, key and bytes, transmitted by buffer
-        public static byte[] decodeBytes(this byte[] buffer, out int length, out BufferType type, out byte key)
+        /// <summary> hasLength is for udp packets </summary>
+        /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
+        public static byte[] decodeBytes(this byte[] buffer, out int length, out BufferType type, out byte key, bool hasLength = true)
         {
-            if (buffer == null || buffer.Length < 6)
+            if (buffer == null || buffer.Length < (hasLength ? 6 : 2))
             {
                 type = BufferType.None;
                 length = 0;
@@ -169,26 +175,26 @@ namespace Walhalla
                 return null;
             }
 
-            byte[] bytes = new byte[buffer.Length - 6];
+            byte[] bytes = new byte[buffer.Length - (hasLength ? 6 : 2)];
             using (MemoryStream mem = new MemoryStream(buffer))
             {
                 using (BinaryReader BR = new BinaryReader(mem))
                 {
-                    length = BR.ReadInt32();
+                    if (hasLength) length = BR.ReadInt32();
+                    else length = buffer.Length - 2;
+
                     type = (BufferType)BR.ReadByte();
                     key = BR.ReadByte();
                 }
             }
 
-            Array.Copy(buffer, 6, bytes, 0, length);
+            Array.Copy(buffer, hasLength ? 6 : 2, bytes, 0, length);
             return bytes;
         }
         #endregion
 
         #region Experimental Dot
-        /// <summary>
-        /// Uses the first four bits for unsigned Int8s
-        /// </summary>
+        /// <summary> Uses the first four bits for unsigned Int8s </summary>
         public static byte dot(byte a, byte b)
         {
             if (a > 15) a = 15;
@@ -203,9 +209,7 @@ namespace Walhalla
             return (byte)_;
         }
 
-        /// <summary>
-        /// Uses the first four bits for unsigned Int8s
-        /// </summary>
+        /// <summary> Uses the first four bits for unsigned Int8s </summary>
         public static (byte, byte) dot(byte dot)
         {
             (int a, int b) _ = (0, 0);

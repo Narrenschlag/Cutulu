@@ -9,10 +9,10 @@ namespace Walhalla
     public class UdpHandler : HandlerBase
     {
         public delegate void UdpPacket(byte key, BufferType type, byte[] bytes, IPEndPoint source);
-        public UdpPacket? serverSideReceive;
+        public UdpPacket serverSideReceive;
 
         private bool isServerClient;
-        public UdpClient? client;
+        public UdpClient client;
 
         /// <summary> Creates handle on server side </summary>
         public UdpHandler(int port, UdpPacket onReceive) : base(port, null)
@@ -39,7 +39,7 @@ namespace Walhalla
         }
 
         /// <summary> Creates handle on client side </summary>
-        public UdpHandler(string host, int udpPort, Packet? onReceive) : base(udpPort, onReceive)
+        public UdpHandler(string host, int udpPort, Packet onReceive) : base(udpPort, onReceive)
         {
             serverSideReceive = null;
             isServerClient = false;
@@ -79,7 +79,7 @@ namespace Walhalla
         {
             if (Connected && client != null && target != null)
             {
-                byte[] bytes = value.encodeBytes(key);
+                byte[] bytes = value.encodeBytes(key, false);
                 client.Send(bytes, bytes.Length, target);
             }
         }
@@ -90,7 +90,7 @@ namespace Walhalla
 
             if (Connected && client != null)
             {
-                byte[] bytes = value.encodeBytes(key);
+                byte[] bytes = value.encodeBytes(key, false);
                 client.Send(bytes, bytes.Length);
             }
         }
@@ -101,7 +101,7 @@ namespace Walhalla
             if (Connected && client != null && target != null)
             {
                 if (bytes == null) bytes = new byte[0];
-                bytes = bytes.encodeBytes(type, key);
+                bytes = bytes.encodeBytes(type, key, false);
 
                 client.Send(bytes, bytes.Length, target);
             }
@@ -114,7 +114,7 @@ namespace Walhalla
             if (Connected && client != null)
             {
                 if (bytes == null) bytes = new byte[0];
-                bytes = bytes.encodeBytes(type, key);
+                bytes = bytes.encodeBytes(type, key, false);
 
                 client.Send(bytes, bytes.Length);
             }
@@ -126,20 +126,22 @@ namespace Walhalla
         {
             while (Connected)
                 try { await _receive(); }
-                catch (Exception ex) { ("Error:" + ex.Message).Log(); }
+                catch (Exception ex) { ("udp-error:" + ex.Message).Log(); }
         }
 
         private async Task _receive()
         {
             if (client == null) return;
 
-            // Read length
+            // Read package
             UdpReceiveResult result = await client.ReceiveAsync();
             byte[] buffer = result.Buffer;
 
-            byte[] bytes = Bufferf.decodeBytes(buffer, out int length, out BufferType type, out byte key);
+            // Decode bytes
+            byte[] bytes = Bufferf.decodeBytes(buffer, out int length, out BufferType type, out byte key, false);
             if (type == BufferType.None) return;
 
+            // Invoke callback
             if (isServerClient && serverSideReceive != null) serverSideReceive(key, type, bytes, result.RemoteEndPoint);
             else if (onReceive != null) onReceive(key, type, bytes);
         }
