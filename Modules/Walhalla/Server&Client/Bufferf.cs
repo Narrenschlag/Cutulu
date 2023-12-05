@@ -50,15 +50,26 @@ namespace Walhalla
             byte[] @default() => new byte[0];
         }
 
-        public static T fromBytes<T>(this byte[] bytes) => (T)fromBytes(bytes, getTypeId<T>());
-        public static object fromBytes(this byte[] bytes, BufferType type)
+        public static T fromBytes<T>(this byte[] bytes)
+        {
+            object obj = fromBytes(bytes, getTypeId<T>(), out bool json);
+
+            if (obj != null && json && typeof(T) != typeof(string))
+                return (obj as string).json<T>();
+
+            return (T)obj;
+        }
+
+        public static object fromBytes(this byte[] bytes, BufferType type, out bool mayBeJson)
         {
             if (bytes == null)
             {
                 "!!! WARNING !!!\nWas unable to fetch data from package due to it being emtpy".Log();
+                mayBeJson = false;
                 return default;
             }
 
+            mayBeJson = type == BufferType.String;
             switch (type)
             {
                 case BufferType.Boolean: return BitConverter.ToBoolean(bytes);
