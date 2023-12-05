@@ -7,12 +7,12 @@ namespace Walhalla
         public TcpHandler Tcp;
         public UdpHandler Udp;
 
-        public bool Connected => Tcp.Connected;
+        public bool Connected => Tcp != null && Tcp.Connected;
 
         public Network(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
-            Tcp = new TcpHandler(tcpHost, tcpPort, receiveTcp, Disconnect);
-            Udp = new UdpHandler(udpHost, udpPort, receiveUdp);
+            try { _connect(tcpHost, tcpPort, udpHost, udpPort); }
+            catch { $"Failed to connect to host".LogError(); }
         }
 
         private void receiveUdp(byte key, BufferType type, byte[] data) => Receive(key, type, data, false);
@@ -28,8 +28,17 @@ namespace Walhalla
             else Udp.send(key, value);
         }
 
+        protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
+        {
+            Tcp = new TcpHandler(tcpHost, tcpPort, receiveTcp, Disconnect);
+            Udp = new UdpHandler(udpHost, udpPort, receiveUdp);
+        }
+
         public virtual void Disconnect()
         {
+            if (Tcp != null) Tcp.Close();
+            if (Udp != null) Udp.Close();
+
             "disconnected.".LogError();
         }
     }

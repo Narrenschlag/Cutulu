@@ -2,16 +2,17 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
 using System;
+using Cutulu;
 
 namespace Walhalla
 {
     public class UdpHandler : HandlerBase
     {
         public delegate void UdpPacket(byte key, BufferType type, byte[] bytes, IPEndPoint source);
-        public UdpPacket serverSideReceive;
+        public UdpPacket? serverSideReceive;
 
         private bool isServerClient;
-        public UdpClient client;
+        public UdpClient? client;
 
         /// <summary> Creates handle on server side </summary>
         public UdpHandler(int port, UdpPacket onReceive) : base(port, null)
@@ -21,13 +22,10 @@ namespace Walhalla
 
             try
             {
-                client = new UdpClient();
+                client = new UdpClient(port);
 
                 // Set the UDP client to reuse the address and port (optional)
                 client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-                // Bind the UDP client to a specific port
-                client.Client.Bind(new IPEndPoint(IPAddress.Any, port));
 
                 // Listens to udp signals
                 _listen();
@@ -41,18 +39,27 @@ namespace Walhalla
         }
 
         /// <summary> Creates handle on client side </summary>
-        public UdpHandler(string host, int port, Packet onReceive) : base(port, onReceive)
+        public UdpHandler(string host, int udpPort, Packet? onReceive) : base(udpPort, onReceive)
         {
             serverSideReceive = null;
             isServerClient = false;
 
-            client = new UdpClient();
-            client.Connect(host, port); // Use the same port as the UDP listener and the same adress as tcp endpoint
+            try
+            {
+                client = new UdpClient();
 
-            _listen();
+                client.Connect(host, udpPort); // Use the same port as the UDP listener and the same adress as tcp endpoint
+
+                // Listens to udp signals
+                if (onReceive != null) _listen();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Was not able to establish a udp connection:\n{ex.Message}");
+            }
         }
 
-        public override bool Connected => client != null && (isServerClient ? true : client.Client.Connected);
+        public override bool Connected => client != null;
 
         /// <summary> Closes local network elements </summary>
         public override void Close()
@@ -68,15 +75,38 @@ namespace Walhalla
 
         #region Send Data
         /// <summary> Sends data through connection </summary>
+        public void send<T>(byte key, T value, IPEndPoint target)
+        {
+            if (Connected && client != null && target != null)
+            {
+                byte[] bytes = value.encodeBytes(key);
+                client.Send(bytes, bytes.Length, target);
+            }
+        }
+
         public override void send<T>(byte key, T value)
         {
             base.send(key, value);
 
             if (Connected && client != null)
-                client.Send(value.encodeBytes(key));
+            {
+                byte[] bytes = value.encodeBytes(key);
+                client.Send(bytes, bytes.Length);
+            }
         }
 
         /// <summary> Sends data through connection </summary>
+        public void send(byte key, BufferType type, byte[] bytes, IPEndPoint target)
+        {
+            if (Connected && client != null && target != null)
+            {
+                if (bytes == null) bytes = new byte[0];
+                bytes = bytes.encodeBytes(type, key);
+
+                client.Send(bytes, bytes.Length, target);
+            }
+        }
+
         public override void send(byte key, BufferType type, byte[] bytes)
         {
             base.send(key, type, bytes);
@@ -84,7 +114,9 @@ namespace Walhalla
             if (Connected && client != null)
             {
                 if (bytes == null) bytes = new byte[0];
-                client.Send(bytes.encodeBytes(type, key));
+                bytes = bytes.encodeBytes(type, key);
+
+                client.Send(bytes, bytes.Length);
             }
         }
         #endregion
@@ -93,10 +125,8 @@ namespace Walhalla
         private async void _listen()
         {
             while (Connected)
-            {
                 try { await _receive(); }
-                catch { break; }
-            }
+                catch (Exception ex) { ("Error:" + ex.Message).Log(); }
         }
 
         private async Task _receive()
