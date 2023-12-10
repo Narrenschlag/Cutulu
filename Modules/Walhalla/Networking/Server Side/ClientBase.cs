@@ -6,7 +6,10 @@ namespace Walhalla
     public class ClientBase
     {
         public delegate void PacketReceive(byte key, BufferType type, byte[] bytes, bool tcp);
+        public delegate void Disconnect(ClientBase client);
+
         public PacketReceive onReceiveAll;
+        public Disconnect onClose;
 
         protected Dictionary<uint, ClientBase> Registry;
         public uint UID;
@@ -27,14 +30,16 @@ namespace Walhalla
         /// <summary> Handles incomming traffic </summary>
         public virtual void onReceive(byte key, BufferType type, byte[] bytes, bool tcp)
         {
-            $"{UID}> {(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
-
+            //$"{UID}> {(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
             if (onReceiveAll != null) onReceiveAll(key, type, bytes, tcp);
         }
 
         public virtual void onDisconnect()
         {
             $"--- Disconnected [{UID}]".Log();
+
+            if (onClose != null)
+                onClose(this);
 
             lock (Registry)
             {
