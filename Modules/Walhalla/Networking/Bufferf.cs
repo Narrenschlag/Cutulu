@@ -29,7 +29,9 @@ namespace Walhalla
                 switch (typeId)
                 {
                     case BufferType.Boolean: return BitConverter.GetBytes((bool)obj);
+
                     case BufferType.Byte: return new byte[1] { (byte)obj };
+                    case BufferType.ByteArray: return (byte[])obj;
 
                     case BufferType.Short: return BitConverter.GetBytes((short)obj);
                     case BufferType.UnsignedShort: return BitConverter.GetBytes((ushort)obj);
@@ -73,7 +75,9 @@ namespace Walhalla
             switch (type)
             {
                 case BufferType.Boolean: return BitConverter.ToBoolean(bytes);
+
                 case BufferType.Byte: return bytes[0];
+                case BufferType.ByteArray: return bytes;
 
                 case BufferType.Short: return BitConverter.ToInt16(bytes);
                 case BufferType.UnsignedShort: return BitConverter.ToUInt16(bytes);
@@ -97,7 +101,9 @@ namespace Walhalla
 
             // Boolean + Byte
             if (t == typeof(bool)) return BufferType.Boolean;
+
             else if (t == typeof(byte)) return BufferType.Byte;
+            else if (t == typeof(byte[])) return BufferType.ByteArray;
 
             // Short
             if (t == typeof(short)) return BufferType.Short;
@@ -126,7 +132,9 @@ namespace Walhalla
             switch (type)
             {
                 case BufferType.Boolean: return typeof(bool);
+
                 case BufferType.Byte: return typeof(byte);
+                case BufferType.ByteArray: return typeof(byte[]);
 
                 case BufferType.Short: return typeof(short);
                 case BufferType.UnsignedShort: return typeof(ushort);
@@ -240,7 +248,7 @@ namespace Walhalla
     {
         None = 0,
 
-        Boolean, Byte,
+        Boolean, Byte, ByteArray,
         Short, UnsignedShort,
         Integer, UnsignedInteger,
         Float, Double,
