@@ -187,6 +187,8 @@ namespace Cutulu
 		#endregion
 
 		#region Bit Functions
+		public static float GetBitAt_float(this byte number, int bitIndex) => GetBitAt((int)number, bitIndex) ? 1 : 0;
+		public static bool GetBitAt(this byte number, int bitIndex) => GetBitAt((int)number, bitIndex);
 		public static bool GetBitAt(this int number, int bitIndex)
 		{
 			if (bitIndex < 0 || bitIndex >= 32) // C# Integer have 32 bits
@@ -194,6 +196,9 @@ namespace Cutulu
 
 			return ((number >> bitIndex) & 1) == 1;
 		}
+
+		public static byte SetBitAt(ref byte number, int bitIndex, bool newValue) => number = SetBitAt(number, bitIndex, newValue);
+		public static byte SetBitAt(this byte number, int bitIndex, bool newValue) => (byte)SetBitAt((int)number, bitIndex, newValue);
 
 		public static int SetBitAt(ref int number, int bitIndex, bool newValue) => number = SetBitAt(number, bitIndex, newValue);
 		public static int SetBitAt(this int number, int bitIndex, bool newValue)
