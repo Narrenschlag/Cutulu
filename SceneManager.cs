@@ -8,7 +8,7 @@ namespace Cutulu
         public static int MaxSceneMemory = 8;
 
         public static List<int> BuildIndexHistory = new List<int>();
-        private static SceneManager Singleton;
+        protected static SceneManager Singleton;
 
         public override void _EnterTree() => Singleton = this;
 
@@ -18,7 +18,10 @@ namespace Cutulu
         public static PackedScene Scene(int buildIndex) => Singleton.IsNull() ? null : Singleton.scene(buildIndex);
         public virtual PackedScene scene(int buildIndex) => default;
 
-        public static Node Load(int sceneIndex, bool replaceAll = true)
+        public static Node Load(int sceneIndex, bool replaceAll = true) => Singleton.load(sceneIndex, replaceAll);
+        public static Node Load(PackedScene scene, bool replaceAll = true) => Singleton.load(scene, replaceAll);
+
+        protected virtual Node load(int sceneIndex, bool replaceAll = true)
         {
             // Memorize index
             if (sceneIndex >= 0 && getCurrentIndex() != sceneIndex)
@@ -29,12 +32,12 @@ namespace Cutulu
                     BuildIndexHistory.RemoveAt(0);
             }
 
-            return Load(Scene(sceneIndex), replaceAll);
+            return Load(scene(sceneIndex), replaceAll);
         }
 
-        public static Node Load(PackedScene scene, bool replaceAll = true)
+        protected virtual Node load(PackedScene scene, bool replaceAll = true)
         {
-            if (replaceAll) Singleton.Clear();
+            if (replaceAll) this.Clear();
 
             return scene.IsNull() ? null :
                 scene.Instantiate<Node>(Singleton);

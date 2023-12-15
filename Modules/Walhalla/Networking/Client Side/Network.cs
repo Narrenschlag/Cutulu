@@ -7,6 +7,9 @@ namespace Walhalla
         public TcpHandler Tcp;
         public UdpHandler Udp;
 
+        public delegate void Packet(byte key, BufferType type, byte[] data, bool tcp);
+        public static Packet onReceive;
+
         public bool Connected => Tcp != null && Tcp.Connected;
 
         public Network(string tcpHost, int tcpPort, string udpHost, int udpPort)
@@ -20,6 +23,7 @@ namespace Walhalla
         public virtual void Receive(byte key, BufferType type, byte[] bytes, bool tcp)
         {
             $"{(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
+            if (onReceive != null) onReceive(key, type, bytes, tcp);
         }
 
         public virtual void Send<T>(byte key, T value, bool tcp)
