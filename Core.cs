@@ -93,8 +93,8 @@ namespace Cutulu
 			node.ProcessMode = active ? Node.ProcessModeEnum.Pausable : Node.ProcessModeEnum.Disabled;
 			if (node is CollisionObject3D) (node as CollisionObject3D).DisableMode = active ? CollisionObject3D.DisableModeEnum.KeepActive : CollisionObject3D.DisableModeEnum.Remove;
 			if (node is CollisionShape3D) (node as CollisionShape3D).Disabled = !active;
+			if (node is CanvasItem) (node as CanvasItem).Visible = active;
 			if (node is Node3D) (node as Node3D).Visible = active;
-			if (node is Node2D) (node as Node2D).Visible = active;
 			if (includeChildren)
 			{
 				foreach (Node child in node.GetNodesInChildren<Node>(false))
@@ -505,6 +505,19 @@ namespace Cutulu
 
 			extracted = _extracted.ToArray();
 			return result.ToString();
+		}
+
+		public static bool IsEmail(this string mail)
+		{
+			if (mail.IsEmpty()) return false;
+			if (!mail.Contains('@')) return false;
+			if (mail.EndsWith('.') || mail.EndsWith('@')) return false;
+
+			string[] splits = mail.Split('@');
+			if (splits.Length != 2) return false;
+			if (!splits[1].Contains('.')) return false;
+
+			return true;
 		}
 		#endregion
 
