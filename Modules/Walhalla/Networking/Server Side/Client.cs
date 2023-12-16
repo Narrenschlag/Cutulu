@@ -1,3 +1,5 @@
+using Cutulu;
+
 namespace Walhalla.Server
 {
     public class Client
@@ -42,9 +44,9 @@ namespace Walhalla.Server
 
         // receive		tcp results
         // _receive		udp results
-        private void onReceive(byte key, BufferType type, byte[] bytes, bool tcp)
+        protected virtual void onReceive(byte key, BufferType type, byte[] bytes, bool tcp)
         {
-            if (Target != null)
+            if (Target.NotNull())
                 lock (Target)
                 {
                     if (tcp) Target.receive(this, key, type, bytes);
@@ -52,10 +54,10 @@ namespace Walhalla.Server
                 }
         }
 
-        public void send<T>(byte key, T value, bool tcp)
+        public virtual void send<T>(byte key, T value, bool tcp)
             => Source.send(key, value, tcp);
 
-        private void onQuit(ClientBase client)
+        protected virtual void onQuit(ClientBase client)
         {
             if (Target != null)
                 lock (Target) Target.remove(this);
