@@ -52,6 +52,10 @@ namespace Walhalla
             byte[] @default() => new byte[0];
         }
 
+        /// <summary> Returns byte data as type </summary>
+        public static T As<T>(this byte[] bytes) => fromBytes<T>(bytes);
+
+        /// <summary> Returns byte data as type </summary>
         public static T fromBytes<T>(this byte[] bytes)
         {
             object obj = fromBytes(bytes, getTypeId<T>(), out bool json);

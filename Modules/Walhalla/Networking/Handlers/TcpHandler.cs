@@ -78,6 +78,7 @@ namespace Walhalla
         #endregion
 
         #region Receive Data
+        /// <summary> Receive packets as long as client is connected </summary>
         protected async void _listen()
         {
             while (Connected)
@@ -90,9 +91,10 @@ namespace Walhalla
                 }
             }
 
-            _onDisconnect();
+            _disconnected();
         }
 
+        /// <summary> Waits for bytes received, reads and then formats them </summary>
         protected async Task _receive()
         {
             // Define buffer for strorage
@@ -122,7 +124,8 @@ namespace Walhalla
         }
         #endregion
 
-        private void _onDisconnect()
+        /// <summary> Called on client disconnect </summary>
+        private void _disconnected()
         {
             if (onDisconnect != null)
                 onDisconnect();

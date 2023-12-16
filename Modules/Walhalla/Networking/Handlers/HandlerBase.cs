@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using System;
 
 namespace Walhalla
@@ -19,6 +18,7 @@ namespace Walhalla
 
         public virtual bool Connected => false;
 
+        /// <summary> Closes handler </summary>
         public virtual void Close()
         {
             onReceive = null;
@@ -26,13 +26,12 @@ namespace Walhalla
 
         #region Send Data
         /// <summary> Sends data through connection </summary>
-        public virtual void send<T>(byte key, T value)
-        {
-            if (!Connected) throw new Exception($"{GetType()} is not connected");
-        }
+        public virtual void send<T>(byte key, T value) => conThrow();
 
         /// <summary> Sends data through connection </summary>
-        public virtual void send(byte key, BufferType type, byte[] bytes)
+        public virtual void send(byte key, BufferType type, byte[] bytes) => conThrow();
+
+        protected void conThrow()
         {
             if (!Connected) throw new Exception($"{GetType()} is not connected");
         }

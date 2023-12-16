@@ -34,6 +34,7 @@ namespace Walhalla.Server
             Name = name;
         }
 
+        /// <summary> Sets target to receive data </summary>
         public void setTarget(ClientTarget target)
         {
             if (Target != null) Target.remove(this);
@@ -61,13 +62,15 @@ namespace Walhalla.Server
                 }
         }
 
+        /// <summary> Send data to server </summary>
         public virtual void send<T>(byte key, T value, bool tcp)
             => Source.send(key, value, tcp);
 
+        /// <summary> Triggered on server/client disconnect </summary>
         protected virtual void onQuit(ClientBase client)
         {
             if (Target != null)
-                lock (Target) Target.remove(this);
+                lock (Target) Target.disconnected(this);
         }
     }
 }

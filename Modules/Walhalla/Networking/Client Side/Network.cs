@@ -25,7 +25,7 @@ namespace Walhalla.Client
         private void receiveTcp(byte key, BufferType type, byte[] data) => Receive(key, type, data, true);
         public virtual void Receive(byte key, BufferType type, byte[] bytes, bool tcp)
         {
-            $"{(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
+            //$"{(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
             if (onReceive != null) onReceive(key, type, bytes, tcp);
         }
 

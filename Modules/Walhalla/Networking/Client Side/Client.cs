@@ -1,32 +1,30 @@
+using Cutulu;
+
 namespace Walhalla.Client
 {
     public class Client
     {
         public Network Source;
 
-        public bool isLoggedIn;
-        public uint AccountId;
-
         public ClientTarget Target;
-        public uint TargetId;
-        public string Name;
 
         public Client(Network network, ClientTarget target)
         {
             Source = network;
 
             Network.onReceive += onReceive;
-            Network.onDisconnect += onQuit;
+            Network.onDisconnect += onDisconnect;
 
             setTarget(target);
         }
 
+        /// <summary> Sets target to receive data </summary>
         public void setTarget(ClientTarget target)
         {
-            if (Target != null) Target.remove(this);
-            Target = target;
+            if (Target != null) Target.remove();
 
-            TargetId = target != null ? target.add(this) : 0;
+            Target = target;
+            if (target.NotNull()) target.add();
         }
 
         // receive		tcp results
@@ -36,18 +34,20 @@ namespace Walhalla.Client
             if (Target != null)
                 lock (Target)
                 {
-                    if (tcp) Target.receive(this, key, type, bytes);
-                    else Target._receive(this, key, type, bytes);
+                    if (tcp) Target.receive(key, type, bytes);
+                    else Target._receive(key, type, bytes);
                 }
         }
 
+        /// <summary> Send data to server </summary>
         public virtual void send<T>(byte key, T value, bool tcp)
             => Source.Send(key, value, tcp);
 
-        protected virtual void onQuit()
+        /// <summary> Triggered on server/client disconnect </summary>
+        protected virtual void onDisconnect()
         {
             if (Target != null)
-                lock (Target) Target.remove(this);
+                lock (Target) Target.disconnected();
         }
     }
 }

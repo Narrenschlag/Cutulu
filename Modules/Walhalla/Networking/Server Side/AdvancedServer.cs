@@ -25,7 +25,7 @@ namespace Walhalla.Server
         }
 
         /// <summary> Creates new tcp/udp client </summary>
-        protected override ClientBase newClient(ref TcpClient tcp, uint uid)
+        protected override ClientBase newClient(ref System.Net.Sockets.TcpClient tcp, uint uid)
         {
             AdvancedClient client = new AdvancedClient(ref tcp, uid, ref Clients, this);
             IPEndPoint endpoint = tcp.Client.RemoteEndPoint as IPEndPoint;
@@ -69,7 +69,7 @@ namespace Walhalla.Server
         }
     }
 
-    public class AdvancedClient : SimpleClient
+    public class AdvancedClient : TcpClient
     {
         public AdvancedServer server;
         public IPEndPoint endPoint;
@@ -77,7 +77,7 @@ namespace Walhalla.Server
         public delegate void ClientAdd(AdvancedClient client);
         public static ClientAdd onClientJoin, onClientQuit;
 
-        public AdvancedClient(ref TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, AdvancedServer server, PacketReceive onReceiveAll = null) : base(ref client, uid, ref registry, onReceiveAll)
+        public AdvancedClient(ref System.Net.Sockets.TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, AdvancedServer server, PacketReceive onReceiveAll = null) : base(ref client, uid, ref registry, onReceiveAll)
         {
             this.server = server;
             endPoint = null;

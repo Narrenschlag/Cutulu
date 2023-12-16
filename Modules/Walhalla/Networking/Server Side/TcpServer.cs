@@ -48,7 +48,7 @@ namespace Walhalla.Server
             }
 
             // If a connection exists, the server will accept it
-            TcpClient tcp = await TcpListener.AcceptTcpClientAsync();
+            System.Net.Sockets.TcpClient tcp = await TcpListener.AcceptTcpClientAsync();
 
             // Register client
             lock (Clients)
@@ -62,9 +62,9 @@ namespace Walhalla.Server
         }
 
         /// <summary> Creates new tcp-only client </summary>
-        protected virtual ClientBase newClient(ref TcpClient tcp, uint uid)
+        protected virtual ClientBase newClient(ref System.Net.Sockets.TcpClient tcp, uint uid)
         {
-            return new SimpleClient(ref tcp, uid, ref Clients);
+            return new TcpClient(ref tcp, uid, ref Clients);
         }
 
         #region Broadcasting
@@ -100,13 +100,13 @@ namespace Walhalla.Server
         #endregion
     }
 
-    public class SimpleClient : ClientBase
+    public class TcpClient : ClientBase
     {
         public TcpHandler tcp;
 
         public delegate void PacketReceiveBy(byte key, BufferType type, byte[] bytes);
 
-        public SimpleClient(ref TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, PacketReceive onReceive = null) : base(uid, ref registry, onReceive)
+        public TcpClient(ref System.Net.Sockets.TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, PacketReceive onReceive = null) : base(uid, ref registry, onReceive)
         {
             tcp = new TcpHandler(ref client, uid, receiveTcp, _disconnect);
         }

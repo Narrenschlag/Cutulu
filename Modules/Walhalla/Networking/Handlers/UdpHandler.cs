@@ -84,6 +84,7 @@ namespace Walhalla
             }
         }
 
+        /// <summary> Sends data through connection </summary>
         public override void send<T>(byte key, T value)
         {
             base.send(key, value);
@@ -107,6 +108,7 @@ namespace Walhalla
             }
         }
 
+        /// <summary> Sends data through connection </summary>
         public override void send(byte key, BufferType type, byte[] bytes)
         {
             base.send(key, type, bytes);
@@ -122,6 +124,7 @@ namespace Walhalla
         #endregion
 
         #region Receive Data
+        /// <summary> Receive packets as long as client is connected </summary>
         private async void _listen()
         {
             while (Connected)
@@ -129,6 +132,7 @@ namespace Walhalla
                 catch (Exception ex) { ("udp-error:" + ex.Message).Log(); }
         }
 
+        /// <summary> Waits for bytes received, reads and then formats them </summary>
         private async Task _receive()
         {
             if (client == null) return;
