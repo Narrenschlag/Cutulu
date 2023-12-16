@@ -31,7 +31,7 @@ namespace Walhalla.Client
 
         // receive		tcp results
         // _receive		udp results
-        private void onReceive(byte key, BufferType type, byte[] bytes, bool tcp)
+        protected virtual void onReceive(byte key, BufferType type, byte[] bytes, bool tcp)
         {
             if (Target != null)
                 lock (Target)
@@ -41,10 +41,10 @@ namespace Walhalla.Client
                 }
         }
 
-        public void send<T>(byte key, T value, bool tcp)
+        public virtual void send<T>(byte key, T value, bool tcp)
             => Source.Send(key, value, tcp);
 
-        private void onQuit()
+        protected virtual void onQuit()
         {
             if (Target != null)
                 lock (Target) Target.remove(this);
