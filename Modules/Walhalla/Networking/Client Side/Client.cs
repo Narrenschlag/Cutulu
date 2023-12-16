@@ -34,8 +34,15 @@ namespace Walhalla.Client
             if (Target != null)
                 lock (Target)
                 {
-                    if (tcp) Target.receive(key, type, bytes);
-                    else Target._receive(key, type, bytes);
+                    try
+                    {
+                        if (tcp) Target.receive(key, type, bytes);
+                        else Target._receive(key, type, bytes);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        $"[Client base]: cannot receive packet because {ex.Message}".LogError();
+                    }
                 }
         }
 
