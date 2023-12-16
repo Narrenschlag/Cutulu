@@ -1,3 +1,6 @@
+using System;
+using Cutulu;
+
 namespace Walhalla.Client
 {
     public class Client
@@ -23,10 +26,10 @@ namespace Walhalla.Client
 
         public void setTarget(ClientTarget target)
         {
-            if (Target != null) Target.remove(this);
+            if (Target != null) Target.remove();
             Target = target;
 
-            TargetId = target != null ? target.add(this) : 0;
+            TargetId = target != null ? target.add() : 0;
         }
 
         // receive		tcp results
@@ -36,8 +39,15 @@ namespace Walhalla.Client
             if (Target != null)
                 lock (Target)
                 {
-                    if (tcp) Target.receive(this, key, type, bytes);
-                    else Target._receive(this, key, type, bytes);
+                    try
+                    {
+                        if (tcp) Target.receive(key, type, bytes);
+                        else Target._receive(key, type, bytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        $"[Client base]: cannot receive packet because {ex.Message}".LogError();
+                    }
                 }
         }
 
@@ -47,7 +57,7 @@ namespace Walhalla.Client
         protected virtual void onQuit()
         {
             if (Target != null)
-                lock (Target) Target.remove(this);
+                lock (Target) Target.remove();
         }
     }
 }
