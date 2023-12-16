@@ -63,7 +63,7 @@ namespace Walhalla.Server
 
                 if (client != null)
                 {
-                    client.onReceive(key, type, bytes, false);
+                    client._receive(key, type, bytes, false);
                 }
             }
         }
@@ -77,14 +77,10 @@ namespace Walhalla.Server
         public delegate void ClientAdd(AdvancedClient client);
         public static ClientAdd onClientJoin, onClientQuit;
 
-        public PacketReceiveBy onReceiveUdp;
-
-        public AdvancedClient(ref TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, AdvancedServer server, PacketReceiveBy onReceiveTcp = null, PacketReceiveBy onReceiveUdp = null, PacketReceive onReceiveAll = null) : base(ref client, uid, ref registry, onReceiveTcp, onReceiveAll)
+        public AdvancedClient(ref TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, AdvancedServer server, PacketReceive onReceiveAll = null) : base(ref client, uid, ref registry, onReceiveAll)
         {
             this.server = server;
             endPoint = null;
-
-            this.onReceiveUdp = onReceiveUdp;
 
             // Notify other classes
             if (onClientJoin != null)
@@ -120,17 +116,9 @@ namespace Walhalla.Server
             }
         }
 
-        public override void onReceive(byte key, BufferType type, byte[] bytes, bool tcp)
+        public override void _disconnect()
         {
-            base.onReceive(key, type, bytes, tcp);
-
-            if (!tcp && onReceiveUdp != null)
-                onReceiveUdp(key, type, bytes);
-        }
-
-        public override void onDisconnect()
-        {
-            base.onDisconnect();
+            base._disconnect();
 
             // Notify other classes
             if (onClientQuit != null)

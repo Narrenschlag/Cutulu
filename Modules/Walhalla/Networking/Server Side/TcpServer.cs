@@ -79,7 +79,7 @@ namespace Walhalla.Server
             foreach (ClientBase client in receivers)
             {
                 try { client.send(key, value, tcp); }
-                catch (Exception ex) { throw new Exception($"Client {client.UID} was not reachable:\n{ex.Message}"); }
+                catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UID} was not reachable:\n{ex.Message}"); }
             }
         }
 
@@ -94,7 +94,7 @@ namespace Walhalla.Server
             foreach (ClientBase client in receivers)
             {
                 try { client.send(key, type, bytes, tcp); }
-                catch (Exception ex) { throw new Exception($"Client {client.UID} was not reachable:\n{ex.Message}"); }
+                catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UID} was not reachable:\n{ex.Message}"); }
             }
         }
         #endregion
@@ -105,20 +105,17 @@ namespace Walhalla.Server
         public TcpHandler tcp;
 
         public delegate void PacketReceiveBy(byte key, BufferType type, byte[] bytes);
-        public PacketReceiveBy onReceiveTcp;
 
-        public SimpleClient(ref TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, PacketReceiveBy onReceiveTcp = null, PacketReceive onReceiveAll = null) : base(uid, ref registry, onReceiveAll)
+        public SimpleClient(ref TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, PacketReceive onReceive = null) : base(uid, ref registry, onReceive)
         {
-            this.onReceiveTcp = onReceiveTcp;
-
-            tcp = new TcpHandler(ref client, uid, receiveTcp, onDisconnect);
+            tcp = new TcpHandler(ref client, uid, receiveTcp, _disconnect);
         }
 
         public virtual bool Connected => ConnectedTcp;
         public bool ConnectedTcp => tcp != null && tcp.Connected;
 
         private void receiveTcp(byte key, BufferType type, byte[] bytes)
-            => onReceive(key, type, bytes, true);
+            => _receive(key, type, bytes, true);
 
         public override void send<T>(byte key, T value, bool tcp)
         {
@@ -132,14 +129,6 @@ namespace Walhalla.Server
             base.send(key, type, bytes, tcp);
 
             if (tcp && ConnectedTcp) this.tcp.send(key, type, bytes);
-        }
-
-        public override void onReceive(byte key, BufferType type, byte[] bytes, bool tcp)
-        {
-            base.onReceive(key, type, bytes, tcp);
-
-            if (tcp && onReceiveTcp != null)
-                onReceiveTcp(key, type, bytes);
         }
     }
 }
