@@ -16,12 +16,12 @@ namespace Walhalla.Server
 
         public ClientBase(uint uid, ref Dictionary<uint, ClientBase> registry, PacketReceive onReceive)
         {
-            $"+++ Connected [{uid}]".Log();
-
             Registry = registry;
             UID = uid;
 
             this.onReceive = onReceive;
+
+            $"+++ Connected [{UID}]".Log();
         }
 
         public virtual void send(byte key, BufferType type, byte[] bytes, bool tcp) { }
@@ -30,7 +30,7 @@ namespace Walhalla.Server
         /// <summary> Handles incomming traffic </summary>
         public virtual void _receive(byte key, BufferType type, byte[] bytes, bool tcp)
         {
-            $"{UID}> {(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
+            //$"{UID}> {(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
             if (onReceive != null) onReceive(key, type, bytes, tcp);
         }
 

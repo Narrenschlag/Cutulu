@@ -17,7 +17,7 @@ namespace Walhalla.Server
         {
             Source = advancedClient;
 
-            advancedClient.onReceiveAll += onReceive;
+            advancedClient.onReceive += onReceive;
             advancedClient.onClose += onQuit;
 
             setTarget(target);
@@ -47,10 +47,17 @@ namespace Walhalla.Server
         protected virtual void onReceive(byte key, BufferType type, byte[] bytes, bool tcp)
         {
             if (Target.NotNull())
-                lock (Target)
+                try
                 {
-                    if (tcp) Target.receive(this, key, type, bytes);
-                    else Target._receive(this, key, type, bytes);
+                    lock (Target)
+                    {
+                        if (tcp) Target.receive(this, key, type, bytes);
+                        else Target._receive(this, key, type, bytes);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    $"[Client base]: cannot receive packet because {ex.Message}".LogError();
                 }
         }
 
