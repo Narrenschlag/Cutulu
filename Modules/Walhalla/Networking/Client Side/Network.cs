@@ -1,6 +1,6 @@
 using Cutulu;
 
-namespace Walhalla
+namespace Walhalla.Client
 {
     public class Network
     {
@@ -8,6 +8,9 @@ namespace Walhalla
         public UdpHandler Udp;
 
         public delegate void Packet(byte key, BufferType type, byte[] data, bool tcp);
+        public delegate void Empty();
+
+        public static Empty onDisconnect;
         public static Packet onReceive;
 
         public bool Connected => Tcp != null && Tcp.Connected;

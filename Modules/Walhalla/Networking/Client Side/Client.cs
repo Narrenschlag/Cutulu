@@ -1,8 +1,8 @@
-namespace Walhalla.Server
+namespace Walhalla.Client
 {
     public class Client
     {
-        public AdvancedClient Source;
+        public Network Source;
 
         public bool isLoggedIn;
         public uint AccountId;
@@ -11,25 +11,14 @@ namespace Walhalla.Server
         public uint TargetId;
         public string Name;
 
-        public Client(AdvancedClient advancedClient, ClientTarget target)
+        public Client(Network network, ClientTarget target)
         {
-            Source = advancedClient;
+            Source = network;
 
-            advancedClient.onReceiveAll += onReceive;
-            advancedClient.onClose += onQuit;
+            Network.onReceive += onReceive;
+            Network.onDisconnect += onQuit;
 
             setTarget(target);
-        }
-
-        public uint uid() => Source.UID;
-        public uint tid() => TargetId;
-
-        public void login(uint accountId, string name)
-        {
-            AccountId = accountId;
-            isLoggedIn = true;
-
-            Name = name;
         }
 
         public void setTarget(ClientTarget target)
@@ -53,9 +42,9 @@ namespace Walhalla.Server
         }
 
         public void send<T>(byte key, T value, bool tcp)
-            => Source.send(key, value, tcp);
+            => Source.Send(key, value, tcp);
 
-        private void onQuit(ClientBase client)
+        private void onQuit()
         {
             if (Target != null)
                 lock (Target) Target.remove(this);

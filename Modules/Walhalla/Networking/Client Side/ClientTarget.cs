@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Walhalla.Server
+namespace Walhalla.Client
 {
     public partial class ClientTarget : Node
     {

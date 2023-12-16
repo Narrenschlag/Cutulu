@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Cutulu;
 
-namespace Walhalla
+namespace Walhalla.Server
 {
     public class ClientBase
     {

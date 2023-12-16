@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Net;
 using System;
 
-namespace Walhalla
+namespace Walhalla.Server
 {
     public class TcpServer
     {

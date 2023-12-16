@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 
-namespace Walhalla
+namespace Walhalla.Server
 {
     public class AdvancedServer : TcpServer
     {
