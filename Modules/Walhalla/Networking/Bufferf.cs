@@ -56,6 +56,14 @@ namespace Walhalla
         public static T As<T>(this byte[] bytes) => fromBytes<T>(bytes);
 
         /// <summary> Returns byte data as type </summary>
+        public static bool As<T>(this byte[] bytes, out T value)
+        {
+            value = fromBytes<T>(bytes);
+
+            return !value.Equals(default(T));
+        }
+
+        /// <summary> Returns byte data as type </summary>
         public static T fromBytes<T>(this byte[] bytes)
         {
             object obj = fromBytes(bytes, getTypeId<T>(), out bool json);

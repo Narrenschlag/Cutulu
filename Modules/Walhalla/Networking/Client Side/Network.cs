@@ -21,8 +21,8 @@ namespace Walhalla.Client
             catch { $"Failed to connect to host".LogError(); }
         }
 
-        private void receiveUdp(byte key, BufferType type, byte[] data) => Receive(key, type, data, false);
-        private void receiveTcp(byte key, BufferType type, byte[] data) => Receive(key, type, data, true);
+        private void _receiveUdp(byte key, BufferType type, byte[] data) => Receive(key, type, data, false);
+        private void _receiveTcp(byte key, BufferType type, byte[] data) => Receive(key, type, data, true);
         public virtual void Receive(byte key, BufferType type, byte[] bytes, bool tcp)
         {
             //$"{(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
@@ -37,11 +37,11 @@ namespace Walhalla.Client
 
         protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
-            Tcp = new TcpHandler(tcpHost, tcpPort, receiveTcp, Disconnect);
-            Udp = new UdpHandler(udpHost, udpPort, receiveUdp);
+            Tcp = new TcpHandler(tcpHost, tcpPort, _receiveTcp, _disconnect);
+            Udp = new UdpHandler(udpHost, udpPort, _receiveUdp);
         }
 
-        public virtual void Disconnect()
+        public virtual void _disconnect()
         {
             if (Tcp != null) Tcp.Close();
             if (Udp != null) Udp.Close();
