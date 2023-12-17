@@ -64,7 +64,7 @@ namespace Walhalla
                 if (Targets[i] != null)
                 {
                     // Notfiy target
-                    Targets[i]._receive(key, type, bytes, method, this);
+                    Targets[i].__receive(key, type, bytes, method, this);
                 }
             }
 
@@ -85,7 +85,7 @@ namespace Walhalla
                 if (Targets[i] != null)
                 {
                     // Notfiy target
-                    Targets[i]._disconnect(this);
+                    Targets[i].__disconnect(this);
                 }
             }
 
