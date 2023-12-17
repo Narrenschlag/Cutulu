@@ -69,31 +69,31 @@ namespace Walhalla.Server
 
         #region Broadcasting
         /// <summary> Broadcast to all clients </summary>
-        public virtual void Broadcast<T>(byte key, T value, bool tcp) => Broadcast(key, value, tcp, Clients != null ? Clients.Values : null);
+        public virtual void Broadcast<T>(byte key, T value, Method method) => Broadcast(key, value, method, Clients != null ? Clients.Values : null);
 
         /// <summary> Broadcast to selected clients </summary>
-        public virtual void Broadcast<T>(byte key, T value, bool tcp, ICollection<ClientBase> receivers)
+        public virtual void Broadcast<T>(byte key, T value, Method method, ICollection<ClientBase> receivers)
         {
             if (receivers == null || receivers.Count < 1) return;
 
             foreach (ClientBase client in receivers)
             {
-                try { client.send(key, value, tcp); }
+                try { client.send(key, value, method); }
                 catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UID} was not reachable:\n{ex.Message}"); }
             }
         }
 
         /// <summary> Broadcast to all clients </summary>
-        public virtual void Broadcast(byte key, BufferType type, byte[] bytes, bool tcp) => Broadcast(key, type, bytes, tcp, Clients != null ? Clients.Values : null);
+        public virtual void Broadcast(byte key, BufferType type, byte[] bytes, Method method) => Broadcast(key, type, bytes, method, Clients != null ? Clients.Values : null);
 
         /// <summary> Broadcast to selected clients </summary>
-        public virtual void Broadcast(byte key, BufferType type, byte[] bytes, bool tcp, ICollection<ClientBase> receivers)
+        public virtual void Broadcast(byte key, BufferType type, byte[] bytes, Method method, ICollection<ClientBase> receivers)
         {
             if (receivers == null || receivers.Count < 1) return;
 
             foreach (ClientBase client in receivers)
             {
-                try { client.send(key, type, bytes, tcp); }
+                try { client.send(key, type, bytes, method); }
                 catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UID} was not reachable:\n{ex.Message}"); }
             }
         }
@@ -106,29 +106,26 @@ namespace Walhalla.Server
 
         public delegate void PacketReceiveBy(byte key, BufferType type, byte[] bytes);
 
-        public TcpClient(ref System.Net.Sockets.TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, PacketReceive onReceive = null) : base(uid, ref registry, onReceive)
+        public TcpClient(ref System.Net.Sockets.TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, Delegates.Packet onReceive = null) : base(uid, ref registry, onReceive)
         {
-            tcp = new TcpHandler(ref client, uid, receiveTcp, _disconnect);
+            tcp = new TcpHandler(ref client, uid, _receive, _disconnect);
         }
 
-        public virtual bool Connected => ConnectedTcp;
         public bool ConnectedTcp => tcp != null && tcp.Connected;
+        public virtual bool Connected => ConnectedTcp;
 
-        private void receiveTcp(byte key, BufferType type, byte[] bytes)
-            => _receive(key, type, bytes, true);
-
-        public override void send<T>(byte key, T value, bool tcp)
+        public override void send<T>(byte key, T value, Method method)
         {
-            base.send(key, value, tcp);
+            base.send(key, value, method);
 
-            if (tcp && ConnectedTcp) this.tcp.send(key, value);
+            if (method == Method.Tcp && ConnectedTcp) this.tcp.send(key, value);
         }
 
-        public override void send(byte key, BufferType type, byte[] bytes, bool tcp)
+        public override void send(byte key, BufferType type, byte[] bytes, Method method)
         {
-            base.send(key, type, bytes, tcp);
+            base.send(key, type, bytes, method);
 
-            if (tcp && ConnectedTcp) this.tcp.send(key, type, bytes);
+            if (method == Method.Tcp && ConnectedTcp) this.tcp.send(key, type, bytes);
         }
     }
 }

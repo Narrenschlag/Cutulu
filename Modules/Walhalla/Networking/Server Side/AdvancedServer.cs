@@ -63,7 +63,7 @@ namespace Walhalla.Server
 
                 if (client != null)
                 {
-                    client._receive(key, type, bytes, false);
+                    client._receive(key, type, bytes, Method.Udp);
                 }
             }
         }
@@ -77,7 +77,7 @@ namespace Walhalla.Server
         public delegate void ClientAdd(AdvancedClient client);
         public static ClientAdd onClientJoin, onClientQuit;
 
-        public AdvancedClient(ref System.Net.Sockets.TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, AdvancedServer server, PacketReceive onReceiveAll = null) : base(ref client, uid, ref registry, onReceiveAll)
+        public AdvancedClient(ref System.Net.Sockets.TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, AdvancedServer server, Delegates.Packet onReceive = null) : base(ref client, uid, ref registry, onReceive)
         {
             this.server = server;
             endPoint = null;
@@ -96,21 +96,21 @@ namespace Walhalla.Server
         public override bool Connected => base.Connected && ConnectedUdp;
         public bool ConnectedUdp => endPoint != null;
 
-        public override void send(byte key, BufferType type, byte[] bytes, bool tcp)
+        public override void send(byte key, BufferType type, byte[] bytes, Method method)
         {
-            base.send(key, type, bytes, tcp);
+            base.send(key, type, bytes, method);
 
-            if (!tcp && ConnectedUdp && endPoint != null)
+            if (method == Method.Udp && ConnectedUdp && endPoint != null)
             {
                 server.globalUdp.send(key, type, bytes, endPoint);
             }
         }
 
-        public override void send<T>(byte key, T value, bool tcp)
+        public override void send<T>(byte key, T value, Method method)
         {
-            base.send(key, value, tcp);
+            base.send(key, value, method);
 
-            if (!tcp && ConnectedUdp && endPoint != null)
+            if (method == Method.Udp && ConnectedUdp && endPoint != null)
             {
                 server.globalUdp.send(key, value, endPoint);
             }

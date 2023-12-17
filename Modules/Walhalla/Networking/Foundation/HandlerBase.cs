@@ -4,13 +4,10 @@ namespace Walhalla
 {
     public class HandlerBase
     {
-        public delegate void Packet(byte key, BufferType type, byte[] bytes);
-        public delegate void Empty();
-
-        public Packet onReceive;
+        public Delegates.Packet onReceive;
         public int Port;
 
-        public HandlerBase(int port, Packet onReceive)
+        public HandlerBase(int port, Delegates.Packet onReceive)
         {
             this.onReceive = onReceive;
             Port = port;

@@ -39,7 +39,7 @@ namespace Walhalla
         }
 
         /// <summary> Creates handle on client side </summary>
-        public UdpHandler(string host, int udpPort, Packet onReceive) : base(udpPort, onReceive)
+        public UdpHandler(string host, int udpPort, Delegates.Packet onReceive) : base(udpPort, onReceive)
         {
             serverSideReceive = null;
             isServerClient = false;
@@ -147,7 +147,7 @@ namespace Walhalla
 
             // Invoke callback
             if (isServerClient && serverSideReceive != null) serverSideReceive(key, type, bytes, result.RemoteEndPoint);
-            else if (onReceive != null) onReceive(key, type, bytes);
+            else if (onReceive != null) onReceive(key, type, bytes, Method.Udp);
         }
         #endregion
     }

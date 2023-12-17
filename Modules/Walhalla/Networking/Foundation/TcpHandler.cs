@@ -11,10 +11,10 @@ namespace Walhalla
         public NetworkStream stream;
         public TcpClient client;
 
-        public Empty onDisconnect;
+        public Delegates.Empty onDisconnect;
 
         /// <summary> Creates handle on server side </summary>
-        public TcpHandler(ref TcpClient client, uint welcome, Packet onReceive, Empty onDisconnect, int receiveTimeout = 5) : base(0, onReceive)
+        public TcpHandler(ref TcpClient client, uint welcome, Delegates.Packet onReceive, Delegates.Empty onDisconnect, int receiveTimeout = 5) : base(0, onReceive)
         {
             client.ReceiveTimeout = 6000 * receiveTimeout;
 
@@ -27,7 +27,7 @@ namespace Walhalla
         }
 
         /// <summary> Creates handle on client side </summary>
-        public TcpHandler(string host, int port, Packet onReceive, Empty onDisconnect) : base(port, onReceive)
+        public TcpHandler(string host, int port, Delegates.Packet onReceive, Delegates.Empty onDisconnect) : base(port, onReceive)
         {
             client = new TcpClient();
 
@@ -120,7 +120,7 @@ namespace Walhalla
             Array.Copy(bytes, 0, buffer, 4, length);
 
             bytes = Bufferf.decodeBytes(buffer, out length, out BufferType type, out byte key);
-            if (onReceive != null && type != BufferType.None) onReceive(key, type, bytes);
+            if (onReceive != null && type != BufferType.None) onReceive(key, type, bytes, Method.Tcp);
         }
         #endregion
 

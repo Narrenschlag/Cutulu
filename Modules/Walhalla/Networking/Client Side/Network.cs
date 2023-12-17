@@ -2,53 +2,62 @@ using Cutulu;
 
 namespace Walhalla.Client
 {
-    public class Network
+    public class Network<T> : Pointer<T> where T : Target
     {
         public TcpHandler Tcp;
         public UdpHandler Udp;
 
-        public delegate void Packet(byte key, BufferType type, byte[] data, bool tcp);
-        public delegate void Empty();
-
-        public static Empty onDisconnect;
-        public static Packet onReceive;
-
         public bool Connected => Tcp != null && Tcp.Connected;
 
-        public Network(string tcpHost, int tcpPort, string udpHost, int udpPort)
+        public Network(string tcpHost, int tcpPort, string udpHost, int udpPort, T target = null) : base(0, target)
         {
             try { _connect(tcpHost, tcpPort, udpHost, udpPort); }
             catch { $"Failed to connect to host".LogError(); }
         }
 
-        private void _receiveUdp(byte key, BufferType type, byte[] data) => Receive(key, type, data, false);
-        private void _receiveTcp(byte key, BufferType type, byte[] data) => Receive(key, type, data, true);
-        public virtual void Receive(byte key, BufferType type, byte[] bytes, bool tcp)
+        protected override void _receive(byte key, BufferType type, byte[] bytes, Method method)
         {
-            //$"{(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
-            if (onReceive != null) onReceive(key, type, bytes, tcp);
+            $"{method}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
+            base._receive(key, type, bytes, method);
+
+            if (onReceive != null)
+            {
+                onReceive(key, type, bytes, method);
+            }
         }
 
-        public virtual void Send<T>(byte key, T value, bool tcp)
+        public virtual void Send<V>(byte key, V value, Method method = Method.Tcp)
         {
             try
             {
-                if (tcp) Tcp.send(key, value);
-                else Udp.send(key, value);
+                switch (method)
+                {
+                    case Method.Tcp:
+                        Tcp.send(key, value);
+                        break;
+
+                    case Method.Udp:
+                        Udp.send(key, value);
+                        break;
+
+                    default: break;
+                }
             }
             catch { }
         }
 
         protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
-            Tcp = new TcpHandler(tcpHost, tcpPort, _receiveTcp, _disconnect);
-            Udp = new UdpHandler(udpHost, udpPort, _receiveUdp);
+            Tcp = new TcpHandler(tcpHost, tcpPort, _receive, _disconnect);
+            Udp = new UdpHandler(udpHost, udpPort, _receive);
         }
 
-        public virtual void _disconnect()
+        protected override void _disconnect()
         {
             if (Tcp != null) Tcp.Close();
             if (Udp != null) Udp.Close();
+
+            base._disconnect();
 
             "disconnected.".LogError();
         }
