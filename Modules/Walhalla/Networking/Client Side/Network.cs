@@ -31,8 +31,12 @@ namespace Walhalla.Client
 
         public virtual void Send<T>(byte key, T value, bool tcp)
         {
-            if (tcp) Tcp.send(key, value);
-            else Udp.send(key, value);
+            try
+            {
+                if (tcp) Tcp.send(key, value);
+                else Udp.send(key, value);
+            }
+            catch { }
         }
 
         protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
