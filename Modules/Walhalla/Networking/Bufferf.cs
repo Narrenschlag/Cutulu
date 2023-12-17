@@ -1,57 +1,13 @@
 using System.IO;
 using System;
+using Cutulu;
 
 using Enc = System.Text.Encoding;
-using Cutulu;
 namespace Walhalla
 {
     public static class Bufferf
     {
         #region Translation
-        public static byte[] toBytes<T>(this T value, out BufferType typeId)
-        {
-            if (value == null)
-            {
-                typeId = BufferType.None;
-                return @default();
-            }
-
-            typeId = getTypeId<T>();
-            object obj = value;
-
-            if (typeId == BufferType.None)
-            {
-                typeId = BufferType.String;
-                return Enc.UTF8.GetBytes(value.json());
-            }
-
-            else if (value != null)
-                switch (typeId)
-                {
-                    case BufferType.Boolean: return BitConverter.GetBytes((bool)obj);
-
-                    case BufferType.Byte: return new byte[1] { (byte)obj };
-                    case BufferType.ByteArray: return (byte[])obj;
-
-                    case BufferType.Short: return BitConverter.GetBytes((short)obj);
-                    case BufferType.UnsignedShort: return BitConverter.GetBytes((ushort)obj);
-
-                    case BufferType.Integer: return BitConverter.GetBytes((int)obj);
-                    case BufferType.UnsignedInteger: return BitConverter.GetBytes((uint)obj);
-
-                    case BufferType.Float: return BitConverter.GetBytes((float)obj);
-                    case BufferType.Double: return BitConverter.GetBytes((double)obj);
-
-                    case BufferType.String: return Enc.UTF8.GetBytes((string)obj);
-                    case BufferType.Char: return BitConverter.GetBytes((char)obj);
-
-                    default: return @default();
-                }
-            else return @default();
-
-            byte[] @default() => new byte[0];
-        }
-
         /// <summary> Returns byte data as type </summary>
         public static T As<T>(this byte[] bytes) => fromBytes<T>(bytes);
 
@@ -66,25 +22,21 @@ namespace Walhalla
         /// <summary> Returns byte data as type </summary>
         public static T fromBytes<T>(this byte[] bytes)
         {
-            object obj = fromBytes(bytes, getTypeId<T>(), out bool json);
+            BufferType type = getTypeId<T>();
 
-            if (obj != null && json && typeof(T) != typeof(string))
-                return (obj as string).json<T>();
+            object obj = fromBytes<T>(bytes, type);
 
             return (T)obj;
         }
 
-        public static object fromBytes(this byte[] bytes, BufferType type, out bool mayBeJson)
+        private static object fromBytes<IfJsonType>(this byte[] bytes, BufferType type)
         {
             if (bytes == null)
             {
-                "!!! WARNING !!!\nWas unable to fetch data from package due to it being emtpy".Log();
-                mayBeJson = false;
+                "!!! WARNING !!!\nWas unable to fetch data from package due to it being emtpy".LogError();
                 return default;
             }
 
-            mayBeJson = type == BufferType.String || type == BufferType.None;
-            if (type == BufferType.None) type = BufferType.String;
             switch (type)
             {
                 case BufferType.Boolean: return BitConverter.ToBoolean(bytes);
@@ -104,8 +56,48 @@ namespace Walhalla
                 case BufferType.String: return Enc.UTF8.GetString(bytes);
                 case BufferType.Char: return BitConverter.ToChar(bytes);
 
+                case BufferType.Json: return Enc.UTF8.GetString(bytes).json<IfJsonType>();
                 default: return default;
             }
+        }
+
+        public static byte[] toBytes<T>(this T value, out BufferType typeId)
+        {
+            if (value == null)
+            {
+                typeId = BufferType.None;
+                return @default();
+            }
+
+            typeId = getTypeId<T>();
+            object obj = value;
+
+            if (value != null)
+                switch (typeId)
+                {
+                    case BufferType.Boolean: return BitConverter.GetBytes((bool)obj);
+
+                    case BufferType.Byte: return new byte[1] { (byte)obj };
+                    case BufferType.ByteArray: return (byte[])obj;
+
+                    case BufferType.Short: return BitConverter.GetBytes((short)obj);
+                    case BufferType.UnsignedShort: return BitConverter.GetBytes((ushort)obj);
+
+                    case BufferType.Integer: return BitConverter.GetBytes((int)obj);
+                    case BufferType.UnsignedInteger: return BitConverter.GetBytes((uint)obj);
+
+                    case BufferType.Float: return BitConverter.GetBytes((float)obj);
+                    case BufferType.Double: return BitConverter.GetBytes((double)obj);
+
+                    case BufferType.String: return Enc.UTF8.GetBytes((string)obj);
+                    case BufferType.Char: return BitConverter.GetBytes((char)obj);
+
+                    case BufferType.Json: return Enc.UTF8.GetBytes(obj.json());
+                    default: return @default();
+                }
+            else return @default();
+
+            byte[] @default() => new byte[0];
         }
 
         public static BufferType getTypeId<T>()
@@ -137,7 +129,7 @@ namespace Walhalla
             else if (t == typeof(char)) return BufferType.Char;
 
             // Maybe json
-            return BufferType.None;
+            return typeof(T).IsSerializable ? BufferType.Json : BufferType.None;
         }
 
         public static Type getType(this BufferType type)
@@ -266,6 +258,7 @@ namespace Walhalla
         Short, UnsignedShort,
         Integer, UnsignedInteger,
         Float, Double,
-        String, Char
+        String, Char,
+        Json
     }
 }
