@@ -83,7 +83,8 @@ namespace Walhalla
                 return default;
             }
 
-            mayBeJson = type == BufferType.String;
+            mayBeJson = type == BufferType.String || type == BufferType.None;
+            if (type == BufferType.None) type = BufferType.String;
             switch (type)
             {
                 case BufferType.Boolean: return BitConverter.ToBoolean(bytes);
@@ -135,6 +136,7 @@ namespace Walhalla
             else if (t == typeof(string)) return BufferType.String;
             else if (t == typeof(char)) return BufferType.Char;
 
+            // Maybe json
             return BufferType.None;
         }
 
