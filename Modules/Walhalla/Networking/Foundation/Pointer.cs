@@ -49,6 +49,9 @@ namespace Walhalla
 
         public void AddTarget(T target)
         {
+            if (target == null)
+                return;
+
             T[] _ = new T[Targets.Length + 1];
 
             Array.Copy(Targets, _, Targets.Length);
