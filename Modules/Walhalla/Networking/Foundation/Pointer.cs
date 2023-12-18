@@ -50,9 +50,27 @@ namespace Walhalla
 
         public void SetTarget(T target)
         {
+            // Notify about left
+            if (Targets.NotEmpty())
+            {
+                lock (Targets)
+                    for (int i = 0; i < Targets.Length; i++)
+                    {
+                        if (Targets != null)
+                        {
+                            Targets[i].__rem(target_params);
+                        }
+                    }
+            }
+
+            // Assign array
             Targets = target != null ?
                 new T[1] { target } :
                 new T[0];
+
+            // Notify addition to target
+            if (target != null)
+                target.__add(target_params);
         }
 
         public void AddTarget(T target)
@@ -64,6 +82,9 @@ namespace Walhalla
 
             Array.Copy(Targets, _, Targets.Length);
             _[Targets.Length] = target;
+
+            // Notify addition to target
+            target.__add(target_params);
         }
 
         /// <summary> Receive targets data </summary>
