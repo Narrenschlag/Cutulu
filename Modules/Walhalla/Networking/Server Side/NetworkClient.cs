@@ -5,9 +5,6 @@ namespace Walhalla.Server
         public AdvancedClient Source;
         public Network<T> Parent;
 
-        public uint AccountId;
-        public string Name;
-
         public NetworkClient(Network<T> parent, AdvancedClient advancedClient, T target = null) : base(0, target)
         {
             advancedClient.onClose += _disconnect;
@@ -24,20 +21,6 @@ namespace Walhalla.Server
                 Source.send(key, value, method);
             }
             catch { }
-        }
-
-        public bool login(string username)
-        {
-            if (false)
-            {
-                return false;
-            }
-
-            Name = username;
-
-            // TODO: read account id of username from db
-            AccountId = UUID;
-            return true;
         }
 
         private void _disconnect(ClientBase client)
