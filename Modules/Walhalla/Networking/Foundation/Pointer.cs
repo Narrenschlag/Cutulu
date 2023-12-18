@@ -5,7 +5,7 @@ namespace Walhalla
     public class Pointer<T> where T : Target
     {
         // Unique user identification index
-        public uint UUID;
+        public uint UUID { private set; get; }
 
         // Local delegates
         public Delegates.Empty onDisconnect;

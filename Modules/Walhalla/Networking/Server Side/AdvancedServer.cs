@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Net;
 
 namespace Walhalla.Server
@@ -74,17 +73,10 @@ namespace Walhalla.Server
         public AdvancedServer server;
         public IPEndPoint endPoint;
 
-        public delegate void ClientAdd(AdvancedClient client);
-        public static ClientAdd onClientJoin, onClientQuit;
-
         public AdvancedClient(ref System.Net.Sockets.TcpClient client, uint uid, ref Dictionary<uint, ClientBase> registry, AdvancedServer server, Delegates.Packet onReceive = null) : base(ref client, uid, ref registry, onReceive)
         {
             this.server = server;
             endPoint = null;
-
-            // Notify other classes
-            if (onClientJoin != null)
-                onClientJoin(this);
         }
 
         public void connect(IPEndPoint udpSource)
@@ -119,10 +111,6 @@ namespace Walhalla.Server
         public override void _disconnect()
         {
             base._disconnect();
-
-            // Notify other classes
-            if (onClientQuit != null)
-                onClientQuit(this);
 
             // Remove from endpoints
             lock (server.Endpoints)
