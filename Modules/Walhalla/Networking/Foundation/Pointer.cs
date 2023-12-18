@@ -12,8 +12,12 @@ namespace Walhalla
         public Delegates.Empty onDisconnect;
         public Delegates.Packet onReceive;
 
+        /// <summary> TRUE: ignore target receiving and thereby skip it </summary>
+        public bool ignore_targets;
+
         public Pointer(uint uuid, T target = null, Delegates.Packet receiver = null, Delegates.Empty disconnector = null)
         {
+            this.ignore_targets = false;
             this.UUID = uuid;
 
             this.onDisconnect = disconnector;
@@ -62,24 +66,25 @@ namespace Walhalla
         protected virtual void _receive(byte key, BufferType type, byte[] bytes, Method method)
         {
             // Iterate through all targets
-            lock (Targets)
-                for (int i = 0; i < Targets.Length; i++)
-                {
-                    // Valdiate target
-                    if (Targets[i] != null)
+            if (!ignore_targets)
+                lock (Targets)
+                    for (int i = 0; i < Targets.Length; i++)
                     {
-                        try
+                        // Validate target
+                        if (Targets[i] != null)
                         {
-                            // Notfiy target
-                            Targets[i].__receive(key, type, bytes, method, this);
-                        }
+                            try
+                            {
+                                // Notify target
+                                Targets[i].__receive(key, type, bytes, method, this);
+                            }
 
-                        catch (Exception ex)
-                        {
-                            $"[Pointer]: cannot receive packet because {ex.Message}".LogError();
+                            catch (Exception ex)
+                            {
+                                $"[Pointer]: cannot receive packet because {ex.Message}".LogError();
+                            }
                         }
                     }
-                }
 
             // Call delegates
             if (onReceive != null)
@@ -96,7 +101,7 @@ namespace Walhalla
             lock (Targets)
                 for (int i = 0; i < Targets.Length; i++)
                 {
-                    // Valdiate target
+                    // Validate target
                     if (Targets[i] != null)
                     {
                         // Notfiy target
