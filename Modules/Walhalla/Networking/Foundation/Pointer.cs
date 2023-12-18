@@ -80,7 +80,7 @@ namespace Walhalla
                             try
                             {
                                 // Notify target
-                                Targets[i].__receive(key, type, bytes, method, ignore_target_transfer);
+                                Targets[i].__receive(key, type, bytes, method, target_params);
                             }
 
                             catch (Exception ex)
@@ -109,7 +109,7 @@ namespace Walhalla
                     if (Targets[i] != null)
                     {
                         // Notfiy target
-                        Targets[i].__disconnect(ignore_target_transfer);
+                        Targets[i].__disconnect(target_params);
                     }
                 }
 
