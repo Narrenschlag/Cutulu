@@ -13,11 +13,15 @@ namespace Walhalla
         public Delegates.Packet onReceive;
 
         /// <summary> TRUE: ignore target receiving and thereby skip it </summary>
-        public bool ignore_targets;
+        public bool ignore_target_transfer;
+
+        /// <summary> Custom params for the target class </summary>
+        public object[] target_params;
 
         public Pointer(uint uuid, T target = null, Delegates.Packet receiver = null, Delegates.Empty disconnector = null)
         {
-            this.ignore_targets = false;
+            this.target_params = new object[1] { this };
+            this.ignore_target_transfer = false;
             this.UUID = uuid;
 
             this.onDisconnect = disconnector;
@@ -66,7 +70,7 @@ namespace Walhalla
         protected virtual void _receive(byte key, BufferType type, byte[] bytes, Method method)
         {
             // Iterate through all targets
-            if (!ignore_targets)
+            if (!ignore_target_transfer)
                 lock (Targets)
                     for (int i = 0; i < Targets.Length; i++)
                     {
@@ -76,7 +80,7 @@ namespace Walhalla
                             try
                             {
                                 // Notify target
-                                Targets[i].__receive(key, type, bytes, method, this);
+                                Targets[i].__receive(key, type, bytes, method, ignore_target_transfer);
                             }
 
                             catch (Exception ex)
@@ -105,7 +109,7 @@ namespace Walhalla
                     if (Targets[i] != null)
                     {
                         // Notfiy target
-                        Targets[i].__disconnect(this);
+                        Targets[i].__disconnect(ignore_target_transfer);
                     }
                 }
 
