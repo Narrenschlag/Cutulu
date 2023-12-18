@@ -79,8 +79,8 @@ namespace Walhalla
                 }
 
             // Call delegates
-            lock (onReceive)
-                if (onReceive != null)
+            if (onReceive != null)
+                lock (onReceive)
                 {
                     onReceive(key, type, bytes, method);
                 }
@@ -102,8 +102,8 @@ namespace Walhalla
                 }
 
             // Call delegates
-            lock (onDisconnect)
-                if (onDisconnect != null)
+            if (onDisconnect != null)
+                lock (onDisconnect)
                 {
                     onDisconnect();
                 }
