@@ -1,4 +1,5 @@
 using System;
+using Cutulu;
 
 namespace Walhalla
 {
@@ -58,42 +59,54 @@ namespace Walhalla
         protected virtual void _receive(byte key, BufferType type, byte[] bytes, Method method)
         {
             // Iterate through all targets
-            for (int i = 0; i < Targets.Length; i++)
-            {
-                // Valdiate target
-                if (Targets[i] != null)
+            lock (Targets)
+                for (int i = 0; i < Targets.Length; i++)
                 {
-                    // Notfiy target
-                    Targets[i].__receive(key, type, bytes, method, this);
+                    // Valdiate target
+                    if (Targets[i] != null)
+                    {
+                        try
+                        {
+                            // Notfiy target
+                            Targets[i].__receive(key, type, bytes, method, this);
+                        }
+
+                        catch (Exception ex)
+                        {
+                            $"[Pointer]: cannot receive packet because {ex.Message}".LogError();
+                        }
+                    }
                 }
-            }
 
             // Call delegates
-            if (onReceive != null)
-            {
-                onReceive(key, type, bytes, method);
-            }
+            lock (onReceive)
+                if (onReceive != null)
+                {
+                    onReceive(key, type, bytes, method);
+                }
         }
 
         /// <summary> Notify targets about disconnect </summary>
         protected virtual void _disconnect()
         {
             // Iterate through all targets
-            for (int i = 0; i < Targets.Length; i++)
-            {
-                // Valdiate target
-                if (Targets[i] != null)
+            lock (Targets)
+                for (int i = 0; i < Targets.Length; i++)
                 {
-                    // Notfiy target
-                    Targets[i].__disconnect(this);
+                    // Valdiate target
+                    if (Targets[i] != null)
+                    {
+                        // Notfiy target
+                        Targets[i].__disconnect(this);
+                    }
                 }
-            }
 
             // Call delegates
-            if (onDisconnect != null)
-            {
-                onDisconnect();
-            }
+            lock (onDisconnect)
+                if (onDisconnect != null)
+                {
+                    onDisconnect();
+                }
         }
     }
 }
