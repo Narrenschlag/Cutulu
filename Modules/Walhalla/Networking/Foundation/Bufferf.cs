@@ -12,11 +12,15 @@ namespace Walhalla
         public static T As<T>(this byte[] bytes) => fromBytes<T>(bytes);
 
         /// <summary> Returns byte data as type </summary>
+        /// <summary> always true for disposable types </summary>
         public static bool As<T>(this byte[] bytes, out T value)
         {
             value = fromBytes<T>(bytes);
 
-            return !value.Equals(default(T));
+            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>) && value == null)
+                return false;
+
+            return true;
         }
 
         /// <summary> Returns byte data as type </summary>
