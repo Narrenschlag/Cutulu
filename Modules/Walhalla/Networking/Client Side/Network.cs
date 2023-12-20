@@ -17,7 +17,7 @@ namespace Walhalla.Client
 
         protected override void _receive(byte key, BufferType type, byte[] bytes, Method method)
         {
-            $"{method}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
+            //$"{method}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
             base._receive(key, type, bytes, method);
 
             if (onReceive != null)
