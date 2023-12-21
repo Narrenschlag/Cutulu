@@ -53,7 +53,7 @@ namespace Cutulu
 				new(
 					// Movement
 					new Vector2(
-						inputByte.GetBitAt_float(1) - inputByte.GetBitAt_float(3),
+						inputByte.GetBitAt_float(3) - inputByte.GetBitAt_float(1), // Inverted to fix wrong movement on x axis
 						inputByte.GetBitAt_float(0) - inputByte.GetBitAt_float(2)
 						),
 
