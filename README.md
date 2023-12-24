@@ -14,3 +14,9 @@ Formerly called NarrenAPI or Raven the Narrenschlag SDK has gone through a lot o
 My name is Maximilian Schecklmann, also known as Narrenschlag or MaxNar and founder of Software Narrenschlag. My passion and profession is creating software, solving problems, creating art and enhancing the everyday experience of people. My coding journey started in game development and it's this heritage that I base all my interest and experience on till this day. As my personal ambition is to become the **Rodin** of my generation, I want to build my legacy by envoking emotion in people through art and high quality. By supporting this SDK you support my dream and as you support me you simultaneously support this project. Therefore. Thank you.
 
 ~ *Max*
+
+
+
+# Networking
+Comming with Cutulu and inheriting from Walhalla network support is crucial but independent from the library. For the server side you override (Server: Client, Network and Target) and for the client side you override (Client: Network and Target). 
+The first four args of the send method are self explanatory. But the fitht optional 'small' arg has to be explained shortly. It is irrelevant for udp or other methods. But for tcp it switches 'Nagle's Algorithm' on or off. It basically enhances network transfers for small packages.
