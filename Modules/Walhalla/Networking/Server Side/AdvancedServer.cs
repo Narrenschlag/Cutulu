@@ -98,9 +98,9 @@ namespace Walhalla.Server
             }
         }
 
-        public override void send<T>(byte key, T value, Method method)
+        public override void send<T>(byte key, T value, Method method, bool small = true)
         {
-            base.send(key, value, method);
+            base.send(key, value, method, small);
 
             if (method == Method.Udp && ConnectedUdp && endPoint != null)
             {

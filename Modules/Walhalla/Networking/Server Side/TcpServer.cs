@@ -114,11 +114,11 @@ namespace Walhalla.Server
         public bool ConnectedTcp => tcp != null && tcp.Connected;
         public virtual bool Connected => ConnectedTcp;
 
-        public override void send<T>(byte key, T value, Method method)
+        public override void send<T>(byte key, T value, Method method, bool small = true)
         {
-            base.send(key, value, method);
+            base.send(key, value, method, small);
 
-            if (method == Method.Tcp && ConnectedTcp) this.tcp.send(key, value);
+            if (method == Method.Tcp && ConnectedTcp) this.tcp.send(key, value, small);
         }
 
         public override void send(byte key, BufferType type, byte[] bytes, Method method)

@@ -54,9 +54,11 @@ namespace Walhalla
 
         #region Send Data
         /// <summary> Sends data through connection </summary>
-        public override void send<T>(byte key, T value)
+        public override void send<T>(byte key, T value, bool small = true)
         {
-            base.send(key, value);
+            client.NoDelay = small;
+
+            base.send(key, value, small);
 
             stream.Write(value.encodeBytes(key));
             Flush();

@@ -24,7 +24,7 @@ namespace Walhalla.Server
         }
 
         public virtual void send(byte key, BufferType type, byte[] bytes, Method method) { }
-        public virtual void send<T>(byte key, T value, Method method) { }
+        public virtual void send<T>(byte key, T value, Method method, bool small = true) { }
 
         /// <summary> Handles incomming traffic </summary>
         public virtual void _receive(byte key, BufferType type, byte[] bytes, Method method)

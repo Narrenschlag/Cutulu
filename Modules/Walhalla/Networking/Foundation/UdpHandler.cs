@@ -85,9 +85,9 @@ namespace Walhalla
         }
 
         /// <summary> Sends data through connection </summary>
-        public override void send<T>(byte key, T value)
+        public override void send<T>(byte key, T value, bool small = true)
         {
-            base.send(key, value);
+            base.send(key, value, small);
 
             if (Connected && client != null)
             {

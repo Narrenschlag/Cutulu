@@ -23,7 +23,7 @@ namespace Walhalla
 
         #region Send Data
         /// <summary> Sends data through connection </summary>
-        public virtual void send<T>(byte key, T value) => conThrow();
+        public virtual void send<T>(byte key, T value, bool small = true) => conThrow();
 
         /// <summary> Sends data through connection </summary>
         public virtual void send(byte key, BufferType type, byte[] bytes) => conThrow();
