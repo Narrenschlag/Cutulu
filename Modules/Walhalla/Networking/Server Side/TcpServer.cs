@@ -84,16 +84,16 @@ namespace Walhalla.Server
         }
 
         /// <summary> Broadcast to all clients </summary>
-        public virtual void Broadcast(byte key, BufferType type, byte[] bytes, Method method) => Broadcast(key, type, bytes, method, Clients != null ? Clients.Values : null);
+        public virtual void Broadcast(byte key, BufferType type, byte[] bytes, Method method, bool small = true) => Broadcast(key, type, bytes, method, Clients != null ? Clients.Values : null, small);
 
         /// <summary> Broadcast to selected clients </summary>
-        public virtual void Broadcast(byte key, BufferType type, byte[] bytes, Method method, ICollection<ClientBase> receivers)
+        public virtual void Broadcast(byte key, BufferType type, byte[] bytes, Method method, ICollection<ClientBase> receivers, bool small = true)
         {
             if (receivers == null || receivers.Count < 1) return;
 
             foreach (ClientBase client in receivers)
             {
-                try { client.send(key, type, bytes, method); }
+                try { client.send(key, type, bytes, method, small); }
                 catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UID} was not reachable:\n{ex.Message}"); }
             }
         }
@@ -116,13 +116,17 @@ namespace Walhalla.Server
 
         public override void send<T>(byte key, T value, Method method, bool small = true)
         {
+            tcp.client.NoDelay = small;
+
             base.send(key, value, method, small);
 
             if (method == Method.Tcp && ConnectedTcp) this.tcp.send(key, value, small);
         }
 
-        public override void send(byte key, BufferType type, byte[] bytes, Method method)
+        public override void send(byte key, BufferType type, byte[] bytes, Method method, bool small = true)
         {
+            tcp.client.NoDelay = small;
+
             base.send(key, type, bytes, method);
 
             if (method == Method.Tcp && ConnectedTcp) this.tcp.send(key, type, bytes);

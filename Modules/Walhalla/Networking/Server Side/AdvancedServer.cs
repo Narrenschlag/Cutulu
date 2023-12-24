@@ -88,9 +88,9 @@ namespace Walhalla.Server
         public override bool Connected => base.Connected && ConnectedUdp;
         public bool ConnectedUdp => endPoint != null;
 
-        public override void send(byte key, BufferType type, byte[] bytes, Method method)
+        public override void send(byte key, BufferType type, byte[] bytes, Method method, bool small = true)
         {
-            base.send(key, type, bytes, method);
+            base.send(key, type, bytes, method, small);
 
             if (method == Method.Udp && ConnectedUdp && endPoint != null)
             {

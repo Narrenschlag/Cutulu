@@ -26,14 +26,14 @@ namespace Walhalla.Client
             }
         }
 
-        public virtual void Send<V>(byte key, V value, Method method = Method.Tcp)
+        public virtual void Send<V>(byte key, V value, Method method = Method.Tcp, bool small = true)
         {
             try
             {
                 switch (method)
                 {
                     case Method.Tcp:
-                        Tcp.send(key, value);
+                        Tcp.send(key, value, small);
                         break;
 
                     case Method.Udp:

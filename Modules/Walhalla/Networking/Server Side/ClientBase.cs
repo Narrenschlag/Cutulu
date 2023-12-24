@@ -23,7 +23,7 @@ namespace Walhalla.Server
             $"+++ Connected [{UID}]".Log();
         }
 
-        public virtual void send(byte key, BufferType type, byte[] bytes, Method method) { }
+        public virtual void send(byte key, BufferType type, byte[] bytes, Method method, bool small = true) { }
         public virtual void send<T>(byte key, T value, Method method, bool small = true) { }
 
         /// <summary> Handles incomming traffic </summary>
