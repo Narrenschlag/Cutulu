@@ -112,26 +112,29 @@ namespace Cutulu
 			}
 		}
 
-		public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true) where T : Node
+		public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true, byte layerDepth = 0) where T : Node
 		{
-			List<T> list = new List<T>();
-			loop(node, includeSelf);
-			return list;
-
-			void loop(Node node, bool includeSelf)
+		    List<T> list = new List<T>();
+		    loop(node, includeSelf, 0);
+		    return list;
+		
+		    void loop(Node node, bool includeSelf, byte layer)
 			{
 				if (includeSelf) add(node);
-
+		
 				foreach (Node n in node.GetChildren())
 				{
-					loop(n, true);
+					if (layerDepth < 1 || layer < layerDepth)
+					{
+						loop(n, true, (byte)(layer + 1));
+					}
 				}
 			}
-
-			void add(Node node)
-			{
-				if (node is T) list.Add(node as T);
-			}
+		
+		    void add(Node node)
+		    {
+		        if (node is T) list.Add(node as T);
+		    }
 		}
 
 		public static T GetNodeInChildren<T>(this Node node, bool includeSelf = true) where T : Node
