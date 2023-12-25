@@ -88,6 +88,16 @@ namespace Cutulu
 			return t;
 		}
 
+	        public static T Instantiate<T>(this T prefab, Node root) where T : Node
+	        {
+	            if (prefab == null) return null;
+	
+	            T t = (T)prefab.Duplicate();
+	            root.AddChild(t);
+	
+	            return t;
+	        }
+
 		public static void SetActive(this Node node, bool active, bool includeChildren = false)
 		{
 			node.ProcessMode = active ? Node.ProcessModeEnum.Pausable : Node.ProcessModeEnum.Disabled;
