@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Godot;
 
 namespace Cutulu
 {
@@ -12,6 +13,7 @@ namespace Cutulu
         public int TcpPort;
 
         public bool AcceptNewClients;
+        private D WelcomeTarget;
 
         protected TcpListener TcpListener;
         protected uint LastUID;
@@ -20,16 +22,19 @@ namespace Cutulu
         public uint ClientCount => Clients != null ? (uint)Clients.Count : 0;
 
         /// <summary> Simple server that handles tcp only </summary>
-        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, bool acceptClients = true)
+        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, D welcomeTarget = null, bool acceptClients = true)
         {
             Endpoints = new Dictionary<IPEndPoint, ServerConnection<D>>();
             Queue = new Dictionary<IPAddress, ServerConnection<D>>();
             Clients = new Dictionary<uint, ServerConnection<D>>();
 
+            WelcomeTarget = welcomeTarget;
             AcceptNewClients = true;
             TcpPort = tcpPort;
             UdpPort = udpPort;
             LastUID = 0;
+
+            $"Server started. tcp-{tcpPort} udp-{udpPort}".Log();
 
             globalUdp = new UdpProtocol(udpPort, _receiveUdp);
 
@@ -54,13 +59,13 @@ namespace Cutulu
             }
 
             // If a connection exists, the server will accept it
-            System.Net.Sockets.TcpClient tcp = await TcpListener.AcceptTcpClientAsync();
+            TcpClient tcp = await TcpListener.AcceptTcpClientAsync();
 
             // Register client
             lock (Clients)
             {
                 ServerConnection<D> @base = newClient(ref tcp, LastUID++);
-                if (@base != null) Clients.Add(@base.UID, @base);
+                if (@base != null) Clients.Add(@base.UUID, @base);
             }
 
             // Welcome other clients
@@ -70,7 +75,7 @@ namespace Cutulu
         /// <summary> Creates new tcp/udp client </summary>
         protected virtual ServerConnection<D> newClient(ref TcpClient tcp, uint uid)
         {
-            ServerConnection<D> client = new ServerConnection<D>(ref tcp, uid, ref Clients, this, null);
+            ServerConnection<D> client = new ServerConnection<D>(ref tcp, uid, ref Clients, this, WelcomeTarget);
             IPEndPoint endpoint = tcp.Client.RemoteEndPoint as IPEndPoint;
 
             if (endpoint != null)
@@ -100,7 +105,7 @@ namespace Cutulu
             foreach (ServerConnection<D> client in receivers)
             {
                 try { client.send(key, value, method); }
-                catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UID} was not reachable:\n{ex.Message}"); }
+                catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UUID} was not reachable:\n{ex.Message}"); }
             }
         }
         #endregion
@@ -121,6 +126,11 @@ namespace Cutulu
                     if (Queue.TryGetValue(endpoint.Address, out client))
                     {
                         Endpoints.Add(endpoint, client);
+
+                        // Bug: removes random/first occurance
+                        // In normal cases same ip but wrong entries
+                        // (Same ip with different port aka. localhost)
+                        // TODO: fix as it is quite important!
                         Queue.Remove(endpoint.Address);
 
                         client.connect(endpoint);

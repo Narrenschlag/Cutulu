@@ -58,6 +58,7 @@ namespace Cutulu
         /// <summary> Sends data through connection </summary>
         public override void send<T>(byte key, T value, bool small = true)
         {
+            $"{key} is sent".Log();
             client.NoDelay = small;
 
             base.send(key, value, small);

@@ -2,7 +2,7 @@ using System;
 
 namespace Cutulu
 {
-    public class Marker<T> where T : Destination
+    public class Marker<D> where D : Destination
     {
         // Unique user identification index
         public uint UUID { private set; get; }
@@ -17,7 +17,7 @@ namespace Cutulu
         /// <summary> Custom params for the target class </summary>
         public object[] destination_params;
 
-        public Marker(uint uuid, T destination = null, Protocol.Packet receiver = null, Protocol.Empty disconnector = null)
+        public Marker(uint uuid, D destination = null, Protocol.Packet receiver = null, Protocol.Empty disconnector = null)
         {
             this.destination_params = new object[1] { this };
             this.ignore_detination_transfer = false;
@@ -30,24 +30,24 @@ namespace Cutulu
         }
 
         // Target memory
-        private T[] __destinations;
+        private D[] __destinations;
 
         /// <summary> Target array </summary>
-        public T[] Destinations
+        public D[] Destinations
         {
             set => __destinations = value;
             get
             {
                 if (__destinations == null)
                 {
-                    __destinations = new T[0];
+                    __destinations = new D[0];
                 }
 
                 return __destinations;
             }
         }
 
-        public void SetTarget(T destination)
+        public void SetTarget(D destination)
         {
             // Notify about left
             if (Destinations.NotEmpty())
@@ -64,20 +64,20 @@ namespace Cutulu
 
             // Assign array
             Destinations = destination != null ?
-                new T[1] { destination } :
-                new T[0];
+                new D[1] { destination } :
+                new D[0];
 
             // Notify addition to target
             if (destination != null)
                 destination.__add(destination_params);
         }
 
-        public void AddTarget(T destination)
+        public void AddTarget(D destination)
         {
             if (destination == null)
                 return;
 
-            T[] _ = new T[Destinations.Length + 1];
+            D[] _ = new D[Destinations.Length + 1];
 
             Array.Copy(Destinations, _, Destinations.Length);
             _[Destinations.Length] = destination;
@@ -87,7 +87,7 @@ namespace Cutulu
         }
 
         /// <summary> Receive targets data </summary>
-        protected virtual void _receive(byte key, BufferType type, byte[] bytes, Method method)
+        public virtual void _receive(byte key, BufferType type, byte[] bytes, Method method)
         {
             // Iterate through all targets
             if (!ignore_detination_transfer)

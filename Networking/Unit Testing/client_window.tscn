@@ -1,0 +1,77 @@
+[gd_scene load_steps=3 format=3 uid="uid://cg3xqenvy6xnh"]
+
+[ext_resource type="Script" path="res://Cutulu/Networking/Unit Testing/ClientWindow.cs" id="1_nef0e"]
+[ext_resource type="Script" path="res://Cutulu/Networking/Unit Testing/ClientDest.cs" id="2_878gx"]
+
+[node name="Client" type="Window" node_paths=PackedStringArray("Receiver", "Tcp", "Udp", "Key", "String")]
+initial_position = 1
+size = Vector2i(526, 526)
+script = ExtResource("1_nef0e")
+Receiver = NodePath("Client")
+Tcp = NodePath("Control/VBoxContainer/HBoxContainer/Tcp")
+Udp = NodePath("Control/VBoxContainer/HBoxContainer/Udp")
+Key = NodePath("Control/VBoxContainer/Key")
+String = NodePath("Control/VBoxContainer/String")
+
+[node name="Client" type="Node" parent="." node_paths=PackedStringArray("output")]
+script = ExtResource("2_878gx")
+output = NodePath("../Control/VBoxContainer/Button/RichTextLabel")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -135.0
+offset_right = 121.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Key" type="LineEdit" parent="Control/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "KEY (0-255)"
+virtual_keyboard_type = 2
+
+[node name="String" type="LineEdit" parent="Control/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Content (UTF8)"
+virtual_keyboard_type = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Tcp" type="Button" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tcp
+"
+
+[node name="Udp" type="Button" parent="Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Udp"
+
+[node name="Button" type="Button" parent="Control/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Control/VBoxContainer/Button"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+text = "asdaasa
+dddadad"

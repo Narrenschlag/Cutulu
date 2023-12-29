@@ -1,32 +1,29 @@
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Sockets;
+using System.Net;
 
 namespace Cutulu
 {
-    public class ServerConnection<D> where D : Destination
+    public class ServerConnection<D> : Marker<D> where D : Destination
     {
         public delegate void Disconnect(ServerConnection<D> client);
         public TcpProtocol tcp;
 
-        public Protocol.Packet onReceive;
         public Disconnect onClose;
 
         protected Dictionary<uint, ServerConnection<D>> Registry;
-        public uint UID;
 
-        public ServerConnection(ref TcpClient client, uint uid, ref Dictionary<uint, ServerConnection<D>> registry, ServerNetwork<D> server, Protocol.Packet onReceive)
+        public ServerConnection(ref TcpClient client, uint uuid, ref Dictionary<uint, ServerConnection<D>> registry, ServerNetwork<D> server, D destination, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, destination, onReceive, onDisconnect)
         {
             Registry = registry;
-            UID = uid;
 
             this.onReceive = onReceive;
             this.server = server;
             endPoint = null;
 
-            $"+++ Connected [{UID}]".Log();
+            $"+++ Connected [{UUID}]".Log();
 
-            tcp = new TcpProtocol(ref client, uid, _receive, _disconnect);
+            tcp = new TcpProtocol(ref client, uuid, _receive, _disconnect);
         }
 
         public virtual void send<T>(byte key, T value, Method method, bool small = true)
@@ -54,23 +51,18 @@ namespace Cutulu
             }
         }
 
-        /// <summary> Handles incomming traffic </summary>
-        public virtual void _receive(byte key, BufferType type, byte[] bytes, Method method)
+        protected override void _disconnect()
         {
-            //$"{UID}> {(tcp ? "tcp" : "udp")}-package: {key} ({type}, {(bytes == null ? 0 : bytes.Length)})".Log();
-            if (onReceive != null) onReceive(key, type, bytes, method);
-        }
+            $"--- Disconnected [{UUID}]".Log();
 
-        public virtual void _disconnect()
-        {
-            $"--- Disconnected [{UID}]".Log();
+            base.onDisconnect();
 
             if (onClose != null)
                 onClose(this);
 
             lock (Registry)
             {
-                Registry.Remove(UID);
+                Registry.Remove(UUID);
             }
 
             // Remove from endpoints
@@ -98,6 +90,8 @@ namespace Cutulu
         {
             if (udpSource == null) return;
             endPoint = udpSource;
+
+            $"Client({UUID}) has been fully connected successfully.".Log();
         }
     }
 }
