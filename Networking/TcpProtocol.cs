@@ -56,14 +56,15 @@ namespace Cutulu
 
         #region Send Data
         /// <summary> Sends data through connection </summary>
-        public override void send<T>(byte key, T value, bool small = true)
+        public void send<T>(byte key, T value)
         {
-            $"{key} is sent".Log();
-            client.NoDelay = small;
+            _validateConnection();
 
-            base.send(key, value, small);
+            byte[] bytes = value.package(key);
 
-            stream.Write(value.package(key));
+            client.NoDelay = bytes.Length <= 1400;
+            stream.Write(bytes);
+
             Flush();
         }
 

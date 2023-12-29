@@ -104,7 +104,7 @@ namespace Cutulu
 
             foreach (ServerConnection<D> client in receivers)
             {
-                try { client.send(key, value, method); }
+                try { client.Send(key, value, method); }
                 catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UUID} was not reachable:\n{ex.Message}"); }
             }
         }
@@ -126,11 +126,6 @@ namespace Cutulu
                     if (Queue.TryGetValue(endpoint.Address, out client))
                     {
                         Endpoints.Add(endpoint, client);
-
-                        // Bug: removes random/first occurance
-                        // In normal cases same ip but wrong entries
-                        // (Same ip with different port aka. localhost)
-                        // TODO: fix as it is quite important!
                         Queue.Remove(endpoint.Address);
 
                         client.connect(endpoint);
@@ -145,9 +140,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Advanced
         protected virtual void onClientJoin(ServerConnection<D> client) { }
         public virtual void onClientQuit(ServerConnection<D> client) { }
-        #endregion
     }
 }

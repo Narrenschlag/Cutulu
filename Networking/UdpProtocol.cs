@@ -77,26 +77,25 @@ namespace Cutulu
         }
 
         #region Send Data
-        /// <summary> Sends data through connection </summary>
+        /// <summary> Sends data through connection towards special ipendpoint (Server Side) </summary>
         public void send<T>(byte key, T value, IPEndPoint destination)
         {
-            if (Connected() && client != null && destination != null)
+            _validateConnection();
+
+            if (destination != null)
             {
                 byte[] bytes = value.package(key, false);
                 client.Send(bytes, bytes.Length, destination);
             }
         }
 
-        /// <summary> Sends data through connection </summary>
-        public override void send<T>(byte key, T value, bool small = true)
+        /// <summary> Sends data through connection (Client Side) </summary>
+        public void send<T>(byte key, T value)
         {
-            base.send(key, value, small);
+            _validateConnection();
 
-            if (Connected() && client != null)
-            {
-                byte[] bytes = value.package(key, false);
-                client.Send(bytes, bytes.Length);
-            }
+            byte[] bytes = value.package(key, false);
+            client.Send(bytes, bytes.Length);
         }
         #endregion
 

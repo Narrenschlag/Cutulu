@@ -20,10 +20,10 @@ namespace Cutulu
         public virtual void Close() { }
 
         #region Send Data
-        /// <summary> Sends data through connection </summary>
-        public virtual void send<T>(byte key, T value, bool small = true) => errorValidate();
-
-        protected void errorValidate()
+        /// <summary>
+        /// Valdiates connection
+        /// </summary>
+        protected void _validateConnection()
         {
             if (!Connected()) throw new Exception($"{GetType()} is not connected");
         }

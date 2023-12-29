@@ -26,16 +26,14 @@ namespace Cutulu
             tcp = new TcpProtocol(ref client, uuid, _receive, _disconnect);
         }
 
-        public virtual void send<T>(byte key, T value, Method method, bool small = true)
+        public virtual void Send<T>(byte key, T value, Method method)
         {
-            tcp.client.NoDelay = small;
-
             switch (method)
             {
                 case Method.Tcp:
                     if (ConnectedTcp())
                     {
-                        tcp.send(key, value, small);
+                        tcp.send(key, value);
                     }
                     break;
 
@@ -66,11 +64,11 @@ namespace Cutulu
             }
 
             // Remove from endpoints
-            lock (server.Endpoints)
-            {
-                if (endPoint != null && server.Endpoints.ContainsKey(endPoint))
+            if (endPoint != null && server.Endpoints.ContainsKey(endPoint))
+                lock (server.Endpoints)
+                {
                     server.Endpoints.Remove(endPoint);
-            }
+                }
 
             // Message server of disconnection
             if (server != null)
@@ -89,7 +87,9 @@ namespace Cutulu
         public void connect(IPEndPoint udpSource)
         {
             if (udpSource == null) return;
+
             endPoint = udpSource;
+            Send(0, (byte)255, Method.Tcp);
 
             $"Client({UUID}) has been fully connected successfully.".Log();
         }
