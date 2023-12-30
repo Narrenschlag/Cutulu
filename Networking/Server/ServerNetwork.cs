@@ -1,22 +1,21 @@
-using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
-using Godot;
+using System.Net.Sockets;
+using System.Net;
+using System;
 
 namespace Cutulu
 {
     public class ServerNetwork<D> where D : Destination
     {
         public Dictionary<uint, ServerConnection<D>> Clients;
-        public int TcpPort;
-
         public bool AcceptNewClients;
-        private D WelcomeTarget;
+        public int TcpPort;
 
         protected TcpListener TcpListener;
         protected uint LastUID;
+
+        private D WelcomeTarget;
 
         /// <summary> Amount of clients currently connected to the server </summary>
         public uint ClientCount => Clients != null ? (uint)Clients.Count : 0;
@@ -35,7 +34,6 @@ namespace Cutulu
             LastUID = 0;
 
             $"Server started. tcp-{tcpPort} udp-{udpPort}".Log();
-
             globalUdp = new UdpProtocol(udpPort, _receiveUdp);
 
             TcpListener = new TcpListener(IPAddress.Any, tcpPort);
@@ -90,6 +88,7 @@ namespace Cutulu
                     }
             }
 
+            onClientJoin(client);
             return client;
         }
 

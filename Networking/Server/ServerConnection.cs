@@ -7,9 +7,8 @@ namespace Cutulu
     public class ServerConnection<D> : Marker<D> where D : Destination
     {
         public delegate void Disconnect(ServerConnection<D> client);
-        public TcpProtocol tcp;
-
         public Disconnect onClose;
+        public TcpProtocol tcp;
 
         protected Dictionary<uint, ServerConnection<D>> Registry;
 

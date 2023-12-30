@@ -112,10 +112,12 @@ namespace Cutulu
 
             // Call delegates
             if (onReceive != null)
+            {
                 lock (onReceive)
                 {
                     onReceive(key, type, bytes, method);
                 }
+            }
         }
 
         /// <summary> Notify targets about disconnect </summary>
