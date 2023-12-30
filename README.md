@@ -18,5 +18,4 @@ My name is Maximilian Schecklmann, also known as Narrenschlag or MaxNar and foun
 
 
 # Networking
-Comming with Cutulu and inheriting from Walhalla network support is crucial but independent from the library. For the server side you override (Server: Client, Network and Target) and for the client side you override (Client: Network and Target). 
-The first four args of the send method are self explanatory. But the fitht optional 'small' arg has to be explained shortly. It is irrelevant for udp or other methods. But for tcp it switches 'Nagle's Algorithm' on or off. It basically enhances network transfers for small packages.
+Comming with Cutulu and inheriting from Walhalla network support is easy to use and efficient. For the server side you override (Server: ServerNetwork, ServerClient and Destination) and for the client side you override (ClientNetwork, Destination). Nagle's Algorithm is handled by the TcpProtocol class. A sample (Unit Test) is included in the repository.
