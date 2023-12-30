@@ -34,7 +34,6 @@ namespace Cutulu
             LastUID = 0;
 
             $"Server started. tcp-{tcpPort} udp-{udpPort}".Log();
-
             globalUdp = new UdpProtocol(udpPort, _receiveUdp);
 
             TcpListener = new TcpListener(IPAddress.Any, tcpPort);
