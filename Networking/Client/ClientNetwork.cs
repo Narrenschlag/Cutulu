@@ -7,9 +7,9 @@ namespace Cutulu
         public TcpProtocol Tcp;
         public UdpProtocol Udp;
 
-        private bool udpAssociated;
+        public bool UdpConnected { get; private set; }
 
-        public bool Connected => Tcp != null && Tcp.Connected();
+        public bool Connected() => Tcp != null && Tcp.Connected();
 
         public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, T destination = null) : base(0, destination)
         {
@@ -20,11 +20,11 @@ namespace Cutulu
         public override void _receive(byte key, BufferType type, byte[] bytes, Method method)
         {
             // Notify client that server has successfully associated the udp client with the tcp client
-            if (udpAssociated == false && key == 0 && type == BufferType.Byte)
+            if (UdpConnected == false && key == 0 && type == BufferType.Byte)
             {
                 if (bytes.As<byte>() == 255)
                 {
-                    udpAssociated = true;
+                    UdpConnected = true;
                     return;
                 }
             }
@@ -53,7 +53,7 @@ namespace Cutulu
         /// </summary>
         protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
-            udpAssociated = false;
+            UdpConnected = false;
 
             if (Tcp != null)
             {
@@ -78,7 +78,7 @@ namespace Cutulu
         private async void _setupUdp()
         {
             // Stop if connections associated
-            if (udpAssociated == true)
+            if (UdpConnected == true)
             {
                 return;
             }
