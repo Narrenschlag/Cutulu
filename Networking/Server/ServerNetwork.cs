@@ -9,13 +9,13 @@ namespace Cutulu
     public class ServerNetwork<D> where D : Destination
     {
         public Dictionary<uint, ServerConnection<D>> Clients;
-        public int TcpPort;
-
         public bool AcceptNewClients;
-        private D WelcomeTarget;
+        public int TcpPort;
 
         protected TcpListener TcpListener;
         protected uint LastUID;
+
+        private D WelcomeTarget;
 
         /// <summary> Amount of clients currently connected to the server </summary>
         public uint ClientCount => Clients != null ? (uint)Clients.Count : 0;
