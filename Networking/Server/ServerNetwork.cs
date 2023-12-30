@@ -88,6 +88,7 @@ namespace Cutulu
                     }
             }
 
+            onClientJoin(client);
             return client;
         }
 
