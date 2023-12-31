@@ -51,8 +51,7 @@ namespace Cutulu
         protected override void _disconnect()
         {
             $"--- Disconnected [{UUID}]".Log();
-
-            base.onDisconnect();
+            base._disconnect();
 
             if (onClose != null)
                 onClose(this);
