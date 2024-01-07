@@ -3,6 +3,7 @@ using System.Text;
 using System;
 
 using Godot;
+using System.Linq;
 
 namespace Cutulu
 {
@@ -432,6 +433,20 @@ namespace Cutulu
         #endregion
 
         #region String Functions
+        public static string RemoveForbiddenDbChars(this string source) => RemoveChar(source, ' ', '#', '\'', '`', '\'', '@', '/', '\\');
+        public static string RemoveChar(this string source, params char[] chars)
+        {
+            if (chars.IsEmpty())
+            {
+                return source;
+            }
+
+            ICollection<char> list = chars;
+            return new((
+                    from c in source where !list.Contains(c) select c
+                ).ToArray());
+        }
+
         public static string TrimToDirectory(this string path)
         {
             if (string.IsNullOrEmpty(path) || !(path.Contains('/') || path.Contains('\\')))
