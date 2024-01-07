@@ -21,7 +21,7 @@ namespace Cutulu
             this.client = client;
 
             // Cancel setup if connection failed
-            if (Connected = client != null && client.Connected == false)
+            if ((Connected = client != null && client.Connected) == false)
             {
                 Close();
                 return;
@@ -43,7 +43,7 @@ namespace Cutulu
             client.Connect(host, port);
 
             // Cancel setup if connection failed
-            if (Connected = client != null && client.Connected == false)
+            if ((Connected = client != null && client.Connected) == false)
             {
                 Close();
                 return;
