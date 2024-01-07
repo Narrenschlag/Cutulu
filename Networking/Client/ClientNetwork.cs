@@ -7,9 +7,10 @@ namespace Cutulu
         public TcpProtocol Tcp;
         public UdpProtocol Udp;
 
-        public bool UdpConnected { get; private set; }
+        public bool UdpConnected;
+        public bool TcpConnected;
 
-        public bool Connected() => Tcp != null && Tcp.Connected();
+        public bool FullyConnected() => TcpConnected && UdpConnected;
 
         public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, T destination = null) : base(0, destination)
         {
@@ -58,7 +59,10 @@ namespace Cutulu
             Tcp = new TcpProtocol(tcpHost, tcpPort, _receive, _disconnect);
             Udp = new UdpProtocol(udpHost, udpPort, _receive);
 
-            _setupUdp();
+            if (TcpConnected = Tcp != null && Tcp.Connected())
+            {
+                _setupUdp();
+            }
         }
 
         /// <summary> 
@@ -88,8 +92,7 @@ namespace Cutulu
         /// </summary>
         protected override void _disconnect()
         {
-            if (Tcp != null) Tcp.Close();
-            if (Udp != null) Udp.Close();
+            Close();
 
             base._disconnect();
 
@@ -99,6 +102,7 @@ namespace Cutulu
         public virtual void Close()
         {
             UdpConnected = false;
+            TcpConnected = false;
 
             Tcp?.Close();
             Udp?.Close();

@@ -14,13 +14,20 @@ namespace Cutulu
         public Packet onReceive;
 
         /// <summary> Creates handle on server side </summary>
-        public TcpProtocol(ref TcpClient client, uint welcome, Packet onReceive, Empty onDisconnect, int receiveTimeout = 5) : base(0)
+        public TcpProtocol(ref TcpClient client, uint welcome, Packet onReceive, Empty onDisconnect, byte receiveTimeout = 5) : base(0)
         {
             client.ReceiveTimeout = 6000 * receiveTimeout;
             this.onReceive = onReceive;
+            this.client = client;
+
+            // Cancel setup if connection failed
+            if (Connected = client != null && client.Connected == false)
+            {
+                Close();
+                return;
+            }
 
             stream = client.GetStream();
-            this.client = client;
 
             this.onDisconnect = onDisconnect;
             send(0, welcome);
@@ -35,14 +42,18 @@ namespace Cutulu
 
             client.Connect(host, port);
 
+            // Cancel setup if connection failed
+            if (Connected = client != null && client.Connected == false)
+            {
+                Close();
+                return;
+            }
+
             stream = client.GetStream();
 
             this.onDisconnect = onDisconnect;
             _listen();
         }
-
-        /// <summary> Returns if the client is connected </summary>
-        public override bool Connected() => client != null && client.Connected;
 
         /// <summary> Closes local network elements </summary>
         public override void Close()
@@ -76,7 +87,7 @@ namespace Cutulu
         /// <summary> Receive packets as long as client is connected </summary>
         protected async void _listen()
         {
-            while (Connected())
+            while (Connected)
             {
                 try { await _receive(); }
                 catch (Exception ex)

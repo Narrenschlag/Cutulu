@@ -58,5 +58,21 @@ namespace Cutulu
                 return Encoding.UTF8.GetString(ms.ToArray());
             }
         }
+
+        public static string HashPassword(this string password)
+        {
+            using SHA256 sha256 = SHA256.Create();
+
+            byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+
+            // Convert the byte array to a hexadecimal string
+            StringBuilder builder = new();
+            foreach (byte b in hashedBytes)
+            {
+                builder.Append(b.ToString("x2"));
+            }
+
+            return builder.ToString();
+        }
     }
 }
