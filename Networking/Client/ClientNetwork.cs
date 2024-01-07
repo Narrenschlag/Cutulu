@@ -53,17 +53,7 @@ namespace Cutulu
         /// </summary>
         protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
-            UdpConnected = false;
-
-            if (Tcp != null)
-            {
-                Tcp.Close();
-            }
-
-            if (Udp != null)
-            {
-                Udp.Close();
-            }
+            Close();
 
             Tcp = new TcpProtocol(tcpHost, tcpPort, _receive, _disconnect);
             Udp = new UdpProtocol(udpHost, udpPort, _receive);
@@ -104,6 +94,14 @@ namespace Cutulu
             base._disconnect();
 
             "disconnected.".LogError();
+        }
+
+        public virtual void Close()
+        {
+            UdpConnected = false;
+
+            Tcp?.Close();
+            Udp?.Close();
         }
     }
 }
