@@ -73,19 +73,34 @@ namespace Cutulu
         /// <summary> Creates new tcp/udp client </summary>
         protected virtual ServerConnection<D> newClient(ref TcpClient tcp, uint uid)
         {
-            ServerConnection<D> client = new ServerConnection<D>(ref tcp, uid, ref Clients, this, WelcomeTarget);
-            IPEndPoint endpoint = tcp.Client.RemoteEndPoint as IPEndPoint;
-
-            if (endpoint != null)
+            ServerConnection<D> client = new(ref tcp, uid, ref Clients, this, WelcomeTarget);
+            if (tcp.Client != null && tcp.Client.RemoteEndPoint != null)
             {
-                IPAddress address = endpoint.Address;
+                if (tcp.Client.RemoteEndPoint is IPEndPoint endpoint)
+                {
+                    IPAddress address = endpoint.Address;
 
-                if (address != null)
-                    lock (Queue)
-                    {
-                        if (Queue.ContainsKey(address)) Queue[address] = client;
-                        else Queue.Add(address, client);
-                    }
+                    if (address != null)
+                        lock (Queue)
+                        {
+                            if (Queue.ContainsKey(address)) Queue[address] = client;
+                            else Queue.Add(address, client);
+                        }
+                }
+
+                else
+                {
+                    $"Client had not enpoint to fetch\nRemote Tcp Endpoint valid: {tcp.Client.RemoteEndPoint != null}".LogError();
+                    tcp.Close();
+                    return null;
+                }
+            }
+
+            else
+            {
+                $"Client had problems setting up the udp connection:\nTcp valid: {tcp != null}\nTcp Client instance valid: {tcp != null && tcp.Client != null}".LogError();
+                tcp.Close();
+                return null;
             }
 
             onClientJoin(client);
