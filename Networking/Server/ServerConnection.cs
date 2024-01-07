@@ -76,7 +76,7 @@ namespace Cutulu
         }
 
         public virtual bool Connected() => ConnectedTcp() && ConnectedUdp();
-        public bool ConnectedTcp() => tcp != null && tcp.Connected();
+        public bool ConnectedTcp() => tcp != null && tcp.Connected;
         public bool ConnectedUdp() => endPoint != null;
 
         public ServerNetwork<D> server;

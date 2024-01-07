@@ -59,7 +59,7 @@ namespace Cutulu
             Tcp = new TcpProtocol(tcpHost, tcpPort, _receive, _disconnect);
             Udp = new UdpProtocol(udpHost, udpPort, _receive);
 
-            if (TcpConnected = Tcp != null && Tcp.Connected())
+            if (TcpConnected = Tcp != null && Tcp.Connected)
             {
                 _setupUdp();
             }
