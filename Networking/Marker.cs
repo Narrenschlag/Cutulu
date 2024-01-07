@@ -105,7 +105,15 @@ namespace Cutulu
 
                             catch (Exception ex)
                             {
-                                $"[Pointer]: cannot receive packet because {ex.Message}".LogError();
+                                if (Destinations.Length <= i || Destinations[i].IsNull())
+                                {
+                                    $"[Ignoring Marker]: Marker has been destroyed or is null".LogError();
+                                }
+
+                                else
+                                {
+                                    $"[Marker (class: {Destinations[i].GetType()})]: cannot receive packet because {ex.Message}\n{ex.StackTrace}".LogError();
+                                }
                             }
                         }
                     }
