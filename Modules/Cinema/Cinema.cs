@@ -1,0 +1,170 @@
+using System;
+using Godot;
+
+namespace Cutulu
+{
+    using P = CinemaPerspective;
+    public partial class Cinema : Node3D
+    {
+        [ExportGroup("Nodes")]
+        [Export] public Node3D GlobalPositionPivot;
+        [Export] public Node3D LocalPositionPivot;
+        [Export] public Node3D LocalRotationPivot;
+        [Export] public Node3D RotationYPivot;
+        [Export] public Node3D RotationXPivot;
+
+        [ExportGroup("Integrated Perspectives")]
+        [Export] public int DefaultPerspectiveIndex;
+        [Export] public P[] Perspectives;
+
+        private float xRotation;
+        private Vector2 input;
+        private Node3D target;
+
+        private static Cinema Singleton;
+        private static P perspective;
+
+        #region Overrides
+        public override void _EnterTree()
+        {
+            if (Singleton.NotNull())
+            {
+                Singleton.Destroy();
+            }
+
+            Singleton = this;
+        }
+
+        public override void _Process(double delta)
+        {
+            if (target.IsNull())
+            {
+                return;
+            }
+
+            if (perspective.IsNull())
+            {
+                Perspective(Perspectives.GetClampedElement(DefaultPerspectiveIndex));
+            }
+
+            if (perspective.UsePhysicsUpdate == false)
+            {
+                MoveCamera((float)delta);
+            }
+        }
+
+        public override void _PhysicsProcess(double delta)
+        {
+            if (target.IsNull() || perspective.IsNull())
+            {
+                return;
+            }
+
+            if (perspective.UsePhysicsUpdate)
+            {
+                MoveCamera((float)delta);
+            }
+        }
+        #endregion
+
+        #region Static
+        public static Vector2 RelativeMouseMovement
+        {
+            set
+            {
+                if (Singleton.NotNull())
+                {
+                    Singleton.input = value;
+                }
+            }
+        }
+
+        public static void Target(Node3D target, P perspective, bool instant = true)
+        {
+            Perspective(perspective);
+            Target(target, instant);
+        }
+
+        public static void Target(Node3D target, bool instant = true)
+        {
+            if (Singleton.IsNull())
+            {
+                "No cinema instance established.".LogError();
+                return;
+            }
+
+            Singleton.target = target;
+
+            if (instant && perspective.NotNull())
+            {
+                Singleton.GlobalPositionPivot.GlobalPosition = target.GlobalPosition + perspective.GlobalOffset;
+            }
+        }
+
+        public static void Perspective(byte i)
+        {
+            if (Singleton.IsNull())
+            {
+                return;
+            }
+
+            Perspective(Singleton.Perspectives.GetClampedElement(i));
+        }
+
+        public static void Perspective(P perspective)
+        => Cinema.perspective = perspective;
+
+        public static bool TryGetRotation(out Vector3 Rotation)
+        {
+            if (Singleton.NotNull())
+            {
+                Rotation = Singleton.RotationYPivot.Rotation;
+                return true;
+            }
+
+            else
+            {
+                Rotation = default;
+                return false;
+            }
+        }
+        #endregion
+
+        private void MoveCamera(float delta)
+        {
+            // Read local input
+            Vector2 input = this.input;
+            this.input = Vector2.Zero;
+
+            // Apply positioning
+            GlobalPositionPivot.GlobalPosition = perspective.LerpPosition ?
+                GlobalPositionPivot.GlobalPosition.Lerp(target.GlobalPosition + perspective.GlobalOffset, delta * perspective.LerpSpeed) :
+                target.GlobalPosition + perspective.GlobalOffset;
+
+            // Left/Right
+            if (RotationYPivot.NotNull())
+            {
+                RotationYPivot.RotateY(perspective.RotationSpeedY.toRadians() * input.X * delta);
+            }
+
+            // Up/Down
+            if (RotationXPivot.NotNull())
+            {
+                xRotation = Mathf.Clamp(xRotation + perspective.RotationSpeedX * input.Y * delta, perspective.MinAngleX, perspective.MaxAngleX);
+                RotationXPivot.Rotation = RotationXPivot.Rotation.setX(xRotation.toRadians());
+            }
+
+            // Perspective Offset
+            if (LocalPositionPivot.NotNull())
+            {
+                LocalPositionPivot.Position = LocalPositionPivot.Position.Lerp(perspective.LocalOffset, 5 * delta);
+            }
+
+            // Perspective Angle
+            if (LocalRotationPivot.NotNull())
+            {
+                LocalRotationPivot.Rotation = LocalRotationPivot.Rotation.setX(Mathf.LerpAngle(LocalRotationPivot.Rotation.X, perspective.CameraAngle, delta * 5));
+            }
+        }
+    }
+}
