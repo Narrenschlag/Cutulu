@@ -55,46 +55,196 @@ namespace Cutulu
         }
         #endregion
 
-        #region Serialize
-        // For classes/struct
+        #region Frontend Serialization
+        /// <summary> 
+        /// Returns byte[] of value
+        /// </summary>
         public static byte[] Serialize<T>(this T source) where T : new()
         {
-            PropertyInfo[] properties = typeof(T).GetProperties();
+            Type type = typeof(T);
+
+            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            {
+                return SerializeValue(source);
+            }
 
             using MemoryStream stream = new();
             using BinaryWriter writer = new(stream);
 
-            object value = default;
-            Type type;
-
-            for (int i = 0; i < properties.Length; i++)
-            {
-                value = properties[i].GetValue(source);
-
-                if (Write(type = properties[i].PropertyType, ref value, writer) == false)
-                {
-                    $"Value Type of {type} is not supported".LogError();
-                    continue;
-                }
-            }
+            Serialize(type, source, writer);
 
             stream.Close();
             writer.Close();
             return stream.ToArray();
         }
 
-        // For values
-        public static byte[] SerializeValue<T>(this T value)
+        /// <summary> 
+        /// Returns byte[] of value array
+        /// </summary>
+        public static byte[] Serialize<T>(this T[] source) where T : new()
+        {
+            Type type = typeof(T);
+
+            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            {
+                return SerializeValue(source);
+            }
+
+            using MemoryStream stream = new();
+            using BinaryWriter writer = new(stream);
+
+            ushort length = (ushort)source.Length;
+            writer.Write(length);
+
+            for (ushort i = 0; i < length; i++)
+            {
+                Serialize(type, source[i], writer);
+            }
+
+            stream.Close();
+            writer.Close();
+            return stream.ToArray();
+        }
+        #endregion
+
+        #region Frontend Deserialization
+        /// <summary> 
+        /// Returns value by reading a given byte buffer
+        /// </summary>
+        public static void Deserialize<T>(this byte[] bytes, out T result) where T : new()
+        {
+            Type type = typeof(T);
+
+            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            {
+                result = DeserializeValue<T>(bytes);
+                return;
+            }
+
+            using MemoryStream stream = new(bytes);
+            using BinaryReader reader = new(stream);
+
+            object value = Deserialize<T>(typeof(T), reader);
+            result = value == default ? default : (T)value;
+
+            stream.Close();
+            reader.Close();
+        }
+
+        /// <summary> 
+        /// Returns value array by reading a given byte buffer
+        /// </summary>
+        public static void Deserialize<T>(this byte[] bytes, out T[] result) where T : new()
+        {
+            Type type = typeof(T);
+
+            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            {
+                result = DeserializeValue<T[]>(bytes);
+                return;
+            }
+
+            using MemoryStream stream = new(bytes);
+            using BinaryReader reader = new(stream);
+
+            ushort length = reader.ReadUInt16();
+
+            result = new T[length];
+            object value;
+
+            for (ushort i = 0; i < length; i++)
+            {
+                value = Deserialize<T>(type, reader);
+
+                result[i] = value == default ? default : (T)value;
+            }
+
+            stream.Close();
+            reader.Close();
+        }
+        #endregion
+
+        #region Backend Serialization
+        private static void Serialize(Type type, object value, BinaryWriter writer)
+        {
+            PropertyInfo[] properties = type.GetProperties();
+
+            object _value;
+            Type _type;
+
+            for (int i = 0; i < properties.Length; i++)
+            {
+                _value = properties[i].GetValue(value);
+
+                if (Write(_type = properties[i].PropertyType, ref _value, writer) == false)
+                {
+                    $"Value Type of {_type} is not supported".LogError();
+                    continue;
+                }
+            }
+        }
+
+        private static byte[] SerializeValue<T>(this T value)
         {
             using MemoryStream stream = new();
 
-            using BinaryWriter writer = new BinaryWriter(stream);
+            using BinaryWriter writer = new(stream);
             object obj = value;
 
             return Write(value.GetType(), ref obj, writer) ? stream.ToArray() : null;
         }
+        #endregion
 
-        // Secret backend
+        #region Backend Deserialization
+        private static object Deserialize<T>(Type type, BinaryReader reader) where T : new()
+        {
+            PropertyInfo[] properties = type.GetProperties();
+            T result = new();
+            Type _type;
+
+            for (int i = 0; i < properties.Length; i++)
+            {
+                // Return if there are no bytes left and it's therefore a type mismatch
+                if (reader.BaseStream.CanRead == false)
+                {
+                    "Class/Struct Type mismatch".LogError();
+
+                    return default;
+                }
+
+                // Ignore value of it's not supported by any built in or addition formatter
+                if (Read(_type = properties[i].PropertyType, out object value, reader) == false)
+                {
+                    $"Value Type of {_type} is not supported. This may produce further problems.".LogError();
+                    continue;
+                }
+
+                // Types are not lining up and therefore the cast is invalid
+                if (_type != value.GetType())
+                {
+                    $"Value Type mismatch required({_type}) != result({value.GetType()})".LogError();
+
+                    return default;
+                }
+
+                // Apply value
+                properties[i].SetValue(result, value);
+            }
+
+            return result;
+        }
+
+        // For values
+        private static T DeserializeValue<T>(this byte[] bytes)
+        {
+            using MemoryStream stream = new(bytes);
+            using BinaryReader reader = new(stream);
+
+            return Read(typeof(T), out object result, reader) ? (T)result : default;
+        }
+        #endregion
+
+        #region Write and Read Utility
         private static bool Write(Type type, ref object value, BinaryWriter writer)
         {
             #region Array
@@ -160,68 +310,6 @@ namespace Cutulu
             };
 
             return true;
-        }
-        #endregion
-
-        #region Deserialize
-        // For classes and structs
-        public static T Deserialize<T>(this byte[] bytes) where T : new()
-        {
-            PropertyInfo[] properties = typeof(T).GetProperties();
-
-            using MemoryStream stream = new(bytes);
-            using BinaryReader reader = new(stream);
-
-            object value = default;
-            T result = new();
-            Type type;
-
-            for (int i = 0; i < properties.Length; i++)
-            {
-                // Return if there are no bytes left and it's therefore a type mismatch
-                if (bytes.Length < 1)
-                {
-                    "Class/Struct Type mismatch".LogError();
-
-                    stream.Close();
-                    reader.Close();
-                    return default;
-                }
-
-                // Ignore value of it's not supported by any built in or addition formatter
-                if (Read(type = properties[i].PropertyType, out value, reader) == false)
-                {
-                    $"Value Type of {type} is not supported. This may produce further problems.".LogError();
-                    continue;
-                }
-
-                // Types are not lining up and therefore the cast is invalid
-                if (type != value.GetType())
-                {
-                    $"Value Type mismatch required({type}) != result({value.GetType()})".LogError();
-
-                    stream.Close();
-                    reader.Close();
-                    return default;
-                }
-
-                // Apply value
-                properties[i].SetValue(result, value);
-            }
-
-            stream.Close();
-            reader.Close();
-            return result;
-        }
-
-        // For values
-        public static T DeserializeValue<T>(this byte[] bytes)
-        {
-            using MemoryStream stream = new(bytes);
-
-            using BinaryReader reader = new BinaryReader(stream);
-
-            return Read(typeof(T), out object result, reader) ? (T)result : default;
         }
 
         private static bool Read(Type type, out object value, BinaryReader reader)
