@@ -19,7 +19,7 @@ namespace Cutulu.UnitTest.Network
             base.__receive(key, bytes, method, values);
 
             if (output.NotNull())
-            {/*
+            {
                 if (bytes.TryDeserialize(out string txt))
                 {
                     txt = $"{key}> {txt}";
@@ -37,7 +37,6 @@ namespace Cutulu.UnitTest.Network
                 {
                     output.Text += $"key({key}) {bytes.Length} bytes\n";
                 }
-            */
             }
         }
     }

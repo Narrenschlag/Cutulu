@@ -66,67 +66,74 @@ namespace Cutulu
 
         #region Frontend Serialization
         /// <summary> 
-        /// Returns byte[] of value
+        /// Turns value into byte buffer
         /// </summary>
-        public static byte[] SerializeClass<T>(this T source) where T : new()
+        public static byte[] Serialize<T>(this T source)
         {
             Type type = typeof(T);
 
-            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            if (IsPrimitive(type) || (type.IsArray && IsPrimitive(type.GetElementType())))
             {
-                return SerializeValue(source);
+                return SerializeValue(type, source);
             }
 
-            using MemoryStream stream = new();
-            using BinaryWriter writer = new(stream);
-
-            SerializeObject(type, source, writer);
-
-            stream.Close();
-            writer.Close();
-            return stream.ToArray();
-        }
-
-        /// <summary> 
-        /// Returns byte[] of value array
-        /// </summary>
-        public static byte[] SerializeClassArray<T>(this T[] source) where T : new()
-        {
-            Type type = typeof(T);
-
-            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            else if (type.IsArray)
             {
-                return SerializeValue(source);
+                return SerializeClassArray(type.GetElementType(), source);
             }
 
-            using MemoryStream stream = new();
-            using BinaryWriter writer = new(stream);
-
-            ushort length = (ushort)source.Length;
-            writer.Write(length);
-
-            for (ushort i = 0; i < length; i++)
+            else
             {
-                SerializeObject(type, source[i], writer);
+                return SerializeClass(type, source);
             }
-
-            stream.Close();
-            writer.Close();
-            return stream.ToArray();
-        }
-
-        public static byte[] SerializeValue<T>(this T value)
-        {
-            using MemoryStream stream = new();
-
-            using BinaryWriter writer = new(stream);
-            object obj = value;
-
-            return Write(value.GetType(), ref obj, writer) ? stream.ToArray() : null;
         }
         #endregion
 
         #region Backend Serialization
+        private static byte[] SerializeValue(Type type, object value)
+        {
+            using MemoryStream stream = new();
+
+            using BinaryWriter writer = new(stream);
+
+            return Write(type, ref value, writer) ? stream.ToArray() : null;
+        }
+
+        private static byte[] SerializeClass(Type type, object classValue)
+        {
+            using MemoryStream stream = new();
+            using BinaryWriter writer = new(stream);
+
+            SerializeObject(type, classValue, writer);
+
+            stream.Close();
+            writer.Close();
+            return stream.ToArray();
+        }
+
+        private static byte[] SerializeClassArray(Type elementType, object arrayValue)
+        {
+            if (arrayValue is not Array array)
+            {
+                return null;
+            }
+
+            using MemoryStream stream = new();
+            using BinaryWriter writer = new(stream);
+
+            ushort length = (ushort)array.Length;
+            writer.Write(length);
+
+            for (ushort i = 0; i < length; i++)
+            {
+                SerializeObject(elementType, array.GetValue(i), writer);
+            }
+
+            stream.Close();
+            writer.Close();
+            return stream.ToArray();
+        }
+
         private static void SerializeObject(Type type, object value, BinaryWriter writer)
         {
             PropertyInfo[] properties = type.GetProperties();
@@ -149,52 +156,79 @@ namespace Cutulu
 
         #region Frontend Deserialization
         /// <summary> 
+        /// Tries to return value by reading a given byte buffer
+        /// </summary>
+        public static bool TryDeserialize<T>(this byte[] bytes, out T result)
+        {
+            try
+            {
+                result = Deserialize<T>(bytes);
+                return true;
+            }
+
+            catch
+            {
+                result = default;
+                return false;
+            }
+        }
+
+        /// <summary> 
         /// Returns value by reading a given byte buffer
         /// </summary>
-        public static T DeserializeClass<T>(this byte[] bytes) where T : new()
+        public static T Deserialize<T>(this byte[] bytes)
         {
             Type type = typeof(T);
 
-            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            if (IsPrimitive(type) || (type.IsArray && IsPrimitive(type.GetElementType())))
             {
                 return DeserializeValue<T>(bytes);
             }
 
+            else if (type.IsArray)
+            {
+                return (T)(object)DeserializeClassArray(type.GetElementType(), bytes);
+            }
+
+            else
+            {
+                return (T)DeserializeClass(type, bytes);
+            }
+        }
+        #endregion
+
+        #region Backend Deserialization
+        private static T DeserializeValue<T>(this byte[] bytes)
+        {
             using MemoryStream stream = new(bytes);
             using BinaryReader reader = new(stream);
 
-            object value = DeserializeObject<T>(typeof(T), reader);
+            return Read(typeof(T), out object result, reader) ? (T)result : default;
+        }
+
+        private static object DeserializeClass(Type type, byte[] bytes)
+        {
+            using MemoryStream stream = new(bytes);
+            using BinaryReader reader = new(stream);
+
+            object value = DeserializeObject(type, reader);
             stream.Close();
             reader.Close();
 
-            return value == default ? default : (T)value;
+            return value;
         }
 
-        /// <summary> 
-        /// Returns value array by reading a given byte buffer
-        /// </summary>
-        public static T[] DeserializeClassArray<T>(this byte[] bytes) where T : new()
+        private static Array DeserializeClassArray(Type elementType, byte[] bytes)
         {
-            Type type = typeof(T);
-
-            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
-            {
-                return DeserializeValue<T[]>(bytes);
-            }
-
             using MemoryStream stream = new(bytes);
             using BinaryReader reader = new(stream);
 
             ushort length = reader.ReadUInt16();
 
-            T[] result = new T[length];
-            object value;
-
+            Array result = Array.CreateInstance(elementType, length);
             for (ushort i = 0; i < length; i++)
             {
-                value = DeserializeObject<T>(type, reader);
-
-                result[i] = value == default ? default : (T)value;
+                result.SetValue(DeserializeObject(elementType, reader), i);
             }
 
             stream.Close();
@@ -203,21 +237,10 @@ namespace Cutulu
             return result;
         }
 
-        // For values
-        public static T DeserializeValue<T>(this byte[] bytes)
-        {
-            using MemoryStream stream = new(bytes);
-            using BinaryReader reader = new(stream);
-
-            return Read(typeof(T), out object result, reader) ? (T)result : default;
-        }
-        #endregion
-
-        #region Backend Deserialization
-        private static object DeserializeObject<T>(Type type, BinaryReader reader) where T : new()
+        private static object DeserializeObject(Type type, BinaryReader reader)
         {
             PropertyInfo[] properties = type.GetProperties();
-            T result = new();
+            object result = Activator.CreateInstance(type);
             Type _type;
 
             for (int i = 0; i < properties.Length; i++)
@@ -254,6 +277,8 @@ namespace Cutulu
         #endregion
 
         #region Write and Read Utility
+        private static bool IsPrimitive(Type type) => type.IsPrimitive || AdditionalFormatters.ContainsKey(type);
+
         private static bool Write(Type type, ref object value, BinaryWriter writer)
         {
             #region Array

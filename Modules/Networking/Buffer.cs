@@ -14,7 +14,7 @@ namespace Cutulu
         public static byte[] Package<T>(this T value, byte key, Method method)
         {
             // Convert to bytes
-            byte[] bytes = value.SerializeValue();
+            byte[] bytes = value.Serialize();
 
             // Prepare buffer
             byte[] buffer = new byte[bytes.Length + (byte)method];
@@ -62,7 +62,7 @@ namespace Cutulu
             key = rdr.ReadByte();
 
             // Read custom values
-            T value = rdr.ReadBytes(length).DeserializeValue<T>();
+            T value = rdr.ReadBytes(length).Deserialize<T>();
 
             // Close streams
             strm.Close();
