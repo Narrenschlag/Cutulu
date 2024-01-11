@@ -14,35 +14,35 @@ namespace Cutulu
 
         public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, T destination = null) : base(0, destination)
         {
-            try { _connect(tcpHost, tcpPort, udpHost, udpPort); }
+            try { Connect(tcpHost, tcpPort, udpHost, udpPort); }
             catch { $"Failed to connect to host".LogError(); }
         }
 
-        public override void _receive(byte key, BufferType type, byte[] bytes, Method method)
+        public override void Receive(byte key, byte[] bytes, Method method)
         {
             // Notify client that server has successfully associated the udp client with the tcp client
-            if (UdpConnected == false && key == 0 && type == BufferType.Byte)
+            if (UdpConnected == false && key == 0 && bytes.Length == 1)
             {
-                if (bytes.As<byte>() == 255)
+                if (bytes[0] == 255)
                 {
                     UdpConnected = true;
                     return;
                 }
             }
 
-            base._receive(key, type, bytes, method);
+            base.Receive(key, bytes, method);
         }
 
-        public virtual void Send<V>(byte key, V value, Method method = Method.Tcp)
+        public virtual void Send<V>(byte key, V value, Method method)
         {
             switch (method)
             {
                 case Method.Tcp:
-                    Tcp.send(key, value);
+                    Tcp.Send(key, value);
                     break;
 
                 case Method.Udp:
-                    Udp.send(key, value);
+                    Udp.Send(key, value);
                     break;
 
                 default: break;
@@ -52,16 +52,16 @@ namespace Cutulu
         /// <summary>
         /// Closes current connections and opens new connections
         /// </summary>
-        protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
+        protected virtual void Connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
             Close();
 
-            Tcp = new TcpProtocol(tcpHost, tcpPort, _receive, _disconnect);
-            Udp = new UdpProtocol(udpHost, udpPort, _receive);
+            Tcp = new TcpProtocol(tcpHost, tcpPort, Receive, Disconnect);
+            Udp = new UdpProtocol(udpHost, udpPort, Receive);
 
             if (TcpConnected = Tcp != null && Tcp.Connected)
             {
-                _setupUdp();
+                SetupUdp();
             }
         }
 
@@ -69,7 +69,7 @@ namespace Cutulu
         /// Sends udp packages to server until<br/> 
         /// server associated tcp connection with udp connection 
         /// </summary>
-        private async void _setupUdp()
+        private async void SetupUdp()
         {
             // Stop if connections associated
             if (UdpConnected == true)
@@ -84,17 +84,17 @@ namespace Cutulu
             await Task.Delay(50);
 
             // Restart the function
-            _setupUdp();
+            SetupUdp();
         }
 
         /// <summary>
         /// Called on disconnection from server or network provider
         /// </summary>
-        protected override void _disconnect()
+        protected override void Disconnect()
         {
             Close();
 
-            base._disconnect();
+            base.Disconnect();
 
             "disconnected.".LogError();
         }

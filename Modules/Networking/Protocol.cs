@@ -4,7 +4,7 @@ namespace Cutulu
 {
     public class Protocol
     {
-        public delegate void Packet(byte key, BufferType type, byte[] bytes, Method method);
+        public delegate void Packet(byte key, byte[] bytes, Method method);
         public delegate void Empty();
 
         public int Port;
@@ -26,7 +26,7 @@ namespace Cutulu
         /// <summary>
         /// Valdiates connection
         /// </summary>
-        protected void _validateConnection()
+        protected void ValidateConnection()
         {
             if (Connected == false) throw new Exception($"{GetType()} is not connected");
         }

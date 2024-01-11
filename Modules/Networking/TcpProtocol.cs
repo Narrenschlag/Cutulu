@@ -30,8 +30,8 @@ namespace Cutulu
             stream = client.GetStream();
 
             this.onDisconnect = onDisconnect;
-            send(0, welcome);
-            _listen();
+            Send(0, welcome);
+            Listen();
         }
 
         /// <summary> Creates handle on client side </summary>
@@ -52,14 +52,14 @@ namespace Cutulu
             stream = client.GetStream();
 
             this.onDisconnect = onDisconnect;
-            _listen();
+            Listen();
         }
 
         /// <summary> Closes local network elements </summary>
         public override void Close()
         {
-            if (stream != null) stream.Close();
-            if (client != null) client.Close();
+            stream?.Close();
+            client?.Close();
 
             onDisconnect = null;
             base.Close();
@@ -67,11 +67,11 @@ namespace Cutulu
 
         #region Send Data
         /// <summary> Sends data through connection </summary>
-        public void send<T>(byte key, T value)
+        public void Send<T>(byte key, T value)
         {
-            _validateConnection();
+            ValidateConnection();
 
-            byte[] bytes = value.package(key);
+            byte[] bytes = value.Package(key, Method.Tcp);
 
             client.NoDelay = bytes.Length <= 1400;
             stream.Write(bytes);
@@ -85,11 +85,11 @@ namespace Cutulu
 
         #region Receive Data
         /// <summary> Receive packets as long as client is connected </summary>
-        protected async void _listen()
+        protected async void Listen()
         {
             while (Connected)
             {
-                try { await _receive(); }
+                try { await Receive(); }
                 catch (Exception ex)
                 {
                     ex.Message.Log();
@@ -97,44 +97,44 @@ namespace Cutulu
                 }
             }
 
-            _disconnected();
+            Disconnected();
         }
 
         /// <summary> Waits for bytes received, reads and then formats them </summary>
-        protected async Task _receive()
+        protected async Task Receive()
         {
             // Define buffer for strorage
             byte[] buffer = new byte[4];
 
             // Read length
-            int i = await stream.ReadAsync(buffer, 0, 4);
+            int i = await stream.ReadAsync(buffer.AsMemory(0, 4));
 
             // Catches disconnect StackOverflow
             if (i < 4) throw new IOException("connection corrupted");
 
             // Read length of buffer
             int length = 0;
-            using (MemoryStream mem = new MemoryStream(buffer))
+            using (MemoryStream mem = new(buffer))
             {
-                using BinaryReader BR = new BinaryReader(mem);
+                using BinaryReader BR = new(mem);
                 length = BR.ReadInt32();
             }
 
             byte[] bytes = new byte[length += 2];
-            await stream.ReadAsync(bytes, 0, length);
+            await stream.ReadAsync(bytes.AsMemory(0, length));
+
             Array.Resize(ref buffer, 4 + length);
             Array.Copy(bytes, 0, buffer, 4, length);
 
-            BufferType type = Buffer.unpack(buffer, out bytes, out byte key);
-            if (type != BufferType.None && onReceive != null) onReceive(key, type, bytes, Method.Tcp);
+            bytes = Buffer.Unpack(buffer, out byte key, Method.Tcp);
+            if (bytes != null && onReceive != null) onReceive(key, bytes, Method.Tcp);
         }
         #endregion
 
         /// <summary> Called on client disconnect </summary>
-        private void _disconnected()
+        private void Disconnected()
         {
-            if (onDisconnect != null)
-                onDisconnect();
+            onDisconnect?.Invoke();
 
             Close();
         }

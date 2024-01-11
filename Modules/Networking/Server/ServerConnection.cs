@@ -6,8 +6,8 @@ namespace Cutulu
 {
     public class ServerConnection<D> : Marker<D> where D : Destination
     {
-        public delegate void Disconnect(ServerConnection<D> client);
-        public Disconnect onClose;
+        public delegate void DisconnectDel(ServerConnection<D> client);
+        public DisconnectDel onClose;
         public TcpProtocol tcp;
 
         protected Dictionary<uint, ServerConnection<D>> Registry;
@@ -22,7 +22,7 @@ namespace Cutulu
 
             $"+++ Connected [{UUID}]".Log();
 
-            tcp = new TcpProtocol(ref client, uuid, _receive, _disconnect);
+            tcp = new TcpProtocol(ref client, uuid, Receive, Disconnect);
         }
 
         public virtual void Send<T>(byte key, T value, Method method)
@@ -32,14 +32,14 @@ namespace Cutulu
                 case Method.Tcp:
                     if (ConnectedTcp())
                     {
-                        tcp.send(key, value);
+                        tcp.Send(key, value);
                     }
                     break;
 
                 case Method.Udp:
                     if (ConnectedUdp())
                     {
-                        server.globalUdp.send(key, value, endPoint);
+                        server.globalUdp.Send(key, value, endPoint);
                     }
                     break;
 
@@ -48,13 +48,12 @@ namespace Cutulu
             }
         }
 
-        protected override void _disconnect()
+        protected override void Disconnect()
         {
             $"--- Disconnected [{UUID}]".Log();
-            base._disconnect();
+            base.Disconnect();
 
-            if (onClose != null)
-                onClose(this);
+            onClose?.Invoke(this);
 
             lock (Registry)
             {
@@ -69,10 +68,7 @@ namespace Cutulu
                 }
 
             // Message server of disconnection
-            if (server != null)
-            {
-                server.onClientQuit(this);
-            }
+            server?.OnClientQuit(this);
         }
 
         public virtual bool Connected() => ConnectedTcp() && ConnectedUdp();
@@ -82,7 +78,7 @@ namespace Cutulu
         public ServerNetwork<D> server;
         public IPEndPoint endPoint;
 
-        public void connect(IPEndPoint udpSource)
+        public void Connect(IPEndPoint udpSource)
         {
             if (udpSource == null) return;
 

@@ -11,13 +11,21 @@ namespace Cutulu
         private static Dictionary<Type, ByteFormatter> AdditionalFormatters;
         public static void RegisterFormatter(Type type, ByteFormatter formatter, bool overrideExisting = true)
         {
-            if (AdditionalFormatters == null)
+            // Formatter invalid
+            if (formatter == null)
+            {
+                return;
+            }
+
+            // Setup instances
+            else if (AdditionalFormatters == null)
             {
                 AdditionalFormatters = new(){
                 { type, formatter }
             };
             }
 
+            // Override existing
             else if (AdditionalFormatters.ContainsKey(type))
             {
                 if (overrideExisting)
@@ -26,6 +34,7 @@ namespace Cutulu
                 }
             }
 
+            // Add new
             else
             {
                 AdditionalFormatters.Add(type, formatter);
@@ -59,7 +68,7 @@ namespace Cutulu
         /// <summary> 
         /// Returns byte[] of value
         /// </summary>
-        public static byte[] Serialize<T>(this T source) where T : new()
+        public static byte[] SerializeClass<T>(this T source) where T : new()
         {
             Type type = typeof(T);
 
@@ -81,7 +90,7 @@ namespace Cutulu
         /// <summary> 
         /// Returns byte[] of value array
         /// </summary>
-        public static byte[] Serialize<T>(this T[] source) where T : new()
+        public static byte[] SerializeClassArray<T>(this T[] source) where T : new()
         {
             Type type = typeof(T);
 
@@ -105,6 +114,16 @@ namespace Cutulu
             writer.Close();
             return stream.ToArray();
         }
+
+        public static byte[] SerializeValue<T>(this T value)
+        {
+            using MemoryStream stream = new();
+
+            using BinaryWriter writer = new(stream);
+            object obj = value;
+
+            return Write(value.GetType(), ref obj, writer) ? stream.ToArray() : null;
+        }
         #endregion
 
         #region Backend Serialization
@@ -126,53 +145,41 @@ namespace Cutulu
                 }
             }
         }
-
-        private static byte[] SerializeValue<T>(this T value)
-        {
-            using MemoryStream stream = new();
-
-            using BinaryWriter writer = new(stream);
-            object obj = value;
-
-            return Write(value.GetType(), ref obj, writer) ? stream.ToArray() : null;
-        }
         #endregion
 
         #region Frontend Deserialization
         /// <summary> 
         /// Returns value by reading a given byte buffer
         /// </summary>
-        public static void Deserialize<T>(this byte[] bytes, out T result) where T : new()
+        public static T DeserializeClass<T>(this byte[] bytes) where T : new()
         {
             Type type = typeof(T);
 
             if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
             {
-                result = DeserializeValue<T>(bytes);
-                return;
+                return DeserializeValue<T>(bytes);
             }
 
             using MemoryStream stream = new(bytes);
             using BinaryReader reader = new(stream);
 
             object value = DeserializeObject<T>(typeof(T), reader);
-            result = value == default ? default : (T)value;
-
             stream.Close();
             reader.Close();
+
+            return value == default ? default : (T)value;
         }
 
         /// <summary> 
         /// Returns value array by reading a given byte buffer
         /// </summary>
-        public static void Deserialize<T>(this byte[] bytes, out T[] result) where T : new()
+        public static T[] DeserializeClassArray<T>(this byte[] bytes) where T : new()
         {
             Type type = typeof(T);
 
             if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
             {
-                result = DeserializeValue<T[]>(bytes);
-                return;
+                return DeserializeValue<T[]>(bytes);
             }
 
             using MemoryStream stream = new(bytes);
@@ -180,7 +187,7 @@ namespace Cutulu
 
             ushort length = reader.ReadUInt16();
 
-            result = new T[length];
+            T[] result = new T[length];
             object value;
 
             for (ushort i = 0; i < length; i++)
@@ -192,6 +199,17 @@ namespace Cutulu
 
             stream.Close();
             reader.Close();
+
+            return result;
+        }
+
+        // For values
+        public static T DeserializeValue<T>(this byte[] bytes)
+        {
+            using MemoryStream stream = new(bytes);
+            using BinaryReader reader = new(stream);
+
+            return Read(typeof(T), out object result, reader) ? (T)result : default;
         }
         #endregion
 
@@ -232,15 +250,6 @@ namespace Cutulu
             }
 
             return result;
-        }
-
-        // For values
-        private static T DeserializeValue<T>(this byte[] bytes)
-        {
-            using MemoryStream stream = new(bytes);
-            using BinaryReader reader = new(stream);
-
-            return Read(typeof(T), out object result, reader) ? (T)result : default;
         }
         #endregion
 
