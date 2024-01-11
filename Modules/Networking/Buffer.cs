@@ -55,6 +55,11 @@ namespace Cutulu
 
         /// <summary> hasLength is for udp packets </summary>
         /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
+        public static T Unpack<T>(this byte[] bytes)
+        => bytes.Deserialize<T>();
+
+        /// <summary> hasLength is for udp packets </summary>
+        /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
         public static byte[] UnpackRaw(this byte[] buffer, out byte key)
         {
             // Buffer could not be read
