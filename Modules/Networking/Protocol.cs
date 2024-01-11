@@ -7,6 +7,7 @@ namespace Cutulu
         public delegate void Packet(byte key, byte[] bytes, Method method);
         public delegate void Empty();
 
+        public bool Connected;
         public int Port;
 
         public Protocol(int port)
@@ -14,10 +15,11 @@ namespace Cutulu
             Port = port;
         }
 
-        public virtual bool Connected() => false;
-
         /// <summary> Closes handler </summary>
-        public virtual void Close() { }
+        public virtual void Close()
+        {
+            Connected = false;
+        }
 
         #region Send Data
         /// <summary>
@@ -25,7 +27,7 @@ namespace Cutulu
         /// </summary>
         protected void _validateConnection()
         {
-            if (!Connected()) throw new Exception($"{GetType()} is not connected");
+            if (Connected == false) throw new Exception($"{GetType()} is not connected");
         }
         #endregion
     }

@@ -25,6 +25,7 @@ namespace Cutulu
             try
             {
                 client = new UdpClient(port);
+                Connected = true;
 
                 // Set the UDP client to reuse the address and port (optional)
                 client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -34,6 +35,8 @@ namespace Cutulu
             }
             catch (Exception ex)
             {
+                Close();
+
                 throw new Exception($"Was not able to establish a udp connection:\n{ex.Message}");
             }
 
@@ -50,6 +53,7 @@ namespace Cutulu
             try
             {
                 client = new UdpClient();
+                Connected = true;
 
                 client.Connect(host, udpPort); // Use the same port as the UDP listener and the same adress as tcp endpoint
 
@@ -58,11 +62,11 @@ namespace Cutulu
             }
             catch (Exception ex)
             {
+                Close();
+
                 throw new Exception($"Was not able to establish a udp connection:\n{ex.Message}");
             }
         }
-
-        public override bool Connected() => client != null;
 
         /// <summary> Closes local network elements </summary>
         public override void Close()
@@ -103,7 +107,7 @@ namespace Cutulu
         /// <summary> Receive packets as long as client is connected </summary>
         private async void _listen()
         {
-            while (Connected())
+            while (Connected)
                 try
                 {
                     await _receive();
