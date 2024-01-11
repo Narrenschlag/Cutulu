@@ -9,7 +9,7 @@ namespace Cutulu
         #region Sending
         /// <summary> assignLength is for udp packets </summary>
         /// <returns> Buffer with byte[] length, type, key and then the bytes </returns>
-        public static byte[] Package<T>(this T value, byte key, Method method)
+        public static byte[] PackageRaw<T>(this T value, byte key, Method method)
         {
             // If is null
             if (value == null)
@@ -55,7 +55,7 @@ namespace Cutulu
 
         /// <summary> hasLength is for udp packets </summary>
         /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
-        public static byte[] Unpack(this byte[] buffer, out byte key)
+        public static byte[] UnpackRaw(this byte[] buffer, out byte key)
         {
             // Buffer could not be read
             if (buffer == null || buffer.Length < 1)

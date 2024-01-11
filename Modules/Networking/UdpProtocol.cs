@@ -88,7 +88,7 @@ namespace Cutulu
 
             if (destination != null)
             {
-                byte[] bytes = value.Package(key, Method.Udp);
+                byte[] bytes = value.PackageRaw(key, Method.Udp);
                 client.Send(bytes, bytes.Length, destination);
             }
         }
@@ -98,7 +98,7 @@ namespace Cutulu
         {
             _validateConnection();
 
-            byte[] bytes = value.Package(key, Method.Udp);
+            byte[] bytes = value.PackageRaw(key, Method.Udp);
             client.Send(bytes, bytes.Length);
         }
         #endregion
@@ -128,7 +128,7 @@ namespace Cutulu
             byte[] buffer = result.Buffer;
 
             // Decode bytes
-            byte[] bytes = Buffer.Unpack(buffer, out byte key);
+            byte[] bytes = Buffer.UnpackRaw(buffer, out byte key);
             if (bytes == null) return;
 
             // Invoke callback

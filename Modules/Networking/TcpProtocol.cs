@@ -71,7 +71,7 @@ namespace Cutulu
         {
             _validateConnection();
 
-            byte[] bytes = value.Package(key, Method.Tcp);
+            byte[] bytes = value.PackageRaw(key, Method.Tcp);
 
             client.NoDelay = bytes.Length <= 1400;
             stream.Write(bytes);
@@ -124,7 +124,7 @@ namespace Cutulu
             await stream.ReadAsync(bytes.AsMemory(0, length));
 
             // Unpack bytes
-            bytes = Buffer.Unpack(bytes, out byte key);
+            bytes = Buffer.UnpackRaw(bytes, out byte key);
             if (bytes != null && onReceive != null) onReceive(key, bytes, Method.Tcp);
         }
         #endregion
