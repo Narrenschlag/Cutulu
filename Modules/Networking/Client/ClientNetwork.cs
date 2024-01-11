@@ -55,7 +55,7 @@ namespace Cutulu
         protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
             UdpConnected = false;
-            close();
+            Close();
 
             Tcp = new TcpProtocol(tcpHost, tcpPort, _receive, _disconnect);
             Udp = new UdpProtocol(udpHost, udpPort, _receive);
@@ -93,14 +93,14 @@ namespace Cutulu
         /// </summary>
         protected override void _disconnect()
         {
-            close();
+            Close();
 
             base._disconnect();
 
             "disconnected.".LogError();
         }
 
-        protected virtual void close()
+        public virtual void Close()
         {
             UdpConnected = false;
             TcpConnected = false;
