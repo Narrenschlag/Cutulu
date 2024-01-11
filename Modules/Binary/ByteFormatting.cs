@@ -71,7 +71,7 @@ namespace Cutulu
             using MemoryStream stream = new();
             using BinaryWriter writer = new(stream);
 
-            Serialize(type, source, writer);
+            SerializeObject(type, source, writer);
 
             stream.Close();
             writer.Close();
@@ -98,7 +98,7 @@ namespace Cutulu
 
             for (ushort i = 0; i < length; i++)
             {
-                Serialize(type, source[i], writer);
+                SerializeObject(type, source[i], writer);
             }
 
             stream.Close();
@@ -107,65 +107,8 @@ namespace Cutulu
         }
         #endregion
 
-        #region Frontend Deserialization
-        /// <summary> 
-        /// Returns value by reading a given byte buffer
-        /// </summary>
-        public static void Deserialize<T>(this byte[] bytes, out T result) where T : new()
-        {
-            Type type = typeof(T);
-
-            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
-            {
-                result = DeserializeValue<T>(bytes);
-                return;
-            }
-
-            using MemoryStream stream = new(bytes);
-            using BinaryReader reader = new(stream);
-
-            object value = Deserialize<T>(typeof(T), reader);
-            result = value == default ? default : (T)value;
-
-            stream.Close();
-            reader.Close();
-        }
-
-        /// <summary> 
-        /// Returns value array by reading a given byte buffer
-        /// </summary>
-        public static void Deserialize<T>(this byte[] bytes, out T[] result) where T : new()
-        {
-            Type type = typeof(T);
-
-            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
-            {
-                result = DeserializeValue<T[]>(bytes);
-                return;
-            }
-
-            using MemoryStream stream = new(bytes);
-            using BinaryReader reader = new(stream);
-
-            ushort length = reader.ReadUInt16();
-
-            result = new T[length];
-            object value;
-
-            for (ushort i = 0; i < length; i++)
-            {
-                value = Deserialize<T>(type, reader);
-
-                result[i] = value == default ? default : (T)value;
-            }
-
-            stream.Close();
-            reader.Close();
-        }
-        #endregion
-
         #region Backend Serialization
-        private static void Serialize(Type type, object value, BinaryWriter writer)
+        private static void SerializeObject(Type type, object value, BinaryWriter writer)
         {
             PropertyInfo[] properties = type.GetProperties();
 
@@ -195,8 +138,65 @@ namespace Cutulu
         }
         #endregion
 
+        #region Frontend Deserialization
+        /// <summary> 
+        /// Returns value by reading a given byte buffer
+        /// </summary>
+        public static void Deserialize<T>(this byte[] bytes, out T result) where T : new()
+        {
+            Type type = typeof(T);
+
+            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            {
+                result = DeserializeValue<T>(bytes);
+                return;
+            }
+
+            using MemoryStream stream = new(bytes);
+            using BinaryReader reader = new(stream);
+
+            object value = DeserializeObject<T>(typeof(T), reader);
+            result = value == default ? default : (T)value;
+
+            stream.Close();
+            reader.Close();
+        }
+
+        /// <summary> 
+        /// Returns value array by reading a given byte buffer
+        /// </summary>
+        public static void Deserialize<T>(this byte[] bytes, out T[] result) where T : new()
+        {
+            Type type = typeof(T);
+
+            if (type.IsPrimitive || AdditionalFormatters.ContainsKey(type))
+            {
+                result = DeserializeValue<T[]>(bytes);
+                return;
+            }
+
+            using MemoryStream stream = new(bytes);
+            using BinaryReader reader = new(stream);
+
+            ushort length = reader.ReadUInt16();
+
+            result = new T[length];
+            object value;
+
+            for (ushort i = 0; i < length; i++)
+            {
+                value = DeserializeObject<T>(type, reader);
+
+                result[i] = value == default ? default : (T)value;
+            }
+
+            stream.Close();
+            reader.Close();
+        }
+        #endregion
+
         #region Backend Deserialization
-        private static object Deserialize<T>(Type type, BinaryReader reader) where T : new()
+        private static object DeserializeObject<T>(Type type, BinaryReader reader) where T : new()
         {
             PropertyInfo[] properties = type.GetProperties();
             T result = new();
