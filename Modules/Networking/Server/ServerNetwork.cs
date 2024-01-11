@@ -15,7 +15,7 @@ namespace Cutulu
         protected TcpListener TcpListener;
         protected uint LastUID;
 
-        private D WelcomeTarget;
+        private readonly D WelcomeTarget;
 
         /// <summary> Amount of clients currently connected to the server </summary>
         public uint ClientCount => Clients != null ? (uint)Clients.Count : 0;
@@ -34,26 +34,26 @@ namespace Cutulu
             LastUID = 0;
 
             $"Server started. tcp-{tcpPort} udp-{udpPort}".Log();
-            globalUdp = new UdpProtocol(udpPort, _receiveUdp);
+            globalUdp = new UdpProtocol(udpPort, ReceiveUdp);
 
             TcpListener = new TcpListener(IPAddress.Any, tcpPort);
             TcpListener.Start(10);
 
             // Async client accept
-            if (acceptClients) auth();
+            if (acceptClients) Auth();
         }
 
         /// <summary>
         /// Handles all incomming connections and assigns them to an id<br/>
         /// Then it starts listening to them
         /// </summary>
-        protected virtual async void auth()
+        protected virtual async void Auth()
         {
             // Ignore new connections
             if (!AcceptNewClients)
             {
                 await Task.Delay(100);
-                auth();
+                Auth();
             }
 
             // If a connection exists, the server will accept it
@@ -62,16 +62,16 @@ namespace Cutulu
             // Register client
             lock (Clients)
             {
-                ServerConnection<D> @base = newClient(ref tcp, LastUID++);
+                ServerConnection<D> @base = NewClient(ref tcp, LastUID++);
                 if (@base != null) Clients.Add(@base.UUID, @base);
             }
 
             // Welcome other clients
-            auth();
+            Auth();
         }
 
         /// <summary> Creates new tcp/udp client </summary>
-        protected virtual ServerConnection<D> newClient(ref TcpClient tcp, uint uid)
+        protected virtual ServerConnection<D> NewClient(ref TcpClient tcp, uint uid)
         {
             ServerConnection<D> client = new(ref tcp, uid, ref Clients, this, WelcomeTarget);
             if (tcp.Client != null && tcp.Client.RemoteEndPoint != null)
@@ -103,13 +103,13 @@ namespace Cutulu
                 return null;
             }
 
-            onClientJoin(client);
+            OnClientJoin(client);
             return client;
         }
 
         #region Broadcasting
         /// <summary> Broadcast to all clients </summary>
-        public virtual void Broadcast<T>(byte key, T value, Method method) => Broadcast(key, value, method, Clients != null ? Clients.Values : null);
+        public virtual void Broadcast<T>(byte key, T value, Method method) => Broadcast(key, value, method, Clients?.Values);
 
         /// <summary> Broadcast to selected clients </summary>
         public virtual void Broadcast<T>(byte key, T value, Method method, ICollection<ServerConnection<D>> receivers)
@@ -135,7 +135,7 @@ namespace Cutulu
         public UdpProtocol globalUdp;
         public int UdpPort;
 
-        private void _receiveUdp(byte key, byte[] bytes, IPEndPoint endpoint)
+        private void ReceiveUdp(byte key, byte[] bytes, IPEndPoint endpoint)
         {
             lock (this)
             {
@@ -147,19 +147,16 @@ namespace Cutulu
                         Endpoints.Add(endpoint, client);
                         Queue.Remove(endpoint.Address);
 
-                        client.connect(endpoint);
+                        client.Connect(endpoint);
                     }
                 }
 
-                if (client != null)
-                {
-                    client._receive(key, bytes, Method.Udp);
-                }
+                client?.Receive(key, bytes, Method.Udp);
             }
         }
         #endregion
 
-        protected virtual void onClientJoin(ServerConnection<D> client) { }
-        public virtual void onClientQuit(ServerConnection<D> client) { }
+        protected virtual void OnClientJoin(ServerConnection<D> client) { }
+        public virtual void OnClientQuit(ServerConnection<D> client) { }
     }
 }
