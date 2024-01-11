@@ -14,21 +14,18 @@ namespace Cutulu
             Port = port;
         }
 
-        public bool Connected;
+        public virtual bool Connected() => false;
 
         /// <summary> Closes handler </summary>
-        public virtual void Close()
-        {
-            Connected = false;
-        }
+        public virtual void Close() { }
 
         #region Send Data
         /// <summary>
         /// Valdiates connection
         /// </summary>
-        protected void ValidateConnection()
+        protected void _validateConnection()
         {
-            if (Connected == false) throw new Exception($"{GetType()} is not connected");
+            if (!Connected()) throw new Exception($"{GetType()} is not connected");
         }
         #endregion
     }

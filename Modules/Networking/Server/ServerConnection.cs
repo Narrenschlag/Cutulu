@@ -6,8 +6,8 @@ namespace Cutulu
 {
     public class ServerConnection<D> : Marker<D> where D : Destination
     {
-        public delegate void DisconnectDel(ServerConnection<D> client);
-        public DisconnectDel onClose;
+        public delegate void Disconnect(ServerConnection<D> client);
+        public Disconnect onClose;
         public TcpProtocol tcp;
 
         protected Dictionary<uint, ServerConnection<D>> Registry;
@@ -22,7 +22,7 @@ namespace Cutulu
 
             $"+++ Connected [{UUID}]".Log();
 
-            tcp = new TcpProtocol(ref client, uuid, Receive, Disconnect);
+            tcp = new TcpProtocol(ref client, uuid, _receive, _disconnect);
         }
 
         public virtual void Send<T>(byte key, T value, Method method)
@@ -32,14 +32,14 @@ namespace Cutulu
                 case Method.Tcp:
                     if (ConnectedTcp())
                     {
-                        tcp.Send(key, value);
+                        tcp.send(key, value);
                     }
                     break;
 
                 case Method.Udp:
                     if (ConnectedUdp())
                     {
-                        server.globalUdp.Send(key, value, endPoint);
+                        server.globalUdp.send(key, value, endPoint);
                     }
                     break;
 
@@ -48,12 +48,13 @@ namespace Cutulu
             }
         }
 
-        protected override void Disconnect()
+        protected override void _disconnect()
         {
             $"--- Disconnected [{UUID}]".Log();
-            base.Disconnect();
+            base._disconnect();
 
-            onClose?.Invoke(this);
+            if (onClose != null)
+                onClose(this);
 
             lock (Registry)
             {
@@ -68,17 +69,20 @@ namespace Cutulu
                 }
 
             // Message server of disconnection
-            server?.OnClientQuit(this);
+            if (server != null)
+            {
+                server.onClientQuit(this);
+            }
         }
 
         public virtual bool Connected() => ConnectedTcp() && ConnectedUdp();
-        public bool ConnectedTcp() => tcp != null && tcp.Connected;
+        public bool ConnectedTcp() => tcp != null && tcp.Connected();
         public bool ConnectedUdp() => endPoint != null;
 
         public ServerNetwork<D> server;
         public IPEndPoint endPoint;
 
-        public void Connect(IPEndPoint udpSource)
+        public void connect(IPEndPoint udpSource)
         {
             if (udpSource == null) return;
 

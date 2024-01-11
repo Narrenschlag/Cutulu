@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cg3xqenvy6xnh"]
 
-[ext_resource type="Script" path="res://Cutulu/Networking/Unit Testing/ClientWindow.cs" id="1_nef0e"]
-[ext_resource type="Script" path="res://Cutulu/Networking/Unit Testing/ClientDest.cs" id="2_878gx"]
+[ext_resource type="Script" path="res://Cutulu/Modules/Networking/Unit Testing/ClientWindow.cs" id="1_nef0e"]
+[ext_resource type="Script" path="res://Cutulu/Modules/Networking/Unit Testing/ClientDest.cs" id="2_878gx"]
 
 [node name="Client" type="Window" node_paths=PackedStringArray("Receiver", "Tcp", "Udp", "Key", "String")]
 initial_position = 1

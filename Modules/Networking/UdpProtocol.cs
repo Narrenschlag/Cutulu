@@ -12,7 +12,7 @@ namespace Cutulu
         public UdpPacket serverSideReceive;
         public Packet clientSideReceive;
 
-        private readonly bool isServerClient;
+        private bool isServerClient;
         public UdpClient client;
 
         /// <summary> Creates handle on server side </summary>
@@ -25,22 +25,19 @@ namespace Cutulu
             try
             {
                 client = new UdpClient(port);
-                Connected = true;
 
                 // Set the UDP client to reuse the address and port (optional)
                 client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
                 // Listens to udp signals
-                Listen();
+                _listen();
             }
             catch (Exception ex)
             {
-                Close();
-
                 throw new Exception($"Was not able to establish a udp connection:\n{ex.Message}");
             }
 
-            Listen();
+            _listen();
         }
 
         /// <summary> Creates handle on client side </summary>
@@ -53,20 +50,19 @@ namespace Cutulu
             try
             {
                 client = new UdpClient();
-                Connected = true;
 
                 client.Connect(host, udpPort); // Use the same port as the UDP listener and the same adress as tcp endpoint
 
                 // Listens to udp signals
-                if (onReceive_client != null) Listen();
+                if (onReceive_client != null) _listen();
             }
             catch (Exception ex)
             {
-                Close();
-
                 throw new Exception($"Was not able to establish a udp connection:\n{ex.Message}");
             }
         }
+
+        public override bool Connected() => client != null;
 
         /// <summary> Closes local network elements </summary>
         public override void Close()
@@ -82,9 +78,9 @@ namespace Cutulu
 
         #region Send Data
         /// <summary> Sends data through connection towards special ipendpoint (Server Side) </summary>
-        public void Send<T>(byte key, T value, IPEndPoint destination)
+        public void send<T>(byte key, T value, IPEndPoint destination)
         {
-            ValidateConnection();
+            _validateConnection();
 
             if (destination != null)
             {
@@ -94,9 +90,9 @@ namespace Cutulu
         }
 
         /// <summary> Sends data through connection (Client Side) </summary>
-        public void Send<T>(byte key, T value)
+        public void send<T>(byte key, T value)
         {
-            ValidateConnection();
+            _validateConnection();
 
             byte[] bytes = value.Package(key, Method.Udp);
             client.Send(bytes, bytes.Length);
@@ -105,12 +101,12 @@ namespace Cutulu
 
         #region Receive Data
         /// <summary> Receive packets as long as client is connected </summary>
-        private async void Listen()
+        private async void _listen()
         {
-            while (Connected)
+            while (Connected())
                 try
                 {
-                    await Receive();
+                    await _receive();
                 }
                 catch (Exception ex)
                 {
@@ -119,7 +115,7 @@ namespace Cutulu
         }
 
         /// <summary> Waits for bytes received, reads and then formats them </summary>
-        private async Task Receive()
+        private async Task _receive()
         {
             if (client == null) return;
 
@@ -128,18 +124,24 @@ namespace Cutulu
             byte[] buffer = result.Buffer;
 
             // Decode bytes
-            byte[] bytes = Buffer.Unpack(buffer, out byte key, Method.Udp);
+            byte[] bytes = Buffer.Unpack(buffer, out byte key);
             if (bytes == null) return;
 
             // Invoke callback
             if (isServerClient)
             {
-                serverSideReceive?.Invoke(key, bytes, result.RemoteEndPoint);
+                if (serverSideReceive != null)
+                {
+                    serverSideReceive(key, bytes, result.RemoteEndPoint);
+                }
             }
 
             else
             {
-                clientSideReceive?.Invoke(key, bytes, Method.Udp);
+                if (clientSideReceive != null)
+                {
+                    clientSideReceive(key, bytes, Method.Udp);
+                }
             }
         }
         #endregion

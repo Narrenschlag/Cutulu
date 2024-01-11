@@ -7,42 +7,41 @@ namespace Cutulu
         public TcpProtocol Tcp;
         public UdpProtocol Udp;
 
-        public bool UdpConnected;
-        public bool TcpConnected;
+        public bool UdpConnected { get; private set; }
 
-        public bool FullyConnected() => TcpConnected && UdpConnected;
+        public bool Connected() => Tcp != null && Tcp.Connected();
 
         public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, T destination = null) : base(0, destination)
         {
-            try { Connect(tcpHost, tcpPort, udpHost, udpPort); }
+            try { _connect(tcpHost, tcpPort, udpHost, udpPort); }
             catch { $"Failed to connect to host".LogError(); }
         }
 
-        public override void Receive(byte key, byte[] bytes, Method method)
+        public override void _receive(byte key, byte[] bytes, Method method)
         {
             // Notify client that server has successfully associated the udp client with the tcp client
-            if (UdpConnected == false && key == 0 && bytes.Length == 1)
+            if (UdpConnected == false && key == 0)
             {
-                if (bytes[0] == 255)
+                if (bytes.TryDeserialize(out byte auth) && auth == 255)
                 {
                     UdpConnected = true;
                     return;
                 }
             }
 
-            base.Receive(key, bytes, method);
+            base._receive(key, bytes, method);
         }
 
-        public virtual void Send<V>(byte key, V value, Method method)
+        public virtual void Send<V>(byte key, V value, Method method = Method.Tcp)
         {
             switch (method)
             {
                 case Method.Tcp:
-                    Tcp.Send(key, value);
+                    Tcp.send(key, value);
                     break;
 
                 case Method.Udp:
-                    Udp.Send(key, value);
+                    Udp.send(key, value);
                     break;
 
                 default: break;
@@ -52,24 +51,31 @@ namespace Cutulu
         /// <summary>
         /// Closes current connections and opens new connections
         /// </summary>
-        protected virtual void Connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
+        protected virtual void _connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
-            Close();
+            UdpConnected = false;
 
-            Tcp = new TcpProtocol(tcpHost, tcpPort, Receive, Disconnect);
-            Udp = new UdpProtocol(udpHost, udpPort, Receive);
-
-            if (TcpConnected = Tcp != null && Tcp.Connected)
+            if (Tcp != null)
             {
-                SetupUdp();
+                Tcp.Close();
             }
+
+            if (Udp != null)
+            {
+                Udp.Close();
+            }
+
+            Tcp = new TcpProtocol(tcpHost, tcpPort, _receive, _disconnect);
+            Udp = new UdpProtocol(udpHost, udpPort, _receive);
+
+            _setupUdp();
         }
 
         /// <summary> 
         /// Sends udp packages to server until<br/> 
         /// server associated tcp connection with udp connection 
         /// </summary>
-        private async void SetupUdp()
+        private async void _setupUdp()
         {
             // Stop if connections associated
             if (UdpConnected == true)
@@ -84,28 +90,20 @@ namespace Cutulu
             await Task.Delay(50);
 
             // Restart the function
-            SetupUdp();
+            _setupUdp();
         }
 
         /// <summary>
         /// Called on disconnection from server or network provider
         /// </summary>
-        protected override void Disconnect()
+        protected override void _disconnect()
         {
-            Close();
+            if (Tcp != null) Tcp.Close();
+            if (Udp != null) Udp.Close();
 
-            base.Disconnect();
+            base._disconnect();
 
             "disconnected.".LogError();
-        }
-
-        public virtual void Close()
-        {
-            UdpConnected = false;
-            TcpConnected = false;
-
-            Tcp?.Close();
-            Udp?.Close();
         }
     }
 }

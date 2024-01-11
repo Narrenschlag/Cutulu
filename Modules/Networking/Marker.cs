@@ -38,7 +38,10 @@ namespace Cutulu
             set => __destinations = value;
             get
             {
-                __destinations ??= Array.Empty<D>();
+                if (__destinations == null)
+                {
+                    __destinations = new D[0];
+                }
 
                 return __destinations;
             }
@@ -52,17 +55,21 @@ namespace Cutulu
                 lock (Destinations)
                     for (int i = 0; i < Destinations.Length; i++)
                     {
-                        Destinations?[i].__rem(destination_params);
+                        if (Destinations != null)
+                        {
+                            Destinations[i].__rem(destination_params);
+                        }
                     }
             }
 
             // Assign array
             Destinations = destination != null ?
                 new D[1] { destination } :
-                Array.Empty<D>();
+                new D[0];
 
             // Notify addition to target
-            destination?.__add(destination_params);
+            if (destination != null)
+                destination.__add(destination_params);
         }
 
         public void AddTarget(D destination)
@@ -80,7 +87,7 @@ namespace Cutulu
         }
 
         /// <summary> Receive targets data </summary>
-        public virtual void Receive(byte key, byte[] bytes, Method method)
+        public virtual void _receive(byte key, byte[] bytes, Method method)
         {
             // Iterate through all targets
             if (!ignore_detination_transfer)
@@ -98,15 +105,7 @@ namespace Cutulu
 
                             catch (Exception ex)
                             {
-                                if (Destinations.Length <= i || Destinations[i].IsNull())
-                                {
-                                    $"[Ignoring Marker]: Marker has been destroyed or is null".LogError();
-                                }
-
-                                else
-                                {
-                                    $"[Marker (class: {Destinations[i].GetType()})]: cannot receive packet because {ex.Message}\n{ex.StackTrace}".LogError();
-                                }
+                                $"[Pointer]: cannot receive packet because {ex.Message}".LogError();
                             }
                         }
                     }
@@ -122,15 +121,18 @@ namespace Cutulu
         }
 
         /// <summary> Notify targets about disconnect </summary>
-        protected virtual void Disconnect()
+        protected virtual void _disconnect()
         {
             // Iterate through all targets
             lock (Destinations)
                 for (int i = 0; i < Destinations.Length; i++)
                 {
                     // Validate target
-                    // Notfiy target
-                    Destinations[i]?.__disconnect(destination_params);
+                    if (Destinations[i] != null)
+                    {
+                        // Notfiy target
+                        Destinations[i].__disconnect(destination_params);
+                    }
                 }
 
             // Call delegates
@@ -139,16 +141,6 @@ namespace Cutulu
                 {
                     onDisconnect();
                 }
-        }
-
-        internal void _receive(byte key, object type, byte[] bytes, Method method)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal void _receive(byte key, byte[] bytes, Method method)
-        {
-            throw new NotImplementedException();
         }
     }
 }

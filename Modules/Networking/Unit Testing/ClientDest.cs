@@ -20,7 +20,7 @@ namespace Cutulu.UnitTest.Network
 
             if (output.NotNull())
             {
-                if (bytes.TryDeserialize(out string txt))
+                if (bytes.Unpack(out string txt))
                 {
                     txt = $"{key}> {txt}";
 

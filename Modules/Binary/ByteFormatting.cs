@@ -70,6 +70,11 @@ namespace Cutulu
         /// </summary>
         public static byte[] Serialize<T>(this T source)
         {
+            if (source == null)
+            {
+                return null;
+            }
+
             Type type = typeof(T);
 
             if (IsValue(type) || (type.IsArray && IsValue(type.GetElementType())))
@@ -277,7 +282,7 @@ namespace Cutulu
         #endregion
 
         #region Write and Read Utility
-        private static bool IsValue(Type type) => type.IsPrimitive || AdditionalFormatters.ContainsKey(type) || type == typeof(string);
+        private static bool IsValue(Type type) => type.IsPrimitive || (AdditionalFormatters != null && AdditionalFormatters.ContainsKey(type)) || type == typeof(string);
 
         private static bool Write(Type type, ref object value, BinaryWriter writer)
         {

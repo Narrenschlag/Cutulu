@@ -15,7 +15,7 @@ namespace Cutulu
         protected TcpListener TcpListener;
         protected uint LastUID;
 
-        private readonly D WelcomeTarget;
+        private D WelcomeTarget;
 
         /// <summary> Amount of clients currently connected to the server </summary>
         public uint ClientCount => Clients != null ? (uint)Clients.Count : 0;
@@ -34,26 +34,26 @@ namespace Cutulu
             LastUID = 0;
 
             $"Server started. tcp-{tcpPort} udp-{udpPort}".Log();
-            globalUdp = new UdpProtocol(udpPort, ReceiveUdp);
+            globalUdp = new UdpProtocol(udpPort, _receiveUdp);
 
             TcpListener = new TcpListener(IPAddress.Any, tcpPort);
             TcpListener.Start(10);
 
             // Async client accept
-            if (acceptClients) Auth();
+            if (acceptClients) auth();
         }
 
         /// <summary>
         /// Handles all incomming connections and assigns them to an id<br/>
         /// Then it starts listening to them
         /// </summary>
-        protected virtual async void Auth()
+        protected virtual async void auth()
         {
             // Ignore new connections
             if (!AcceptNewClients)
             {
                 await Task.Delay(100);
-                Auth();
+                auth();
             }
 
             // If a connection exists, the server will accept it
@@ -62,54 +62,39 @@ namespace Cutulu
             // Register client
             lock (Clients)
             {
-                ServerConnection<D> @base = NewClient(ref tcp, LastUID++);
+                ServerConnection<D> @base = newClient(ref tcp, LastUID++);
                 if (@base != null) Clients.Add(@base.UUID, @base);
             }
 
             // Welcome other clients
-            Auth();
+            auth();
         }
 
         /// <summary> Creates new tcp/udp client </summary>
-        protected virtual ServerConnection<D> NewClient(ref TcpClient tcp, uint uid)
+        protected virtual ServerConnection<D> newClient(ref TcpClient tcp, uint uid)
         {
-            ServerConnection<D> client = new(ref tcp, uid, ref Clients, this, WelcomeTarget);
-            if (tcp.Client != null && tcp.Client.RemoteEndPoint != null)
+            ServerConnection<D> client = new ServerConnection<D>(ref tcp, uid, ref Clients, this, WelcomeTarget);
+            IPEndPoint endpoint = tcp.Client.RemoteEndPoint as IPEndPoint;
+
+            if (endpoint != null)
             {
-                if (tcp.Client.RemoteEndPoint is IPEndPoint endpoint)
-                {
-                    IPAddress address = endpoint.Address;
+                IPAddress address = endpoint.Address;
 
-                    if (address != null)
-                        lock (Queue)
-                        {
-                            if (Queue.ContainsKey(address)) Queue[address] = client;
-                            else Queue.Add(address, client);
-                        }
-                }
-
-                else
-                {
-                    $"Client had not enpoint to fetch\nRemote Tcp Endpoint valid: {tcp.Client.RemoteEndPoint != null}".LogError();
-                    tcp.Close();
-                    return null;
-                }
+                if (address != null)
+                    lock (Queue)
+                    {
+                        if (Queue.ContainsKey(address)) Queue[address] = client;
+                        else Queue.Add(address, client);
+                    }
             }
 
-            else
-            {
-                $"Client had problems setting up the udp connection:\nTcp valid: {tcp != null}\nTcp Client instance valid: {tcp != null && tcp.Client != null}".LogError();
-                tcp.Close();
-                return null;
-            }
-
-            OnClientJoin(client);
+            onClientJoin(client);
             return client;
         }
 
         #region Broadcasting
         /// <summary> Broadcast to all clients </summary>
-        public virtual void Broadcast<T>(byte key, T value, Method method) => Broadcast(key, value, method, Clients?.Values);
+        public virtual void Broadcast<T>(byte key, T value, Method method) => Broadcast(key, value, method, Clients != null ? Clients.Values : null);
 
         /// <summary> Broadcast to selected clients </summary>
         public virtual void Broadcast<T>(byte key, T value, Method method, ICollection<ServerConnection<D>> receivers)
@@ -118,6 +103,11 @@ namespace Cutulu
 
             foreach (ServerConnection<D> client in receivers)
             {
+                if (client == null)
+                {
+                    continue;
+                }
+
                 try { client.Send(key, value, method); }
                 catch (Exception ex) { throw new Exception($"[tcpServer]: Client {client.UUID} was not reachable:\n{ex.Message}"); }
             }
@@ -130,7 +120,7 @@ namespace Cutulu
         public UdpProtocol globalUdp;
         public int UdpPort;
 
-        private void ReceiveUdp(byte key, byte[] bytes, IPEndPoint endpoint)
+        private void _receiveUdp(byte key, byte[] bytes, IPEndPoint endpoint)
         {
             lock (this)
             {
@@ -142,16 +132,19 @@ namespace Cutulu
                         Endpoints.Add(endpoint, client);
                         Queue.Remove(endpoint.Address);
 
-                        client.Connect(endpoint);
+                        client.connect(endpoint);
                     }
                 }
 
-                client?._receive(key, bytes, Method.Udp);
+                if (client != null)
+                {
+                    client._receive(key, bytes, Method.Udp);
+                }
             }
         }
         #endregion
 
-        protected virtual void OnClientJoin(ServerConnection<D> client) { }
-        public virtual void OnClientQuit(ServerConnection<D> client) { }
+        protected virtual void onClientJoin(ServerConnection<D> client) { }
+        public virtual void onClientQuit(ServerConnection<D> client) { }
     }
 }

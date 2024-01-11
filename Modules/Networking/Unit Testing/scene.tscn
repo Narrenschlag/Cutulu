@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://bfrq0qlxotl27"]
 
-[ext_resource type="Script" path="res://Cutulu/Networking/Unit Testing/UnitTest.cs" id="1_f2j1b"]
-[ext_resource type="Script" path="res://Cutulu/Networking/Unit Testing/ServerNode.cs" id="2_d0koy"]
-[ext_resource type="PackedScene" uid="uid://cg3xqenvy6xnh" path="res://Cutulu/Networking/Unit Testing/client_window.tscn" id="3_p6wjg"]
+[ext_resource type="Script" path="res://Cutulu/Modules/Networking/Unit Testing/UnitTest.cs" id="1_f2j1b"]
+[ext_resource type="Script" path="res://Cutulu/Modules/Networking/Unit Testing/ServerNode.cs" id="2_d0koy"]
+[ext_resource type="PackedScene" uid="uid://cg3xqenvy6xnh" path="res://Cutulu/Modules/Networking/Unit Testing/client_window.tscn" id="3_p6wjg"]
 
 [node name="Unit Tests" type="Node" node_paths=PackedStringArray("ServerNode", "ServerSendTcp", "ServerSendUdp", "ClientSide")]
 script = ExtResource("1_f2j1b")
