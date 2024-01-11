@@ -152,7 +152,7 @@ namespace Cutulu
 
                 if (Write(_type = properties[i].PropertyType, ref _value, writer) == false)
                 {
-                    $"Value Type of {_type} is not supported".LogError();
+                    $"Value Type of {_type} is not supported. You could add an additional ByteFormatterOverride and register it.".LogError();
                     continue;
                 }
             }
@@ -261,7 +261,7 @@ namespace Cutulu
                 // Ignore value of it's not supported by any built in or addition formatter
                 if (Read(_type = properties[i].PropertyType, out object value, reader) == false)
                 {
-                    $"Value Type of {_type} is not supported. This may produce further problems.".LogError();
+                    $"Value Type of {_type} is not supported. This may produce further problems. You could add an additional ByteFormatterOverride and register it.".LogError();
                     continue;
                 }
 
