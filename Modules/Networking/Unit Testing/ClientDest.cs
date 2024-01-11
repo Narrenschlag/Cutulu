@@ -22,7 +22,7 @@ namespace Cutulu.UnitTest.Network
             {
                 if (bytes.Unpack(out string txt))
                 {
-                    txt = $"{key}> {txt}";
+                    txt = $"{method}({key})[{bytes.Length}] {key}> {txt}";
 
                     if (output.Text.Length > 255)
                     {
@@ -35,7 +35,7 @@ namespace Cutulu.UnitTest.Network
                 }
                 else
                 {
-                    output.Text += $"key({key}) {bytes.Length} bytes\n";
+                    output.Text += $"{method}({key}) {bytes.Length} bytes\n";
                 }
             }
         }
