@@ -35,22 +35,18 @@ namespace Cutulu.UnitTest.Network
             }
         }
 
-        private void onClientSide()
+        private void OnClientSide()
         {
-            if (Windows == null)
-            {
-                Windows = new List<ClientWindow>();
-            }
-
+            Windows ??= new List<ClientWindow>();
             Windows.Add(ClientWindowPrefab.Instantiate<ClientWindow>(this));
         }
 
-        private void onSendServerTcp()
+        private void OnSendServerTcp()
         {
             Server.Broadcast(0, "test", Method.Tcp);
         }
 
-        private void onSendServerUdp()
+        private void OnSendServerUdp()
         {
             Server.Broadcast(0, "test", Method.Udp);
         }

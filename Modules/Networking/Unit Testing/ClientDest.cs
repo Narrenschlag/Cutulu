@@ -14,9 +14,9 @@ namespace Cutulu.UnitTest.Network
             }
         }
 
-        public override void __receive(byte key, byte[] bytes, Method method, params object[] values)
+        public override void Receive(byte key, byte[] bytes, Method method, params object[] values)
         {
-            base.__receive(key, bytes, method, values);
+            base.Receive(key, bytes, method, values);
 
             if (output.NotNull())
             {

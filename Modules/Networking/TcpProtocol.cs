@@ -30,8 +30,8 @@ namespace Cutulu
 
             stream = client.GetStream();
 
-            send(0, welcome);
-            _listen();
+            Send(0, welcome);
+            Listen();
         }
 
         /// <summary> Creates handle on client side </summary>
@@ -52,14 +52,14 @@ namespace Cutulu
 
             stream = client.GetStream();
 
-            _listen();
+            Listen();
         }
 
         /// <summary> Closes local network elements </summary>
         public override void Close()
         {
-            if (stream != null) stream.Close();
-            if (client != null) client.Close();
+            stream?.Close();
+            client?.Close();
 
             onDisconnect = null;
             base.Close();
@@ -67,9 +67,9 @@ namespace Cutulu
 
         #region Send Data
         /// <summary> Sends data through connection </summary>
-        public void send<T>(byte key, T value)
+        public void Send<T>(byte key, T value)
         {
-            _validateConnection();
+            ValidateConnection();
 
             byte[] bytes = value.PackageRaw(key, Method.Tcp);
 
@@ -85,11 +85,11 @@ namespace Cutulu
 
         #region Receive Data
         /// <summary> Receive packets as long as client is connected </summary>
-        protected async void _listen()
+        protected async void Listen()
         {
             while (Connected)
             {
-                try { await _receive(); }
+                try { await Receive(); }
                 catch (Exception ex)
                 {
                     ex.Message.Log();
@@ -97,11 +97,11 @@ namespace Cutulu
                 }
             }
 
-            _disconnected();
+            Disconnected();
         }
 
         /// <summary> Waits for bytes received, reads and then formats them </summary>
-        protected async Task _receive()
+        protected async Task Receive()
         {
             // Define buffer for strorage
             byte[] bytes = new byte[2];
@@ -130,10 +130,9 @@ namespace Cutulu
         #endregion
 
         /// <summary> Called on client disconnect </summary>
-        private void _disconnected()
+        private void Disconnected()
         {
-            if (onDisconnect != null)
-                onDisconnect();
+            onDisconnect?.Invoke();
 
             Close();
         }

@@ -38,10 +38,7 @@ namespace Cutulu
             set => __destinations = value;
             get
             {
-                if (__destinations == null)
-                {
-                    __destinations = new D[0];
-                }
+                __destinations ??= Array.Empty<D>();
 
                 return __destinations;
             }
@@ -55,21 +52,17 @@ namespace Cutulu
                 lock (Destinations)
                     for (int i = 0; i < Destinations.Length; i++)
                     {
-                        if (Destinations != null)
-                        {
-                            Destinations[i].__rem(destination_params);
-                        }
+                        Destinations?[i].Rem(destination_params);
                     }
             }
 
             // Assign array
             Destinations = destination != null ?
                 new D[1] { destination } :
-                new D[0];
+                Array.Empty<D>();
 
             // Notify addition to target
-            if (destination != null)
-                destination.__add(destination_params);
+            destination?.Add(destination_params);
         }
 
         public void AddTarget(D destination)
@@ -83,11 +76,11 @@ namespace Cutulu
             _[Destinations.Length] = destination;
 
             // Notify addition to target
-            destination.__add(destination_params);
+            destination.Add(destination_params);
         }
 
         /// <summary> Receive targets data </summary>
-        public virtual void _receive(byte key, byte[] bytes, Method method)
+        public virtual void Receive(byte key, byte[] bytes, Method method)
         {
             // Iterate through all targets
             if (!ignore_detination_transfer)
@@ -100,7 +93,7 @@ namespace Cutulu
                             try
                             {
                                 // Notify target
-                                Destinations[i].__receive(key, bytes, method, destination_params);
+                                Destinations[i].Receive(key, bytes, method, destination_params);
                             }
 
                             catch (Exception ex)
@@ -129,18 +122,15 @@ namespace Cutulu
         }
 
         /// <summary> Notify targets about disconnect </summary>
-        protected virtual void _disconnect()
+        protected virtual void Disconnected()
         {
             // Iterate through all targets
             lock (Destinations)
                 for (int i = 0; i < Destinations.Length; i++)
                 {
                     // Validate target
-                    if (Destinations[i] != null)
-                    {
-                        // Notfiy target
-                        Destinations[i].__disconnect(destination_params);
-                    }
+                    // Notfiy target
+                    Destinations[i]?.Disconnect(destination_params);
                 }
 
             // Call delegates

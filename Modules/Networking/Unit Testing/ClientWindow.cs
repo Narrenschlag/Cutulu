@@ -29,12 +29,12 @@ namespace Cutulu.UnitTest.Network
             }
         }
 
-        private void sendTcp()
+        private void SendTcp()
         {
             Net.Send(byte.TryParse(Key.Text, out byte key) ? key : (byte)0, String.Text, Method.Tcp);
         }
 
-        private void sendUdp()
+        private void SendUdp()
         {
             Net.Send(byte.TryParse(Key.Text, out byte key) ? key : (byte)0, String.Text, Method.Udp);
         }
