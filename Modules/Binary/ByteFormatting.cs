@@ -72,7 +72,7 @@ namespace Cutulu
         {
             Type type = typeof(T);
 
-            if (IsPrimitive(type) || (type.IsArray && IsPrimitive(type.GetElementType())))
+            if (IsValue(type) || (type.IsArray && IsValue(type.GetElementType())))
             {
                 return SerializeValue(type, source);
             }
@@ -180,7 +180,7 @@ namespace Cutulu
         {
             Type type = typeof(T);
 
-            if (IsPrimitive(type) || (type.IsArray && IsPrimitive(type.GetElementType())))
+            if (IsValue(type) || (type.IsArray && IsValue(type.GetElementType())))
             {
                 return DeserializeValue<T>(bytes);
             }
@@ -277,7 +277,7 @@ namespace Cutulu
         #endregion
 
         #region Write and Read Utility
-        private static bool IsPrimitive(Type type) => type.IsPrimitive || AdditionalFormatters.ContainsKey(type);
+        private static bool IsValue(Type type) => type.IsPrimitive || AdditionalFormatters.ContainsKey(type) || type == typeof(string);
 
         private static bool Write(Type type, ref object value, BinaryWriter writer)
         {
