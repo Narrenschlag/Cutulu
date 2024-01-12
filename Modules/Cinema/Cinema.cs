@@ -85,6 +85,22 @@ namespace Cutulu
             Target(target, instant);
         }
 
+        public static void SetGlobalPosition(Vector3 globalPosition)
+        {
+            if (Singleton.NotNull() && perspective.NotNull())
+            {
+                Singleton.SetGlobalPosition(globalPosition, false);
+            }
+        }
+
+        public static void SetGlobalPosition(Node3D target, Vector3 globalPosition)
+        {
+            if (Singleton.NotNull() && target == Singleton.target)
+            {
+                SetGlobalPosition(globalPosition);
+            }
+        }
+
         public static void Target(Node3D target, bool instant = true)
         {
             if (Singleton.IsNull())
@@ -95,9 +111,9 @@ namespace Cutulu
 
             Singleton.target = target;
 
-            if (instant && perspective.NotNull())
+            if (instant)
             {
-                Singleton.GlobalPositionPivot.GlobalPosition = target.GlobalPosition + perspective.GlobalOffset;
+                SetGlobalPosition(target.GlobalPosition);
             }
         }
 
@@ -130,6 +146,13 @@ namespace Cutulu
         }
         #endregion
 
+        private void SetGlobalPosition(Vector3 globalPosition, bool ignoreOffset = true)
+        {
+            GlobalPositionPivot.GlobalPosition = ignoreOffset == false ?
+                globalPosition + perspective.GlobalOffset :
+                globalPosition;
+        }
+
         private void MoveCamera(float delta)
         {
             // Read local input
@@ -137,9 +160,10 @@ namespace Cutulu
             this.input = Vector2.Zero;
 
             // Apply positioning
-            GlobalPositionPivot.GlobalPosition = perspective.LerpPosition ?
+            this.SetGlobalPosition(perspective.LerpPosition ?
                 GlobalPositionPivot.GlobalPosition.Lerp(target.GlobalPosition + perspective.GlobalOffset, delta * perspective.LerpSpeed) :
-                target.GlobalPosition + perspective.GlobalOffset;
+                target.GlobalPosition + perspective.GlobalOffset
+            );
 
             // Left/Right
             if (RotationYPivot.NotNull())
