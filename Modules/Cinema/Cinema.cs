@@ -181,13 +181,13 @@ namespace Cutulu
             // Perspective Offset
             if (LocalPositionPivot.NotNull())
             {
-                LocalPositionPivot.Position = LocalPositionPivot.Position.Lerp(perspective.LocalOffset, 5 * delta);
+                LocalPositionPivot.Position = LocalPositionPivot.Position.Lerp(perspective.LocalOffset, 8 * delta);
             }
 
             // Perspective Angle
             if (LocalRotationPivot.NotNull())
             {
-                LocalRotationPivot.Rotation = LocalRotationPivot.Rotation.setX(Mathf.LerpAngle(LocalRotationPivot.Rotation.X, perspective.CameraAngle, delta * 5));
+                LocalRotationPivot.Rotation = LocalRotationPivot.Rotation.setX(Mathf.LerpAngle(LocalRotationPivot.Rotation.X, perspective.CameraAngle, delta * 8));
             }
         }
     }
