@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using Godot;
 
@@ -5,19 +6,19 @@ namespace Cutulu
 {
     public class WebRequest
     {
-        public delegate void Result(bool success, Godot.Collections.Dictionary result);
+        public delegate void Result(bool success, string result);
         private readonly HttpRequest request;
         private readonly Result onReceive;
 
-        public WebRequest(string url, Result result = null) : this(result)
+        public WebRequest(Node node, string url, Result result = null) : this(node, result)
         {
             request.Request(url, null, HttpClient.Method.Get);
         }
 
-        public WebRequest(string url, string[] headers, Result result) : this(url, "", headers, result) { }
-        public WebRequest(string url, string json, Result result) : this(url, json, null, result) { }
+        public WebRequest(Node node, string url, string[] headers, Result result) : this(node, url, "", headers, result) { }
+        public WebRequest(Node node, string url, string json, Result result) : this(node, url, json, null, result) { }
 
-        public WebRequest(string url, string json, string[] headers, Result result = null) : this(result)
+        public WebRequest(Node node, string url, string json, string[] headers, Result result = null) : this(node, result)
         {
             if (url.IsEmpty())
             {
@@ -27,9 +28,10 @@ namespace Cutulu
             request.Request(url, headers, HttpClient.Method.Post, json);
         }
 
-        private WebRequest(Result result)
+        private WebRequest(Node node, Result result)
         {
             request = new HttpRequest();
+            node.AddChild(request);
             onReceive = result;
 
             request.RequestCompleted += OnRequestCompleted;
@@ -39,7 +41,7 @@ namespace Cutulu
         {
             request.Destroy();
 
-            onReceive?.Invoke(responseCode == 0, Json.ParseString(Encoding.UTF8.GetString(body)).AsGodotDictionary());
+            onReceive?.Invoke(responseCode == (byte)HttpClient.ResponseCode.Ok, Encoding.UTF8.GetString(body).Trim()); // Json.ParseString(Encoding.UTF8.GetString(body)).AsGodotDictionary());
         }
     }
 }
