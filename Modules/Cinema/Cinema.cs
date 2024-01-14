@@ -149,8 +149,33 @@ namespace Cutulu
         private void SetGlobalPosition(Vector3 globalPosition, bool ignoreOffset = true)
         {
             GlobalPositionPivot.GlobalPosition = ignoreOffset == false ?
-                globalPosition + perspective.GlobalOffset :
+                PosPlusOffset(globalPosition) :
                 globalPosition;
+        }
+
+        private Vector3 PosPlusOffset(Vector3 globalPosition)
+        {
+            globalPosition += Vector3.Up * perspective.GlobalOffset.Y;
+
+            if (perspective.GlobalOffset.X != 0)
+            {
+                globalPosition += RotationYPivot.Right() * perspective.GlobalOffset.X;
+            }
+
+            if (perspective.GlobalOffset.Z != 0)
+            {
+                globalPosition += RotationYPivot.Forward() * perspective.GlobalOffset.Z;
+            }
+
+            return globalPosition;
+        }
+
+        public static void EnsureCamera()
+        {
+            if (Singleton.NotNull())
+            {
+                Singleton.MoveCamera(0);
+            }
         }
 
         private void MoveCamera(float delta)
@@ -161,8 +186,8 @@ namespace Cutulu
 
             // Apply positioning
             this.SetGlobalPosition(perspective.LerpPosition ?
-                GlobalPositionPivot.GlobalPosition.Lerp(target.GlobalPosition + perspective.GlobalOffset, delta * perspective.LerpSpeed) :
-                target.GlobalPosition + perspective.GlobalOffset
+                GlobalPositionPivot.GlobalPosition.Lerp(PosPlusOffset(target.GlobalPosition), delta * perspective.LerpSpeed) :
+                PosPlusOffset(target.GlobalPosition)
             );
 
             // Left/Right
