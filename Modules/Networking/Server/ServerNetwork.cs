@@ -157,10 +157,11 @@ namespace Cutulu
                     client.Receive(key, bytes, Method.Udp);
                 }
 
-                else
-                {
-                    $"Non fitting package with safetyId: {safetyId}".LogError();
-                }
+                // Debug non fitting packages (wrong safety id)
+                //else
+                //{
+                //    $"Non fitting package with safetyId: {safetyId}".LogError();
+                //}
             }
         }
         #endregion
