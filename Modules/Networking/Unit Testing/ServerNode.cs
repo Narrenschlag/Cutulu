@@ -5,7 +5,7 @@ namespace Cutulu.UnitTest.Network
         public override void Receive(byte key, byte[] bytes, Method method, params object[] values)
         {
             ServerConnection<Destination> client = values[0] as ServerConnection<Destination>;
-            $"{client.UUID}> {method}-{key}".Log();
+            $"{client.UUID}-{method}:  [{key}]".Log();
         }
     }
 }

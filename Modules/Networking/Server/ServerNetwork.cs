@@ -135,7 +135,7 @@ namespace Cutulu
         public UdpProtocol globalUdp;
         public int UdpPort;
 
-        private void ReceiveUdp(byte key, byte[] bytes, IPEndPoint endpoint)
+        private void ReceiveUdp(byte key, byte[] bytes, IPEndPoint endpoint, ushort safetyId)
         {
             lock (this)
             {
@@ -151,7 +151,16 @@ namespace Cutulu
                     }
                 }
 
-                client?.Receive(key, bytes, Method.Udp);
+                // Validate safety id and send accept package
+                if (client != null && client.SafetyId == safetyId)
+                {
+                    client.Receive(key, bytes, Method.Udp);
+                }
+
+                else
+                {
+                    $"Non fitting package with safetyId: {safetyId}".LogError();
+                }
             }
         }
         #endregion

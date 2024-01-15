@@ -12,7 +12,7 @@ namespace Cutulu
 
         protected Dictionary<uint, ServerConnection<D>> Registry;
 
-        public ServerConnection(ref TcpClient client, uint uuid, ref Dictionary<uint, ServerConnection<D>> registry, ServerNetwork<D> server, D destination, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, destination, onReceive, onDisconnect)
+        public ServerConnection(ref TcpClient client, uint uuid, ref Dictionary<uint, ServerConnection<D>> registry, ServerNetwork<D> server, D destination, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, (ushort)uuid, destination, onReceive, onDisconnect)
         {
             Registry = registry;
 
@@ -83,7 +83,7 @@ namespace Cutulu
             if (udpSource == null) return;
 
             endPoint = udpSource;
-            Send(0, (byte)255, Method.Tcp);
+            Send(255, SafetyId, Method.Tcp);
 
             $"Client({UUID}) has been fully connected successfully.".Log();
         }

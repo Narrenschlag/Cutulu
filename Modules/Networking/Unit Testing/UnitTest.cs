@@ -25,18 +25,20 @@ namespace Cutulu.UnitTest.Network
 
             if (ClientSide.NotNull())
             {
-                ClientSide.ConnectButton(this, "onClientSide");
+                ClientSide.ConnectButton(this, "OnClientSide");
             }
 
             if (ServerSendTcp.NotNull())
             {
-                ServerSendTcp.ConnectButton(this, "onSendServerTcp");
-                ServerSendUdp.ConnectButton(this, "onSendServerUdp");
+                ServerSendTcp.ConnectButton(this, "OnSendServerTcp");
+                ServerSendUdp.ConnectButton(this, "OnSendServerUdp");
             }
         }
 
         private void OnClientSide()
         {
+            "Creating client".Log();
+
             Windows ??= new List<ClientWindow>();
             Windows.Add(ClientWindowPrefab.Instantiate<ClientWindow>(this));
         }

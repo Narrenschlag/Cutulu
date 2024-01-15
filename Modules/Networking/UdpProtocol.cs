@@ -7,7 +7,7 @@ namespace Cutulu
 {
     public class UdpProtocol : Protocol
     {
-        public delegate void UdpPacket(byte key, byte[] bytes, IPEndPoint source);
+        public delegate void UdpPacket(byte key, byte[] bytes, IPEndPoint source, ushort safetyId);
 
         public UdpPacket serverSideReceive;
         public Packet clientSideReceive;
@@ -94,11 +94,11 @@ namespace Cutulu
         }
 
         /// <summary> Sends data through connection (Client Side) </summary>
-        public void Send<T>(byte key, T value)
+        public void Send<T>(byte key, T value, ushort safetyId)
         {
             ValidateConnection();
 
-            byte[] bytes = value.PackageRaw(key, Method.Udp);
+            byte[] bytes = value.PackageRawUdpClient(key, safetyId);
             client.Send(bytes, bytes.Length);
         }
         #endregion
@@ -127,18 +127,22 @@ namespace Cutulu
             UdpReceiveResult result = await client.ReceiveAsync();
             byte[] buffer = result.Buffer;
 
-            // Decode bytes
-            byte[] bytes = Buffer.UnpackRaw(buffer, out byte key);
-            if (bytes == null) return;
-
             // Invoke callback
             if (isServerClient)
             {
-                serverSideReceive?.Invoke(key, bytes, result.RemoteEndPoint);
+                // Decode bytes
+                byte[] bytes = Buffer.UnpackRawUdpServer(buffer, out byte key, out ushort safetyId);
+                if (bytes == null) return;
+
+                serverSideReceive?.Invoke(key, bytes, result.RemoteEndPoint, safetyId);
             }
 
             else
             {
+                // Decode bytes
+                byte[] bytes = Buffer.UnpackRaw(buffer, out byte key);
+                if (bytes == null) return;
+
                 clientSideReceive?.Invoke(key, bytes, Method.Udp);
             }
         }

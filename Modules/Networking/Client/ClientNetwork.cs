@@ -12,7 +12,7 @@ namespace Cutulu
 
         public bool FullyConnected() => TcpConnected && UdpConnected;
 
-        public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, T destination = null) : base(0, destination)
+        public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, T destination = null) : base(0, 0, destination)
         {
             try { Connect(tcpHost, tcpPort, udpHost, udpPort); }
             catch { $"Failed to connect to host".LogError(); }
@@ -21,10 +21,11 @@ namespace Cutulu
         public override void Receive(byte key, byte[] bytes, Method method)
         {
             // Notify client that server has successfully associated the udp client with the tcp client
-            if (UdpConnected == false && key == 0)
+            if (UdpConnected == false && key == 255)
             {
-                if (bytes.TryDeserialize(out byte auth) && auth == 255)
+                if (bytes.TryDeserialize(out ushort safetyId))
                 {
+                    SafetyId = safetyId;
                     UdpConnected = true;
                     return;
                 }
@@ -42,7 +43,7 @@ namespace Cutulu
                     break;
 
                 case Method.Udp:
-                    Udp.Send(key, value);
+                    Udp.Send(key, value, SafetyId);
                     break;
 
                 default: break;

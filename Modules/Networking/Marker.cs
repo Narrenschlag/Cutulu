@@ -7,6 +7,9 @@ namespace Cutulu
         // Unique user identification index
         public uint UUID { private set; get; }
 
+        // Safety Identification for unknown udp packages
+        public ushort SafetyId { protected set; get; }
+
         // Local delegates
         public Protocol.Empty onDisconnect;
         public Protocol.Packet onReceive;
@@ -17,10 +20,12 @@ namespace Cutulu
         /// <summary> Custom params for the target class </summary>
         public object[] destination_params;
 
-        public Marker(uint uuid, D destination = null, Protocol.Packet receiver = null, Protocol.Empty disconnector = null)
+        public Marker(uint uuid, ushort safetyId, D destination = null, Protocol.Packet receiver = null, Protocol.Empty disconnector = null)
         {
             this.destination_params = new object[1] { this };
             this.ignore_detination_transfer = false;
+
+            this.SafetyId = safetyId;
             this.UUID = uuid;
 
             this.onDisconnect = disconnector;

@@ -20,12 +20,12 @@ namespace Cutulu.UnitTest.Network
 
             if (Tcp.NotNull())
             {
-                Tcp.ConnectButton(this, "sendTcp");
+                Tcp.ConnectButton(this, "SendTcp");
             }
 
             if (Udp.NotNull())
             {
-                Udp.ConnectButton(this, "sendUdp");
+                Udp.ConnectButton(this, "SendUdp");
             }
         }
 
