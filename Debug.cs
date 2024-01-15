@@ -17,6 +17,7 @@ namespace Cutulu
         public static void LogError(this object obj) => LogError(obj.ToString());
         public static void Log(this object obj) => Log(obj.ToString());
 
+        public static void LogWarning(this string message) => GD.PushWarning(message);
         public static void LogError(this string message) => GD.PrintErr(message);
         public static void Log(this string message) => GD.Print(message);
 
