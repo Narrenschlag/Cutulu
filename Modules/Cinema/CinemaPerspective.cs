@@ -14,6 +14,7 @@ namespace Cutulu
         [Export] public bool LerpPosition;
 
         [ExportGroup("Rotation Left-Right")]
+        [Export] public bool TranslateToInstant;
         [Export] public float RotationSpeedY;
         [Export] public float CameraAngle;
 
