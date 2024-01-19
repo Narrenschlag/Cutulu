@@ -73,7 +73,7 @@ namespace Cutulu
         /// <summary> Creates new tcp/udp client </summary>
         protected virtual ServerConnection<D> NewClient(ref TcpClient tcp, uint uid)
         {
-            ServerConnection<D> client = new(ref tcp, uid, ref Clients, this, WelcomeTarget);
+            ServerConnection<D> client;
             if (tcp.Client != null && tcp.Client.RemoteEndPoint != null)
             {
                 if (tcp.Client.RemoteEndPoint is IPEndPoint endpoint)
@@ -83,28 +83,29 @@ namespace Cutulu
                     if (address != null)
                         lock (Queue)
                         {
+                            client = new(ref tcp, uid, ref Clients, this, WelcomeTarget);
+
                             if (Queue.ContainsKey(address)) Queue[address] = client;
                             else Queue.Add(address, client);
                         }
+
+                    else return error($"Client endpoint address is invalid", ref tcp);
                 }
 
-                else
-                {
-                    $"Client had not enpoint to fetch\nRemote Tcp Endpoint valid: {tcp.Client.RemoteEndPoint != null}".LogError();
-                    tcp.Close();
-                    return null;
-                }
+                else return error($"Client had not enpoint to fetch\nRemote Tcp Endpoint valid: {tcp.Client.RemoteEndPoint != null}", ref tcp);
             }
 
-            else
-            {
-                $"Client had problems setting up the udp connection:\nTcp valid: {tcp != null}\nTcp Client instance valid: {tcp != null && tcp.Client != null}".LogError();
-                tcp.Close();
-                return null;
-            }
+            else return error($"Client had problems setting up the udp connection:\nTcp valid: {tcp != null}\nTcp Client instance valid: {tcp != null && tcp.Client != null}", ref tcp);
 
             OnClientJoin(client);
             return client;
+
+            static ServerConnection<D> error(string message, ref TcpClient tcp)
+            {
+                message.LogError();
+                tcp?.Close();
+                return null;
+            }
         }
 
         #region Broadcasting
