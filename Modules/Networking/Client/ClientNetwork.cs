@@ -55,7 +55,6 @@ namespace Cutulu
         /// </summary>
         protected virtual void Connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
         {
-            UdpConnected = false;
             Close();
 
             Tcp = new TcpProtocol(tcpHost, tcpPort, Receive, Disconnected);

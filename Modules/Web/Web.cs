@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text;
 using Godot;
 
@@ -10,25 +9,20 @@ namespace Cutulu
         private readonly HttpRequest request;
         private readonly Result onReceive;
 
-        public WebRequest(Node node, string url, Result result = null) : this(node, result)
+        public WebRequest(Node node, string url, Result result = null) : this(ref node, result)
         {
-            request.Request(url, null, HttpClient.Method.Get);
+            request.Request(url, null, HttpClient.Method.Get, "");
         }
 
         public WebRequest(Node node, string url, string[] headers, Result result) : this(node, url, "", headers, result) { }
         public WebRequest(Node node, string url, string json, Result result) : this(node, url, json, null, result) { }
 
-        public WebRequest(Node node, string url, string json, string[] headers, Result result = null) : this(node, result)
+        public WebRequest(Node node, string url, string json, string[] headers, Result result = null) : this(ref node, result)
         {
-            if (url.IsEmpty())
-            {
-                url = "127.0.0.1";
-            }
-
             request.Request(url, headers, HttpClient.Method.Post, json);
         }
 
-        private WebRequest(Node node, Result result)
+        private WebRequest(ref Node node, Result result)
         {
             request = new HttpRequest();
             node.AddChild(request);
