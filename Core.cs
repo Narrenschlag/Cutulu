@@ -36,20 +36,66 @@ namespace Cutulu
         public static float toDegrees(this float radians) => radians / Mathf.Pi * 180;
         public static float toRadians(this float degree) => degree / 180 * Mathf.Pi;
 
-        public static void lerpLookY(this Node3D node, Vector3 globalPosition, float lerp)
+        public static float GetYRotation(this Vector3 direction, bool useRadians = false)
         {
-            Vector3 Rotation = node.Rotation;
-            node.LookAt(globalPosition);
+            // Ensure the direction is normalized
+            direction = direction.Normalized();
 
-            node.Rotation = Rotation.setY(Mathf.LerpAngle(Rotation.Y, node.Rotation.Y, lerp));
+            // Calculate the angle using the arctangent function
+            // Adjust the angle to be positive and between 0 and 360 units
+            float angle = (Mathf.Atan2(direction.X, direction.Z) + Mathf.Pi * 2) % (Mathf.Pi * 2);
+
+            // Convert the angle to degrees if needed
+            return useRadians ? angle : angle.toDegrees();
         }
 
-        public static void lerpLookYDir(this Node3D node, Vector3 dir, float lerp, bool global = false)
+        public static Vector3 GetDirectionFromYRotation(this float angle, bool useRadians = false)
         {
-            float angle = Vector2.Zero.AngleToPoint(dir.toXY().RotatedD(90));
+            // Convert the angle to radians if needed
+            if (useRadians)
+            {
+                angle = angle.toRadians();
+            }
 
-            if (global) node.GlobalRotation = node.GlobalRotation.setY(Mathf.LerpAngle(node.GlobalRotation.Y, angle, lerp));
-            else node.Rotation = node.Rotation.setY(Mathf.LerpAngle(node.Rotation.Y, angle, lerp));
+            // Calculate the direction using trigonometric functions
+            float x = Mathf.Cos(angle);
+            float z = Mathf.Sin(angle);
+
+            return new Vector3(x, 0, z);
+        }
+
+        public static float GetAngleToFront180(this Vector3 FromGlobalPosition, Node3D Target, bool useRadians = false)
+        {
+            return GetAngleToFront180(
+                GetYRotation(FromGlobalPosition - Target.GlobalPosition, useRadians),
+                useRadians ? Target.Rotation.Y : Target.RotationDegrees.Y,
+                useRadians
+                );
+        }
+
+        public static float GetAngleToFront180(this float fromAngle, float toAngle, bool useRadians = false)
+        {
+            // Convert angles to radians if needed
+            if (useRadians == false)
+            {
+                fromAngle = fromAngle.toRadians();
+                toAngle = toAngle.toRadians();
+            }
+
+            // Calculate the difference between the angles
+            float delta = toAngle - fromAngle;
+
+            // Wrap the delta within the range of -Pi to Pi (or -180 to 180 degrees)
+            delta = (delta + Mathf.Pi) % (Mathf.Pi * 2);
+
+            // Ensure the result is in the range of 0 to 180 degrees and inverted
+            delta = Mathf.Abs(delta);
+            if (delta > Mathf.Pi)
+                delta = 2 * Mathf.Pi - delta;
+            delta = Mathf.Pi - delta;
+
+            // Convert delta back to degrees if needed
+            return useRadians ? delta : delta.toDegrees();
         }
         #endregion
 
