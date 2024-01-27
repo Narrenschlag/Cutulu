@@ -39,7 +39,7 @@ namespace Cutulu
             NestedString nestedString = Parse(plain, openKeys, closeKey, openSuffix, closePrefix, trimValues);
             T _class = new T();
 
-            List<(string key, string value)> list = new List<(string key, string value)>();
+            List<(string key, string value)> list = new();
             foreach ((string key, string value) in list)
                 _class.SetFieldValue(key, value);
 
