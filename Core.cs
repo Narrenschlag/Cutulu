@@ -4,6 +4,7 @@ using System;
 
 using Godot;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Cutulu
 {
@@ -112,7 +113,19 @@ namespace Cutulu
             }
         }
 
-        public static void DestroyAfter(this Node node, float lifeTime, bool forceInstant = false) => QueueAction(lifeTime, delegate { node.Destroy(forceInstant); });
+        public static async void Destroy(this Node node, float lifeTime, bool forceInstant = false)
+        {
+            await Task.Delay(Mathf.RoundToInt(lifeTime * 1000));
+
+            if (node.NotNull())
+            {
+                lock (node)
+                {
+                    Destroy(node, forceInstant);
+                }
+            }
+        }
+
         public static void Destroy(this Node node, bool forceInstant = false)
         {
             if (node.IsNull()) return;
@@ -148,10 +161,12 @@ namespace Cutulu
         public static void SetActive(this Node node, bool active, bool includeChildren = false)
         {
             node.ProcessMode = active ? Node.ProcessModeEnum.Pausable : Node.ProcessModeEnum.Disabled;
+
             if (node is CollisionObject3D) (node as CollisionObject3D).DisableMode = active ? CollisionObject3D.DisableModeEnum.KeepActive : CollisionObject3D.DisableModeEnum.Remove;
             if (node is CollisionShape3D) (node as CollisionShape3D).Disabled = !active;
             if (node is CanvasItem) (node as CanvasItem).Visible = active;
             if (node is Node3D) (node as Node3D).Visible = active;
+
             if (includeChildren)
             {
                 foreach (Node child in node.GetNodesInChildren<Node>(false))
@@ -309,6 +324,56 @@ namespace Cutulu
         #region Dictionary Functions
         public static bool NotEmpty<T, U>(this Dictionary<T, U> dic) => dic != null && dic.Count > 0;
         public static bool IsEmpty<T, U>(this Dictionary<T, U> dic) => !NotEmpty(dic);
+
+        /// <summary>
+        /// Sets entry no matter if key is already contained.
+        /// </summary>
+        public static void Set<K, V>(this Dictionary<K, V> dic, K key, V value)
+        {
+            if ((dic ??= new()).ContainsKey(key))
+            {
+                dic[key] = value;
+            }
+
+            else
+            {
+                dic.Add(key, value);
+            }
+        }
+
+        /// <summary>
+        /// Adds key, value to dictionary if not contained.
+        /// </summary>
+        public static bool TryAdd<K, V>(this Dictionary<K, V> dic, K key, V value)
+        {
+            if ((dic ??= new()).ContainsKey(key))
+            {
+                return false;
+            }
+
+            else
+            {
+                dic.Add(key, value);
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Removes key from dictionary if contained.
+        /// </summary>
+        public static bool TryRemove<K, V>(this Dictionary<K, V> dic, K key)
+        {
+            if ((dic ??= new()).ContainsKey(key) == false)
+            {
+                return false;
+            }
+
+            else
+            {
+                dic.Remove(key);
+                return true;
+            }
+        }
         #endregion
 
         #region Float Functions
@@ -603,70 +668,32 @@ namespace Cutulu
         public static int EnumLength<T>() where T : Enum => EnumArray<T>().Length;
         #endregion
 
-        #region Wait
-        private static WaiterHandler wh;
-        /// <summary>
-        /// Has to be setup with a master parent if there is none.<br/>
-        /// <br/><b>seconds</b>     The duration to wait in seconds
-        /// <br/><b>action</b>      The callback function
-        /// <br/><b>root parent</b> The parent node (has to be referenced once to be set up
-        /// </summary>
-        public static void QueueAction(this float seconds, Action action, Node rootParent = null)
+        #region Queue Actions
+        public static async void QueueAction(this Node node, Action action, float timeInSeconds)
         {
-            if (action == null) return;
+            await Task.Delay(Mathf.RoundToInt(timeInSeconds * 1000));
 
-            // Create Wait Handler if not existant yet
-            if (wh == null)
+            if (node.NotNull())
             {
-                if (rootParent == null)
+                lock (node)
                 {
-                    Debug.LogError("NoParentNodeException: Cannot add any wait timers until there is a node in the tree!");
-                    return;
+                    action.Invoke();
                 }
-
-                wh = new WaiterHandler();
-                rootParent.AddChild(wh);
             }
+        }
 
-            // Add action to queue
-            if (seconds <= 0)
+        public static async void QueueAction(this Action action, float timeInSeconds)
+        {
+            await Task.Delay(Mathf.RoundToInt(timeInSeconds * 1000));
+
+            if (action != null)
             {
-                action?.Invoke();
+                lock (action)
+                {
+                    action.Invoke();
+                }
             }
-            else wh.Add(action, seconds);
         }
         #endregion
     }
-
-    #region Wait Extension
-    public partial class WaiterHandler : Node
-    {
-        public List<WaitObj> Objects = new();
-
-        public void Add(Action action, float time) => Objects.Add(new WaitObj() { Action = action, TimeRemaining = time });
-
-        public override void _Process(double delta)
-        {
-            if (Objects.IsEmpty()) return;
-            float time = (float)delta;
-
-            for (int i = Objects.Count - 1; i >= 0; i--)
-            {
-                Objects[i].TimeRemaining -= time;
-
-                if (Objects[i].TimeRemaining <= 0)
-                {
-                    Objects[i].Action.Invoke();
-                    Objects.RemoveAt(i);
-                }
-            }
-        }
-
-        public class WaitObj
-        {
-            public float TimeRemaining;
-            public Action Action;
-        }
-    }
-    #endregion
 }
