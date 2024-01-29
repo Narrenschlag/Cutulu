@@ -77,7 +77,7 @@ namespace Cutulu
 
             Type type = typeof(T);
 
-            if (IsValue(type) || (type.IsArray && IsValue(type.GetElementType())))
+            if (IsDeserializableValue(type) || (type.IsArray && IsDeserializableValue(type.GetElementType())))
             {
                 return SerializeValue(type, source);
             }
@@ -185,7 +185,7 @@ namespace Cutulu
         {
             Type type = typeof(T);
 
-            if (IsValue(type) || (type.IsArray && IsValue(type.GetElementType())))
+            if (IsDeserializableValue(type) || (type.IsArray && IsDeserializableValue(type.GetElementType())))
             {
                 return DeserializeValue<T>(bytes);
             }
@@ -282,150 +282,201 @@ namespace Cutulu
         #endregion
 
         #region Write and Read Utility
-        private static bool IsValue(Type type) => type.IsPrimitive || (AdditionalFormatters != null && AdditionalFormatters.ContainsKey(type)) || type == typeof(string);
+        private static bool IsDeserializableValue(Type type) => type.IsPrimitive || (AdditionalFormatters != null && AdditionalFormatters.ContainsKey(type)) || type == typeof(string);
 
         private static bool Write(Type type, ref object value, BinaryWriter writer)
         {
-            #region Array
+            // Handle array value
             if (type.IsArray && value is Array array)
             {
+                // Establish new temp stream
                 using MemoryStream _stream = new();
                 using BinaryWriter _writer = new(_stream);
 
+                // Write length of array
                 ushort length = (ushort)array.Length;
                 _writer.Write(length);
 
+                // Write array elements into temp stream
                 for (ushort i = 0; i < length; i++)
                 {
+                    // Get element value
                     object obj = array.GetValue(i);
 
+                    // Write to temp stream
+                    // Return if not working
                     if (Write(obj.GetType(), ref obj, _writer) == false)
                     {
+                        // Close streams
                         _stream.Close();
                         _writer.Close();
+
                         return false;
                     }
                 }
 
+                // Write temp stream buffer to main stream
                 writer.Write(_stream.ToArray());
 
+                // Close streams
                 _stream.Close();
                 _writer.Close();
+
                 return true;
             }
-            #endregion
 
-            switch (type)
+            // Write single value
+            else
             {
-                // Text
-                case var t when t == typeof(string): writer.Write((string)value); break;
-                case var t when t == typeof(char): writer.Write((char)value); break;
+                return write(type, ref value, writer);
+            }
 
-                // Integers
-                case var t when t == typeof(uint): writer.Write((uint)value); break;
-                case var t when t == typeof(int): writer.Write((int)value); break;
+            static bool write(Type type, ref object value, BinaryWriter writer)
+            {
+                // Write based on type
+                switch (type)
+                {
+                    // Text
+                    case var t when t == typeof(string): writer.Write((string)value); break;
+                    case var t when t == typeof(char): writer.Write((char)value); break;
 
-                // Shorts
-                case var t when t == typeof(ushort): writer.Write((ushort)value); break;
-                case var t when t == typeof(short): writer.Write((ushort)value); break;
+                    // Integers
+                    case var t when t == typeof(uint): writer.Write((uint)value); break;
+                    case var t when t == typeof(int): writer.Write((int)value); break;
 
-                // Bytes and bools
-                case var t when t == typeof(byte): writer.Write((byte)value); break;
-                case var t when t == typeof(bool): writer.Write((bool)value); break;
+                    // Shorts
+                    case var t when t == typeof(ushort): writer.Write((ushort)value); break;
+                    case var t when t == typeof(short): writer.Write((ushort)value); break;
 
-                // Floats
-                case var t when t == typeof(double): writer.Write((double)value); break;
-                case var t when t == typeof(float): writer.Write((float)value); break;
+                    // Bytes and bools
+                    case var t when t == typeof(byte): writer.Write((byte)value); break;
+                    case var t when t == typeof(bool): writer.Write((bool)value); break;
 
-                // Custom or non-supported
-                default:
-                    if (TryGetFormatter(type, out ByteFormatter formatter))
-                    {
-                        formatter.Write(value, writer);
-                        break;
-                    }
+                    // Floats
+                    case var t when t == typeof(double): writer.Write((double)value); break;
+                    case var t when t == typeof(float): writer.Write((float)value); break;
 
-                    return false;
-            };
+                    // Custom or non-supported
+                    default:
+                        if (TryGetFormatter(type, out ByteFormatter formatter))
+                        {
+                            formatter.Write(value, writer);
+                            break;
+                        }
 
-            return true;
+                        // Writing failed
+                        return false;
+                };
+
+                // Writing worked
+                return true;
+            }
         }
 
         private static bool Read(Type type, out object value, BinaryReader reader)
         {
-            #region Array
+            // Handle array values
             if (type.IsArray)
             {
+                // Read array length
                 ushort length = reader.ReadUInt16();
                 Type _type = type.GetElementType();
 
+                // Create array
                 Array array = Array.CreateInstance(_type, length);
+
+                // Read array elements
                 for (ushort i = 0; i < length; i++)
+                {
+                    // Reading value succeeded
                     if (Read(_type, out object _v, reader))
                     {
                         array.SetValue(_v, i);
                     }
 
+                    // Reading value failed
                     else
                     {
                         value = default;
                         return false;
                     }
+                }
 
+                // Return array value
                 value = array;
                 return true;
             }
-            #endregion
 
-            value = type switch
+            // Read single value
+            else
             {
-                // Text
-                var t when t == typeof(string) => reader.ReadString(),
-                var t when t == typeof(char) => reader.ReadChar(),
-
-                // Ints
-                var t when t == typeof(uint) => reader.ReadUInt32(),
-                var t when t == typeof(int) => reader.ReadInt32(),
-
-                // Shorts
-                var t when t == typeof(ushort) => reader.ReadUInt16(),
-                var t when t == typeof(short) => reader.ReadInt16(),
-
-                // Bytes and bools
-                var t when t == typeof(byte) => reader.ReadByte(),
-                var t when t == typeof(bool) => reader.ReadBoolean(),
-
-                // Floats
-                var t when t == typeof(double) => reader.ReadDouble(),
-                var t when t == typeof(float) => reader.ReadSingle(),
-
-                // Custom or non-supported
-                _ => custom()
-            };
-
-            // Custom or non-supported
-            object custom()
-            {
-                if (TryGetFormatter(type, out ByteFormatter formatter))
-                {
-                    return formatter.Read(reader);
-                }
-
-                return new Exception();
+                return read(type, out value, reader);
             }
 
-            return value.GetType() != typeof(Exception);
+            static bool read(Type type, out object value, BinaryReader reader)
+            {
+                value = type switch
+                {
+                    // Text
+                    var t when t == typeof(string) => reader.ReadString(),
+                    var t when t == typeof(char) => reader.ReadChar(),
+
+                    // Ints
+                    var t when t == typeof(uint) => reader.ReadUInt32(),
+                    var t when t == typeof(int) => reader.ReadInt32(),
+
+                    // Shorts
+                    var t when t == typeof(ushort) => reader.ReadUInt16(),
+                    var t when t == typeof(short) => reader.ReadInt16(),
+
+                    // Bytes and bools
+                    var t when t == typeof(byte) => reader.ReadByte(),
+                    var t when t == typeof(bool) => reader.ReadBoolean(),
+
+                    // Floats
+                    var t when t == typeof(double) => reader.ReadDouble(),
+                    var t when t == typeof(float) => reader.ReadSingle(),
+
+                    // Custom or non-supported
+                    _ => custom()
+                };
+
+                // Custom or non-supported
+                object custom()
+                {
+                    if (TryGetFormatter(type, out ByteFormatter formatter))
+                    {
+                        return formatter.Read(reader);
+                    }
+
+                    return new Exception();
+                }
+
+                return value.GetType() != typeof(Exception);
+            }
         }
         #endregion
     }
 
+    /// <summary>
+    /// Used to create custom formatters for non primitive data structures
+    /// </summary>
     public class ByteFormatter
     {
+        /// <summary>
+        /// Defines logic to write data structure into bytes
+        /// </summary>
         public virtual void Write(object value, BinaryWriter writer) { }
+
+        /// <summary>
+        /// Defines logic to read data structure from bytes
+        /// </summary>
         public virtual object Read(BinaryReader reader) => default;
 
-        /// <summary> Adds this formatter to the global registry </summary>
-        public void Register<T>(bool overrideExisting = true)
-        => ByteFormatting.RegisterFormatter(typeof(T), this, overrideExisting);
+        /// <summary>
+        /// Registers this formatter to the global registry with the type associated
+        /// </summary>
+        public void Register<TargetType>(bool overrideExisting = true)
+        => ByteFormatting.RegisterFormatter(typeof(TargetType), this, overrideExisting);
     }
 }
