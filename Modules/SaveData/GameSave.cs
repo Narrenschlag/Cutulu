@@ -30,9 +30,6 @@ namespace Cutulu
             // Remember last save file name
             LastSaveFileName = saveFileName;
 
-            // Create new local
-            Local = new();
-
             return true;
         }
 

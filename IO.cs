@@ -5,6 +5,7 @@ using DA = Godot.DirAccess;
 using System.Text.Json;
 using System;
 using Godot;
+using System.IO;
 
 namespace Cutulu
 {
@@ -149,7 +150,26 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Writes text down in a file opened/created on the run.
+        /// Write bytes into file at given path.
+        /// </summary>
+        public static void Write(this string path, byte[] bytes)
+        {
+            // Check if buffer and path are valid and create dir if non existant
+            if (bytes == null) "No byte buffer assigned".Throw();
+            if (path.IsEmpty()) "No path assigned!".Throw();
+
+            mkDir(path = path.Trim());
+
+            // Create/Open file
+            FA file = FA.Open(path, FA.ModeFlags.Write);
+
+            file.StoreBuffer(bytes);
+
+            file.Flush();
+        }
+
+        /// <summary>
+        /// Reads text from file at given path.
         /// </summary>
         public static string Read(this string path, string decryptionKey = null)
         {
@@ -166,6 +186,19 @@ namespace Cutulu
                 content = content.DecryptString(decryptionKey);
 
             return content;
+        }
+
+        /// <summary>
+        /// Read bytes from file at given path.
+        /// </summary>
+        public static byte[] ReadBytes(this string path)
+        {
+            // Check if the path is valid and create dir if non existant
+            if (path.IsEmpty()) "No path assigned!".Throw();
+            if (path.Exists() == false) $"No file found at <{path}>.".Throw();
+
+            FA file = FA.Open(path, FA.ModeFlags.Read);
+            return file.GetBuffer((long)file.GetLength());
         }
 
         /// <summary>
