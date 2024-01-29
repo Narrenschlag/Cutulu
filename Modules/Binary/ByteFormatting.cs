@@ -9,6 +9,10 @@ namespace Cutulu
     {
         #region Additional Formatters
         private static Dictionary<Type, ByteFormatter> AdditionalFormatters;
+
+        /// <summary>
+        /// Registers a formatter for non primitive data structures
+        /// </summary>
         public static void RegisterFormatter(Type type, ByteFormatter formatter, bool overrideExisting = true)
         {
             // Formatter invalid
@@ -41,6 +45,9 @@ namespace Cutulu
             }
         }
 
+        /// <summary>
+        /// Removes formatter for non primitive data structures
+        /// </summary>
         public static void ClearFormatter(Type type)
         {
             if (AdditionalFormatters != null && AdditionalFormatters.ContainsKey(type))
@@ -49,6 +56,9 @@ namespace Cutulu
             }
         }
 
+        /// <summary>
+        /// Tries to find custom formatter for non primitive data structure
+        /// </summary>
         private static bool TryGetFormatter(Type type, out ByteFormatter formatter)
         {
             if (AdditionalFormatters == null)

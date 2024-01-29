@@ -5,7 +5,6 @@ using DA = Godot.DirAccess;
 using System.Text.Json;
 using System;
 using Godot;
-using System.IO;
 
 namespace Cutulu
 {
@@ -68,7 +67,7 @@ namespace Cutulu
             }
 
             // Update custom json setup
-            if (t is WasJson) (t as WasJson).OnReadFromJson();
+            if (t is IWasJson) (t as IWasJson).OnReadFromJson();
 
             return t;
         }
@@ -100,7 +99,7 @@ namespace Cutulu
         #region File Managment
         /// <summary>
         /// Load json from path. Throws errors if something fails.
-        /// Recommended usage: try,catch
+        /// Recommended usage: try, catch
         /// </summary>
         public static T LoadJson<T>(this string path, string decryptionKey = null)
         {
@@ -124,18 +123,18 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Creates directory if not existant already.
+        /// Creates directory if not existing already.
         /// </summary>
-        public static Error mkDir(this string path) => DirAccess.MakeDirAbsolute(path.TrimToDirectory());
+        public static Error MkDir(this string path) => DirAccess.MakeDirAbsolute(path.TrimToDirectory());
 
         /// <summary>
         /// Writes text down in a file opened/created on the run.
         /// </summary>
-        public static void Write(this string path, string content, string encryptionKey = null, bool instantFlush = true)
+        public static void Write(this string path, string content, string encryptionKey = null)
         {
             // Check if the path is valid and create dir if non existant
             if (path.IsEmpty()) "No path assigned!".Throw();
-            mkDir(path = path.Trim());
+            MkDir(path = path.Trim());
 
             // Encrypt content
             if (encryptionKey.NotEmpty())
@@ -144,9 +143,7 @@ namespace Cutulu
             // Create/Open file
             FA file = FA.Open(path, FA.ModeFlags.Write);
             file.StoreString(content);
-
-            // Flush and thereby finally write file to storage
-            if (instantFlush) file.Flush();
+            file.Flush();
         }
 
         /// <summary>
@@ -158,13 +155,11 @@ namespace Cutulu
             if (bytes == null) "No byte buffer assigned".Throw();
             if (path.IsEmpty()) "No path assigned!".Throw();
 
-            mkDir(path = path.Trim());
+            MkDir(path = path.Trim());
 
             // Create/Open file
             FA file = FA.Open(path, FA.ModeFlags.Write);
-
             file.StoreBuffer(bytes);
-
             file.Flush();
         }
 
@@ -202,12 +197,12 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Check if file exists
+        /// Check if file exists at given path
         /// </summary>
         public static bool Exists(this string path) => FA.FileExists(path);
 
         /// <summary>
-        /// Ereases file from directory
+        /// Deletes file at given path
         /// </summary>
         public static void DeleteFile(this string path)
         {
@@ -216,7 +211,7 @@ namespace Cutulu
         #endregion
     }
 
-    public interface WasJson
+    public interface IWasJson
     {
         public void OnReadFromJson();
     }
