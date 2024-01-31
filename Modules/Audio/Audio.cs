@@ -1,43 +1,193 @@
-using Cutulu;
+using System.Collections.Generic;
 using Godot;
 
-public partial class Audio : Node
+namespace Cutulu
 {
-    public static Audio Node;
-    public override void _EnterTree()
+    /// <summary>
+    /// Audio System for static, 3D and 2D audio players.
+    /// </summary>
+    public partial class Audio : Node
     {
-        Node = this;
-    }
+        private static Dictionary<byte, Node> GroupParents;
+        private static Index<byte, Node> Index;
+        private static Audio Singleton;
 
-    public static AudioStreamPlayer3D Play(string localPath, Vector3 globalPosition, float lifeTime = 0) => Node.IsNull() ? null : localPath.TryLoadResource(out AudioStream stream) ? Play(stream, globalPosition, lifeTime) : null;
-    public static AudioStreamPlayer3D Play(AudioStream stream, Vector3 globalPosition, float lifeTime = 0) => Node.IsNull() ? null : Node.PlayLocal(stream, globalPosition, lifeTime);
-    public AudioStreamPlayer3D PlayLocal(AudioStream stream, Vector3 globalPosition, float lifeTime = 0)
-    {
-        AudioStreamPlayer3D player = new();
-        AddChild(player);
+        public override void _EnterTree()
+        {
+            Singleton = this;
+        }
 
-        player.GlobalPosition = globalPosition;
+        /// <summary>
+        /// Plays an audio stream in 3D space
+        /// <br/>Stream is the sound file
+        /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// <br/>Remove Percent removes the player after (1.0 = 100%) of it's length. Set to 0.0 for loops.
+        /// </summary>
+        public static AudioStreamPlayer Play(AudioStream stream, byte audioGroup = 0, float removePercent = 1.0f)
+        {
+            // Create player and parent to group parent
+            AudioStreamPlayer player = new();
 
-        if (lifeTime > 0)
-            player.Destroy(lifeTime);
+            // Prepare values
+            PreparePlay(player, ref stream, ref audioGroup, ref removePercent);
 
-        player.Stream = stream;
-        player.Play(0);
-        return player;
-    }
+            // Assign remaining values
+            player.Stream = stream;
+            player.Play();
 
-    public static AudioStreamPlayer Play(string localPath, float lifeTime = 0) => Node.IsNull() ? null : localPath.TryLoadResource(out AudioStream stream) ? Play(stream, lifeTime) : null;
-    public static AudioStreamPlayer Play(AudioStream stream, float lifeTime = 0) => Node.IsNull() ? null : Node.PlayLocal(stream, lifeTime);
-    public AudioStreamPlayer PlayLocal(AudioStream stream, float lifeTime = 0)
-    {
-        AudioStreamPlayer player = new();
-        AddChild(player);
+            // Return result
+            return player;
+        }
 
-        if (lifeTime > 0)
-            player.Destroy(lifeTime);
+        /// <summary>
+        /// Plays an audio stream in 3D space
+        /// <br/>Stream is the sound file
+        /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// <br/>Global Position is the position assigned to the stream player
+        /// <br/>Remove Percent removes the player after (1.0 = 100%) of it's length. Set to 0.0 for loops.
+        /// </summary>
+        public static AudioStreamPlayer3D Play(AudioStream stream, Vector3 globalPosition, byte audioGroup = 0, float removePercent = 1.0f)
+        {
+            // Create player and parent to group parent
+            AudioStreamPlayer3D player = new();
 
-        player.Stream = stream;
-        player.Play(0);
-        return player;
+            // Prepare values
+            PreparePlay(player, ref stream, ref audioGroup, ref removePercent);
+
+            // Assign remaining values
+            player.GlobalPosition = globalPosition;
+            player.Stream = stream;
+            player.Play();
+
+            // Return result
+            return player;
+        }
+
+        /// <summary>
+        /// Plays an audio stream in 2D space
+        /// <br/>Stream is the sound file
+        /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// <br/>Global Position is the position assigned to the stream player
+        /// <br/>Remove Percent removes the player after (1.0 = 100%) of it's length. Set to 0.0 for loops.
+        /// </summary>
+        public static AudioStreamPlayer2D Play(AudioStream stream, Vector2 globalPosition, byte audioGroup = 0, float removePercent = 1.0f)
+        {
+            // Create player and parent to group parent
+            AudioStreamPlayer2D player = new();
+
+            // Prepare values
+            PreparePlay(player, ref stream, ref audioGroup, ref removePercent);
+
+            // Assign remaining values
+            player.GlobalPosition = globalPosition;
+            player.Stream = stream;
+            player.Play();
+
+            // Return result
+            return player;
+        }
+
+        /// <summary>
+        /// Prepares incomming streams and their nodes for less code
+        /// </summary>
+        private static void PreparePlay(Node playerNode, ref AudioStream stream, ref byte audioGroup, ref float removePercent)
+        {
+            // Setup group parent
+            if ((GroupParents ??= new()).ContainsKey(audioGroup) == false)
+            {
+                GroupParents.Add(audioGroup, new());
+                Singleton.AddChild(GroupParents[audioGroup]);
+                GroupParents[audioGroup].Name = $"Group [{audioGroup}]";
+            }
+
+            // Set parent
+            GroupParents[audioGroup].AddChild(playerNode);
+
+            // Remove after time
+            if (removePercent > 0)
+            {
+                playerNode.Destroy((float)stream.GetLength() * removePercent);
+            }
+
+            // Register to index
+            (Index ??= new()).Add(audioGroup, playerNode);
+        }
+
+        /// <summary>
+        /// Removes all audio players of given group
+        /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// </summary>
+        public static void Stop(byte audioGroup = 0)
+        {
+            // Validate group
+            if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
+            {
+                // Remove group parent
+                parent.Destroy();
+            }
+        }
+
+        /// <summary>
+        /// Pauses all audio players of given group
+        /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// </summary>
+        public static void Pause(byte audioGroup = 0)
+        {
+            // Validate group
+            if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
+            {
+                foreach (AudioStreamPlayer player in parent.GetNodesInChildren<AudioStreamPlayer>())
+                {
+                    player.StreamPaused = true;
+                }
+
+                foreach (AudioStreamPlayer3D player in parent.GetNodesInChildren<AudioStreamPlayer3D>())
+                {
+                    player.StreamPaused = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Continues all audio players of given group
+        /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// </summary>
+        public static void UnPause(byte audioGroup = 0)
+        {
+            // Validate group
+            if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
+            {
+                foreach (AudioStreamPlayer player in parent.GetNodesInChildren<AudioStreamPlayer>())
+                {
+                    player.StreamPaused = false;
+                }
+
+                foreach (AudioStreamPlayer3D player in parent.GetNodesInChildren<AudioStreamPlayer3D>())
+                {
+                    player.StreamPaused = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Plays all audio players of given group
+        /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// </summary>
+        public static void Play(byte audioGroup = 0, float fromPosition = 0)
+        {
+            // Validate group
+            if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
+            {
+                foreach (AudioStreamPlayer player in parent.GetNodesInChildren<AudioStreamPlayer>())
+                {
+                    player.Play(fromPosition);
+                }
+
+                foreach (AudioStreamPlayer3D player in parent.GetNodesInChildren<AudioStreamPlayer3D>())
+                {
+                    player.Play(fromPosition);
+                }
+            }
+        }
     }
 }
