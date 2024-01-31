@@ -368,10 +368,17 @@ namespace Cutulu
 
                     // Custom or non-supported
                     default:
+                        // Custom formatting for registered types
                         if (TryGetFormatter(type, out ByteFormatter formatter))
                         {
                             formatter.Write(value, writer);
                             break;
+                        }
+
+                        // For internal class serialization
+                        else if (type.IsClass)
+                        {
+                            writer.Write(value.Serialize());
                         }
 
                         // Writing failed
@@ -454,9 +461,17 @@ namespace Cutulu
                 // Custom or non-supported
                 object custom()
                 {
+                    // Custom formatting for registered types
                     if (TryGetFormatter(type, out ByteFormatter formatter))
                     {
                         return formatter.Read(reader);
+                    }
+
+                    // For internal class serialization
+                    else if (type.IsClass)
+                    {
+                        Read(type, out object _value, reader);
+                        return _value;
                     }
 
                     return new Exception();
