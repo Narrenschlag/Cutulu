@@ -37,9 +37,9 @@ namespace Cutulu
             return list.NotEmpty();
         }
 
-        public B First(A key) => Contains(key) ? dic[key][0] : default(B);
+        public B First(A key) => Contains(key) ? dic[key][0] : default;
 
-        public void Remove(A key) { if (Contains(key)) dic.Remove(key); }
+        public void Remove(A key) => dic.TryRemove(key);
         public void Remove(A key, B value)
         {
             if (TryGet(key, out List<B> list) && list.Contains(value))

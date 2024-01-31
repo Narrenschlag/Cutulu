@@ -8,6 +8,9 @@ using Godot;
 
 namespace Cutulu
 {
+    /// <summary>
+    /// Handles Input and Output of file streams to read and write files to the OS file system
+    /// </summary>
     public static class IO
     {
         public const string PROJECT_PATH = "res://";
