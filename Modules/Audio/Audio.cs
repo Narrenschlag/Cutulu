@@ -124,6 +124,9 @@ namespace Cutulu
             {
                 // Remove group parent
                 parent.Destroy();
+
+                // Clear index entry
+                (Index ??= new()).Remove(audioGroup);
             }
         }
 
