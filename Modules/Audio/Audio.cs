@@ -117,13 +117,42 @@ namespace Cutulu
         /// Removes all audio players of given group
         /// <br/>AudioGroup sets the group of the audio for easy access of all group members
         /// </summary>
-        public static void Stop(byte audioGroup = 0)
+        public static void Remove(byte audioGroup = 0)
         {
             // Validate group
             if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
             {
                 // Remove group parent
                 parent.Destroy();
+            }
+        }
+
+        /// <summary>
+        /// Stops all audio players of given group
+        /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// </summary>
+        public static void Stop(byte audioGroup = 0)
+        {
+            // Validate group
+            if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
+            {
+                // Static
+                foreach (AudioStreamPlayer player in parent.GetNodesInChildren<AudioStreamPlayer>())
+                {
+                    player.Stop();
+                }
+
+                // 3D
+                foreach (AudioStreamPlayer3D player in parent.GetNodesInChildren<AudioStreamPlayer3D>())
+                {
+                    player.Stop();
+                }
+
+                // 2D
+                foreach (AudioStreamPlayer2D player in parent.GetNodesInChildren<AudioStreamPlayer2D>())
+                {
+                    player.Stop();
+                }
             }
         }
 
@@ -136,12 +165,20 @@ namespace Cutulu
             // Validate group
             if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
             {
+                // Static
                 foreach (AudioStreamPlayer player in parent.GetNodesInChildren<AudioStreamPlayer>())
                 {
                     player.StreamPaused = true;
                 }
 
+                // 3D
                 foreach (AudioStreamPlayer3D player in parent.GetNodesInChildren<AudioStreamPlayer3D>())
+                {
+                    player.StreamPaused = true;
+                }
+
+                // 2D
+                foreach (AudioStreamPlayer2D player in parent.GetNodesInChildren<AudioStreamPlayer2D>())
                 {
                     player.StreamPaused = true;
                 }
@@ -157,12 +194,20 @@ namespace Cutulu
             // Validate group
             if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
             {
+                // Static
                 foreach (AudioStreamPlayer player in parent.GetNodesInChildren<AudioStreamPlayer>())
                 {
                     player.StreamPaused = false;
                 }
 
+                // 3D
                 foreach (AudioStreamPlayer3D player in parent.GetNodesInChildren<AudioStreamPlayer3D>())
+                {
+                    player.StreamPaused = false;
+                }
+
+                // 2D
+                foreach (AudioStreamPlayer2D player in parent.GetNodesInChildren<AudioStreamPlayer2D>())
                 {
                     player.StreamPaused = false;
                 }
@@ -179,14 +224,22 @@ namespace Cutulu
             // Validate group
             if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
             {
+                // Static
                 foreach (AudioStreamPlayer player in parent.GetNodesInChildren<AudioStreamPlayer>())
                 {
-                    player.Play(fromPosition);
+                    player.Play();
                 }
 
+                // 3D
                 foreach (AudioStreamPlayer3D player in parent.GetNodesInChildren<AudioStreamPlayer3D>())
                 {
-                    player.Play(fromPosition);
+                    player.Play();
+                }
+
+                // 2D
+                foreach (AudioStreamPlayer2D player in parent.GetNodesInChildren<AudioStreamPlayer2D>())
+                {
+                    player.Play();
                 }
             }
         }
