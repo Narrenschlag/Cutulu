@@ -172,6 +172,7 @@ namespace Cutulu
         /// <summary>
         /// Plays all audio players of given group
         /// <br/>AudioGroup sets the group of the audio for easy access of all group members
+        /// <br/>FromPosition sets the offset of the tracks
         /// </summary>
         public static void Play(byte audioGroup = 0, float fromPosition = 0)
         {
