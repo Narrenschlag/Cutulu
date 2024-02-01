@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 
 namespace Cutulu
@@ -10,13 +11,14 @@ namespace Cutulu
     {
         private static Dictionary<byte, Node> GroupParents;
         private static Index<byte, Node> Index;
-        private static Audio Singleton;
+        public static Audio Singleton;
 
         public override void _EnterTree()
         {
             Singleton = this;
         }
 
+        #region Play
         /// <summary>
         /// Plays an audio stream in 3D space
         /// <br/>Stream is the sound file
@@ -93,15 +95,17 @@ namespace Cutulu
         private static void PreparePlay(Node playerNode, ref AudioStream stream, ref byte audioGroup, ref float removePercent)
         {
             // Setup group parent
-            if ((GroupParents ??= new()).ContainsKey(audioGroup) == false)
+            if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) == false || parent.IsNull())
             {
-                GroupParents.Add(audioGroup, new());
-                Singleton.AddChild(GroupParents[audioGroup]);
-                GroupParents[audioGroup].Name = $"Group [{audioGroup}]";
+                parent = new();
+                Singleton.AddChild(parent);
+                parent.Name = $"Group [{audioGroup}]";
+
+                GroupParents.Set(audioGroup, parent);
             }
 
             // Set parent
-            GroupParents[audioGroup].AddChild(playerNode);
+            parent.AddChild(playerNode);
 
             // Remove after time
             if (removePercent > 0)
@@ -112,7 +116,9 @@ namespace Cutulu
             // Register to index
             (Index ??= new()).Add(audioGroup, playerNode);
         }
+        #endregion
 
+        #region Other Utility
         /// <summary>
         /// Removes all audio players of given group
         /// <br/>AudioGroup sets the group of the audio for easy access of all group members
@@ -230,21 +236,196 @@ namespace Cutulu
                 // Static
                 foreach (AudioStreamPlayer player in parent.GetNodesInChildren<AudioStreamPlayer>())
                 {
-                    player.Play();
+                    player.Play(fromPosition);
                 }
 
                 // 3D
                 foreach (AudioStreamPlayer3D player in parent.GetNodesInChildren<AudioStreamPlayer3D>())
                 {
-                    player.Play();
+                    player.Play(fromPosition);
                 }
 
                 // 2D
                 foreach (AudioStreamPlayer2D player in parent.GetNodesInChildren<AudioStreamPlayer2D>())
                 {
-                    player.Play();
+                    player.Play(fromPosition);
                 }
             }
         }
+        #endregion
+
+        #region Fade In/Out
+        /// <summary>
+        /// Fades in audio player volume.
+        /// </summary>
+        public static void FadeIn(byte audioGroup, float duration, float volumeDb, byte fadeResolution = 50)
+        {
+            // Validate group
+            if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
+            {
+                foreach (Node player in parent.GetChildren())
+                {
+                    FadeIn(player, duration, volumeDb, fadeResolution);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fades in audio player volume.
+        /// </summary>
+        public static async void FadeIn(Node player, float duration, float volumeDb, byte fadeResolution = 50)
+        {
+            lock (player)
+            {
+                SetVolume(player, -40);
+            }
+
+            int step = Mathf.RoundToInt(duration / fadeResolution * 1000);
+            for (byte i = 0; i < fadeResolution; i++)
+            {
+                if (player.IsNull())
+                {
+                    return;
+                }
+
+                lock (player)
+                {
+                    SetVolume(player, Mathf.Lerp(GetVolume(player), volumeDb, (float)i / fadeResolution));
+                }
+
+                await Task.Delay(step);
+            }
+        }
+
+        /// <summary>
+        /// Fades out audio player group volume.
+        /// </summary>
+        public static async void FadeOut(byte audioGroup, float duration, bool removeOnEnd = true, byte fadeResolution = 50)
+        {
+            // Validate group
+            if ((GroupParents ??= new()).TryGetValue(audioGroup, out Node parent) && parent.NotNull())
+            {
+                foreach (Node player in parent.GetChildren())
+                {
+                    FadeOut(player, duration, removeOnEnd, fadeResolution);
+                }
+            }
+
+            // Remove group on end if has no children
+            if (removeOnEnd)
+            {
+                await Task.Delay(Mathf.RoundToInt(1000 * duration) + 1);
+
+                if ((GroupParents ??= new()).TryGetValue(audioGroup, out parent) && parent.NotNull() && parent.GetChildCount() < 1)
+                {
+                    Remove(audioGroup);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fades out audio player volume.
+        /// </summary>
+        public static async void FadeOut(Node player, float duration, bool removeOnEnd = true, byte fadeResolution = 50)
+        {
+            int step = Mathf.RoundToInt(duration / fadeResolution * 1000);
+            float volume = 40f / fadeResolution;
+
+            for (byte i = 0; i < fadeResolution; i++)
+            {
+                lock (player)
+                {
+                    if (player.IsNull())
+                    {
+                        return;
+                    }
+
+                    ModifyVolume(player, -volume);
+                }
+
+                await Task.Delay(step);
+            }
+
+            if (removeOnEnd)
+            {
+                lock (player)
+                {
+                    if (player.IsNull())
+                    {
+                        return;
+                    }
+
+                    player.Destroy();
+                }
+            }
+        }
+        #endregion
+
+        #region Volume
+        /// <summary>
+        /// Modifies audio player's volumeDb
+        /// </summary>
+        private static void ModifyVolume(Node node, float volumeDb)
+        {
+            if (node is AudioStreamPlayer)
+            {
+                (node as AudioStreamPlayer).VolumeDb += volumeDb;
+            }
+
+            else if (node is AudioStreamPlayer3D)
+            {
+                (node as AudioStreamPlayer3D).VolumeDb += volumeDb;
+            }
+
+            else if (node is AudioStreamPlayer2D)
+            {
+                (node as AudioStreamPlayer2D).VolumeDb += volumeDb;
+            }
+        }
+
+        /// <summary>
+        /// Sets audio player's volumeDb
+        /// </summary>
+        private static void SetVolume(Node node, float volumeDb)
+        {
+            if (node is AudioStreamPlayer)
+            {
+                (node as AudioStreamPlayer).VolumeDb = volumeDb;
+            }
+
+            else if (node is AudioStreamPlayer3D)
+            {
+                (node as AudioStreamPlayer3D).VolumeDb = volumeDb;
+            }
+
+            else if (node is AudioStreamPlayer2D)
+            {
+                (node as AudioStreamPlayer2D).VolumeDb = volumeDb;
+            }
+        }
+
+        /// <summary>
+        /// Get audio player's volumeDb
+        /// </summary>
+        private static float GetVolume(Node node)
+        {
+            if (node is AudioStreamPlayer)
+            {
+                return (node as AudioStreamPlayer).VolumeDb;
+            }
+
+            else if (node is AudioStreamPlayer3D)
+            {
+                return (node as AudioStreamPlayer3D).VolumeDb;
+            }
+
+            else if (node is AudioStreamPlayer2D)
+            {
+                return (node as AudioStreamPlayer2D).VolumeDb;
+            }
+
+            return default;
+        }
+        #endregion
     }
 }
