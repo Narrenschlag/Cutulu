@@ -23,7 +23,7 @@ namespace Cutulu
             // Notify client that server has successfully associated the udp client with the tcp client
             if (UdpConnected == false && key == 255)
             {
-                if (bytes.TryDeserialize(out ushort safetyId))
+                if (bytes.TryBuffer(out ushort safetyId))
                 {
                     SafetyId = safetyId;
                     UdpConnected = true;

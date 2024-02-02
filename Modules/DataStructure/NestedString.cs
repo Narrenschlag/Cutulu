@@ -41,7 +41,7 @@ namespace Cutulu
 
             List<(string key, string value)> list = new();
             foreach ((string key, string value) in list)
-                _class.SetFieldValue(key, value);
+                _class.SetParameterValue(key, value);
 
             return _class;
         }

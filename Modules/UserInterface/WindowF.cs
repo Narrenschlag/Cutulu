@@ -4,6 +4,10 @@ namespace Cutulu
 {
     static class WindowF
     {
+        /// <summary>
+        /// Clamps user interface window to given viewport/host window
+        /// <br/>to prevent it from leaving the screen.
+        /// </summary>
         public static bool ClampToViewport(this Window window, Node hostWindow, int titleMargin = 35, int PixelMargin = 0)
         {
             // Try to use main window if no host window defined
