@@ -18,7 +18,7 @@ namespace Cutulu
             }
 
             // Convert to bytes
-            byte[] bytes = value.Serialize();
+            byte[] bytes = value.Buffer();
 
             // Establish streams
             using MS strm = new();
@@ -55,7 +55,7 @@ namespace Cutulu
             }
 
             // Convert to bytes
-            byte[] bytes = value.Serialize();
+            byte[] bytes = value.Buffer();
 
             // Establish streams
             using MS strm = new();
@@ -80,12 +80,12 @@ namespace Cutulu
         /// <summary> hasLength is for udp packets </summary>
         /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
         public static bool Unpack<T>(this byte[] bytes, out T value)
-        => bytes.TryDeserialize(out value);
+        => bytes.TryBuffer(out value);
 
         /// <summary> hasLength is for udp packets </summary>
         /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
         public static T Unpack<T>(this byte[] bytes)
-        => bytes.Deserialize<T>();
+        => bytes.Buffer<T>();
 
         /// <summary> hasLength is for udp packets </summary>
         /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
