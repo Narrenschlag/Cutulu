@@ -12,6 +12,14 @@ namespace Cutulu
 
         protected Dictionary<uint, ServerConnection<D>> Registry;
 
+        public ServerNetwork<D> server;
+        public IPEndPoint endPoint;
+
+        public virtual bool Connected() => ConnectedTcp() && ConnectedUdp();
+        public bool ConnectedTcp() => tcp != null && tcp.Connected;
+        public bool ConnectedUdp() => endPoint != null;
+
+        #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public ServerConnection(ref TcpClient client, uint uuid, ref Dictionary<uint, ServerConnection<D>> registry, ServerNetwork<D> server, D destination, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, (ushort)uuid, destination, onReceive, onDisconnect)
         {
             Registry = registry;
@@ -25,6 +33,18 @@ namespace Cutulu
             tcp = new TcpProtocol(ref client, uuid, Receive, Disconnected);
         }
 
+        public void Connect(IPEndPoint udpSource)
+        {
+            if (udpSource == null) return;
+
+            endPoint = udpSource;
+            Send(255, SafetyId, Method.Tcp);
+
+            $"Client({UUID}) has been fully connected successfully.".Log();
+        }
+        #endregion
+
+        #region Send Data       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public virtual void Send<T>(byte key, T value, Method method)
         {
             switch (method)
@@ -47,7 +67,9 @@ namespace Cutulu
                     break;
             }
         }
+        #endregion
 
+        #region Connection End  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         protected override void Disconnected()
         {
             $"--- Disconnected [{UUID}]".Log();
@@ -70,22 +92,6 @@ namespace Cutulu
             // Message server of disconnection
             server?.OnClientQuit(this);
         }
-
-        public virtual bool Connected() => ConnectedTcp() && ConnectedUdp();
-        public bool ConnectedTcp() => tcp != null && tcp.Connected;
-        public bool ConnectedUdp() => endPoint != null;
-
-        public ServerNetwork<D> server;
-        public IPEndPoint endPoint;
-
-        public void Connect(IPEndPoint udpSource)
-        {
-            if (udpSource == null) return;
-
-            endPoint = udpSource;
-            Send(255, SafetyId, Method.Tcp);
-
-            $"Client({UUID}) has been fully connected successfully.".Log();
-        }
+        #endregion
     }
 }

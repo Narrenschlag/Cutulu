@@ -18,8 +18,9 @@ namespace Cutulu
         private readonly D WelcomeTarget;
 
         /// <summary> Amount of clients currently connected to the server </summary>
-        public uint ClientCount => Clients != null ? (uint)Clients.Count : 0;
+        public uint ConnectionCount() => Clients != null ? (uint)Clients.Count : 0;
 
+        #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary> Simple server that handles tcp only </summary>
         public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, D welcomeTarget = null, bool acceptClients = true)
         {
@@ -107,8 +108,9 @@ namespace Cutulu
                 return null;
             }
         }
+        #endregion
 
-        #region Broadcasting
+        #region Broadcasting    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary> Broadcast to all clients </summary>
         public virtual void Broadcast<T>(byte key, T value, Method method) => Broadcast(key, value, method, Clients?.Values);
 
@@ -130,7 +132,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Udp
+        #region Udp             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public Dictionary<IPEndPoint, ServerConnection<D>> Endpoints;
         public Dictionary<IPAddress, ServerConnection<D>> Queue;
         public UdpProtocol globalUdp;
@@ -157,17 +159,13 @@ namespace Cutulu
                 {
                     client.Receive(key, bytes, Method.Udp);
                 }
-
-                // Debug non fitting packages (wrong safety id)
-                //else
-                //{
-                //    $"Non fitting package with safetyId: {safetyId}".LogError();
-                //}
             }
         }
         #endregion
 
+        #region Global Events   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         protected virtual void OnClientJoin(ServerConnection<D> client) { }
         public virtual void OnClientQuit(ServerConnection<D> client) { }
+        #endregion
     }
 }

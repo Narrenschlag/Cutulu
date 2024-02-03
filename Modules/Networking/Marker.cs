@@ -14,30 +14,39 @@ namespace Cutulu
         public Protocol.Empty onDisconnect;
         public Protocol.Packet onReceive;
 
-        /// <summary> TRUE: ignore target receiving and thereby skip it </summary>
+        /// <summary> 
+        /// TRUE: ignore target receiving and thereby skip it 
+        /// </summary>
         public bool ignore_detination_transfer;
 
-        /// <summary> Custom params for the target class </summary>
+        /// <summary>
+        /// Custom params for the target class
+        /// </summary>
         public object[] destination_params;
 
+        #region Setup               ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public Marker(uint uuid, ushort safetyId, D destination = null, Protocol.Packet receiver = null, Protocol.Empty disconnector = null)
         {
-            this.destination_params = new object[1] { this };
-            this.ignore_detination_transfer = false;
+            destination_params = new object[1] { this };
+            ignore_detination_transfer = false;
 
-            this.SafetyId = safetyId;
-            this.UUID = uuid;
+            SafetyId = safetyId;
+            UUID = uuid;
 
-            this.onDisconnect = disconnector;
-            this.onReceive = receiver;
+            onDisconnect = disconnector;
+            onReceive = receiver;
 
             SetTarget(destination);
         }
+        #endregion
 
-        // Target memory
+        #region Destinations        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Destination memory
         private D[] __destinations;
 
-        /// <summary> Target array </summary>
+        /// <summary>
+        /// Collection of Destinations that receive the incomming traffic
+        /// </summary>
         public D[] Destinations
         {
             set => __destinations = value;
@@ -49,16 +58,21 @@ namespace Cutulu
             }
         }
 
+        /// <summary>
+        /// Sets target destination for all incomming packages.
+        /// </summary>
         public void SetTarget(D destination)
         {
             // Notify about left
             if (Destinations.NotEmpty())
             {
                 lock (Destinations)
+                {
                     for (int i = 0; i < Destinations.Length; i++)
                     {
                         Destinations?[i].Rem(destination_params);
                     }
+                }
             }
 
             // Assign array
@@ -70,10 +84,15 @@ namespace Cutulu
             destination?.Add(destination_params);
         }
 
+        /// <summary>
+        /// Adds target destination for all incomming packages.
+        /// </summary>
         public void AddTarget(D destination)
         {
             if (destination == null)
+            {
                 return;
+            }
 
             D[] _ = new D[Destinations.Length + 1];
 
@@ -83,24 +102,32 @@ namespace Cutulu
             // Notify addition to target
             destination.Add(destination_params);
         }
+        #endregion
 
-        /// <summary> Receive targets data </summary>
+        #region Async Events        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Distributes all the incomming traffic to all registered destinations
+        /// </summary>
         public virtual void Receive(byte key, byte[] bytes, Method method)
         {
             // Iterate through all targets
             if (!ignore_detination_transfer)
+            {
                 lock (Destinations)
+                {
                     for (int i = 0; i < Destinations.Length; i++)
                     {
                         // Validate target
                         if (Destinations[i] != null)
                         {
+                            // Success
                             try
                             {
                                 // Notify target
                                 Destinations[i].Receive(key, bytes, method, destination_params);
                             }
 
+                            // Failed
                             catch (Exception ex)
                             {
                                 if (Destinations.Length <= i || Destinations[i].IsNull())
@@ -115,6 +142,8 @@ namespace Cutulu
                             }
                         }
                     }
+                }
+            }
 
             // Call delegates
             if (onReceive != null)
@@ -126,24 +155,31 @@ namespace Cutulu
             }
         }
 
-        /// <summary> Notify targets about disconnect </summary>
+        /// <summary> 
+        /// Notify targets about disconnect 
+        /// </summary>
         protected virtual void Disconnected()
         {
             // Iterate through all targets
             lock (Destinations)
+            {
                 for (int i = 0; i < Destinations.Length; i++)
                 {
                     // Validate target
                     // Notfiy target
                     Destinations[i]?.Disconnect(destination_params);
                 }
+            }
 
             // Call delegates
             if (onDisconnect != null)
+            {
                 lock (onDisconnect)
                 {
                     onDisconnect();
                 }
+            }
         }
+        #endregion
     }
 }

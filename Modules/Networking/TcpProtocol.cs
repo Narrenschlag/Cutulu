@@ -13,7 +13,10 @@ namespace Cutulu
         public Empty onDisconnect;
         public Packet onReceive;
 
-        /// <summary> Creates handle on server side </summary>
+        #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Creates handle on server side 
+        /// </summary>
         public TcpProtocol(ref TcpClient client, uint welcome, Packet onReceive, Empty onDisconnect, byte receiveTimeout = 5) : base(0)
         {
             client.ReceiveTimeout = 6000 * receiveTimeout;
@@ -34,7 +37,9 @@ namespace Cutulu
             Listen();
         }
 
-        /// <summary> Creates handle on client side </summary>
+        /// <summary> 
+        /// Creates handle on client side 
+        /// </summary>
         public TcpProtocol(string host, int port, Packet onReceive, Empty onDisconnect) : base(port)
         {
             this.onDisconnect = onDisconnect;
@@ -54,19 +59,12 @@ namespace Cutulu
 
             Listen();
         }
+        #endregion
 
-        /// <summary> Closes local network elements </summary>
-        public override void Close()
-        {
-            stream?.Close();
-            client?.Close();
-
-            onDisconnect = null;
-            base.Close();
-        }
-
-        #region Send Data
-        /// <summary> Sends data through connection </summary>
+        #region Send Data       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Sends data through connection 
+        /// </summary>
         public void Send<T>(byte key, T value)
         {
             ValidateConnection();
@@ -79,12 +77,16 @@ namespace Cutulu
             Flush();
         }
 
-        /// <summary> Sends written data to server </summary>
+        /// <summary> 
+        /// Sends written data to server 
+        /// </summary>
         public void Flush() => stream.Flush();
         #endregion
 
-        #region Receive Data
-        /// <summary> Receive packets as long as client is connected </summary>
+        #region Receive Data    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Receive packets as long as client is connected 
+        /// </summary>
         protected async void Listen()
         {
             while (Connected)
@@ -100,7 +102,9 @@ namespace Cutulu
             Disconnected();
         }
 
-        /// <summary> Waits for bytes received, reads and then formats them </summary>
+        /// <summary> 
+        /// Waits for bytes received, reads and then formats them 
+        /// </summary>
         protected async Task Receive()
         {
             // Define buffer for strorage
@@ -129,12 +133,28 @@ namespace Cutulu
         }
         #endregion
 
-        /// <summary> Called on client disconnect </summary>
+        #region End Connection  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Closes local network elements 
+        /// </summary>
+        public override void Close()
+        {
+            stream?.Close();
+            client?.Close();
+
+            onDisconnect = null;
+            base.Close();
+        }
+
+        /// <summary>
+        /// Called on client disconnect 
+        /// </summary>
         private void Disconnected()
         {
             onDisconnect?.Invoke();
 
             Close();
         }
+        #endregion
     }
 }

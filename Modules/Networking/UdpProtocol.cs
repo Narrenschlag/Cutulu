@@ -15,7 +15,10 @@ namespace Cutulu
         private readonly bool isServerClient;
         public UdpClient client;
 
-        /// <summary> Creates handle on server side </summary>
+        #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Creates handle on server side 
+        /// </summary>
         public UdpProtocol(int port, UdpPacket onReceive_server) : base(port)
         {
             serverSideReceive = onReceive_server;
@@ -43,7 +46,9 @@ namespace Cutulu
             Listen();
         }
 
-        /// <summary> Creates handle on client side </summary>
+        /// <summary> 
+        /// Creates handle on client side 
+        /// </summary>
         public UdpProtocol(string host, int udpPort, Packet onReceive_client) : base(udpPort)
         {
             clientSideReceive = onReceive_client;
@@ -67,21 +72,12 @@ namespace Cutulu
                 throw new Exception($"Was not able to establish a udp connection:\n{ex.Message}");
             }
         }
+        #endregion
 
-        /// <summary> Closes local network elements </summary>
-        public override void Close()
-        {
-            if (client != null)
-            {
-                client.Close();
-                client = null;
-            }
-
-            base.Close();
-        }
-
-        #region Send Data
-        /// <summary> Sends data through connection towards special ipendpoint (Server Side) </summary>
+        #region Send Data       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Sends data through connection towards special ipendpoint (Server Side) 
+        /// </summary>
         public void Send<T>(byte key, T value, IPEndPoint destination)
         {
             ValidateConnection();
@@ -93,7 +89,9 @@ namespace Cutulu
             }
         }
 
-        /// <summary> Sends data through connection (Client Side) </summary>
+        /// <summary> 
+        /// Sends data through connection (Client Side) 
+        /// </summary>
         public void Send<T>(byte key, T value, ushort safetyId)
         {
             ValidateConnection();
@@ -103,8 +101,10 @@ namespace Cutulu
         }
         #endregion
 
-        #region Receive Data
-        /// <summary> Receive packets as long as client is connected </summary>
+        #region Receive Data    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Receive packets as long as client is connected 
+        /// </summary>
         private async void Listen()
         {
             while (Connected)
@@ -118,7 +118,9 @@ namespace Cutulu
                 }
         }
 
-        /// <summary> Waits for bytes received, reads and then formats them </summary>
+        /// <summary> 
+        /// Waits for bytes received, reads and then formats them 
+        /// </summary>
         private async Task Receive()
         {
             if (client == null) return;
@@ -145,6 +147,22 @@ namespace Cutulu
 
                 clientSideReceive?.Invoke(key, bytes, Method.Udp);
             }
+        }
+        #endregion
+
+        #region End Connection  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Closes local network elements 
+        /// </summary>
+        public override void Close()
+        {
+            if (client != null)
+            {
+                client.Close();
+                client = null;
+            }
+
+            base.Close();
         }
         #endregion
     }

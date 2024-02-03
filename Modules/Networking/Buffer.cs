@@ -6,9 +6,10 @@ namespace Cutulu
 {
     public static class Buffer
     {
-        #region Sending
-        /// <summary> assignLength is for udp packets </summary>
-        /// <returns> Buffer with byte[] length, type, key and then the bytes </returns>
+        #region Sending         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Packages your values in byte array with extra information for your generic transport protocol  
+        /// </summary>
         public static byte[] PackageRaw<T>(this T value, byte key, Method method)
         {
             // If is null
@@ -34,6 +35,8 @@ namespace Cutulu
                 default:
                     break;
             }
+
+            // Write key
             wrtr.Write(key);
 
             // Write custom values
@@ -46,6 +49,9 @@ namespace Cutulu
             return strm.ToArray();
         }
 
+        /// <summary> 
+        /// Packages your values in byte array with extra information for your UDP transport protocol  
+        /// </summary>
         public static byte[] PackageRawUdpClient<T>(this T value, byte key, ushort udpSafety)
         {
             // If is null
@@ -76,19 +82,22 @@ namespace Cutulu
         }
         #endregion
 
-        #region Receiving
-        /// <summary> hasLength is for udp packets </summary>
-        /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
+        #region Receiving       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Unpackages your value from a prepared byte array  
+        /// </summary>
         public static bool Unpack<T>(this byte[] bytes, out T value)
         => bytes.TryBuffer(out value);
 
-        /// <summary> hasLength is for udp packets </summary>
-        /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
+        /// <summary> 
+        /// Unpackages your value from a prepared byte array  
+        /// </summary>
         public static T Unpack<T>(this byte[] bytes)
         => bytes.Buffer<T>();
 
-        /// <summary> hasLength is for udp packets </summary>
-        /// <returns> Length, type, key and bytes, transmitted by buffer </returns>
+        /// <summary> 
+        /// Unpackages your values from byte array with extra information of your generic transport protocol  
+        /// </summary>
         public static byte[] UnpackRaw(this byte[] buffer, out byte key)
         {
             // Buffer could not be read
@@ -115,6 +124,9 @@ namespace Cutulu
             return bytes;
         }
 
+        /// <summary> 
+        /// Unpackages your values from byte array with extra information of your udp transport protocol  
+        /// </summary>
         public static byte[] UnpackRawUdpServer(this byte[] buffer, out byte key, out ushort udpSafety)
         {
             // Buffer could not be read
@@ -148,6 +160,9 @@ namespace Cutulu
         #endregion
     }
 
+    /// <summary> 
+    /// Define your methods here. Tcp and Udp are already contained.
+    /// </summary>
     public enum Method
     {
         Tcp, Udp

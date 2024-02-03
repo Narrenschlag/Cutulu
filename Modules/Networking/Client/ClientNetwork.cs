@@ -12,42 +12,11 @@ namespace Cutulu
 
         public bool FullyConnected() => TcpConnected && UdpConnected;
 
+        #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, T destination = null) : base(0, 0, destination)
         {
             try { Connect(tcpHost, tcpPort, udpHost, udpPort); }
             catch { $"Failed to connect to host".LogError(); }
-        }
-
-        public override void Receive(byte key, byte[] bytes, Method method)
-        {
-            // Notify client that server has successfully associated the udp client with the tcp client
-            if (UdpConnected == false && key == 255)
-            {
-                if (bytes.TryBuffer(out ushort safetyId))
-                {
-                    SafetyId = safetyId;
-                    UdpConnected = true;
-                    return;
-                }
-            }
-
-            base.Receive(key, bytes, method);
-        }
-
-        public virtual void Send<V>(byte key, V value, Method method = Method.Tcp)
-        {
-            switch (method)
-            {
-                case Method.Tcp:
-                    Tcp.Send(key, value);
-                    break;
-
-                case Method.Udp:
-                    Udp.Send(key, value, SafetyId);
-                    break;
-
-                default: break;
-            }
         }
 
         /// <summary>
@@ -87,7 +56,51 @@ namespace Cutulu
             // Restart the function
             SetupUdp();
         }
+        #endregion
 
+        #region Send Data       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Sends data to server.
+        /// </summary>
+        public virtual void Send<V>(byte key, V value, Method method = Method.Tcp)
+        {
+            switch (method)
+            {
+                case Method.Tcp:
+                    Tcp.Send(key, value);
+                    break;
+
+                case Method.Udp:
+                    Udp.Send(key, value, SafetyId);
+                    break;
+
+                default: break;
+            }
+        }
+        #endregion
+
+        #region Receive Data    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Receives data from server.
+        /// </summary>
+        public override void Receive(byte key, byte[] bytes, Method method)
+        {
+            // Notify client that server has successfully associated the udp client with the tcp client
+            if (UdpConnected == false && key == 255)
+            {
+                if (bytes.TryBuffer(out ushort safetyId))
+                {
+                    SafetyId = safetyId;
+                    UdpConnected = true;
+                    return;
+                }
+            }
+
+            base.Receive(key, bytes, method);
+        }
+        #endregion
+
+        #region End Connection  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Called on disconnection from server or network provider
         /// </summary>
@@ -108,5 +121,6 @@ namespace Cutulu
             Tcp?.Close();
             Udp?.Close();
         }
+        #endregion
     }
 }
