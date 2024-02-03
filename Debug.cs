@@ -5,7 +5,7 @@ namespace Cutulu
 {
     public static class Debug
     {
-        #region Rendering 3D Functions
+        #region Rendering 3D Functions  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Draws a point in 3d space.
         /// </summary>
@@ -27,7 +27,7 @@ namespace Cutulu
         public static MeshInstance3D Line(this Node node, List<Vector3> path, Color color) => Render.DrawLine(node, path, color);
         #endregion
 
-        #region Logging
+        #region Logging                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Logs an error message.
         /// </summary>

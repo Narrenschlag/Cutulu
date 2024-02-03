@@ -10,7 +10,7 @@ namespace Cutulu
 {
     public static class Core
     {
-        #region Shortcuts
+        #region Shortcuts               ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static Node GetRoot(this Node node) => node.GetTree().CurrentScene;
 
         public static Node3D Main3D { get { if (_main3d == null) _main3d = (Engine.GetMainLoop() as SceneTree).CurrentScene.GetNodeInChildren<Node3D>(); return _main3d; } }
@@ -23,7 +23,7 @@ namespace Cutulu
         private static Node _main;
         #endregion
 
-        #region General Functions
+        #region General Functions       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static float invert(this float value, bool invert) => value * (invert ? -1 : 1);
         public static int invert(this int value, bool invert) => value * (invert ? -1 : 1);
 
@@ -31,7 +31,7 @@ namespace Cutulu
         public static int toInt01(this bool value) => value ? 1 : 0;
         #endregion
 
-        #region Rotation Functions
+        #region Rotation Functions      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static Vector2 RotatedD(this Vector2 v2, float degrees) => v2.Rotated(degrees.toRadians());
 
         public static float toDegrees(this float radians) => radians / Mathf.Pi * 180;
@@ -100,7 +100,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Node Functions
+        #region Node Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static void Clear(this Node parent, bool forceInstant = false)
         {
             if (parent.IsNull()) return;
@@ -244,7 +244,7 @@ namespace Cutulu
         public static bool NotNull(this GodotObject node) => !IsNull(node);
         #endregion
 
-        #region Signal Functions
+        #region Signal Functions        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static void Connect(this Node signalSource, string signalName, Node nodeToConnect, string functionName)
         {
             if (signalSource.IsNull() || signalName.IsEmpty() || nodeToConnect.IsNull() || functionName.IsEmpty()) return;
@@ -261,7 +261,7 @@ namespace Cutulu
         public static void DisconnectButton(this Node node, Node nodeToConnect, string functionName) => Disconnect(node, "pressed", nodeToConnect, functionName);
         #endregion
 
-        #region Bit Functions
+        #region Bit Functions           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static float GetBitAt_float(this byte number, int bitIndex) => GetBitAt((int)number, bitIndex) ? 1 : 0;
         public static bool GetBitAt(this byte number, int bitIndex) => GetBitAt((int)number, bitIndex);
         public static bool GetBitAt(this int number, int bitIndex)
@@ -305,7 +305,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Array Functions
+        #region Array Functions         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static bool NotEmpty<T>(this T[] array) => array != null && array.Length > 0;
         public static bool IsEmpty<T>(this T[] array) => !NotEmpty(array);
 
@@ -314,14 +314,14 @@ namespace Cutulu
         public static T GetClampedElement<T>(this T[] array, int index) => array.IsEmpty() ? default : array[Mathf.Clamp(index, 0, array.Length - 1)];
         #endregion
 
-        #region List Functions
+        #region List Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static bool NotEmpty<T>(this List<T> list) => list != null && list.Count > 0;
         public static bool IsEmpty<T>(this List<T> list) => !NotEmpty(list);
 
         public static T RandomElement<T>(this List<T> list, T @default = default) => list.NotEmpty() ? list[Random.RangeInt(0, list.Count)] : @default;
         #endregion
 
-        #region Dictionary Functions
+        #region Dictionary Functions    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static bool NotEmpty<T, U>(this Dictionary<T, U> dic) => dic != null && dic.Count > 0;
         public static bool IsEmpty<T, U>(this Dictionary<T, U> dic) => !NotEmpty(dic);
 
@@ -376,7 +376,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Float Functions
+        #region Float Functions         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static float abs(this float f) => Math.Abs(f);
 
         public static float max(this float f0, float f1) => Math.Max(f0, f1);
@@ -389,7 +389,7 @@ namespace Cutulu
         public static float min(this float f0, float f1, float f2, float f3) => min(min(f0, f1, f2), f3);
         #endregion
 
-        #region Integer Functions
+        #region Integer Functions       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static int abs(this int i) => Math.Abs(i);
 
         public static int max(this int f0, int f1) => Math.Max(f0, f1);
@@ -401,7 +401,7 @@ namespace Cutulu
         public static int min(this int f0, int f1, int f2, int f3) => min(min(f0, f1, f2), f3);
         #endregion
 
-        #region Vector2 Functions
+        #region Vector2 Functions       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static Vector2 Lerp(this Vector2 a, Vector2 b, float lerp) => new(Mathf.Lerp(a.X, b.X, lerp), Mathf.Lerp(a.Y, b.Y, lerp));
 
         public static Vector2 setX(this Vector2 v2, float value) => new(value, v2.Y);
@@ -422,7 +422,7 @@ namespace Cutulu
         public static Vector2 toXY(this Vector3 value) => new(value.X, value.Z);
         #endregion
 
-        #region Vector3 Functions
+        #region Vector3 Functions       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static void SetForward(this Node3D node, Vector3 direction, bool global = true) => node.LookAt((global ? node.GlobalPosition : node.Position) + direction);
 
         public static Vector3 setX(this Vector3 v3, float value) => new(value, v3.Y, v3.Z);
@@ -445,7 +445,7 @@ namespace Cutulu
         public static Vector3 toXZ(this Vector2 value) => new(value.X, 0, value.Y);
         #endregion
 
-        #region List Functions
+        #region List Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static List<Vector3> ClampDistanceRelative(this List<Vector3> list, float percentage)
         {
             percentage = Mathf.Clamp(percentage, 0, 1);
@@ -535,7 +535,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Input Functions
+        #region Input Functions         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static float GetInputValue(this string name) => Input.GetActionRawStrength(name);
 
         public static Vector2 GetInputVector(this string negativeX, string positiveX, string negativeY, string positiveY) => new(GetInputAxis(negativeX, positiveX), GetInputAxis(negativeY, positiveY));
@@ -543,7 +543,7 @@ namespace Cutulu
         public static bool GetInput(this string name, float threshold = .2f) => GetInputValue(name) >= threshold;
         #endregion
 
-        #region String Functions
+        #region String Functions        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static string RemoveForbiddenDbChars(this string source) => RemoveChar(source, ' ', '#', '\'', '`', '\'', '@', '/', '\\');
         public static string RemoveChar(this string source, params char[] chars)
         {
@@ -660,7 +660,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Enum Functions
+        #region Enum Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static Array Array(this Enum Enum) => Enum.GetValues(Enum.GetType());
         public static int Length(this Enum Enum) => Array(Enum).Length;
 
@@ -668,7 +668,7 @@ namespace Cutulu
         public static int EnumLength<T>() where T : Enum => EnumArray<T>().Length;
         #endregion
 
-        #region Queue Actions
+        #region Queue Actions           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static async void QueueAction(this Node node, Action action, float timeInSeconds)
         {
             await Task.Delay(Mathf.RoundToInt(timeInSeconds * 1000));

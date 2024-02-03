@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Godot.Collections;
 using Godot;
 
@@ -6,7 +5,7 @@ namespace Cutulu
 {
     public static class Physics
     {
-        #region Values
+        #region Values                      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         private static float _gravity2D, _gravity3D;
         private static Vector2 _gravity2DV;
         private static Vector3 _gravity3DV;
@@ -18,7 +17,7 @@ namespace Cutulu
         public static float Gravity3D { get { if (_gravity3D.Equals(default)) _gravity3D = ProjectSettings.GetSetting("physics/3d/default_gravity", 9.8f).AsSingle(); return _gravity3D; } }
         #endregion
 
-        #region Raycast Functions
+        #region Raycast Functions           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static bool Linecast(this Node3D node, Vector3 fromGlobal, Vector3 toGlobal, out RaycastHit hit, uint mask = 4294967295)
             => Raycast(node, fromGlobal, toGlobal - fromGlobal, out hit, fromGlobal.DistanceTo(toGlobal), mask);
 
@@ -69,7 +68,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Curved Raycast Functions
+        #region Curved Raycast Functions    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static bool RaycastCurve(Vector3 origin, Vector3 direction, out RaycastHit hit, Color color, float gravity, float resolution, float length)
             => Core.Main3D.RaycastCurve(origin, direction, out hit, color, gravity, resolution, length);
 
@@ -135,7 +134,7 @@ namespace Cutulu
         #endregion
     }
 
-    #region RaycastHit
+    #region RaycastHit                      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public struct RaycastHit
     {
         public GodotObject collider;

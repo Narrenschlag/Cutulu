@@ -7,8 +7,8 @@ namespace Cutulu
 {
     /// <summary>
     /// Used for writing values into bytes and reading values from bytes.
-    /// Allows for infinite recursion and internal classes.
-    /// Keep in mind to use { get; set; }.
+    /// <br/>Allows for infinite recursion and internal classes.
+    /// <br/>Keep in mind to use { get; set; }.
     /// </summary>
     public static class Bytes
     {
