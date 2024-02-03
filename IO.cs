@@ -16,7 +16,7 @@ namespace Cutulu
         public const string PROJECT_PATH = "res://";
         public const string USER_PATH = "user://";
 
-        #region JSON Utility
+        #region JSON Utility    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         private static Dictionary<bool, bool, JsonSerializerOptions> options;
         private static bool currentFormat, currentIndent;
 
@@ -45,7 +45,7 @@ namespace Cutulu
             JsonOptions(currentFormat).Converters.Add(converter);
         }
 
-        #region From Json
+        #region From Json       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static T json<T>(this string json) => json<T>(json, currentFormat);
         public static T json<T>(this string json, bool simpleFormat = true, bool indentFormat = false) => json<T>(json, default, simpleFormat, indentFormat);
         public static T json<T>(this string json, string decryptionKey = null, bool simpleFormat = true, bool indentFormat = false)
@@ -79,7 +79,7 @@ namespace Cutulu
         => json<T>(json, decryptionKey, currentFormat, currentIndent);
         #endregion
 
-        #region To Json
+        #region To Json         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static string json(this object obj) => json(obj, "");
         public static string json(this object obj, bool simpleFormat = true, bool indentFormat = false) => json(obj, default, simpleFormat, indentFormat);
         public static string json(this object obj, string encryptionKey = null, bool simpleFormat = true, bool indentFormat = false)
@@ -99,7 +99,7 @@ namespace Cutulu
         #endregion
         #endregion
 
-        #region File Managment
+        #region File Managment  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Load json from path. Throws errors if something fails.
         /// Recommended usage: try, catch
@@ -210,6 +210,34 @@ namespace Cutulu
         public static void DeleteFile(this string path)
         {
             if (Exists(path)) DA.RemoveAbsolute(path);
+        }
+
+        /// <summary>
+        /// Returns files at given path
+        /// </summary>
+        public static string[] GetFiles(this string path)
+        {
+            bool exists = DA.DirExistsAbsolute(path.EndsWith('/') || path.EndsWith('\\') ? path : path += '/');
+            if (exists)
+            {
+                return DA.GetFilesAt(path);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns directories at given path
+        /// </summary>
+        public static string[] GetDirectories(this string path)
+        {
+            bool exists = DA.DirExistsAbsolute(path.EndsWith('/') || path.EndsWith('\\') ? path : path += '/');
+            if (exists)
+            {
+                return DA.GetDirectoriesAt(path);
+            }
+
+            return null;
         }
         #endregion
     }
