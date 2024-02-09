@@ -13,11 +13,11 @@ namespace Cutulu
         /// </summary>
         public static void Register()
         {
-            new Vector3IFormatter().Register<Vector3I>();
-            new Vector3Formatter().Register<Vector3>();
+            new Vector3IFormatter().Register<Vector3I>(false);
+            new Vector3Formatter().Register<Vector3>(false);
 
-            new Vector2IFormatter().Register<Vector2I>();
-            new Vector2Formatter().Register<Vector2>();
+            new Vector2IFormatter().Register<Vector2I>(false);
+            new Vector2Formatter().Register<Vector2>(false);
         }
 
         #region Vector3         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

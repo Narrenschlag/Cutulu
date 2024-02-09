@@ -5,7 +5,8 @@ namespace Cutulu
 {
     /// <summary>
     /// Static, Json-based save system designed for smaller games to easily implement saving.
-    /// May be used for middle sized games too. Larger save files may result in slow saving/loading performance.
+    /// <br/>May be used for middle sized games too. Larger save files may result in slow saving/loading performance.
+    /// <br/>For more performance use a custom struct that contains all the data and save it using byte write/read utility.
     /// </summary>
     public static class GameSave
     {
