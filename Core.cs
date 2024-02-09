@@ -1,10 +1,10 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Text;
+using System.Linq;
 using System;
 
 using Godot;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Cutulu
 {
@@ -545,12 +545,13 @@ namespace Cutulu
 
         #region String Functions        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static string RemoveForbiddenDbChars(this string source) => RemoveChar(source, ' ', '#', '\'', '`', '\'', '@', '/', '\\');
+
+        /// <summary>
+        /// Returns string without listed char values
+        /// </summary>
         public static string RemoveChar(this string source, params char[] chars)
         {
-            if (chars.IsEmpty())
-            {
-                return source;
-            }
+            if (chars.IsEmpty()) return source;
 
             ICollection<char> list = chars;
             return new((
@@ -558,10 +559,218 @@ namespace Cutulu
                 ).ToArray());
         }
 
+        /// <summary>
+        /// Returns only listed char values in string
+        /// </summary>
+        public static string KeepChar(this string source, params char[] chars)
+        {
+            if (chars.IsEmpty()) return source;
+
+            ICollection<char> list = chars;
+            return new((
+                    from c in source where list.Contains(c) select c
+                ).ToArray());
+        }
+
+        /// <summary>
+        /// Splits string after first instance of seperator
+        /// </summary>
+        public static string[] SplitOnce(this string source, params char[] serperators)
+        {
+            if (serperators.IsEmpty() || source.IsEmpty()) return null;
+
+            for (int i = 0; i < serperators.Length; i++)
+            {
+                // Found a char
+                if (source.Contains(serperators[i]))
+                {
+                    break;
+                }
+
+                // No char has been found
+                if (i >= serperators.Length - 1)
+                {
+                    return null;
+                }
+            }
+
+            // Find split index
+            ICollection<char> list = serperators;
+            for (int i = 0; i < source.Length - 1; i++)
+            {
+                if (list.Contains(source[i]))
+                {
+                    // Define before and after
+                    string before = source[..i].Trim();
+                    string after = source[(i + 1)..].Trim();
+
+                    // Validate before and after
+                    if (before.NotEmpty() && after.NotEmpty())
+                    {
+                        return new string[2] { before, after };
+                    }
+
+                    // Before or after is empty
+                    else break;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Trims spaces to avoid double and more spaces
+        /// </summary>
+        public static string TrimSpaces(this string source)
+        {
+            StringBuilder result = new();
+            source = source.Trim();
+
+            bool wasSpace = false;
+            bool isSpace;
+
+            // Enumerate through source
+            for (int i = 0; i < source.Length; i++)
+            {
+                // Check if is space
+                isSpace = source[i] == ' ';
+
+                // Check if was space before
+                if (isSpace == false || wasSpace == false)
+                {
+                    result.Append(source[i]);
+                }
+
+                // Set past to present
+                wasSpace = isSpace;
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Splits string into lines and executes function that returns the modified line
+        /// </summary>
+        public static string[] SplitAnd(this string source, char seperator, Func<string, string> actionPerLine, bool ignoreEmptyEntries = false)
+        {
+            string[] splits = source.Split(seperator, StringSplitOptions.TrimEntries);
+            List<string> lines = new();
+
+            for (int i = 0; i < splits.Length; i++)
+            {
+                if (ignoreEmptyEntries)
+                {
+                    string line = actionPerLine.Invoke(splits[i]);
+                    if (line.NotEmpty())
+                    {
+                        lines.Add(line);
+                    }
+                }
+
+                else lines.Add(actionPerLine.Invoke(splits[i]));
+            }
+
+            return lines.ToArray();
+        }
+
+        /// <summary>
+        /// Insert value in front of keys
+        /// </summary>
+        public static string InsertInFrontOf(this string source, string insertValue, params char[] keys)
+        {
+            if (source.IsEmpty()) return source;
+            StringBuilder stringBuilder = new();
+
+            ICollection<char> splits = keys;
+            for (ushort i = 0; i < source.Length; i++)
+            {
+                if (splits.Contains(source[i]))
+                {
+                    stringBuilder.Append(insertValue);
+                }
+
+                stringBuilder.Append(source[i]);
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Insert value in front of and after keys
+        /// </summary>
+        public static string InsertInFrontOfAndAfter(this string source, string insertValue, params char[] keys)
+        {
+            if (source.IsEmpty()) return source;
+            StringBuilder stringBuilder = new();
+
+            ICollection<char> splits = keys;
+            for (ushort i = 0; i < source.Length; i++)
+            {
+                if (splits.Contains(source[i]))
+                {
+                    stringBuilder.Append(insertValue);
+                    stringBuilder.Append(source[i]);
+                    stringBuilder.Append(insertValue);
+                }
+
+                else stringBuilder.Append(source[i]);
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Inserts value after keys
+        /// </summary>
+        public static string InsertAfter(this string source, string insertValue, params char[] keys)
+        {
+            if (source.IsEmpty()) return source;
+            StringBuilder stringBuilder = new();
+            stringBuilder.Append(source[0]);
+
+            ICollection<char> splits = keys;
+            for (ushort i = 1; i < source.Length; i++)
+            {
+                stringBuilder.Append(source[i]);
+
+                if (splits.Contains(source[i]))
+                {
+                    stringBuilder.Append(insertValue);
+                }
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Removes empty lines
+        /// </summary>
+        public static string RemoveEmptyLines(this string source)
+        {
+            if (source.IsEmpty()) return source;
+
+            string[] lines = source.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            StringBuilder stringBuilder = new();
+
+            stringBuilder.Append(lines[0]);
+            for (ushort i = 1; i < lines.Length; i++)
+            {
+                stringBuilder.Append($"\n{lines[i]}");
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        public static string RemoveBehind(this string source, string identifier)
+        {
+            if (identifier.IsEmpty() || source.IsEmpty() || source.Contains(identifier[0]) == false || source.Contains(identifier) == false) return source;
+
+            return source.Split(identifier, StringSplitOptions.TrimEntries)[0];
+        }
+
         public static string TrimToDirectory(this string path)
         {
-            if (string.IsNullOrEmpty(path) || !(path.Contains('/') || path.Contains('\\')))
-                return path;
+            if (string.IsNullOrEmpty(path) || !(path.Contains('/') || path.Contains('\\'))) return path;
 
             char c;
             for (int i = path.Length; i > 0; i--)
@@ -592,10 +801,12 @@ namespace Cutulu
 
         public static string Fill(this string str, int targetLength, char fillChar, bool before = true)
         {
-            StringBuilder builder = new();
-            builder.Append(str.Trim());
+            if (targetLength < 1 || (str = str.Trim()).Length >= targetLength) return str;
 
-            for (int i = 0; i < (targetLength - builder.Length); i++)
+            StringBuilder builder = new();
+            builder.Append(str);
+
+            for (int i = builder.Length; i < targetLength; i++)
                 if (before) builder.Insert(0, fillChar);
                 else builder.Append(fillChar);
 
