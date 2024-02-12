@@ -155,7 +155,12 @@ namespace Cutulu
         public static void Write(this string path, byte[] bytes)
         {
             // Check if buffer and path are valid and create dir if non existant
-            if (bytes == null) "No byte buffer assigned".Throw();
+            if (bytes == null)
+            {
+                "No byte buffer assigned".LogError();
+                return;
+            }
+
             if (path.IsEmpty()) "No path assigned!".Throw();
 
             MkDir(path = path.Trim());

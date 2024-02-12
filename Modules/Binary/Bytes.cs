@@ -91,6 +91,8 @@ namespace Cutulu
         /// </summary>
         public static byte[] Buffer(this object value)
         {
+            if (value == null) return null;
+
             using MemoryStream stream = new();
             using BinaryWriter writer = new(stream);
 
