@@ -54,7 +54,7 @@ namespace Cutulu
             LastSaveFileName = saveFileName;
 
             // Load json
-            string json = SaveFilePath(saveFileName).Read();
+            string json = SaveFilePath(saveFileName).ReadString();
 
             // Assign to local
             Local = json.json<Dictionary<string, object>>();
@@ -82,7 +82,7 @@ namespace Cutulu
             Local ??= new();
 
             // Write to file
-            SaveFilePath(saveFileName).Write(Local.json());
+            SaveFilePath(saveFileName).WriteString(Local.json());
         }
 
         /// <summary>

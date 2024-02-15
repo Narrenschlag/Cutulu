@@ -5,6 +5,7 @@ using DA = Godot.DirAccess;
 using System.Text.Json;
 using System;
 using Godot;
+using System.Reflection;
 
 namespace Cutulu
 {
@@ -101,31 +102,6 @@ namespace Cutulu
 
         #region File Managment  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Load json from path. Throws errors if something fails.
-        /// Recommended usage: try, catch
-        /// </summary>
-        public static T LoadJson<T>(this string path, string decryptionKey = null)
-        {
-            string json = Read(path, decryptionKey);
-            return json.json<T>();
-        }
-
-        /// <summary>
-        /// Try load class from path.
-        /// </summary>
-        public static bool TryLoad<T>(this string path, out T asset) where T : class
-        {
-            if (Exists(path = path.Trim()))
-            {
-                asset = GD.Load<T>(path);
-                return true;
-            }
-
-            asset = default;
-            return false;
-        }
-
-        /// <summary>
         /// Creates directory if not existing already.
         /// </summary>
         public static Error MkDir(this string path) => DirAccess.MakeDirAbsolute(path.TrimToDirectory());
@@ -133,7 +109,7 @@ namespace Cutulu
         /// <summary>
         /// Writes text down in a file opened/created on the run.
         /// </summary>
-        public static void Write(this string path, string content, string encryptionKey = null)
+        public static void WriteString(this string path, string content, string encryptionKey = null)
         {
             // Check if the path is valid and create dir if non existant
             if (path.IsEmpty()) "No path assigned!".Throw();
@@ -152,7 +128,7 @@ namespace Cutulu
         /// <summary>
         /// Write bytes into file at given path.
         /// </summary>
-        public static void Write(this string path, byte[] bytes)
+        public static void WriteBytes(this string path, byte[] bytes)
         {
             // Check if buffer and path are valid and create dir if non existant
             if (bytes == null)
@@ -174,7 +150,7 @@ namespace Cutulu
         /// <summary>
         /// Reads text from file at given path.
         /// </summary>
-        public static string Read(this string path, string decryptionKey = null)
+        public static string ReadString(this string path, string decryptionKey = null)
         {
             // Check if the path is valid and create dir if non existant
             if (path.IsEmpty()) "No path assigned!".Throw();
@@ -245,15 +221,28 @@ namespace Cutulu
             return null;
         }
 
-        public enum FileType
+        /// <summary>
+        /// Defines the type serialization used for the file
+        /// </summary>
+        public enum FileType : byte
         {
-            Json, Binary
+            Json,
+            Binary,
+            GDResource
         }
 
+        /// <summary>
+        /// Returns file as defined type T
+        /// </summary>
+        public static T Read<T>(this string path, FileType type = FileType.Json) => TryRead(path, out T output, type) ? output : default;
+
+        /// <summary>
+        /// Returns file as defined type T
+        /// </summary>
         public static bool TryRead<T>(this string path, out T output, FileType type = FileType.Json)
         {
             // Check if file exists
-            if (Exists(path))
+            if (Exists(path = path.Trim()))
             {
                 // Check file type
                 switch (type)
@@ -267,7 +256,7 @@ namespace Cutulu
                         // Try reading as json
                         try
                         {
-                            output = path.Read().json<T>();
+                            output = path.ReadString().json<T>();
                             return true;
                         }
 
@@ -276,6 +265,19 @@ namespace Cutulu
                         {
                             break;
                         }
+
+                    // Handle godot resource loading
+                    case FileType.GDResource:
+                        // Validate T is a class
+                        if (typeof(T).IsClass)
+                        {
+                            MethodInfo method = typeof(GD).GetMethod("Load", BindingFlags.Public | BindingFlags.Static);
+                            MethodInfo genericMethod = method.MakeGenericMethod(typeof(T));
+
+                            return (output = genericMethod.Invoke(null, new object[1] { path }) is T _output ? _output : default) != null;
+                        }
+
+                        break;
 
                     // Edge case
                     default:
@@ -287,8 +289,14 @@ namespace Cutulu
             return false;
         }
 
-        public static bool TryWrite<T>(this T input, string path, FileType type = FileType.Json, bool overwrite = true)
+        /// <summary>
+        /// Writes instance of type T as file
+        /// </summary>
+        public static bool Write<T>(this T input, string path, FileType type = FileType.Json, bool overwrite = true)
         {
+            // Validate input
+            if (input == null) return false;
+
             // Check for existing file and overwrite check
             if (overwrite == false && Exists(path))
             {
@@ -300,13 +308,25 @@ namespace Cutulu
             {
                 // Handle binary writing
                 case FileType.Binary:
-                    Write(path, input.Buffer());
+                    WriteBytes(path, input.Buffer());
                     return true;
 
                 // Handle json writing
                 case FileType.Json:
-                    Write(path, input.json());
+                    WriteString(path, input.json());
                     return true;
+
+                // Handle godot resource loading
+                case FileType.GDResource:
+                    // Validate that input is Resource
+                    if (input is Resource)
+                    {
+                        // Save the resource to the file
+                        ResourceSaver.Save(input as Resource, path);
+                        return true;
+                    }
+
+                    return false;
 
                 // Edge case
                 default:

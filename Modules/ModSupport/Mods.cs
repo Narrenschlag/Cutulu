@@ -112,7 +112,7 @@ namespace Cutulu
 
             try
             {
-                string json = IO.Read(configPath);
+                string json = IO.ReadString(configPath);
                 ModConfig config = json.json<ModConfig>();
 
                 if (config.Name.IsEmpty())

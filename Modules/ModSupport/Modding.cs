@@ -144,7 +144,7 @@ namespace Cutulu
 
             public void Write(string localPath, string text, string encryptionKey = null)
             {
-                IO.Write(fix(ref localPath), text, encryptionKey);
+                IO.WriteString(fix(ref localPath), text, encryptionKey);
             }
 
             public string Read(string localPath, string encryptionKey = null)
@@ -153,7 +153,7 @@ namespace Cutulu
             {
                 try
                 {
-                    text = IO.Read(fix(ref localPath), decryptionKey);
+                    text = IO.ReadString(fix(ref localPath), decryptionKey);
                     return true;
                 }
                 catch
