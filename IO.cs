@@ -244,6 +244,75 @@ namespace Cutulu
 
             return null;
         }
+
+        public enum FileType
+        {
+            Json, Binary
+        }
+
+        public static bool TryRead<T>(this string path, out T output, FileType type = FileType.Json)
+        {
+            // Check if file exists
+            if (Exists(path))
+            {
+                // Check file type
+                switch (type)
+                {
+                    // Handle binary reading
+                    case FileType.Binary:
+                        return path.ReadBytes().TryBuffer(out output);
+
+                    // Handle json reading
+                    case FileType.Json:
+                        // Try reading as json
+                        try
+                        {
+                            output = path.Read().json<T>();
+                            return true;
+                        }
+
+                        // Something failed
+                        catch
+                        {
+                            break;
+                        }
+
+                    // Edge case
+                    default:
+                        break;
+                }
+            }
+
+            output = default;
+            return false;
+        }
+
+        public static bool TryWrite<T>(this T input, string path, FileType type = FileType.Json, bool overwrite = true)
+        {
+            // Check for existing file and overwrite check
+            if (overwrite == false && Exists(path))
+            {
+                return false;
+            }
+
+            // Check the file type
+            switch (type)
+            {
+                // Handle binary writing
+                case FileType.Binary:
+                    Write(path, input.Buffer());
+                    return true;
+
+                // Handle json writing
+                case FileType.Json:
+                    Write(path, input.json());
+                    return true;
+
+                // Edge case
+                default:
+                    return false;
+            }
+        }
         #endregion
     }
 
