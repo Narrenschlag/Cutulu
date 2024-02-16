@@ -234,7 +234,7 @@ namespace Cutulu
         /// <summary>
         /// Returns file as defined type T
         /// </summary>
-        public static T Read<T>(this string path, FileType type = FileType.Json) => TryRead(path, out T output, type) ? output : default;
+        public static T Read<T>(this string path, FileType type = FileType.Json) => TryRead(path, out T output, type) ? output : output;
 
         /// <summary>
         /// Returns file as defined type T
