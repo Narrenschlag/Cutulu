@@ -168,7 +168,7 @@ namespace Cutulu
             public T ReadResource<T>(string localPath) where T : class
                 => TryReadResource(localPath, out T result) ? result : default;
             public bool TryReadResource<T>(string localPath, out T result) where T : class
-                => IO.TryLoad(fix(ref localPath), out result);
+                => IO.TryRead(fix(ref localPath), out result, IO.FileType.GDResource);
 
             public T ReadJson<T>(string localPath)
                 => TryReadJson(localPath, out T result) ? result : default;
