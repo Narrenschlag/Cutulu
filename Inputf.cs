@@ -25,6 +25,15 @@ namespace Cutulu
             return old && !valueStore;
         }
 
+        private static bool capturedMouse;
+        public static void CaptureMouse() => CaptureMouse(!capturedMouse);
+        public static void CaptureMouse(bool value)
+        {
+            capturedMouse = value;
+
+            Input.MouseMode = capturedMouse ? Input.MouseModeEnum.Captured : Input.MouseModeEnum.Visible;
+        }
+
         #region Server - Client Communication
         public static byte ReadBaseInputs()
         {

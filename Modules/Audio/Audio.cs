@@ -18,6 +18,16 @@ namespace Cutulu
             Singleton = this;
         }
 
+        #region Get             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        public static List<T> Get<T>(byte audioGroup) where T : Node
+        {
+            if (Singleton.IsNull() || GroupParents == null || GroupParents.TryGetValue(audioGroup, out Node parent) == false) return null;
+
+            List<T> list = parent.GetNodesInChildren<T>();
+            return list.Count < 1 ? null : list;
+        }
+        #endregion
+
         #region Play            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Plays an audio stream in 3D space
