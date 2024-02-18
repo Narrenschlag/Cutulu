@@ -306,12 +306,77 @@ namespace Cutulu
         #endregion
 
         #region Array Functions         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public static bool NotEmpty<T>(this T[] array) => array != null && array.Length > 0;
-        public static bool IsEmpty<T>(this T[] array) => !NotEmpty(array);
+        public static ushort Size<T>(this T[] array) => array == null ? (ushort)0 : (ushort)array.Length;
 
-        public static T RandomElement<T>(this T[] array, T @default = default) => array.NotEmpty() ? array[Random.RangeInt(0, array.Length)] : @default;
+        public static bool NotEmpty<T>(this T[] array)
+        => array != null && array.Length > 0;
 
-        public static T GetClampedElement<T>(this T[] array, int index) => array.IsEmpty() ? default : array[Mathf.Clamp(index, 0, array.Length - 1)];
+        public static bool IsEmpty<T>(this T[] array)
+        => !NotEmpty(array);
+
+        public static T RandomElement<T>(this T[] array, T @default = default)
+        => array.NotEmpty() ? array[Random.RangeInt(0, array.Length)] : @default;
+
+        public static T GetClampedElement<T>(this T[] array, int index)
+        => array.IsEmpty() ? default : array[Mathf.Clamp(index, 0, array.Length - 1)];
+
+        public static bool Contains<T>(this T[] array, T element)
+        => ((ICollection<T>)array).Contains(element);
+
+        public static void AddToArray<T>(this T element, ref T[] array)
+        {
+            if (array == null)
+            {
+                array = new T[1] { element };
+                return;
+            }
+
+            T[] _array = new T[array.Length + 1];
+
+            System.Array.Copy(array, _array, array.Length);
+            _array[array.Length] = element;
+
+            array = _array;
+        }
+
+        public static void RemoveNull<T>(ref T[] array)
+        {
+            if (array.IsEmpty()) return;
+
+            List<T> list = new();
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (array[i] != null)
+                {
+                    list.Add(array[i]);
+                }
+            }
+
+            array = list.ToArray();
+        }
+
+        public static void RemoveFromArray<T>(this T element, ref T[] array, bool removeAllOccurences = false)
+        {
+            if (array.IsEmpty()) return;
+
+            List<T> list = new();
+            bool removed = false;
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                if ((removed && removeAllOccurences == false) || array[i].Equals(element))
+                {
+                    list.Add(array[i]);
+                }
+
+                else
+                {
+                    removed = true;
+                }
+            }
+
+            array = list.ToArray();
+        }
         #endregion
 
         #region List Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -443,6 +508,33 @@ namespace Cutulu
         public static Vector3 toUp(this Vector3 forward, Vector3 right) => -forward.Normalized().Cross(right.Normalized());
 
         public static Vector3 toXZ(this Vector2 value) => new(value.X, 0, value.Y);
+
+        /// <summary>
+        /// Round Vector3 to given decimal spaces
+        /// </summary>
+        public static Vector3 Round(this Vector3 value, byte decimalSpaces = 0)
+        => new(value.X.Round(decimalSpaces), value.Y.Round(decimalSpaces), value.Z.Round(decimalSpaces));
+
+        /// <summary>
+        /// Round Vector3 to given decimal spaces
+        /// </summary>
+        public static Vector3 Round(this Vector3 value, float step = 1f)
+        => new(value.X.Round(step), value.Y.Round(step), value.Z.Round(step));
+
+        public static float Round(this float value, byte decimalSpaces)
+        => Mathf.RoundToInt(value * Mathf.Pow(10, decimalSpaces)) / Mathf.Pow(10, decimalSpaces);
+
+        public static float Round(this float value, float step = 1f)
+        {
+            // Calculate rest
+            float rest = value % Mathf.Abs(step);
+
+            // Ceil
+            if (rest > step / 2) return value + (step - rest);
+
+            // Floor
+            else return value - rest;
+        }
         #endregion
 
         #region List Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

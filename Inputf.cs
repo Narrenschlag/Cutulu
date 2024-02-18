@@ -8,6 +8,27 @@ namespace Cutulu
         public static float GetValue(this string name) => Input.GetActionRawStrength(name);
 
         public static Vector2 MousePosition(this Node node) => node.GetViewport().GetMousePosition();
+        public static bool GetMousePosition(this Camera3D camera, out Vector3 globalPosition, uint mask = 4294967295)
+        {
+            if (RaycastFromCamera(camera, out RaycastHit hit, mask))
+            {
+                globalPosition = hit.point;
+                return true;
+            }
+
+            globalPosition = Vector3.Zero;
+            return false;
+        }
+
+        public static bool RaycastFromCamera(this Camera3D camera, out RaycastHit hit, uint mask = 4294967295)
+        {
+            if (Physics.Raycast(camera, out hit, 25, mask))
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         public static bool Down(this string name, ref bool valueStore, float threshold = .5f)
         {
