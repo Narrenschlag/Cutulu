@@ -364,7 +364,7 @@ namespace Cutulu
 
             for (int i = 0; i < array.Length; i++)
             {
-                if ((removed && removeAllOccurences == false) || array[i].Equals(element))
+                if ((removed && removeAllOccurences == false) || array[i].Equals(element) == false)
                 {
                     list.Add(array[i]);
                 }
