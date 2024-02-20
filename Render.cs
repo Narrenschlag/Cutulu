@@ -8,8 +8,8 @@ namespace Cutulu
         #region Base Functions		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static MeshInstance3D StartLineMesh(this Color color, out ImmediateMesh mesh)
         {
-            MeshInstance3D mesh_instance = new MeshInstance3D();
-            OrmMaterial3D material = new OrmMaterial3D();
+            MeshInstance3D mesh_instance = new();
+            OrmMaterial3D material = new();
             mesh = new ImmediateMesh();
 
             mesh_instance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;

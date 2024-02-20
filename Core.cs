@@ -526,14 +526,15 @@ namespace Cutulu
 
         public static float Round(this float value, float step = 1f)
         {
-            // Calculate rest
-            float rest = value % Mathf.Abs(step);
+            if (step <= 0) throw new ArgumentException("Step must be greater than zero.");
 
-            // Ceil
-            if (rest > step / 2) return value + (step - rest);
+            float remainder = (value = Mathf.Ceil(value / 0.001f) * 0.001f) % step;
+            float halfStep = step / 2f;
 
-            // Floor
-            else return value - rest;
+            return
+                remainder >= halfStep ? value + step - remainder :
+                remainder < -halfStep ? value - step - remainder :
+                value - remainder;
         }
         #endregion
 
