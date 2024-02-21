@@ -308,6 +308,27 @@ namespace Cutulu
         #region Array Functions         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static ushort Size<T>(this T[] array) => array == null ? (ushort)0 : (ushort)array.Length;
 
+        public static bool Compare<T>(this T[] array, T[] other)
+        {
+            if (array.Size() == other.Size())
+            {
+                if (array.Size() > 0)
+                {
+                    List<T> list = new(other);
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        if (list.Contains(array[i]) == false) return false;
+
+                        list.Remove(array[i]);
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         public static bool NotEmpty<T>(this T[] array)
         => array != null && array.Length > 0;
 
@@ -507,7 +528,7 @@ namespace Cutulu
         public static Vector3 toUp(this Vector3 forward) => toRight(forward, Vector3.Right);
         public static Vector3 toUp(this Vector3 forward, Vector3 right) => -forward.Normalized().Cross(right.Normalized());
 
-        public static Vector3 toXZ(this Vector2 value) => new(value.X, 0, value.Y);
+        public static Vector3 toXZ(this Vector2 value, float y = 0) => new(value.X, y, value.Y);
 
         /// <summary>
         /// Round Vector3 to given decimal spaces
