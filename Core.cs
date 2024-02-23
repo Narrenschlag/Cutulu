@@ -398,6 +398,29 @@ namespace Cutulu
 
             array = list.ToArray();
         }
+
+        public static T[] OffsetElements<T>(this T[] array, int offset)
+        {
+            OffsetElements(ref array, offset);
+            return array;
+        }
+
+        public static void OffsetElements<T>(ref T[] array, int offset)
+        {
+            T[] result = new T[array.Length];
+
+            // Calculate the effective offset (taking negative offsets into account)
+            offset = -offset % array.Length;
+
+            if (offset < 0) offset += array.Length;
+            else if (offset == 0) return;
+
+            // Copy the bytes to the result array with the offset
+            System.Array.Copy(array, offset, result, 0, array.Length - offset);
+            System.Array.Copy(array, 0, result, array.Length - offset, offset);
+
+            array = result;
+        }
         #endregion
 
         #region List Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
