@@ -1,5 +1,3 @@
-using System;
-
 namespace Cutulu
 {
     /// <summary>
@@ -110,7 +108,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Swap Byte bits
+        #region Swap Bits
         /// <summary>
         /// Swaps every second bit with the previous bit.
         /// </summary>
@@ -167,8 +165,11 @@ namespace Cutulu
         /// </summary>
         public static byte[] SwapBytes(this byte[] @bytes)
         {
-            SwapBytes(ref @bytes);
-            return @bytes;
+            byte[] result = @bytes.Duplicate();
+
+            SwapBytes(ref result);
+
+            return result;
         }
 
         /// <summary>
@@ -216,9 +217,8 @@ namespace Cutulu
         /// </summary>
         public static byte[] OffsetBits(this byte[] @bytes, int bitOffset)
         {
-            var result = new byte[@bytes.Length];
+            var result = @bytes.Duplicate();
 
-            Array.Copy(@bytes, result, result.Length);
             OffsetBits(ref result, ref bitOffset);
             return result;
         }
@@ -267,8 +267,11 @@ namespace Cutulu
         /// </summary>
         public static byte[] OffsetBytes(this byte[] @bytes, int offset)
         {
-            OffsetBytes(ref @bytes, ref offset);
-            return @bytes;
+            var result = @bytes.Duplicate();
+
+            OffsetBytes(ref result, ref offset);
+
+            return result;
         }
 
         /// <summary>

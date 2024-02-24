@@ -421,6 +421,15 @@ namespace Cutulu
 
             array = result;
         }
+
+        public static T[] Duplicate<T>(this T[] array)
+        {
+            var result = new T[array.Length];
+
+            System.Array.Copy(array, result, array.Length);
+
+            return result;
+        }
         #endregion
 
         #region List Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
