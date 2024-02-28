@@ -1,3 +1,5 @@
+using Godot;
+
 namespace Cutulu
 {
     /// <summary>
@@ -5,7 +7,7 @@ namespace Cutulu
     /// </summary>
     public static class Bytef
     {
-        #region Bit Manipulation for single Byte
+        #region Bit Manipulation            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Sets value to bit at byte.
         /// </summary>
@@ -76,7 +78,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Byte Manipulation
+        #region Byte Manipulation           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Swaps byte1 with the byte2.
         /// </summary>
@@ -86,7 +88,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Bit Manipulation for Arrays
+        #region Bit Manipulation for Arrays ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Gets bit value within byte array
         /// </summary>
@@ -108,7 +110,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Swap Bits
+        #region Swap Bits                   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Swaps every second bit with the previous bit.
         /// </summary>
@@ -159,7 +161,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Swap Bytes
+        #region Swap Bytes                  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Swaps every second bit with the previous bit.
         /// </summary>
@@ -189,7 +191,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Offset Bits
+        #region Offset Bits                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Offsets bits.
         /// </summary>
@@ -261,7 +263,7 @@ namespace Cutulu
         }
         #endregion
 
-        #region Offset Bytes
+        #region Offset Bytes                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Offsets bytes.
         /// </summary>
@@ -280,63 +282,82 @@ namespace Cutulu
         public static void OffsetBytes(ref byte[] @bytes, ref int offset) => Core.OffsetElements(ref @bytes, offset);
         #endregion
 
-        #region Byte Utility
-        public static bool[] GetBooleans(this byte @byte)
+        #region Bits and Bools              ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Set all bits of a byte based on booleans.
+        /// </summary>
+        public static byte SetBools(this byte @byte, params bool[] bools)
         {
-            GetBooleans(ref @byte, out var result);
-            return result;
+            SetBools(ref @byte, bools);
+            return @byte;
         }
 
-        public static void GetBooleans(ref byte @byte, out bool[] booleans)
+        /// <summary>
+        /// Set all bits of a byte based on booleans.
+        /// </summary>
+        public static void SetBools(ref byte @byte, params bool[] bools)
         {
-            booleans = new bool[8];
+            if (bools.IsEmpty()) return;
 
-            for (byte i = 0; i < 8; i++)
+            for (byte i = 0; i < bools.Length && i < 8; i++)
             {
-                booleans[i] = GetBit(ref @byte, ref i);
+                SetBit(ref @byte, ref i, ref bools[i]);
             }
         }
 
-        public static byte ApplyBooleans(this bool bool1, params bool[] boolN)
+        /// <summary>
+        /// Set all bits of a byte based on booleans.
+        /// </summary>
+        public static byte[] SetBools(this byte[] array, params bool[] bools)
         {
-            byte result = 0;
-            ApplyBooleans(ref result, ref bool1, boolN);
-
-            return result;
+            SetBools(ref array, bools);
+            return array;
         }
 
-        public static void ApplyBooleans(ref byte @byte, ref bool bool1, params bool[] boolN)
+        /// <summary>
+        /// Set all bits of a byte based on booleans.
+        /// </summary>
+        public static void SetBools(ref byte[] array, params bool[] bools)
         {
-            byte i = 0;
+            array = new byte[Mathf.CeilToInt(array.Size() / 8f)];
+            if (bools.IsEmpty()) return;
+            byte bitIndex;
 
-            SetBit(ref @byte, ref i, ref bool1);
-
-            if (boolN != null)
+            for (ushort i = 0; i < bools.Length; i++)
             {
-                for (i = 1; i <= boolN.Length && i < 8; i++)
-                {
-                    SetBit(ref @byte, ref i, ref boolN[i - 1]);
-                }
+                bitIndex = (byte)(i % 8);
+
+                SetBit(ref array[Mathf.FloorToInt(i / 8f)], ref bitIndex, ref bools[i]);
             }
         }
 
-        public static byte ApplyBooleans(this bool[] boolN)
+        /// <summary>
+        /// Get all bits of a byte based on booleans.
+        /// </summary>
+        public static bool[] GetBools(this byte @byte) => GetBools(new byte[1] { @byte });
+
+        /// <summary>
+        /// Get all bits of a byte based on booleans.
+        /// </summary>
+        public static bool[] GetBools(this byte[] array) => GetBools(ref array);
+
+        /// <summary>
+        /// Get all bits of a byte based on booleans.
+        /// </summary>
+        public static bool[] GetBools(ref byte[] array)
         {
-            byte result = 0;
-            ApplyBooleans(ref result, ref boolN);
+            bool[] result = new bool[array.Size() * 8];
+            if (array.IsEmpty()) return result;
+            byte bitIndex;
+
+            for (ushort i = 0; i < result.Length; i++)
+            {
+                bitIndex = (byte)(i % 8);
+
+                result[i] = GetBit(ref array[Mathf.FloorToInt(i / 8f)], ref bitIndex);
+            }
 
             return result;
-        }
-
-        public static void ApplyBooleans(ref byte @byte, ref bool[] boolN)
-        {
-            if (boolN != null)
-            {
-                for (byte i = 1; i < boolN.Length && i < 8; i++)
-                {
-                    SetBit(ref @byte, ref i, ref boolN[i]);
-                }
-            }
         }
         #endregion
     }
