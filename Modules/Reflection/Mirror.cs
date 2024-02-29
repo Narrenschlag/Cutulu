@@ -114,7 +114,7 @@ namespace Cutulu
             var methodParams = method.GetParameters();
             if (methodParams == null != (@params == null) || (@params != null && methodParams.Length != @params.Length))
             {
-                Debug.LogError($"Parameter count mismatch (method: {(methodParams != null ? methodParams.Length : 0)} != {(@params != null ? @params.Length : 0)}) for method({methodName}) in typeof({@class}).");
+                Debug.LogError($"Parameter count mismatch (method: {(methodParams != null ? methodParams.Length : 0)} != {(@params != null ? @params.Length : 0)} :input) for method({methodName}) in typeof({@class}).");
                 return default;
             }
             #endregion
