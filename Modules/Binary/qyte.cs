@@ -16,7 +16,7 @@ namespace Cutulu
             Byte = value;
         }
 
-        public int GetValue(int index)
+        public readonly int GetValue(int index)
         {
             if (index < 0 || index > 3)
                 throw new("Index must be between 0 and 3 (inclusive).");

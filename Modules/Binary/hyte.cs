@@ -7,6 +7,7 @@ namespace Cutulu
     {
         public byte Byte { get; private set; }
 
+        public hyte() => Byte = 0;
         public hyte(byte value)
         {
             if (value > 0x0F)
@@ -25,23 +26,23 @@ namespace Cutulu
             return (byte)(Byte & 0x0F);
         }
 
-        public void SetFirstNibble(byte value)
+        public hyte SetFirst(byte value)
         {
             if (value > 0x0F)
                 throw new("Value must be between 0x00 and 0x0F (inclusive).");
 
-            Byte = (byte)((value << 4) | (Byte & 0x0F));
+            return new() { Byte = (byte)((value << 4) | (Byte & 0x0F)) };
         }
 
-        public void SetSecondNibble(byte value)
+        public hyte SetSecond(byte value)
         {
             if (value > 0x0F)
                 throw new("Value must be between 0x00 and 0x0F (inclusive).");
 
-            Byte = (byte)((Byte & 0xF0) | value);
+            return new() { Byte = (byte)((Byte & 0xF0) | value) };
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"{{ 0x{GetFirst():X}, 0x{GetSecond():X} }}";
         }
