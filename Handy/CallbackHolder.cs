@@ -16,6 +16,11 @@ namespace Cutulu
             button.AddChild(this);
         }
 
+        public CallbackHolder(string nodeFunc, Action callback) : this(callback)
+        {
+            this.Connect(nodeFunc, this, "Call");
+        }
+
         public CallbackHolder(Action callback)
         {
             Callback = callback;
