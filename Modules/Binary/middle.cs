@@ -8,8 +8,9 @@ namespace Cutulu
         public const int MinValue = -8388608; // -2^23
         public const int MaxValue = 8388607;  // (2^23 - 1)
 
-        public byte[] Bytes { get; private set; }
+        public byte[] Bytes;
 
+        public middle() => Bytes = null;
         public middle(int value)
         {
             if (value < MinValue || value > MaxValue)
@@ -59,8 +60,9 @@ namespace Cutulu
         public const int MaxValue = 16777215;  // (2^24 - 1)
         public const int MinValue = 0;  // (0)
 
-        public byte[] Bytes { get; private set; }
+        public byte[] Bytes;
 
+        public umiddle() => Bytes = null;
         public umiddle(uint value)
         {
             if (value > MaxValue)

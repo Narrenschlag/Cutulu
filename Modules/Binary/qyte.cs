@@ -5,7 +5,7 @@ namespace Cutulu
     /// </summary>
     public struct qyte
     {
-        public byte Byte { get; private set; }
+        public byte Byte;
 
         public qyte() => Byte = 0;
         public qyte(byte value)
