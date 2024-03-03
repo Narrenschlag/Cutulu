@@ -15,12 +15,12 @@ namespace Cutulu
             Byte = value;
         }
 
-        public readonly byte GetFirstNibble()
+        public readonly byte GetFirst()
         {
             return (byte)(Byte >> 4);
         }
 
-        public readonly byte GetSecondNibble()
+        public readonly byte GetSecond()
         {
             return (byte)(Byte & 0x0F);
         }
@@ -43,7 +43,7 @@ namespace Cutulu
 
         public override string ToString()
         {
-            return $"{{ 0x{GetFirstNibble():X}, 0x{GetSecondNibble():X} }}";
+            return $"{{ 0x{GetFirst():X}, 0x{GetSecond():X} }}";
         }
     }
 }
