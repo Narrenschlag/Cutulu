@@ -9,6 +9,16 @@ namespace Cutulu
     {
         #region Bit Manipulation            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
+        /// Sets value to bit at number.
+        /// </summary>
+        public static bool GetBit(this int @int, byte bitIndex)
+        {
+            if (bitIndex > 32) throw new("bitIndex has to be { [0; ]32 }");
+
+            return ((@int >> bitIndex) & 1) == 1;
+        }
+
+        /// <summary>
         /// Sets value to bit at byte.
         /// </summary>
         public static bool GetBit(this byte @byte, byte bitIndex)
