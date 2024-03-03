@@ -1,7 +1,7 @@
 namespace Cutulu
 {
     /// <summary>
-    /// Half byte.
+    /// Byte sized half bytes. (2 hytes are 1 byte)
     /// </summary>
     public struct hyte
     {

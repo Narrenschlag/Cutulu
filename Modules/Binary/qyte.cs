@@ -1,7 +1,7 @@
 namespace Cutulu
 {
     /// <summary>
-    /// Quarter byte.
+    /// Byte sized qarter bytes. (4 qytes are 1 byte)
     /// </summary>
     public struct qyte
     {
@@ -16,7 +16,7 @@ namespace Cutulu
             Byte = value;
         }
 
-        public readonly int GetValue(int index)
+        public readonly int GetValue(byte index)
         {
             if (index < 0 || index > 3)
                 throw new("Index must be between 0 and 3 (inclusive).");
@@ -24,7 +24,7 @@ namespace Cutulu
             return (Byte >> (index * 2)) & 0x03;
         }
 
-        public qyte SetValue(int index, int value)
+        public qyte SetValue(byte index, int value)
         {
             if (index < 0 || index > 3)
                 throw new("Index must be between 0 and 3 (inclusive).");
