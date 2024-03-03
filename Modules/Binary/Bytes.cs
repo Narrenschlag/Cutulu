@@ -137,27 +137,28 @@ namespace Cutulu
             else
             {
                 // Write based on type
-                switch (type)
+                switch (value)
                 {
                     // Text
-                    case var t when t == typeof(string): writer.Write((string)value); break;
-                    case var t when t == typeof(char): writer.Write((char)value); break;
+                    case string v: writer.Write(v); break;
+                    case char v: writer.Write(v); break;
 
                     // Integers
-                    case var t when t == typeof(uint): writer.Write((uint)value); break;
-                    case var t when t == typeof(int): writer.Write((int)value); break;
+                    case uint v: writer.Write(v); break;
+                    case int v: writer.Write(v); break;
 
                     // Shorts
-                    case var t when t == typeof(ushort): writer.Write((ushort)value); break;
-                    case var t when t == typeof(short): writer.Write((short)value); break;
+                    case ushort v: writer.Write(v); break;
+                    case short v: writer.Write(v); break;
 
                     // Bytes and bools
-                    case var t when t == typeof(byte): writer.Write((byte)value); break;
-                    case var t when t == typeof(bool): writer.Write((bool)value); break;
+                    case byte v: writer.Write(v); break;
+                    case sbyte v: writer.Write(v); break;
+                    case bool v: writer.Write(v); break;
 
                     // Floats
-                    case var t when t == typeof(double): writer.Write((double)value); break;
-                    case var t when t == typeof(float): writer.Write((float)value); break;
+                    case double v: writer.Write(v); break;
+                    case float v: writer.Write(v); break;
 
                     // Custom or non-supported
                     default:
@@ -278,6 +279,7 @@ namespace Cutulu
 
                     // Bytes and bools
                     var t when t == typeof(byte) => reader.ReadByte(),
+                    var t when t == typeof(sbyte) => reader.ReadSByte(),
                     var t when t == typeof(bool) => reader.ReadBoolean(),
 
                     // Floats

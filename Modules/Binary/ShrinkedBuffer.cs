@@ -14,12 +14,10 @@ namespace Cutulu
         public byte[] Remaining;
         public byte[] Buffer;
         public byte Offset;
-        public byte Depth;
 
         public ShrinkedBuffer(byte[] buffer, byte offset = 0)
         {
             Offset = offset;
-            Depth = 1;
 
             // Open Streams
             var stream = new MemoryStream(buffer);
@@ -63,6 +61,8 @@ namespace Cutulu
             reader.Close();
             writer.Close();
         }
+
+        public static byte[] Compress(byte[] buffer, byte offset = 0) => new ShrinkedBuffer(buffer, offset).Buffer;
 
         public byte[] Decompress()
         {
