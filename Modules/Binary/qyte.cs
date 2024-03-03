@@ -1,7 +1,7 @@
 namespace Cutulu
 {
     /// <summary>
-    /// Quater byte.
+    /// Quarter byte.
     /// </summary>
     public struct qyte
     {
