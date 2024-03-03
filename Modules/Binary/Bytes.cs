@@ -13,7 +13,23 @@ namespace Cutulu
     public static class Bytes
     {
         #region Additional Formatters   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        private static Dictionary<Type, ByteFormatter> AdditionalFormatters;
+        private static Dictionary<Type, ByteFormatter> additionalFormatters;
+        public static Dictionary<Type, ByteFormatter> AdditionalFormatters
+        {
+            get
+            {
+                // Bootstrap
+                if (additionalFormatters == null)
+                {
+                    additionalFormatters = new();
+
+                    CutuluByteFormatters.Register();
+                    GodotByteFormatters.Register();
+                }
+
+                return additionalFormatters;
+            }
+        }
 
         /// <summary>
         /// Registers a formatter for non primitive data structures
@@ -24,14 +40,6 @@ namespace Cutulu
             if (formatter == null)
             {
                 return;
-            }
-
-            // Setup instances
-            else if (AdditionalFormatters == null)
-            {
-                AdditionalFormatters = new(){
-                { type, formatter }
-            };
             }
 
             // Override existing
@@ -53,30 +61,12 @@ namespace Cutulu
         /// <summary>
         /// Removes formatter for non primitive data structures
         /// </summary>
-        public static void ClearFormatter(Type type)
-        {
-            if (AdditionalFormatters != null && AdditionalFormatters.ContainsKey(type))
-            {
-                AdditionalFormatters.Remove(type);
-            }
-        }
+        public static void ClearFormatter(Type type) => AdditionalFormatters.TryRemove(type);
 
         /// <summary>
         /// Tries to find custom formatter for non primitive data structure
         /// </summary>
-        private static bool TryGetFormatter(Type type, out ByteFormatter formatter)
-        {
-            if (AdditionalFormatters == null)
-            {
-                formatter = null;
-                return false;
-            }
-
-            else
-            {
-                return AdditionalFormatters.TryGetValue(type, out formatter);
-            }
-        }
+        private static bool TryGetFormatter(Type type, out ByteFormatter formatter) => AdditionalFormatters.TryGetValue(type, out formatter);
         #endregion
 
         #region Utility                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
