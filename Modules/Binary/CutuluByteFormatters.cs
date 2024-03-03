@@ -12,35 +12,35 @@ namespace Cutulu
         /// </summary>
         public static void Register()
         {
-            new hyteFormatter().Register<hyte>();
-            new qyteFormatter().Register<qyte>();
+            new hyteFormatter().Register<Int4>();
+            new qyteFormatter().Register<Int2>();
 
-            new middleFormatter().Register<middle>();
-            new umiddleFormatter().Register<umiddle>();
+            new middleFormatter().Register<Int24>();
+            new umiddleFormatter().Register<UInt24>();
         }
 
         class hyteFormatter : ByteFormatter
         {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((hyte)value).Byte);
-            public override object Read(BinaryReader reader) => new hyte() { Byte = reader.ReadByte() };
+            public override void Write(object value, BinaryWriter writer) => writer.Write(((Int4)value).Byte);
+            public override object Read(BinaryReader reader) => new Int4() { Byte = reader.ReadByte() };
         }
 
         class qyteFormatter : ByteFormatter
         {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((qyte)value).Byte);
-            public override object Read(BinaryReader reader) => new qyte() { Byte = reader.ReadByte() };
+            public override void Write(object value, BinaryWriter writer) => writer.Write(((Int2)value).Byte);
+            public override object Read(BinaryReader reader) => new Int2() { Byte = reader.ReadByte() };
         }
 
         class middleFormatter : ByteFormatter
         {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((middle)value).Bytes);
-            public override object Read(BinaryReader reader) => new middle() { Bytes = reader.ReadBytes(3) };
+            public override void Write(object value, BinaryWriter writer) => writer.Write(((Int24)value).Bytes);
+            public override object Read(BinaryReader reader) => new Int24() { Bytes = reader.ReadBytes(3) };
         }
 
         class umiddleFormatter : ByteFormatter
         {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((umiddle)value).Bytes);
-            public override object Read(BinaryReader reader) => new umiddle() { Bytes = reader.ReadBytes(3) };
+            public override void Write(object value, BinaryWriter writer) => writer.Write(((UInt24)value).Bytes);
+            public override object Read(BinaryReader reader) => new UInt24() { Bytes = reader.ReadBytes(3) };
         }
     }
 }

@@ -3,12 +3,12 @@ namespace Cutulu
     /// <summary>
     /// Byte sized half bytes. (2 hytes are 1 byte)
     /// </summary>
-    public struct hyte
+    public struct Int4
     {
         public byte Byte;
 
-        public hyte() => Byte = 0;
-        public hyte(byte value)
+        public Int4() => Byte = 0;
+        public Int4(byte value)
         {
             if (value > 0x0F)
                 throw new("Value must be between 0x00 and 0x0F (inclusive).");
@@ -26,7 +26,7 @@ namespace Cutulu
             return (byte)(Byte & 0x0F);
         }
 
-        public hyte SetFirst(byte value)
+        public Int4 SetFirst(byte value)
         {
             if (value > 0x0F)
                 throw new("Value must be between 0x00 and 0x0F (inclusive).");
@@ -34,7 +34,7 @@ namespace Cutulu
             return new() { Byte = (byte)((value << 4) | (Byte & 0x0F)) };
         }
 
-        public hyte SetSecond(byte value)
+        public Int4 SetSecond(byte value)
         {
             if (value > 0x0F)
                 throw new("Value must be between 0x00 and 0x0F (inclusive).");

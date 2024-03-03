@@ -149,7 +149,7 @@ namespace Cutulu
 
                     // Shorts
                     case var t when t == typeof(ushort): writer.Write((ushort)value); break;
-                    case var t when t == typeof(short): writer.Write((ushort)value); break;
+                    case var t when t == typeof(short): writer.Write((short)value); break;
 
                     // Bytes and bools
                     case var t when t == typeof(byte): writer.Write((byte)value); break;
