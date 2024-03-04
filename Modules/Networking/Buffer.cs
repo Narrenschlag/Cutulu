@@ -163,7 +163,7 @@ namespace Cutulu
     /// <summary> 
     /// Define your methods here. Tcp and Udp are already contained.
     /// </summary>
-    public enum Method
+    public enum Method : byte
     {
         Tcp, Udp
     }

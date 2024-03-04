@@ -14,6 +14,7 @@ namespace Cutulu
     /// </summary>
     public static class IO
     {
+        public const string LocalHost = "127.0.0.1";
         public const string PROJECT_PATH = "res://";
         public const string USER_PATH = "user://";
 
