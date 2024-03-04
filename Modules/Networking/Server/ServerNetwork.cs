@@ -168,11 +168,13 @@ namespace Cutulu
         public virtual void OnClientQuit(ServerConnection<D> client) { }
         #endregion
 
+        #region Closing         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public void Close()
         {
             TcpListener?.Stop();
 
             Clients = null;
         }
+        #endregion
     }
 }
