@@ -167,5 +167,12 @@ namespace Cutulu
         protected virtual void OnClientJoin(ServerConnection<D> client) { }
         public virtual void OnClientQuit(ServerConnection<D> client) { }
         #endregion
+
+        public void Close()
+        {
+            TcpListener?.Stop();
+
+            Clients = null;
+        }
     }
 }
