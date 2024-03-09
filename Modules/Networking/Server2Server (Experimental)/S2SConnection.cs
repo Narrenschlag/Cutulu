@@ -1,6 +1,6 @@
 namespace Cutulu
 {
-    public class S2SConnection<R> : ClientNetwork<R> where R : S2SReceiver
+    public class S2SConnection<R> : ClientNetwork<R> where R : S2SSetup
     {
         public Passkey RemoteKey { get; private set; }
         public string Host { get; private set; }

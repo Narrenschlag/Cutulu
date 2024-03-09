@@ -1,18 +1,20 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
+using System;
 
 namespace Cutulu
 {
     public class ServerConnection<R> : Marker<R> where R : Receiver
     {
         public delegate void Disconnect(ServerConnection<R> client);
+        public Protocol.Empty onSetupComplete;
         public Disconnect onClose;
         public TcpProtocol tcp;
 
-        protected Dictionary<uint, ServerConnection<R>> Registry;
+        protected Dictionary<uint, ServerConnection<R>> Registry => Server?.Clients;
 
-        public ServerNetwork<R> server;
+        public ServerNetwork<R> Server;
         public IPEndPoint endPoint;
 
         public virtual bool Connected() => ConnectedTcp() && ConnectedUdp();
@@ -20,17 +22,27 @@ namespace Cutulu
         public bool ConnectedUdp() => endPoint != null;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public ServerConnection(ref TcpClient client, uint uuid, ref Dictionary<uint, ServerConnection<R>> registry, ServerNetwork<R> server, R receiver, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, (ushort)uuid, receiver, onReceive, onDisconnect)
+        /// <summary> 
+        /// Create ServerConnection
+        /// </summary>
+        public ServerConnection(ref TcpClient client, uint uuid, ServerNetwork<R> server, R receiver, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, (ushort)uuid, receiver, onReceive, onDisconnect)
         {
-            Registry = registry;
-
             this.onReceive = onReceive;
-            this.server = server;
+            this.Server = server;
             endPoint = null;
 
             $"+++ Connected [{UUID}]".Log();
 
             tcp = new TcpProtocol(ref client, uuid, Receive, Disconnected);
+        }
+
+        /// <summary> 
+        /// (Experimental!) Transform ClientNetwork to ServerConnection
+        /// </summary>
+        [Obsolete("This constructor is experimental for Server2Server bonding")]
+        public ServerConnection(ClientNetwork<R> client) : this(ref client.Tcp.client, client.UUID, null, null)
+        {
+
         }
 
         /// <summary> 
@@ -43,7 +55,17 @@ namespace Cutulu
             endPoint = udpSource;
             Send(255, SafetyId, Method.Tcp);
 
-            $"Client({UUID}) has been fully connected successfully.".Log();
+            // Connection has been setup completely
+            onSetupComplete?.Invoke();
+            OnSetupComplete();
+        }
+
+        /// <summary> 
+        /// Triggered when setup is complete
+        /// </summary>
+        protected virtual void OnSetupComplete()
+        {
+
         }
         #endregion
 
@@ -65,7 +87,7 @@ namespace Cutulu
                 case Method.Udp:
                     if (ConnectedUdp())
                     {
-                        server.globalUdp.Send(key, value, endPoint);
+                        Server.globalUdp.Send(key, value, endPoint);
                     }
                     break;
 
@@ -86,20 +108,23 @@ namespace Cutulu
 
             onClose?.Invoke(this);
 
-            lock (Registry)
+            if (Registry != null)
             {
-                Registry.Remove(UUID);
+                lock (Registry)
+                {
+                    Registry?.Remove(UUID);
+                }
             }
 
             // Remove from endpoints
-            if (endPoint != null && server.Endpoints.ContainsKey(endPoint))
-                lock (server.Endpoints)
+            if (endPoint != null && Server.Endpoints.ContainsKey(endPoint))
+                lock (Server.Endpoints)
                 {
-                    server.Endpoints.Remove(endPoint);
+                    Server.Endpoints.Remove(endPoint);
                 }
 
             // Message server of disconnection
-            server?.OnClientQuit(this);
+            Server?.OnClientQuit(this);
         }
 
         /// <summary>

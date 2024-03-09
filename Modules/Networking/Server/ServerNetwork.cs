@@ -88,7 +88,7 @@ namespace Cutulu
                     if (address != null)
                         lock (Queue)
                         {
-                            client = new(ref tcp, uid, ref Clients, this, WelcomeTarget);
+                            client = new(ref tcp, uid, this, WelcomeTarget);
 
                             if (Queue.ContainsKey(address)) Queue[address] = client;
                             else Queue.Add(address, client);
