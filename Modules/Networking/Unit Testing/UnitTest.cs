@@ -14,14 +14,14 @@ namespace Cutulu.UnitTest.Network
         [Export] private PackedScene ClientWindowPrefab;
         [Export] private Button ClientSide;
 
-        private ServerNetwork<Destination> Server;
+        private ServerNetwork<Receiver> Server;
         private List<ClientWindow> Windows;
 
         public override void _EnterTree()
         {
             base._EnterTree();
 
-            Server = new ServerNetwork<Destination>(5000, 5001, ServerNode.NotNull() ? ServerNode : null);
+            Server = new ServerNetwork<Receiver>(5000, 5001, ServerNode.NotNull() ? ServerNode : null);
 
             if (ClientSide.NotNull())
             {

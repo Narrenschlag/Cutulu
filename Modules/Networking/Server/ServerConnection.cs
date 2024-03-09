@@ -4,15 +4,15 @@ using System.Net;
 
 namespace Cutulu
 {
-    public class ServerConnection<D> : Marker<D> where D : Destination
+    public class ServerConnection<R> : Marker<R> where R : Receiver
     {
-        public delegate void Disconnect(ServerConnection<D> client);
+        public delegate void Disconnect(ServerConnection<R> client);
         public Disconnect onClose;
         public TcpProtocol tcp;
 
-        protected Dictionary<uint, ServerConnection<D>> Registry;
+        protected Dictionary<uint, ServerConnection<R>> Registry;
 
-        public ServerNetwork<D> server;
+        public ServerNetwork<R> server;
         public IPEndPoint endPoint;
 
         public virtual bool Connected() => ConnectedTcp() && ConnectedUdp();
@@ -20,7 +20,7 @@ namespace Cutulu
         public bool ConnectedUdp() => endPoint != null;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public ServerConnection(ref TcpClient client, uint uuid, ref Dictionary<uint, ServerConnection<D>> registry, ServerNetwork<D> server, D destination, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, (ushort)uuid, destination, onReceive, onDisconnect)
+        public ServerConnection(ref TcpClient client, uint uuid, ref Dictionary<uint, ServerConnection<R>> registry, ServerNetwork<R> server, R receiver, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, (ushort)uuid, receiver, onReceive, onDisconnect)
         {
             Registry = registry;
 

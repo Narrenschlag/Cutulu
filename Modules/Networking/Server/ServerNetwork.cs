@@ -6,16 +6,16 @@ using System;
 
 namespace Cutulu
 {
-    public class ServerNetwork<D> where D : Destination
+    public class ServerNetwork<R> where R : Receiver
     {
-        public Dictionary<uint, ServerConnection<D>> Clients;
+        public Dictionary<uint, ServerConnection<R>> Clients;
         public bool AcceptNewClients;
         public int TcpPort;
 
         protected TcpListener TcpListener;
         protected uint LastUID;
 
-        private readonly D WelcomeTarget;
+        private readonly R WelcomeTarget;
 
         /// <summary> 
         /// Amount of clients currently connected to the server 
@@ -24,11 +24,11 @@ namespace Cutulu
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary> Simple server that handles tcp only </summary>
-        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, D welcomeTarget = null, bool acceptClients = true)
+        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true)
         {
-            Endpoints = new Dictionary<IPEndPoint, ServerConnection<D>>();
-            Queue = new Dictionary<IPAddress, ServerConnection<D>>();
-            Clients = new Dictionary<uint, ServerConnection<D>>();
+            Endpoints = new Dictionary<IPEndPoint, ServerConnection<R>>();
+            Queue = new Dictionary<IPAddress, ServerConnection<R>>();
+            Clients = new Dictionary<uint, ServerConnection<R>>();
 
             WelcomeTarget = welcomeTarget;
             AcceptNewClients = true;
@@ -65,7 +65,7 @@ namespace Cutulu
             // Register client
             lock (Clients)
             {
-                ServerConnection<D> @base = NewClient(ref tcp, LastUID++);
+                ServerConnection<R> @base = NewClient(ref tcp, LastUID++);
                 if (@base != null) Clients.Add(@base.UUID, @base);
             }
 
@@ -76,9 +76,9 @@ namespace Cutulu
         /// <summary> 
         /// Creates new tcp/udp client 
         /// </summary>
-        protected virtual ServerConnection<D> NewClient(ref TcpClient tcp, uint uid)
+        protected virtual ServerConnection<R> NewClient(ref TcpClient tcp, uint uid)
         {
-            ServerConnection<D> client;
+            ServerConnection<R> client;
             if (tcp.Client != null && tcp.Client.RemoteEndPoint != null)
             {
                 if (tcp.Client.RemoteEndPoint is IPEndPoint endpoint)
@@ -105,7 +105,7 @@ namespace Cutulu
             OnClientJoin(client);
             return client;
 
-            static ServerConnection<D> error(string message, ref TcpClient tcp)
+            static ServerConnection<R> error(string message, ref TcpClient tcp)
             {
                 message.LogError();
                 tcp?.Close();
@@ -119,11 +119,11 @@ namespace Cutulu
         public virtual void Broadcast<T>(byte key, T value, Method method) => Broadcast(key, value, method, Clients?.Values);
 
         /// <summary> Broadcast to selected clients </summary>
-        public virtual void Broadcast<T>(byte key, T value, Method method, ICollection<ServerConnection<D>> receivers)
+        public virtual void Broadcast<T>(byte key, T value, Method method, ICollection<ServerConnection<R>> receivers)
         {
             if (receivers == null || receivers.Count < 1) return;
 
-            foreach (ServerConnection<D> client in receivers)
+            foreach (ServerConnection<R> client in receivers)
             {
                 if (client == null)
                 {
@@ -137,8 +137,8 @@ namespace Cutulu
         #endregion
 
         #region Udp             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public Dictionary<IPEndPoint, ServerConnection<D>> Endpoints;
-        public Dictionary<IPAddress, ServerConnection<D>> Queue;
+        public Dictionary<IPEndPoint, ServerConnection<R>> Endpoints;
+        public Dictionary<IPAddress, ServerConnection<R>> Queue;
         public UdpProtocol globalUdp;
         public int UdpPort;
 
@@ -147,7 +147,7 @@ namespace Cutulu
             lock (this)
             {
                 // Move queued element to endpoint registry
-                if (!Endpoints.TryGetValue(endpoint, out ServerConnection<D> client))
+                if (!Endpoints.TryGetValue(endpoint, out ServerConnection<R> client))
                 {
                     if (Queue.TryGetValue(endpoint.Address, out client))
                     {
@@ -168,8 +168,8 @@ namespace Cutulu
         #endregion
 
         #region Global Events   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        protected virtual void OnClientJoin(ServerConnection<D> client) { }
-        public virtual void OnClientQuit(ServerConnection<D> client) { }
+        protected virtual void OnClientJoin(ServerConnection<R> client) { }
+        public virtual void OnClientQuit(ServerConnection<R> client) { }
         #endregion
 
         #region Closing         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

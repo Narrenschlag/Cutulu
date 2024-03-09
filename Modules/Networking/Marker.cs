@@ -5,7 +5,7 @@ namespace Cutulu
     /// <summary> 
     /// A Marker contains the base for Server and Client connentions
     /// </summary>
-    public class Marker<D> where D : Destination
+    public class Marker<R> where R : Receiver
     {
         // Unique user identification index
         public uint UUID { private set; get; }
@@ -20,117 +20,117 @@ namespace Cutulu
         /// <summary> 
         /// TRUE: ignore target receiving and thereby skip it 
         /// </summary>
-        public bool ignore_destination_transfer;
+        public bool ignore_receiver_transfer;
 
         /// <summary>
         /// Custom params for the target class
         /// </summary>
-        public object[] destination_params;
+        public object[] receiver_params;
 
         #region Setup               ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public Marker(uint uuid, ushort safetyId, D destination = null, Protocol.Packet receiver = null, Protocol.Empty disconnector = null)
+        public Marker(uint uuid, ushort safetyId, R receiver = null, Protocol.Packet onReceive = null, Protocol.Empty disconnector = null)
         {
-            destination_params = new object[1] { this };
-            ignore_destination_transfer = false;
+            receiver_params = new object[1] { this };
+            ignore_receiver_transfer = false;
 
             SafetyId = safetyId;
             UUID = uuid;
 
             onDisconnect = disconnector;
-            onReceive = receiver;
+            this.onReceive = onReceive;
 
-            SetDestination(destination);
+            SetReceiver(receiver);
         }
         #endregion
 
-        #region Destinations        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Destination memory
-        private D[] __destinations, __subDestinations;
+        #region Receivers        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Receiver memory
+        private R[] __receivers, __subReceivers;
 
         /// <summary>
-        /// Collection of Destinations that receive the incomming traffic
+        /// Collection of Receivers that receive the incomming traffic
         /// </summary>
-        public D[] Destinations
+        public R[] Receivers
         {
-            set => __destinations = value;
+            set => __receivers = value;
             get
             {
-                __destinations ??= Array.Empty<D>();
+                __receivers ??= Array.Empty<R>();
 
-                return __destinations;
+                return __receivers;
             }
         }
 
         /// <summary>
-        /// Collection of sub Destinations that receive the incomming traffic
+        /// Collection of sub Receivers that receive the incomming traffic
         /// </summary>
-        public D[] SubDestinations
+        public R[] SubReceivers
         {
-            set => __subDestinations = value;
+            set => __subReceivers = value;
             get
             {
-                __subDestinations ??= Array.Empty<D>();
+                __subReceivers ??= Array.Empty<R>();
 
-                return __subDestinations;
+                return __subReceivers;
             }
         }
 
         /// <summary>
-        /// Sets target destination for all incomming packages
+        /// Sets target Receivers for all incomming packages
         /// </summary>
-        public void SetDestination(params D[] destinations)
+        public void SetReceiver(params R[] receivers)
         {
             // Notify about left
-            if (Destinations.NotEmpty())
+            if (Receivers.NotEmpty())
             {
-                lock (Destinations)
+                lock (Receivers)
                 {
-                    for (int i = 0; i < Destinations.Length; i++)
+                    for (int i = 0; i < Receivers.Length; i++)
                     {
-                        Destinations?[i].Rem(destination_params);
+                        Receivers?[i].Rem(receiver_params);
                     }
                 }
             }
 
             // Assign array
-            Destinations = destinations;
+            Receivers = receivers;
 
             // Notify addition to target
-            if (destinations != null)
+            if (receivers != null)
             {
-                for (int i = 0; i < destinations.Length; i++)
+                for (int i = 0; i < receivers.Length; i++)
                 {
-                    destinations[i]?.Add(destination_params);
+                    receivers[i]?.Add(receiver_params);
                 }
             }
         }
 
         /// <summary>
-        /// Sets target destination for all incomming packages
+        /// Sets target receiver for all incomming packages
         /// </summary>
-        public void SetSubDestination(params D[] destinations)
+        public void SetSubReceiver(params R[] receivers)
         {
             // Notify about left
-            if (SubDestinations.NotEmpty())
+            if (SubReceivers.NotEmpty())
             {
-                lock (SubDestinations)
+                lock (SubReceivers)
                 {
-                    for (int i = 0; i < SubDestinations.Length; i++)
+                    for (int i = 0; i < SubReceivers.Length; i++)
                     {
-                        SubDestinations?[i].Rem(destination_params);
+                        SubReceivers?[i].Rem(receiver_params);
                     }
                 }
             }
 
             // Assign array
-            SubDestinations = destinations;
+            SubReceivers = receivers;
 
             // Notify addition to target
-            if (destinations != null)
+            if (receivers != null)
             {
-                for (int i = 0; i < destinations.Length; i++)
+                for (int i = 0; i < receivers.Length; i++)
                 {
-                    destinations[i]?.Add(destination_params);
+                    receivers[i]?.Add(receiver_params);
                 }
             }
         }
@@ -138,15 +138,15 @@ namespace Cutulu
 
         #region Async Events        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary> 
-        /// Distributes all the incomming traffic to all registered destinations
+        /// Distributes all the incomming traffic to all registered receivers
         /// </summary>
         public virtual void Receive(byte key, byte[] bytes, Method method)
         {
             // Iterate through all targets
-            if (!ignore_destination_transfer)
+            if (!ignore_receiver_transfer)
             {
-                dest(Destinations);
-                dest(SubDestinations);
+                receiver(Receivers);
+                receiver(SubReceivers);
             }
 
             // Call delegates
@@ -158,8 +158,8 @@ namespace Cutulu
                 }
             }
 
-            // Iterate through destinations and call their receive functions
-            void dest(D[] array)
+            // Iterate through receivers and call their receive functions
+            void receiver(R[] array)
             {
                 if (array == null || array.Length < 1) return;
 
@@ -174,7 +174,7 @@ namespace Cutulu
                             try
                             {
                                 // Notify target
-                                array[i].Receive(key, bytes, method, destination_params);
+                                array[i].Receive(key, bytes, method, receiver_params);
                             }
 
                             // Failed
@@ -202,13 +202,13 @@ namespace Cutulu
         protected virtual void Disconnected()
         {
             // Iterate through all targets
-            lock (Destinations)
+            lock (Receivers)
             {
-                for (int i = 0; i < Destinations.Length; i++)
+                for (int i = 0; i < Receivers.Length; i++)
                 {
                     // Validate target
                     // Notfiy target
-                    Destinations[i]?.Disconnect(destination_params);
+                    Receivers[i]?.Disconnect(receiver_params);
                 }
             }
 

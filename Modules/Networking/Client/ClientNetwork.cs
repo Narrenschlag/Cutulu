@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace Cutulu
 {
-    public class ClientNetwork<T> : Marker<T> where T : Destination
+    public class ClientNetwork<R> : Marker<R> where R : Receiver
     {
         public TcpProtocol Tcp;
         public UdpProtocol Udp;
@@ -13,7 +13,7 @@ namespace Cutulu
         public bool FullyConnected() => TcpConnected && UdpConnected;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, T destination = null) : base(0, 0, destination)
+        public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, R receiver = null) : base(0, 0, receiver)
         {
             try { Connect(tcpHost, tcpPort, udpHost, udpPort); }
             catch { $"Failed to connect to host".LogError(); }
@@ -56,6 +56,14 @@ namespace Cutulu
             // Restart the function
             SetupUdp();
         }
+
+        /// <summary> 
+        /// Triggered when setup is complete
+        /// </summary>
+        protected virtual void OnSetupComplete()
+        {
+
+        }
         #endregion
 
         #region Send Data       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +100,8 @@ namespace Cutulu
                 {
                     SafetyId = safetyId;
                     UdpConnected = true;
+
+                    OnSetupComplete();
                     return;
                 }
             }

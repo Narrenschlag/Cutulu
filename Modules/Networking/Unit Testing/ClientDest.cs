@@ -2,7 +2,7 @@ using Godot;
 
 namespace Cutulu.UnitTest.Network
 {
-    public partial class ClientDest : Destination
+    public partial class ClientDest : Receiver
     {
         [Export] private RichTextLabel output;
 

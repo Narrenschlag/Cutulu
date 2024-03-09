@@ -9,6 +9,9 @@ namespace Cutulu
         public const byte Giant = 128;
         public const ushort Safe = 256;
 
+        /// <summary>
+        /// Contains key information
+        /// </summary>
         public byte[] Key { get; private set; }
 
         /// <summary>
@@ -28,5 +31,30 @@ namespace Cutulu
                 Key[i] = (byte)Random.RangeInt(0, 256);
             }
         }
+
+        /// <summary>
+        /// Loads passkey from byte array
+        /// </summary>
+        public Passkey(byte[] bytes) => Key = bytes;
+
+        /// <summary>
+        /// Writes passkey to path
+        /// </summary>
+        public void Write(string path) => IO.Write(Key, path, IO.FileType.Binary);
+
+        /// <summary>
+        /// Loads passkey from path
+        /// </summary>
+        public Passkey Read(string path) => IO.TryRead(path, out Passkey key, IO.FileType.Binary) ? key : default;
+
+        /// <summary>
+        /// Compare and validate key
+        /// </summary>
+        public bool Validate(ref Passkey key) => Equals(key);
+
+        /// <summary>
+        /// Compare and validate key
+        /// </summary>
+        public bool Validate(ref byte[] bytes) => Equals(new Passkey(bytes));
     }
 }
