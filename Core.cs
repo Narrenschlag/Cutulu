@@ -362,7 +362,7 @@ namespace Cutulu
         => array.IsEmpty() ? default : array[Mathf.Clamp(index, 0, array.Length - 1)];
 
         public static bool Contains<T>(this T[] array, T element)
-        => ((ICollection<T>)array).Contains(element);
+        => array != null && array.Length > 0 && ((ICollection<T>)array).Contains(element);
 
         public static T[] AddToArray<T>(this T[] array, T value)
         {
@@ -400,6 +400,24 @@ namespace Cutulu
             }
 
             array = list.ToArray();
+        }
+
+        public static T[] RemoveAt<T>(this T[] array, int index)
+        {
+            if (array.Size() >= index) return array;
+
+            var result = new T[array.Length - 1];
+
+            System.Array.Copy(array, result, index);
+            System.Array.Copy(array, index + 1, result, index, array.Length - index - 1);
+
+            return result;
+        }
+
+        public static T[] RemoveFromArray<T>(this T[] array, T value)
+        {
+            RemoveFromArray(value, ref array);
+            return array;
         }
 
         public static void RemoveFromArray<T>(this T element, ref T[] array, bool removeAllOccurences = false)
