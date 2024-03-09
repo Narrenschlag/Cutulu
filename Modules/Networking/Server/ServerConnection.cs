@@ -92,6 +92,16 @@ namespace Cutulu
             // Message server of disconnection
             server?.OnClientQuit(this);
         }
+
+        /// <summary>
+        /// Closes connection to client.
+        /// </summary>
+        public virtual void Close()
+        {
+            tcp?.Close();
+
+            Disconnected();
+        }
         #endregion
     }
 }
