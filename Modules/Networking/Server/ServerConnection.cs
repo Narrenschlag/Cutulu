@@ -33,6 +33,9 @@ namespace Cutulu
             tcp = new TcpProtocol(ref client, uuid, Receive, Disconnected);
         }
 
+        /// <summary> 
+        /// Finish setup by assigning udp endpoint
+        /// </summary>
         public void Connect(IPEndPoint udpSource)
         {
             if (udpSource == null) return;
@@ -45,6 +48,9 @@ namespace Cutulu
         #endregion
 
         #region Send Data       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Sends data to connection endpoint
+        /// </summary>
         public virtual void Send<T>(byte key, T value, Method method)
         {
             switch (method)
@@ -70,6 +76,9 @@ namespace Cutulu
         #endregion
 
         #region Connection End  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Triggered when connection is closed
+        /// </summary>
         protected override void Disconnected()
         {
             $"--- Disconnected [{UUID}]".Log();
@@ -94,7 +103,7 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Closes connection to client.
+        /// Closes connection to client
         /// </summary>
         public virtual void Close()
         {

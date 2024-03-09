@@ -2,6 +2,9 @@ using System;
 
 namespace Cutulu
 {
+    /// <summary> 
+    /// A Marker contains the base for Server and Client connentions
+    /// </summary>
     public class Marker<D> where D : Destination
     {
         // Unique user identification index
@@ -17,7 +20,7 @@ namespace Cutulu
         /// <summary> 
         /// TRUE: ignore target receiving and thereby skip it 
         /// </summary>
-        public bool ignore_detination_transfer;
+        public bool ignore_destination_transfer;
 
         /// <summary>
         /// Custom params for the target class
@@ -28,7 +31,7 @@ namespace Cutulu
         public Marker(uint uuid, ushort safetyId, D destination = null, Protocol.Packet receiver = null, Protocol.Empty disconnector = null)
         {
             destination_params = new object[1] { this };
-            ignore_detination_transfer = false;
+            ignore_destination_transfer = false;
 
             SafetyId = safetyId;
             UUID = uuid;
@@ -73,7 +76,7 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Sets target destination for all incomming packages.
+        /// Sets target destination for all incomming packages
         /// </summary>
         public void SetDestination(params D[] destinations)
         {
@@ -103,7 +106,7 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Sets target destination for all incomming packages.
+        /// Sets target destination for all incomming packages
         /// </summary>
         public void SetSubDestination(params D[] destinations)
         {
@@ -140,69 +143,10 @@ namespace Cutulu
         public virtual void Receive(byte key, byte[] bytes, Method method)
         {
             // Iterate through all targets
-            if (!ignore_detination_transfer)
+            if (!ignore_destination_transfer)
             {
-                lock (Destinations)
-                {
-                    for (int i = 0; i < Destinations.Length; i++)
-                    {
-                        // Validate target
-                        if (Destinations[i] != null)
-                        {
-                            // Success
-                            try
-                            {
-                                // Notify target
-                                Destinations[i].Receive(key, bytes, method, destination_params);
-                            }
-
-                            // Failed
-                            catch (Exception ex)
-                            {
-                                if (Destinations.Length <= i || Destinations[i].IsNull())
-                                {
-                                    $"[Ignoring Marker]: Marker has been destroyed or is null".LogError();
-                                }
-
-                                else
-                                {
-                                    $"[Marker (class: {Destinations[i].GetType()})]: cannot receive packet because {ex.Message}\n{ex.StackTrace}".LogError();
-                                }
-                            }
-                        }
-                    }
-                }
-
-                lock (SubDestinations)
-                {
-                    for (int i = 0; i < SubDestinations.Length; i++)
-                    {
-                        // Validate target
-                        if (SubDestinations[i] != null)
-                        {
-                            // Success
-                            try
-                            {
-                                // Notify target
-                                SubDestinations[i].Receive(key, bytes, method, destination_params);
-                            }
-
-                            // Failed
-                            catch (Exception ex)
-                            {
-                                if (SubDestinations.Length <= i || SubDestinations[i].IsNull())
-                                {
-                                    $"[Ignoring Marker]: Marker has been destroyed or is null".LogError();
-                                }
-
-                                else
-                                {
-                                    $"[Marker (class: {SubDestinations[i].GetType()})]: cannot receive packet because {ex.Message}\n{ex.StackTrace}".LogError();
-                                }
-                            }
-                        }
-                    }
-                }
+                dest(Destinations);
+                dest(SubDestinations);
             }
 
             // Call delegates
@@ -211,6 +155,43 @@ namespace Cutulu
                 lock (onReceive)
                 {
                     onReceive(key, bytes, method);
+                }
+            }
+
+            // Iterate through destinations and call their receive functions
+            void dest(D[] array)
+            {
+                if (array == null || array.Length < 1) return;
+
+                lock (array)
+                {
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        // Validate target
+                        if (array[i] != null)
+                        {
+                            // Success
+                            try
+                            {
+                                // Notify target
+                                array[i].Receive(key, bytes, method, destination_params);
+                            }
+
+                            // Failed
+                            catch (Exception ex)
+                            {
+                                if (array.Length <= i || array[i].IsNull())
+                                {
+                                    $"[Ignoring Marker]: Marker has been destroyed or is null".LogError();
+                                }
+
+                                else
+                                {
+                                    $"[Marker (class: {array[i].GetType()})]: cannot receive packet because {ex.Message}\n{ex.StackTrace}".LogError();
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

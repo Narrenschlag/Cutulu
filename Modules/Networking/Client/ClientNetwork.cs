@@ -60,7 +60,7 @@ namespace Cutulu
 
         #region Send Data       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Sends data to server.
+        /// Sends data to server
         /// </summary>
         public virtual void Send<V>(byte key, V value, Method method = Method.Tcp)
         {
@@ -81,7 +81,7 @@ namespace Cutulu
 
         #region Receive Data    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
-        /// Receives data from server.
+        /// Receives data from server
         /// </summary>
         public override void Receive(byte key, byte[] bytes, Method method)
         {
@@ -113,6 +113,9 @@ namespace Cutulu
             "disconnected.".LogError();
         }
 
+        /// <summary> 
+        /// Closes connection to server if connected
+        /// </summary>
         public virtual void Close()
         {
             UdpConnected = false;

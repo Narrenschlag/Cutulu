@@ -17,7 +17,9 @@ namespace Cutulu
 
         private readonly D WelcomeTarget;
 
-        /// <summary> Amount of clients currently connected to the server </summary>
+        /// <summary> 
+        /// Amount of clients currently connected to the server 
+        /// </summary>
         public uint ConnectionCount() => Clients != null ? (uint)Clients.Count : 0;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +73,9 @@ namespace Cutulu
             Auth();
         }
 
-        /// <summary> Creates new tcp/udp client </summary>
+        /// <summary> 
+        /// Creates new tcp/udp client 
+        /// </summary>
         protected virtual ServerConnection<D> NewClient(ref TcpClient tcp, uint uid)
         {
             ServerConnection<D> client;
