@@ -36,13 +36,13 @@ namespace Cutulu
             onDisconnect = disconnector;
             onReceive = receiver;
 
-            SetTarget(destination);
+            SetDestination(destination);
         }
         #endregion
 
         #region Destinations        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Destination memory
-        private D[] __destinations;
+        private D[] __destinations, __subDestinations;
 
         /// <summary>
         /// Collection of Destinations that receive the incomming traffic
@@ -59,9 +59,23 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Collection of sub Destinations that receive the incomming traffic
+        /// </summary>
+        public D[] SubDestinations
+        {
+            set => __subDestinations = value;
+            get
+            {
+                __subDestinations ??= Array.Empty<D>();
+
+                return __subDestinations;
+            }
+        }
+
+        /// <summary>
         /// Sets target destination for all incomming packages.
         /// </summary>
-        public void SetTarget(D destination)
+        public void SetDestination(params D[] destinations)
         {
             // Notify about left
             if (Destinations.NotEmpty())
@@ -76,31 +90,46 @@ namespace Cutulu
             }
 
             // Assign array
-            Destinations = destination != null ?
-                new D[1] { destination } :
-                Array.Empty<D>();
+            Destinations = destinations;
 
             // Notify addition to target
-            destination?.Add(destination_params);
+            if (destinations != null)
+            {
+                for (int i = 0; i < destinations.Length; i++)
+                {
+                    destinations[i]?.Add(destination_params);
+                }
+            }
         }
 
         /// <summary>
-        /// Adds target destination for all incomming packages.
+        /// Sets target destination for all incomming packages.
         /// </summary>
-        public void AddTarget(D destination)
+        public void SetSubDestination(params D[] destinations)
         {
-            if (destination == null)
+            // Notify about left
+            if (SubDestinations.NotEmpty())
             {
-                return;
+                lock (SubDestinations)
+                {
+                    for (int i = 0; i < SubDestinations.Length; i++)
+                    {
+                        SubDestinations?[i].Rem(destination_params);
+                    }
+                }
             }
 
-            D[] _ = new D[Destinations.Length + 1];
-
-            Array.Copy(Destinations, _, Destinations.Length);
-            _[Destinations.Length] = destination;
+            // Assign array
+            SubDestinations = destinations;
 
             // Notify addition to target
-            destination.Add(destination_params);
+            if (destinations != null)
+            {
+                for (int i = 0; i < destinations.Length; i++)
+                {
+                    destinations[i]?.Add(destination_params);
+                }
+            }
         }
         #endregion
 
@@ -138,6 +167,37 @@ namespace Cutulu
                                 else
                                 {
                                     $"[Marker (class: {Destinations[i].GetType()})]: cannot receive packet because {ex.Message}\n{ex.StackTrace}".LogError();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                lock (SubDestinations)
+                {
+                    for (int i = 0; i < SubDestinations.Length; i++)
+                    {
+                        // Validate target
+                        if (SubDestinations[i] != null)
+                        {
+                            // Success
+                            try
+                            {
+                                // Notify target
+                                SubDestinations[i].Receive(key, bytes, method, destination_params);
+                            }
+
+                            // Failed
+                            catch (Exception ex)
+                            {
+                                if (SubDestinations.Length <= i || SubDestinations[i].IsNull())
+                                {
+                                    $"[Ignoring Marker]: Marker has been destroyed or is null".LogError();
+                                }
+
+                                else
+                                {
+                                    $"[Marker (class: {SubDestinations[i].GetType()})]: cannot receive packet because {ex.Message}\n{ex.StackTrace}".LogError();
                                 }
                             }
                         }
