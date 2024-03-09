@@ -98,6 +98,26 @@ namespace Cutulu
             // Convert delta back to degrees if needed
             return useRadians ? delta : delta.toDegrees();
         }
+
+        /// <summary>
+        /// Returns angle from Vector2.Right. In Degrees.
+        /// </summary>
+        public static float GetAngleD(this Vector2 direction) => GetAngle(direction).toDegrees();
+
+        /// <summary>
+        /// Returns angle from Vector2.Right. In Radians.
+        /// </summary>
+        public static float GetAngle(this Vector2 direction) => direction.Normalized().Angle();
+
+        /// <summary>
+        /// Returns direction from Vector2.Right. In Degrees.
+        /// </summary>
+        public static Vector2 GetDirectionD(this float degrees) => GetDirection(degrees.toRadians());
+
+        /// <summary>
+        /// Returns direction from Vector2.Right. In Degrees.
+        /// </summary>
+        public static Vector2 GetDirection(this float radians) => Vector2.Right.Rotated(radians).Normalized();
         #endregion
 
         #region Node Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -343,6 +363,12 @@ namespace Cutulu
 
         public static bool Contains<T>(this T[] array, T element)
         => ((ICollection<T>)array).Contains(element);
+
+        public static T[] AddToArray<T>(this T[] array, T value)
+        {
+            AddToArray(value, ref array);
+            return array;
+        }
 
         public static void AddToArray<T>(this T element, ref T[] array)
         {
