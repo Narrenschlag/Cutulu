@@ -50,7 +50,7 @@ namespace Cutulu
         /// <summary>
         /// Compare and validate key
         /// </summary>
-        public bool Validate(ref Passkey key) => Equals(key);
+        public bool Compare(ref Passkey key) => Equals(key);
 
         /// <summary>
         /// Compare and validate key

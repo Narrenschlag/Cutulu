@@ -24,7 +24,7 @@ namespace Cutulu
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary> Simple server that handles tcp only </summary>
-        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true)
+        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32)
         {
             Endpoints = new Dictionary<IPEndPoint, ServerConnection<R>>();
             Queue = new Dictionary<IPAddress, ServerConnection<R>>();
@@ -40,7 +40,7 @@ namespace Cutulu
             globalUdp = new UdpProtocol(udpPort, ReceiveUdp);
 
             TcpListener = new TcpListener(IPAddress.Any, tcpPort);
-            TcpListener.Start(10);
+            TcpListener.Start(maxConnectionsPerTick);
 
             // Async client accept
             if (acceptClients) Auth();
