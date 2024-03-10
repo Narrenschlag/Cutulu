@@ -11,53 +11,35 @@ namespace Cutulu
         public readonly Dictionary<string, NetworkBrother> EstablishedBrothers;
         private readonly Dictionary<string, Passkey> RemoteKeys;
 
-        private readonly TcpListener Listener;
+        public readonly TcpListener Listener;
         private readonly Passkey LocalKey;
+        private readonly string LocalId;
 
         /// <summary>
         /// Compare given passkey to local passkey and return if it's valid
         /// </summary>
-        public bool CompareKey(ref Passkey key) => LocalKey.Compare(ref key);
+        public bool CompareKey(Passkey key) => LocalKey.Compare(ref key);
 
         /// <summary>
         /// Careful. Remote Keys are only assigned once and here.
         /// </summary>
-        public NetworkFamily(int port, Passkey localKey, RemoteKey remoteKey, params RemoteKey[] remoteKeys)
+        public NetworkFamily(string localId, int localPort, Passkey localKey, params RemoteKey[] remoteKeys)
         {
             // Establish remote keys
-            RemoteKeys = new(remoteKeys ?? Array.Empty<RemoteKey>()) { { remoteKey.Key, remoteKey.Value } };
+            RemoteKeys = new(remoteKeys ?? Array.Empty<RemoteKey>());
 
             // Establish local key and brother registry
             EstablishedBrothers = new();
             LocalKey = localKey;
+            LocalId = localId;
 
             // Establish listener
-            Listener = new(IPAddress.Any, port);
+            Listener = new(IPAddress.Any, localPort);
             Listener.Start(16);
 
             // Async client accept
             Accept();
         }
-
-        #region Register Connection
-        /// <summary>
-        /// Add brother to registry
-        /// </summary>
-        private NetworkBrother AddBrother(NetworkBrother brother)
-        {
-            string host = brother.Host.ToString();
-
-            if (EstablishedBrothers.TryGetValue(host, out var oldBrother))
-            {
-                EstablishedBrothers[host] = brother;
-                oldBrother?.Close();
-            }
-
-            else EstablishedBrothers.Add(host, brother);
-
-            return brother;
-        }
-        #endregion
 
         #region Receive Connection
         /// <summary>
@@ -69,15 +51,16 @@ namespace Cutulu
             // If a connection exists, the server will accept it
             var client = await Listener.AcceptTcpClientAsync();
 
-            if (RemoteKeys.TryGetValue(client.GetAddressPort(), out var remoteKey))
-            {
-                AddBrother(new(client, this, remoteKey));
-            }
-
-            else Debug.LogError($"Unexpected brother request from {client.GetAddressPort()}");
+            Debug.LogError($"Pending brother request from {client.GetAddressPort()}");
+            var pending = new PendingBrother(client, this, RemoteKeys, OnWelcomeBrother);
 
             // Welcome other clients
             Accept();
+        }
+
+        private void OnWelcomeBrother(NetworkBrother brother)
+        {
+
         }
         #endregion
 
@@ -85,12 +68,14 @@ namespace Cutulu
         /// <summary>
         /// Establish connection to remote brother
         /// </summary>
-        public void EstablishConnection(string host, int port)
+        public void Connect(string remoteHost, int remotePort)
         {
-            if (RemoteKeys.TryGetValue($"{host.Trim()}:{port}", out var remoteKey))
-                _ = new NetworkBrother(host, port, remoteKey, this, OnConnectionSuccess, OnConnectionFailed);
+            if (RemoteKeys.TryGetValue($"{host.Trim()}", out var remoteKey))
+            {
+                
+            }
 
-            else Debug.LogError($"No remote keys for {host.Trim()}:{port} established");
+            else Debug.LogError($"No remote keys for {host.Trim()} established");
         }
 
         /// <summary>
@@ -110,13 +95,29 @@ namespace Cutulu
         }
         #endregion
 
-        #region End Connection
+        #region Connection Utility
+        /// <summary>
+        /// Add brother to registry
+        /// </summary>
+        private NetworkBrother AddBrother(NetworkBrother brother)
+        {
+            if (EstablishedBrothers.TryGetValue(brother.RemoteId, out var oldBrother))
+            {
+                EstablishedBrothers[brother.RemoteId] = brother;
+                oldBrother?.Close();
+            }
+
+            else EstablishedBrothers.Add(brother.RemoteId, brother);
+
+            return brother;
+        }
+
         /// <summary>
         /// Triggered when brother disconnects
         /// </summary>
         public void OnDisconnect(NetworkBrother brother)
         {
-            EstablishedBrothers.TryRemove(brother.Host);
+            EstablishedBrothers.TryRemove(brother.RemoteId);
         }
         #endregion
     }

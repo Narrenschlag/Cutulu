@@ -356,7 +356,7 @@ namespace Cutulu
         => !NotEmpty(array);
 
         public static T RandomElement<T>(this T[] array, T @default = default)
-        => array.NotEmpty() ? array[Random.RangeInt(0, array.Length)] : @default;
+        => array.NotEmpty() ? array[Random.Range(0, array.Length)] : @default;
 
         public static T GetClampedElement<T>(this T[] array, int index)
         => array.IsEmpty() ? default : array[Mathf.Clamp(index, 0, array.Length - 1)];
@@ -480,7 +480,7 @@ namespace Cutulu
         public static bool NotEmpty<T>(this List<T> list) => list != null && list.Count > 0;
         public static bool IsEmpty<T>(this List<T> list) => !NotEmpty(list);
 
-        public static T RandomElement<T>(this List<T> list, T @default = default) => list.NotEmpty() ? list[Random.RangeInt(0, list.Count)] : @default;
+        public static T RandomElement<T>(this List<T> list, T @default = default) => list.NotEmpty() ? list[Random.Range(0, list.Count)] : @default;
         #endregion
 
         #region Dictionary Functions    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

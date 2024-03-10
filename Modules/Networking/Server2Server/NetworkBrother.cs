@@ -1,78 +1,46 @@
-using System.Threading.Tasks;
-using System.Net.Sockets;
-using System;
+using System.Net;
 
 namespace Cutulu
 {
-    using Callback = Action<NetworkBrother>;
     public class NetworkBrother
     {
-        public const int VerificationTimeWindow = 4;
-
         public readonly NetworkFamily Family;
-        public readonly string Host;
-        public readonly int Port;
+        public readonly string RemoteHost;
+        public readonly int RemotePort;
 
-        public bool Verified { get; private set; }
-        private readonly Passkey RemoteKey;
-        private readonly TcpProtocol Tcp;
+        private readonly TcpProtocol Remote;
+        public readonly string RemoteId;
 
         /// <summary>
         /// Returns connection status
         /// </summary>
-        public bool Connected => Tcp != null && Tcp.Connected;
+        public bool Connected => Remote != null && Remote.Connected;
 
         #region Constructor
-        /// <summary>
-        /// Create connection
-        /// </summary>
-        public NetworkBrother(string host, int port, Passkey remoteKey, NetworkFamily family, Callback onSuccess, Callback onFail) : this(family, ref remoteKey)
+        public NetworkBrother(PendingBrother brother, string remoteId, int remotePort)
         {
-            Host = host.Trim();
-            Port = port;
+            Family = brother.Family;
+            Remote = brother.Remote;
 
-            Tcp = new(Host, Port, OnReceive, OnDisconnect);
+            RemoteHost = ((IPEndPoint)Remote.client.Client.RemoteEndPoint).Address.ToString();
+            RemotePort = remotePort;
+            RemoteId = remoteId;
 
-            // Send key for approval
-            Send(127, RemoteKey);
-
-            // Notify family
-            if (Connected) onSuccess?.Invoke(this);
-            else onFail?.Invoke(this);
+            Remote.onDisconnect = OnDisconnect;
+            Remote.onReceive = OnReceive;
         }
 
-        /// <summary>
-        /// Receive connection
-        /// </summary>
-        public NetworkBrother(TcpClient client, NetworkFamily family, Passkey remoteKey) : this(family, ref remoteKey)
+        public NetworkBrother(NetworkFamily family, ref string remoteHost, ref int remotePort, ref string remoteId, ref Passkey remoteKey)
         {
-            client.GetAddressPort(out Host, out Port);
+            RemoteId = remoteId;
 
-            Tcp = new(ref client, 0, OnReceive, OnDisconnect, 0);
-        }
-
-        /// <summary>
-        /// Local base constructor
-        /// </summary>
-        private NetworkBrother(NetworkFamily family, ref Passkey key)
-        {
-            Verified = false;
-            RemoteKey = key;
             Family = family;
-
-            StartTimeWindow();
-        }
-        #endregion
-
-        #region Time Window
-        /// <summary>
-        /// Starts time window in which the verification process has to be completed. Else close connection.
-        /// </summary>
-        private async void StartTimeWindow()
-        {
-            await Task.Delay(1000 * VerificationTimeWindow);
-
-            if (Verified == false) Close();
+            Remote = new(
+                RemoteHost = remoteHost,
+                RemotePort = remotePort,
+                OnReceive,
+                OnDisconnect
+            );
         }
         #endregion
 
@@ -80,52 +48,18 @@ namespace Cutulu
         /// <summary>
         /// Triggered when data is received
         /// </summary>
-        private void OnReceive(byte key, byte[] bytes, Method method)
+        protected virtual void OnReceive(byte key, byte[] bytes, Method method)
         {
-            // Verify Data
-            if (Verified == false)
-            {
-                if (Connected == false) return;
 
-                switch (key)
-                {
-                    // Verification request
-                    case 127:
-                        var localKey = new Passkey(bytes);
-                        if (Family.CompareKey(ref localKey))
-                        {
-                            Send(128, RemoteKey);
-                            Verified = true;
-                        }
-                        else Close();
-                        break;
-
-                    // Verification awnser
-                    case 128:
-                        localKey = new Passkey(bytes);
-                        if (Family.CompareKey(ref localKey)) Verified = true;
-                        else Close();
-                        break;
-
-                    // Invalid result
-                    default:
-                        Close();
-                        break;
-                }
-            }
-
-            // Handle data
-            else
-            {
-
-            }
         }
 
         /// <summary>
         /// Triggered when connection is closed
         /// </summary>
-        public virtual void OnDisconnect()
+        protected virtual void OnDisconnect()
         {
+            Debug.LogError($"Brother is not welcome in this family.");
+
             Family?.OnDisconnect(this);
         }
         #endregion
@@ -136,7 +70,7 @@ namespace Cutulu
         /// </summary>
         public void Send<T>(byte key, T value)
         {
-            if (Connected) Tcp.Send(key, value);
+            if (Connected) Remote.Send(key, value);
         }
 
         /// <summary>
@@ -152,7 +86,7 @@ namespace Cutulu
         /// </summary>
         public virtual void Close()
         {
-            Tcp?.Close();
+            Remote?.Close();
         }
         #endregion
     }

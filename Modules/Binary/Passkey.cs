@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Cutulu
 {
     public struct Passkey
@@ -22,13 +24,13 @@ namespace Cutulu
         /// <summary>
         /// Generates a length byte long pass key with 256^length possible outcomes
         /// </summary>
-        public Passkey(ushort length)
+        public Passkey(int length)
         {
             Key = new byte[length];
 
             for (ushort i = 0; i < length; i++)
             {
-                Key[i] = (byte)Random.RangeInt(0, 256);
+                Key[i] = (byte)Random.Range(0, 256);
             }
         }
 
@@ -45,7 +47,20 @@ namespace Cutulu
         /// <summary>
         /// Loads passkey from path
         /// </summary>
-        public Passkey Read(string path) => IO.TryRead(path, out Passkey key, IO.FileType.Binary) ? key : default;
+        public static Passkey Read(string path) => IO.TryRead(path, out Passkey key, IO.FileType.Binary) ? key : default;
+
+        public static KeyValuePair<string, Passkey>[] ReadAtDirectory(string path, string fileEnding = ".remote")
+        {
+            var paths = IO.GetFiles(path);
+
+            var array = new KeyValuePair<string, Passkey>[paths.Size()];
+            for (ushort i = 0; i < array.Length; i++)
+            {
+                array[i] = new($"{paths[i][..^fileEnding.Length]}", Read($"{path}{paths[i]}"));
+            }
+
+            return array;
+        }
 
         /// <summary>
         /// Compare and validate key

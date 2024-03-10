@@ -8,7 +8,7 @@ namespace Cutulu
     /// </summary>
     public class WebRequest
     {
-        public delegate void Result(bool success, string result, params object[] given);
+        public delegate void Result(bool success, string result, object[] given);
         private readonly HttpRequest Request;
         private readonly Result Receive;
         private object[] Given;

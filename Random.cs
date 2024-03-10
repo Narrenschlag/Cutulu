@@ -15,21 +15,21 @@ namespace Cutulu
         /// <summary>
 		///	Random value: [min ]max
         /// </summary>
-        public static int RangeInt(int minIncluded, int maxExcluded) => Godot.Mathf.RoundToInt(Range(minIncluded, maxExcluded - 1));
+        public static int Range(int minIncluded, int maxExcluded) => Godot.Mathf.RoundToInt(Range(minIncluded, (float)(maxExcluded - 1)));
 
         /// <summary>
 		///	Random value: [0 ]max
         /// </summary>
-        public static int RangeInt(int maxExcluded) => RangeInt(0, maxExcluded);
+        public static int Range(int maxExcluded) => Range(0, maxExcluded);
 
         /// <summary>
 		///	Random value: [min max]
         /// </summary>
-        public static int RangeInt2(int minIncluded, int maxIncluded) => RangeInt(minIncluded, maxIncluded + 1);
+        public static int RangeIncluded(int minIncluded, int maxIncluded) => Range(minIncluded, maxIncluded + 1);
 
         /// <summary>
 		///	Random value: [0 max]
         /// </summary>
-        public static int RangeInt2(int maxIncluded) => RangeInt(0, maxIncluded + 1);
+        public static int RangeIncluded(int maxIncluded) => Range(0, maxIncluded + 1);
     }
 }
