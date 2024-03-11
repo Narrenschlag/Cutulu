@@ -6,16 +6,18 @@ using System;
 
 namespace Cutulu
 {
+    /// <summary> 
+    /// Server that handles incomming connections via TCP/UDP protocol
+    /// </summary>
     public class ServerNetwork<R> where R : Receiver
     {
-        public Dictionary<uint, ServerConnection<R>> Clients;
+        public readonly Dictionary<uint, ServerConnection<R>> Clients;
+        public readonly int ListentingPortTcp;
         public bool AcceptNewClients;
-        public int TcpPort;
 
-        protected TcpListener TcpListener;
+        protected readonly TcpListener TcpListener;
+        protected readonly R WelcomeTarget;
         protected uint LastUID;
-
-        private readonly R WelcomeTarget;
 
         /// <summary> 
         /// Amount of clients currently connected to the server 
@@ -23,7 +25,6 @@ namespace Cutulu
         public uint ConnectionCount() => Clients != null ? (uint)Clients.Count : 0;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary> Simple server that handles tcp only </summary>
         public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32)
         {
             Endpoints = new Dictionary<IPEndPoint, ServerConnection<R>>();
@@ -31,8 +32,8 @@ namespace Cutulu
             Clients = new Dictionary<uint, ServerConnection<R>>();
 
             WelcomeTarget = welcomeTarget;
+            ListentingPortTcp = tcpPort;
             AcceptNewClients = true;
-            TcpPort = tcpPort;
             UdpPort = udpPort;
             LastUID = 0;
 
@@ -176,8 +177,7 @@ namespace Cutulu
         public void Close()
         {
             TcpListener?.Stop();
-
-            Clients = null;
+            Clients.Clear();
         }
         #endregion
     }

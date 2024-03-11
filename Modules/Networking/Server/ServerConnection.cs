@@ -7,8 +7,10 @@ namespace Cutulu
 {
     public class ServerConnection<R> : Marker<R> where R : Receiver
     {
-        public delegate void Disconnect(ServerConnection<R> client);
+        public delegate void ConnectionPacket(ServerConnection<R> connection, byte key, byte[] bytes, Method method);
+        public delegate void Disconnect(ServerConnection<R> connection);
         public Protocol.Empty onSetupComplete;
+        public ConnectionPacket onReceive2;
         public Disconnect onClose;
         public TcpProtocol tcp;
 

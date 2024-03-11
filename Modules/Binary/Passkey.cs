@@ -70,6 +70,6 @@ namespace Cutulu
         /// <summary>
         /// Compare and validate key
         /// </summary>
-        public bool Validate(ref byte[] bytes) => Equals(new Passkey(bytes));
+        public bool Compare(byte[] bytes) => Equals(new Passkey(bytes));
     }
 }
