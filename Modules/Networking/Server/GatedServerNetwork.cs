@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
@@ -15,11 +14,11 @@ namespace Cutulu
         private readonly NetworkGatekeeper<R> Gatekeeper;
 
         /// <summary> Simple server that handles tcp only </summary>
-        public GatedServerNetwork(ref Passkey passkey, Dictionary<string, byte> expected, int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32, params string[] blacklist)
+        public GatedServerNetwork(ref Passkey passkey, string[] expected, int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32, params string[] blacklist)
         : base(tcpPort, udpPort, welcomeTarget, acceptClients, maxConnectionsPerTick)
         {
-            Gatekeeper = new(passkey, OnConnectionPassed, expected, blacklist);
-            Debug.Log($"Server is gated by using passkey");
+            Gatekeeper = new(OnConnectionPassed, passkey, expected, blacklist);
+            if (passkey.Key.NotEmpty()) Debug.Log($"Server is gated by using passkey");
         }
 
         /// <summary>
