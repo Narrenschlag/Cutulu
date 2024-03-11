@@ -4,6 +4,10 @@ namespace Cutulu
 {
     public struct Passkey
     {
+        public const string DefaultPath = $"{DefaultDirectory}LocalPasskey{FileEnding}";
+        public const string DefaultDirectory = $"{IO.USER_PATH}.private/";
+        public const string FileEnding = ".key";
+
         public const byte Tiny = 8;
         public const byte Small = 16;
         public const byte Medium = 32;
@@ -42,12 +46,16 @@ namespace Cutulu
         /// <summary>
         /// Writes passkey to path
         /// </summary>
-        public void Write(string path) => IO.Write(Key, path, IO.FileType.Binary);
+        public readonly void Write(string path) => IO.Write(Key, path, IO.FileType.Binary);
+        public readonly void WriteByName(string name) => Write($"{DefaultDirectory}{name}{FileEnding}");
+        public readonly void Write() => Write(DefaultPath);
 
         /// <summary>
         /// Loads passkey from path
         /// </summary>
         public static Passkey Read(string path) => IO.TryRead(path, out Passkey key, IO.FileType.Binary) ? key : default;
+        public static Passkey ReadByName(string name) => Read($"{DefaultDirectory}{name}{FileEnding}");
+        public static Passkey Read() => Read(DefaultPath);
 
         public static KeyValuePair<string, Passkey>[] ReadAtDirectory(string path, string fileEnding = ".remote")
         {
