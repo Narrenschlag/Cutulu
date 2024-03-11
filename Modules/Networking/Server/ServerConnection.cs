@@ -99,6 +99,26 @@ namespace Cutulu
         }
         #endregion
 
+        #region Receive Data    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary> 
+        /// Distributes all the incomming traffic to all registered receivers
+        /// </summary>
+        public override void Receive(byte key, byte[] bytes, Method method)
+        {
+            // Handle underlaying base
+            base.Receive(key, bytes, method);
+
+            // Invoke alternative receive callback
+            if (onReceive2 != null)
+            {
+                lock (onReceive2)
+                {
+                    onReceive2?.Invoke(this, key, bytes, method);
+                }
+            }
+        }
+        #endregion
+
         #region Connection End  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary> 
         /// Triggered when connection is closed

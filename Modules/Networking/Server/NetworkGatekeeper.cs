@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System;
 
 namespace Cutulu
@@ -9,14 +8,14 @@ namespace Cutulu
     public class NetworkGatekeeper<R> where R : Receiver
     {
         private readonly Action<ServerConnection<R>> Callback;
-        private readonly Dictionary<string, byte> Expected;
         private readonly string[] Blacklist;
+        private readonly string[] Expected;
         private readonly Passkey LocalKey;
 
         /// <summary>
-        /// Construct Gatekeeper and give orders
+        /// Construct Gatekeeper and give orders. LocalKey = default: no PassKey check. Expected = null: no expected check.
         /// </summary>
-        public NetworkGatekeeper(Passkey localKey, Action<ServerConnection<R>> callback, Dictionary<string, byte> expected, params string[] blacklist)
+        public NetworkGatekeeper(Action<ServerConnection<R>> callback, Passkey localKey = default, string[] expected = null, params string[] blacklist)
         {
             Blacklist = blacklist;
             Expected = expected;
@@ -38,7 +37,7 @@ namespace Cutulu
             var address = connection.tcp.client.GetAddress().ToString();
 
             return
-                (Expected == null || Expected.ContainsKey(address)) &&
+                (Expected == null || Expected.Contains(address)) &&
                 (Blacklist == null || Blacklist.Contains(address) == false);
         }
 
