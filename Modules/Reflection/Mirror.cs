@@ -25,23 +25,16 @@ namespace Cutulu
         /// <summary>
         /// Invoke a method in the class using a type reference.
         /// </summary>
-        public static T Invoke<T>(this Type @class, string methodName, params object[] @params)
+        public static T Invoke<T>(this string methodName, params object[] @params) where T : class
         {
-            // Validate if @class is actually a class
-            if (@class.IsClass == false)
-            {
-                Debug.LogError($"typeof({@class}) has to be a class");
-                return default;
-            }
-
             // Get static build method in type
-            MethodInfo method = @class.GetMethod(methodName);
+            MethodInfo method = typeof(T).GetMethod(methodName);
 
             #region Method Validation
             // Validate that method is not generic
             if (method.IsGenericMethod == true)
             {
-                Debug.LogError($"typeof({@class}) is generic, but you did not assign any generics");
+                Debug.LogError($"typeof({typeof(T)}) is generic, but you did not assign any generics");
                 return default;
             }
             #endregion
@@ -51,7 +44,7 @@ namespace Cutulu
             var methodParams = method.GetParameters();
             if (methodParams == null != (@params == null) || (@params != null && methodParams.Length != @params.Length))
             {
-                Debug.LogError($"Parameter count mismatch (method: {(methodParams != null ? methodParams.Length : 0)} != {(@params != null ? @params.Length : 0)}) for method({methodName}) in typeof({@class}).");
+                Debug.LogError($"Parameter count mismatch (method: {(methodParams != null ? methodParams.Length : 0)} != {(@params != null ? @params.Length : 0)}) for method({methodName}) in typeof({typeof(T)}).");
                 return default;
             }
             #endregion
@@ -64,19 +57,46 @@ namespace Cutulu
         }
 
         /// <summary>
-		/// Invoke a generic method in the class using a type reference.
-		/// </summary>
-        public static T Invoke<T>(this Type @class, string methodName, Type[] generics, params object[] @params)
+        /// Invoke a method in the class using a type instance.
+        /// </summary>
+        public static T Invoke<T>(this T instance, string methodName, params object[] @params) where T : class
         {
-            // Validate if @class is actually a class
-            if (@class.IsClass == false)
+            // Get static build method in type
+            MethodInfo method = typeof(T).GetMethod(methodName);
+
+            #region Method Validation
+            // Validate that method is not generic
+            if (method.IsGenericMethod == true)
             {
-                Debug.LogError($"typeof({@class}) has to be a class.");
+                Debug.LogError($"typeof({typeof(T)}) is generic, but you did not assign any generics");
                 return default;
             }
+            #endregion
 
+            #region Parameters Validation
+            // Mismatching parameters
+            var methodParams = method.GetParameters();
+            if (methodParams == null != (@params == null) || (@params != null && methodParams.Length != @params.Length))
+            {
+                Debug.LogError($"Parameter count mismatch (method: {(methodParams != null ? methodParams.Length : 0)} != {(@params != null ? @params.Length : 0)}) for method({methodName}) in typeof({typeof(T)}).");
+                return default;
+            }
+            #endregion
+
+            // Get result of the method
+            object result = method.Invoke(instance, @params);
+
+            // Return result as T
+            return result != null && result is T t ? t : default;
+        }
+
+        /// <summary>
+		/// Invoke a generic method in the class using a type reference.
+		/// </summary>
+        public static T Invoke<T>(this string methodName, Type[] generics, params object[] @params) where T : class
+        {
             // Get static build method in type
-            MethodInfo method = @class.GetMethod(methodName);
+            MethodInfo method = typeof(T).GetMethod(methodName);
 
             #region Method Validation
             // Validate that method is not generic
@@ -85,10 +105,10 @@ namespace Cutulu
                 // Return basic Invoke result
                 if (generics == null || generics.Length < 1)
                 {
-                    return Invoke<T>(@class, methodName, @params);
+                    return Invoke<T>(methodName, @params);
                 }
 
-                Debug.LogError($"typeof({@class}) is not generic, but you are trying to use generics.");
+                Debug.LogError($"typeof({typeof(T)}) is not generic, but you are trying to use generics.");
                 return default;
             }
             #endregion
@@ -104,7 +124,7 @@ namespace Cutulu
             // Generic type amount is mismatching
             else if (generics.Length != method.GetGenericArguments().Length)
             {
-                Debug.LogError($"Your generics count is mismatching for method({methodName}) in typeof({@class}).");
+                Debug.LogError($"Your generics count is mismatching for method({methodName}) in typeof({typeof(T)}).");
                 return default;
             }
             #endregion
@@ -114,7 +134,7 @@ namespace Cutulu
             var methodParams = method.GetParameters();
             if (methodParams == null != (@params == null) || (@params != null && methodParams.Length != @params.Length))
             {
-                Debug.LogError($"Parameter count mismatch (method: {(methodParams != null ? methodParams.Length : 0)} != {(@params != null ? @params.Length : 0)} :input) for method({methodName}) in typeof({@class}).");
+                Debug.LogError($"Parameter count mismatch (method: {(methodParams != null ? methodParams.Length : 0)} != {(@params != null ? @params.Length : 0)} :input) for method({methodName}) in typeof({typeof(T)}).");
                 return default;
             }
             #endregion
@@ -124,6 +144,65 @@ namespace Cutulu
 
             // Get result of the method
             object result = method.Invoke(null, @params);
+
+            // Return result as T
+            return result != null && result is T t ? t : default;
+        }
+
+        /// <summary>
+		/// Invoke a generic method in the class using a type instance.
+		/// </summary>
+        public static T Invoke<T>(this T instance, string methodName, Type[] generics, params object[] @params) where T : class
+        {
+            // Get static build method in type
+            MethodInfo method = typeof(T).GetMethod(methodName);
+
+            #region Method Validation
+            // Validate that method is not generic
+            if (method.IsGenericMethod == false)
+            {
+                // Return basic Invoke result
+                if (generics == null || generics.Length < 1)
+                {
+                    return Invoke(instance, methodName, @params);
+                }
+
+                Debug.LogError($"typeof({typeof(T)}) is not generic, but you are trying to use generics.");
+                return default;
+            }
+            #endregion
+
+            #region Generics Validation
+            // Trying to run generic function without any generic types
+            else if (generics == null || generics.Length < 1)
+            {
+                Debug.LogError($"You are trying to call a generic method without any generics defined.");
+                return default;
+            }
+
+            // Generic type amount is mismatching
+            else if (generics.Length != method.GetGenericArguments().Length)
+            {
+                Debug.LogError($"Your generics count is mismatching for method({methodName}) in typeof({typeof(T)}).");
+                return default;
+            }
+            #endregion
+
+            #region Parameters Validation
+            // Mismatching parameters
+            var methodParams = method.GetParameters();
+            if (methodParams == null != (@params == null) || (@params != null && methodParams.Length != @params.Length))
+            {
+                Debug.LogError($"Parameter count mismatch (method: {(methodParams != null ? methodParams.Length : 0)} != {(@params != null ? @params.Length : 0)} :input) for method({methodName}) in typeof({typeof(T)}).");
+                return default;
+            }
+            #endregion
+
+            // Create generic method based on type
+            method = method.MakeGenericMethod(generics);
+
+            // Get result of the method
+            object result = method.Invoke(instance, @params);
 
             // Return result as T
             return result != null && result is T t ? t : default;
