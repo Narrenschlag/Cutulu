@@ -33,7 +33,7 @@ namespace Cutulu
             this.Server = server;
             endPoint = null;
 
-            $"+++ Connected [{UUID}]".Log();
+            Debug.Log($"+++[{UUID}]");
 
             tcp = new TcpProtocol(ref client, uuid, Receive, Disconnected);
         }
@@ -125,7 +125,7 @@ namespace Cutulu
         /// </summary>
         protected override void Disconnected()
         {
-            $"--- Disconnected [{UUID}]".Log();
+            Debug.Log($"---[{UUID}]");
             base.Disconnected();
 
             onClose?.Invoke(this);
