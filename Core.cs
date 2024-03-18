@@ -121,13 +121,13 @@ namespace Cutulu
         #endregion
 
         #region Node Functions          ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public static void Clear(this Node parent, bool forceInstant = false)
+        public static void Clear(this Node parent, int skip = 0, bool forceInstant = false)
         {
             if (parent.IsNull()) return;
 
             foreach (Node child in parent.GetChildren())
             {
-                if (child.IsNull()) continue;
+                if (skip-- > 0 || child.IsNull()) continue;
 
                 child.Destroy(forceInstant);
             }
@@ -404,12 +404,13 @@ namespace Cutulu
 
         public static T[] RemoveAt<T>(this T[] array, int index)
         {
-            if (array.Size() >= index) return array;
+            if (array.Length <= index || index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range");
 
             var result = new T[array.Length - 1];
 
             System.Array.Copy(array, result, index);
-            System.Array.Copy(array, index + 1, result, index, array.Length - index - 1);
+            System.Array.Copy(array, index + 1, result, index, result.Length - index);
 
             return result;
         }

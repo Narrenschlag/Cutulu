@@ -22,5 +22,14 @@ namespace Cutulu
         /// Define new title for application window.
         /// </summary>
         public static void SetWindowTitle(string newTitle, int windowId = 0) => DisplayServer.WindowSetTitle(newTitle, windowId);
+
+        /// <summary>
+        /// Set or Get value of Clipboard
+        /// </summary>
+        public static string Clipboard
+        {
+            set => DisplayServer.ClipboardSet(value);
+            get => DisplayServer.ClipboardGet();
+        }
     }
 }
