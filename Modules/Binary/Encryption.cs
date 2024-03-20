@@ -7,6 +7,38 @@ namespace Cutulu
 {
     public static class Encryption
     {
+        public static string HashEncryptString(this string plaintText, string key) => plaintText.EncryptString(key).EncryptString(key.HashPassword());
+        public static string HashDecryptString(this string encryptedText, string key) => encryptedText.DecryptString(key.HashPassword()).DecryptString(key);
+
+        public static string EncryptString(this string plainText, string key, int depth)
+        {
+            // Encrypt
+            for (int i = 0; i < depth; i++)
+            {
+                plainText = plainText.EncryptString(key = key.HashPassword());
+            }
+
+            return plainText;
+        }
+
+        public static string DecryptString(this string encryptedText, string key, int depth)
+        {
+            // Reverse hashing by using key
+            var keys = new string[depth];
+            for (int i = 0; i < depth; i++)
+            {
+                keys[depth - 1 - i] = key = key.HashPassword();
+            }
+
+            // Decrypt
+            for (int i = 0; i < depth; i++)
+            {
+                encryptedText = encryptedText.DecryptString(keys[i]);
+            }
+
+            return encryptedText;
+        }
+
         public static string EncryptString(this string plaintext, string key)
         {
             if (string.IsNullOrEmpty(plaintext) || string.IsNullOrEmpty(key))
