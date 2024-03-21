@@ -140,13 +140,13 @@ namespace Cutulu
         /// <summary> 
         /// Distributes all the incomming traffic to all registered receivers
         /// </summary>
-        public virtual void Receive(byte key, byte[] bytes, Method method)
+        public virtual void Receive(ref NetworkPackage package)
         {
             // Iterate through all targets
             if (!ignore_receiver_transfer)
             {
-                receiver(Receivers);
-                receiver(SubReceivers);
+                receiver(Receivers, ref package);
+                receiver(SubReceivers, ref package);
             }
 
             // Call delegates
@@ -154,12 +154,12 @@ namespace Cutulu
             {
                 lock (onReceive)
                 {
-                    onReceive(key, bytes, method);
+                    onReceive?.Invoke(ref package);
                 }
             }
 
             // Iterate through receivers and call their receive functions
-            void receiver(R[] array)
+            void receiver(R[] array, ref NetworkPackage package)
             {
                 if (array == null || array.Length < 1) return;
 
@@ -174,7 +174,7 @@ namespace Cutulu
                             try
                             {
                                 // Notify target
-                                array[i].Receive(key, bytes, method, receiver_params);
+                                array[i].Receive(ref package, receiver_params);
                             }
 
                             // Failed

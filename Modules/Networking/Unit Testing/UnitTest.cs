@@ -45,12 +45,12 @@ namespace Cutulu.UnitTest.Network
 
         private void OnSendServerTcp()
         {
-            Server.Broadcast(0, "test", Method.Tcp);
+            Server.Broadcast((short)Random.RangeIncluded(short.MinValue, short.MaxValue), "test", Method.Tcp);
         }
 
         private void OnSendServerUdp()
         {
-            Server.Broadcast(0, "test", Method.Udp);
+            Server.Broadcast((short)Random.RangeIncluded(short.MinValue, short.MaxValue), "test", Method.Udp);
         }
     }
 }

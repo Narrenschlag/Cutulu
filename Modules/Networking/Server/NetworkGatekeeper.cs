@@ -63,15 +63,15 @@ namespace Cutulu
         /// <summary>
         /// Check first incomming packet for the right pass key. 
         /// </summary>
-        private void OnReceive(ServerConnection<R> connection, byte gateKey, byte[] bytes, Method method)
+        private void OnReceive(ServerConnection<R> connection, ref NetworkPackage package)
         {
             // Check gate key
-            switch (gateKey)
+            switch (package.Key)
             {
                 // Right gate key
                 case 123:
                     // Check pass key
-                    if (CompareKey(bytes))
+                    if (CompareKey(package.Content))
                     {
                         // Pass Gatekeeper
                         connection.onReceive2 -= OnReceive;

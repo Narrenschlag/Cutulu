@@ -4,7 +4,7 @@ namespace Cutulu
 {
     public class Protocol
     {
-        public delegate void Packet(byte key, byte[] bytes, Method method);
+        public delegate void Packet(ref NetworkPackage package);
         public delegate void Empty();
 
         public bool Connected;

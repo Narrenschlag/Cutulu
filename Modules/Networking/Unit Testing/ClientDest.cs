@@ -14,15 +14,15 @@ namespace Cutulu.UnitTest.Network
             }
         }
 
-        public override void Receive(byte key, byte[] bytes, Method method, params object[] values)
+        public override void Receive(ref NetworkPackage package, params object[] values)
         {
-            base.Receive(key, bytes, method, values);
+            base.Receive(ref package, values);
 
             if (output.NotNull())
             {
-                if (bytes.Unpack(out string txt))
+                if (package.TryBuffer(out string txt))
                 {
-                    txt = $"{method}({key})[{bytes.Length}] {key}> {txt}";
+                    txt = $"{package.Method}(k:{package.Key})[{package.Content.Length}b]> {txt}";
 
                     if (output.Text.Length > 255)
                     {
@@ -35,7 +35,7 @@ namespace Cutulu.UnitTest.Network
                 }
                 else
                 {
-                    output.Text += $"{method}({key}) {bytes.Length} bytes\n";
+                    output.Text += $"{package.Method}(k:{package.Key}) {package.Content.Length}b\n";
                 }
             }
         }

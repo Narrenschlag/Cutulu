@@ -29,14 +29,14 @@ namespace Cutulu.UnitTest.Network
             }
         }
 
-        private void SendTcp()
+        private void SendTcp() => Send(Method.Tcp);
+        private void SendUdp() => Send(Method.Udp);
+        private void Send(Method method)
         {
-            Net.Send(byte.TryParse(Key.Text, out byte key) ? key : (byte)0, String.Text, Method.Tcp);
-        }
+            if (short.TryParse(Key.Text, out var key) == false) return;
 
-        private void SendUdp()
-        {
-            Net.Send(byte.TryParse(Key.Text, out byte key) ? key : (byte)0, String.Text, Method.Udp);
+            if (ushort.TryParse(String.Text, out var s)) Net.Send(key, s, method);
+            else Net.Send(key, String.Text, method);
         }
     }
 }

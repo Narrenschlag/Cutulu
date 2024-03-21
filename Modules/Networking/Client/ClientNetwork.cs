@@ -42,13 +42,10 @@ namespace Cutulu
         private async void SetupUdp()
         {
             // Stop if connections associated
-            if (UdpConnected == true)
-            {
-                return;
-            }
+            if (UdpConnected == true) return;
 
             // Send one byte udp packet with key 0
-            Send(0, (byte)0, Method.Udp);
+            Send(0, Method.Udp);
 
             // Wait 0.05s to resend association package
             await Task.Delay(50);
@@ -62,7 +59,7 @@ namespace Cutulu
         /// </summary>
         protected virtual void OnSetupComplete()
         {
-
+            
         }
         #endregion
 
@@ -70,7 +67,7 @@ namespace Cutulu
         /// <summary>
         /// Sends data to server
         /// </summary>
-        public virtual void Send<V>(byte key, V value, Method method = Method.Tcp)
+        public virtual void Send<V>(short key, V value, Method method)
         {
             switch (method)
             {
@@ -85,18 +82,36 @@ namespace Cutulu
                 default: break;
             }
         }
+        /// <summary>
+        /// Sends signal to server
+        /// </summary>
+        public virtual void Send(short key, Method method)
+        {
+            switch (method)
+            {
+                case Method.Tcp:
+                    Tcp.Send<byte[]>(key, null);
+                    break;
+
+                case Method.Udp:
+                    Udp.Send<byte[]>(key, null, SafetyId);
+                    break;
+
+                default: break;
+            }
+        }
         #endregion
 
         #region Receive Data    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Receives data from server
         /// </summary>
-        public override void Receive(byte key, byte[] bytes, Method method)
+        public override void Receive(ref NetworkPackage package)
         {
             // Notify client that server has successfully associated the udp client with the tcp client
-            if (UdpConnected == false && key == 255)
+            if (UdpConnected == false && package.Key == 255)
             {
-                if (bytes.TryBuffer(out ushort safetyId))
+                if (package.TryBuffer(out ushort safetyId))
                 {
                     SafetyId = safetyId;
                     UdpConnected = true;
@@ -106,7 +121,7 @@ namespace Cutulu
                 }
             }
 
-            base.Receive(key, bytes, method);
+            base.Receive(ref package);
         }
         #endregion
 

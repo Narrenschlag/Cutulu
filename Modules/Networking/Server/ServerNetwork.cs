@@ -117,10 +117,10 @@ namespace Cutulu
 
         #region Broadcasting    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary> Broadcast to all clients </summary>
-        public virtual void Broadcast<T>(byte key, T value, Method method) => Broadcast(key, value, method, Clients?.Values);
+        public virtual void Broadcast<T>(short key, T value, Method method) => Broadcast(key, value, method, Clients?.Values);
 
         /// <summary> Broadcast to selected clients </summary>
-        public virtual void Broadcast<T>(byte key, T value, Method method, ICollection<ServerConnection<R>> receivers)
+        public virtual void Broadcast<T>(short key, T value, Method method, ICollection<ServerConnection<R>> receivers)
         {
             if (receivers == null || receivers.Count < 1) return;
 
@@ -143,26 +143,24 @@ namespace Cutulu
         public UdpProtocol globalUdp;
         public int UdpPort;
 
-        private void ReceiveUdp(byte key, byte[] bytes, IPEndPoint endpoint, ushort safetyId)
+        private void ReceiveUdp(ref NetworkPackage package, IPEndPoint endpoint, ushort safetyId)
         {
             lock (this)
             {
-                // Move queued element to endpoint registry
-                if (!Endpoints.TryGetValue(endpoint, out ServerConnection<R> client))
+                // Try find existing linked connection
+                if (Endpoints.TryGetValue(endpoint, out ServerConnection<R> client))
                 {
-                    if (Queue.TryGetValue(endpoint.Address, out client))
-                    {
-                        Endpoints.Add(endpoint, client);
-                        Queue.Remove(endpoint.Address);
-
-                        client.Connect(endpoint);
-                    }
+                    // Validate safety id and send accept package
+                    if (client?.SafetyId == safetyId) client.Receive(ref package);
                 }
 
-                // Validate safety id and send accept package
-                if (client != null && client.SafetyId == safetyId)
+                // Move queued element to endpoint registry
+                else if (Queue.TryGetValue(endpoint.Address, out client))
                 {
-                    client.Receive(key, bytes, Method.Udp);
+                    Endpoints.Add(endpoint, client);
+                    Queue.Remove(endpoint.Address);
+
+                    client.Connect(endpoint);
                 }
             }
         }

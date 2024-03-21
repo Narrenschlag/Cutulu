@@ -5,7 +5,7 @@ namespace Cutulu
         /// <summary> 
         /// Receive Data
         /// </summary>
-        public virtual void Receive(byte key, byte[] bytes, Method method, params object[] values) { }
+        public virtual void Receive(ref NetworkPackage package, params object[] values) { }
 
         /// <summary> 
         /// Triggered when this is added to connection receivers

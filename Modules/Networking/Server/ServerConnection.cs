@@ -7,7 +7,7 @@ namespace Cutulu
 {
     public class ServerConnection<R> : Marker<R> where R : Receiver
     {
-        public delegate void ConnectionPacket(ServerConnection<R> connection, byte key, byte[] bytes, Method method);
+        public delegate void ConnectionPacket(ServerConnection<R> connection, ref NetworkPackage package);
         public delegate void Disconnect(ServerConnection<R> connection);
         public Protocol.Empty onSetupComplete;
         public ConnectionPacket onReceive2;
@@ -75,7 +75,7 @@ namespace Cutulu
         /// <summary> 
         /// Sends data to connection endpoint
         /// </summary>
-        public virtual void Send<T>(byte key, T value, Method method)
+        public virtual void Send<T>(short key, T value, Method method)
         {
             switch (method)
             {
@@ -103,17 +103,17 @@ namespace Cutulu
         /// <summary> 
         /// Distributes all the incomming traffic to all registered receivers
         /// </summary>
-        public override void Receive(byte key, byte[] bytes, Method method)
+        public override void Receive(ref NetworkPackage package)
         {
             // Handle underlaying base
-            base.Receive(key, bytes, method);
+            base.Receive(ref package);
 
             // Invoke alternative receive callback
             if (onReceive2 != null)
             {
                 lock (onReceive2)
                 {
-                    onReceive2?.Invoke(this, key, bytes, method);
+                    onReceive2?.Invoke(this, ref package);
                 }
             }
         }

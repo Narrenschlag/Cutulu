@@ -2,12 +2,13 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
 using System;
+using System.IO;
 
 namespace Cutulu
 {
     public class UdpProtocol : Protocol
     {
-        public delegate void UdpPacket(byte key, byte[] bytes, IPEndPoint source, ushort safetyId);
+        public delegate void UdpPacket(ref NetworkPackage package, IPEndPoint source, ushort safetyId);
 
         public UdpPacket serverSideReceive;
         public Packet clientSideReceive;
@@ -78,13 +79,13 @@ namespace Cutulu
         /// <summary> 
         /// Sends data through connection towards special ipendpoint (Server Side) 
         /// </summary>
-        public void Send<T>(byte key, T value, IPEndPoint destination)
+        public void Send<T>(short key, T value, IPEndPoint destination)
         {
             ValidateConnection();
 
             if (destination != null)
             {
-                byte[] bytes = value.PackageRaw(key, Method.Udp);
+                byte[] bytes = PackageS2C(ref key, ref value);
                 client.Send(bytes, bytes.Length, destination);
             }
         }
@@ -92,11 +93,11 @@ namespace Cutulu
         /// <summary> 
         /// Sends data through connection (Client Side) 
         /// </summary>
-        public void Send<T>(byte key, T value, ushort safetyId)
+        public void Send<T>(short key, T value, ushort safetyId)
         {
             ValidateConnection();
 
-            byte[] bytes = value.PackageRawUdpClient(key, safetyId);
+            byte[] bytes = PackageC2S(ref key, ref value, ref safetyId);
             client.Send(bytes, bytes.Length);
         }
         #endregion
@@ -133,19 +134,15 @@ namespace Cutulu
             if (isServerClient)
             {
                 // Decode bytes
-                byte[] bytes = Buffer.UnpackRawUdpServer(buffer, out byte key, out ushort safetyId);
-                if (bytes == null) return;
-
-                serverSideReceive?.Invoke(key, bytes, result.RemoteEndPoint, safetyId);
+                if (UnpackC2S(buffer, out var package, out var safetyId))
+                    serverSideReceive?.Invoke(ref package, result.RemoteEndPoint, safetyId);
             }
 
             else
             {
                 // Decode bytes
-                byte[] bytes = Buffer.UnpackRaw(buffer, out byte key);
-                if (bytes == null) return;
-
-                clientSideReceive?.Invoke(key, bytes, Method.Udp);
+                if (UnpackS2C(buffer, out var package))
+                    clientSideReceive?.Invoke(ref package);
             }
         }
         #endregion
@@ -163,6 +160,115 @@ namespace Cutulu
             }
 
             base.Close();
+        }
+        #endregion
+
+        #region Packaging
+        /// <summary>
+        /// Packets from server, sent to client
+        /// </summary>
+        public static byte[] PackageS2C<T>(ref short key, ref T value)
+        {
+            // Convert to bytes
+            var bytes = value == null ? Array.Empty<byte>() : value.Buffer();
+
+            // Establish streams
+            using MemoryStream strm = new();
+            using BinaryWriter wrtr = new(strm);
+
+            // Write key
+            wrtr.Write(key);
+
+            // Write custom values
+            wrtr.Write(bytes);
+
+            // Close streams
+            strm.Close();
+            wrtr.Close();
+
+            return strm.ToArray();
+        }
+
+        /// <summary>
+        /// Packets from client, sent to server
+        /// </summary>
+        public static byte[] PackageC2S<T>(ref short key, ref T value, ref ushort udpSafety)
+        {
+            // Convert to bytes
+            var bytes = value == null ? Array.Empty<byte>() : value.Buffer();
+
+            // Establish streams
+            using MemoryStream strm = new();
+            using BinaryWriter wrtr = new(strm);
+
+            // Write constant data
+            wrtr.Write(udpSafety);
+            wrtr.Write(key);
+
+            // Write custom values
+            wrtr.Write(bytes);
+
+            // Close streams
+            strm.Close();
+            wrtr.Close();
+
+            return strm.ToArray();
+        }
+
+        /// <summary>
+        /// Packets from client, received by server
+        /// </summary>
+        public static bool UnpackC2S(byte[] buffer, out NetworkPackage package, out ushort udpSafety)
+        {
+            // Buffer could not be read
+            if (buffer == null || buffer.Length < 2)
+            {
+                udpSafety = default;
+                package = default;
+                return false;
+            }
+
+            // Establish streams
+            using MemoryStream strm = new(buffer);
+            using BinaryReader rdr = new(strm);
+
+            // Udp safety
+            udpSafety = rdr.ReadUInt16();
+
+            // Read key and contents
+            package = new(rdr.ReadInt16(), rdr.ReadBytes(buffer.Length - 2), Method.Udp);
+
+            // Close streams
+            strm.Close();
+            rdr.Close();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Packets from server, received by client
+        /// </summary>
+        public static bool UnpackS2C(byte[] buffer, out NetworkPackage package)
+        {
+            // Buffer could not be read
+            if (buffer == null || buffer.Length < 2)
+            {
+                package = default;
+                return false;
+            }
+
+            // Establish streams
+            using MemoryStream strm = new(buffer);
+            using BinaryReader rdr = new(strm);
+
+            // Read key and contents
+            package = new(rdr.ReadInt16(), rdr.ReadBytes(buffer.Length - 2), Method.Tcp);
+
+            // Close streams
+            strm.Close();
+            rdr.Close();
+
+            return true;
         }
         #endregion
     }

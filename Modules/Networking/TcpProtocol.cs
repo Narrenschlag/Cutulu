@@ -65,22 +65,18 @@ namespace Cutulu
         /// <summary> 
         /// Sends data through connection 
         /// </summary>
-        public void Send<T>(byte key, T value)
+        public void Send<T>(short key, T value)
         {
             ValidateConnection();
 
-            byte[] bytes = value.PackageRaw(key, Method.Tcp);
+            byte[] bytes = Package(ref key, ref value);
 
             client.NoDelay = bytes.Length <= 1400;
+
+            // Write and send data
             stream.Write(bytes);
-
-            Flush();
+            stream.Flush();
         }
-
-        /// <summary> 
-        /// Sends written data to server 
-        /// </summary>
-        public void Flush() => stream.Flush();
         #endregion
 
         #region Receive Data    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +103,7 @@ namespace Cutulu
         /// </summary>
         protected async Task Receive()
         {
-            // Define buffer for strorage
+            // Define buffer for storage
             byte[] bytes = new byte[2];
 
             // Read length
@@ -119,7 +115,7 @@ namespace Cutulu
             // Read length of buffer
             using MemoryStream mem = new(bytes);
             using BinaryReader BR = new(mem);
-            int length = BR.ReadUInt16() + 1;
+            int length = BR.ReadUInt16() + 2;
             mem.Close();
             BR.Close();
 
@@ -128,8 +124,8 @@ namespace Cutulu
             await stream.ReadAsync(bytes.AsMemory(0, length));
 
             // Unpack bytes
-            bytes = Buffer.UnpackRaw(bytes, out byte key);
-            if (bytes != null && onReceive != null) onReceive(key, bytes, Method.Tcp);
+            if (Unpack(bytes, out var package))
+                onReceive?.Invoke(ref package);
         }
         #endregion
 
@@ -154,6 +150,56 @@ namespace Cutulu
             onDisconnect?.Invoke();
 
             Close();
+        }
+        #endregion
+
+        #region Packaging
+        public static byte[] Package<T>(ref short key, ref T value)
+        {
+            // Convert to bytes
+            byte[] bytes = value == null ? Array.Empty<byte>() : value.Buffer();
+
+            // Establish streams
+            using MemoryStream strm = new();
+            using BinaryWriter wrtr = new(strm);
+
+            // Write constant data
+            wrtr.Write((ushort)bytes.Length);
+
+            // Write key
+            wrtr.Write(key);
+
+            // Write custom values
+            wrtr.Write(bytes);
+
+            // Close streams
+            strm.Close();
+            wrtr.Close();
+
+            return strm.ToArray();
+        }
+
+        public static bool Unpack(byte[] buffer, out NetworkPackage package)
+        {
+            // Buffer could not be read
+            if (buffer == null || buffer.Length < 2)
+            {
+                package = default;
+                return false;
+            }
+
+            // Establish streams
+            using MemoryStream strm = new(buffer);
+            using BinaryReader rdr = new(strm);
+
+            // Read key and contents
+            package = new(rdr.ReadInt16(), rdr.ReadBytes(buffer.Length - 2), Method.Tcp);
+
+            // Close streams
+            strm.Close();
+            rdr.Close();
+
+            return true;
         }
         #endregion
     }
