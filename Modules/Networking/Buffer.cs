@@ -10,7 +10,7 @@ namespace Cutulu
         /// <summary> 
         /// Packages your values in byte array with extra information for your generic transport protocol  
         /// </summary>
-        public static byte[] PackageRaw<T>(this T value, byte key, Method method)
+        public static byte[] PackageRaw<T>(this T value, ushort key, Method method)
         {
             // If is null
             if (value == null)
@@ -52,7 +52,7 @@ namespace Cutulu
         /// <summary> 
         /// Packages your values in byte array with extra information for your UDP transport protocol  
         /// </summary>
-        public static byte[] PackageRawUdpClient<T>(this T value, byte key, ushort udpSafety)
+        public static byte[] PackageRawUdpClient<T>(this T value, ushort key, ushort udpSafety)
         {
             // If is null
             if (value == null)
@@ -166,5 +166,21 @@ namespace Cutulu
     public enum Method : byte
     {
         Tcp, Udp
+    }
+
+    public struct NetworkPackage
+    {
+        public byte[] Content { get; private set; }
+        public Method Method { get; private set; }
+        public short Key { get; private set; }
+
+        public NetworkPackage(short key, byte[] content, Method method)
+        {
+            Content = content;
+            Method = method;
+            Key = key;
+        }
+
+        public readonly bool TryBuffer<T>(out T value) => Content.TryBuffer(out value);
     }
 }
