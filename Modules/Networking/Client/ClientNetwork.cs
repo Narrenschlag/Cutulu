@@ -59,7 +59,7 @@ namespace Cutulu
         /// </summary>
         protected virtual void OnSetupComplete()
         {
-            
+
         }
         #endregion
 
@@ -72,11 +72,11 @@ namespace Cutulu
             switch (method)
             {
                 case Method.Tcp:
-                    Tcp.Send(key, value);
+                    Tcp.Send(ref key, value);
                     break;
 
                 case Method.Udp:
-                    Udp.Send(key, value, SafetyId);
+                    Udp.Send(ref key, value, SafetyId);
                     break;
 
                 default: break;
@@ -90,11 +90,11 @@ namespace Cutulu
             switch (method)
             {
                 case Method.Tcp:
-                    Tcp.Send<byte[]>(key, null);
+                    Tcp.Send<byte[]>(ref key, null);
                     break;
 
                 case Method.Udp:
-                    Udp.Send<byte[]>(key, null, SafetyId);
+                    Udp.Send<byte[]>(ref key, null, SafetyId);
                     break;
 
                 default: break;

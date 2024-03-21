@@ -7,6 +7,8 @@ namespace Cutulu
 {
     public class TcpProtocol : Protocol
     {
+        public const short WelcomeKey = 0;
+
         public NetworkStream stream;
         public TcpClient client;
 
@@ -33,7 +35,9 @@ namespace Cutulu
 
             stream = client.GetStream();
 
-            Send(0, welcome);
+            short welcomeKey = WelcomeKey;
+            Send(ref welcomeKey, welcome);
+
             Listen();
         }
 
@@ -65,7 +69,7 @@ namespace Cutulu
         /// <summary> 
         /// Sends data through connection 
         /// </summary>
-        public void Send<T>(short key, T value)
+        public void Send<T>(ref short key, T value)
         {
             ValidateConnection();
 

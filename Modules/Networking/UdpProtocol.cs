@@ -79,7 +79,7 @@ namespace Cutulu
         /// <summary> 
         /// Sends data through connection towards special ipendpoint (Server Side) 
         /// </summary>
-        public void Send<T>(short key, T value, IPEndPoint destination)
+        public void Send<T>(ref short key, T value, IPEndPoint destination)
         {
             ValidateConnection();
 
@@ -93,7 +93,7 @@ namespace Cutulu
         /// <summary> 
         /// Sends data through connection (Client Side) 
         /// </summary>
-        public void Send<T>(short key, T value, ushort safetyId)
+        public void Send<T>(ref short key, T value, ushort safetyId)
         {
             ValidateConnection();
 

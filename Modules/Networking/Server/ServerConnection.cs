@@ -82,14 +82,14 @@ namespace Cutulu
                 case Method.Tcp:
                     if (ConnectedTcp())
                     {
-                        tcp.Send(key, value);
+                        tcp.Send(ref key, value);
                     }
                     break;
 
                 case Method.Udp:
                     if (ConnectedUdp())
                     {
-                        Server.globalUdp.Send(key, value, endPoint);
+                        Server.globalUdp.Send(ref key, value, endPoint);
                     }
                     break;
 
