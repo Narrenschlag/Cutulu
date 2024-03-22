@@ -5,12 +5,9 @@ namespace Cutulu.UnitTest.Network
         public override void Receive(ref NetworkPackage package, params object[] values)
         {
             ServerConnection<Receiver> client = values[0] as ServerConnection<Receiver>;
-            var text = "";
+            if (package.TryBuffer(out string text)) { }
 
-            if (package.Content.TryBuffer(out text)) { }
-            else if (package.Content.TryBuffer(out short s)) text = s.ToString();
-
-            $"{client.UUID}-{package.Method}: {(text ?? "<null>")} [k:{package.Key}] {package.Content.Length}b".Log();
+            $"{client.UUID}-{package.Method}: [k:{package.Key}, {package.Content.Length}b] {(text.NotEmpty() ? text : "")}".Log();
         }
     }
 }

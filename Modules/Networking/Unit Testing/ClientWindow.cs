@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Unicode;
 using Godot;
 
 namespace Cutulu.UnitTest.Network
@@ -35,8 +37,7 @@ namespace Cutulu.UnitTest.Network
         {
             if (short.TryParse(Key.Text, out var key) == false) return;
 
-            if (ushort.TryParse(String.Text, out var s)) Net.Send(key, s, method);
-            else Net.Send(key, String.Text, method);
+            Net.Send(key, String.Text, method);
         }
     }
 }
