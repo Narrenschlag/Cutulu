@@ -28,5 +28,6 @@ namespace Cutulu
         }
 
         public readonly bool TryBuffer<T>(out T value) => Content.TryBuffer(out value);
+        public readonly int ByteSize() => Content.Length;
     }
 }
