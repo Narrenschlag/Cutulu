@@ -25,7 +25,7 @@ namespace Cutulu
         {
             if (bitIndex > 7) throw new("bitIndex has to be { [0; ]8 }");
 
-            return GetBit(ref @byte, ref bitIndex);
+            return Bitf.GetBit(ref @byte, ref bitIndex);
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Cutulu
         {
             if (bitIndex > 7) throw new("bitIndex has to be { [0; ]8 }");
 
-            SetBit(ref @byte, ref bitIndex, ref newValue);
+            Bitf.SetBit(ref @byte, ref bitIndex, ref newValue);
             return @byte;
         }
 
@@ -46,7 +46,7 @@ namespace Cutulu
         {
             for (byte i = 0; i < bits.Length && i < 8; i++)
             {
-                SetBit(ref @byte, ref i, ref bits[i]);
+                Bitf.SetBit(ref @byte, ref i, ref bits[i]);
             }
         }
 
@@ -60,27 +60,15 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Sets bit to 0: false
+        /// Sets values to bits at byte. Does not check if bits is null.
         /// </summary>
-        public static void DisableBit(ref byte @byte, ref byte bitIndex) => @byte &= (byte)(1 << bitIndex);
-
-        /// <summary>
-        /// Sets bit to 1: true
-        /// </summary>
-        public static void EnableBit(ref byte @byte, ref byte bitIndex) => @byte |= (byte)(1 << bitIndex);
-
-        /// <summary>
-        /// Gets bit.
-        /// </summary>
-        public static bool GetBit(ref byte @byte, ref byte bitIndex) => (@byte & (byte)(1 << bitIndex)) != 0;
-
-        /// <summary>
-        /// Sets bit.
-        /// </summary>
-        public static void SetBit(ref byte @byte, ref byte bitIndex, ref bool value)
+        public static byte GetByte(params bool[] bits)
         {
-            if (value) EnableBit(ref @byte, ref bitIndex);
-            else DisableBit(ref @byte, ref bitIndex);
+            byte @byte = 0;
+
+            SetBits(ref @byte, bits);
+
+            return @byte;
         }
 
         /// <summary>
@@ -88,11 +76,11 @@ namespace Cutulu
         /// </summary>
         public static void SwapBit(ref byte @byte, ref byte bit1, ref byte bit2)
         {
-            var self = GetBit(ref @byte, ref bit1);
-            var next = GetBit(ref @byte, ref bit2);
+            var self = Bitf.GetBit(ref @byte, ref bit1);
+            var next = Bitf.GetBit(ref @byte, ref bit2);
 
-            SetBit(ref @byte, ref bit1, ref next);
-            SetBit(ref @byte, ref bit2, ref self);
+            Bitf.SetBit(ref @byte, ref bit1, ref next);
+            Bitf.SetBit(ref @byte, ref bit2, ref self);
         }
 
         /// <summary>
@@ -100,11 +88,11 @@ namespace Cutulu
         /// </summary>
         public static void SwapBit(ref byte @byte1, ref byte bit1, ref byte @byte2, ref byte bit2)
         {
-            var value1 = GetBit(ref @byte1, ref bit1);
-            var value2 = GetBit(ref @byte2, ref bit2);
+            var value1 = Bitf.GetBit(ref @byte1, ref bit1);
+            var value2 = Bitf.GetBit(ref @byte2, ref bit2);
 
-            SetBit(ref @byte1, ref bit1, ref value2);
-            SetBit(ref @byte2, ref bit2, ref value1);
+            Bitf.SetBit(ref @byte1, ref bit1, ref value2);
+            Bitf.SetBit(ref @byte2, ref bit2, ref value1);
         }
         #endregion
 
@@ -126,7 +114,7 @@ namespace Cutulu
         {
             byte _bitIndex = (byte)(bitIndex % 8);
 
-            return GetBit(ref array[bitIndex / 2], ref _bitIndex);
+            return Bitf.GetBit(ref array[bitIndex / 2], ref _bitIndex);
         }
 
         /// <summary>
@@ -136,7 +124,7 @@ namespace Cutulu
         {
             byte _bitIndex = (byte)(bitIndex % 8);
 
-            SetBit(ref array[bitIndex / 8], ref _bitIndex, ref newValue);
+            Bitf.SetBit(ref array[bitIndex / 8], ref _bitIndex, ref newValue);
         }
         #endregion
 
@@ -159,11 +147,11 @@ namespace Cutulu
 
             for (byte i = 0, n = 1; i < 8; i += 2, n += 2)
             {
-                self = GetBit(ref @byte, ref i);
-                next = GetBit(ref @byte, ref n);
+                self = Bitf.GetBit(ref @byte, ref i);
+                next = Bitf.GetBit(ref @byte, ref n);
 
-                SetBit(ref @byte, ref n, ref self);
-                SetBit(ref @byte, ref i, ref next);
+                Bitf.SetBit(ref @byte, ref n, ref self);
+                Bitf.SetBit(ref @byte, ref i, ref next);
             }
         }
 
@@ -310,85 +298,6 @@ namespace Cutulu
         /// Offsets bytes.
         /// </summary>
         public static void OffsetBytes(ref byte[] @bytes, ref int offset) => Core.OffsetElements(ref @bytes, offset);
-        #endregion
-
-        #region Bits and Bools              ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// Set all bits of a byte based on booleans.
-        /// </summary>
-        public static byte SetBools(this byte @byte, params bool[] bools)
-        {
-            SetBools(ref @byte, bools);
-            return @byte;
-        }
-
-        /// <summary>
-        /// Set all bits of a byte based on booleans.
-        /// </summary>
-        public static void SetBools(ref byte @byte, params bool[] bools)
-        {
-            if (bools.IsEmpty()) return;
-
-            for (byte i = 0; i < bools.Length && i < 8; i++)
-            {
-                SetBit(ref @byte, ref i, ref bools[i]);
-            }
-        }
-
-        /// <summary>
-        /// Set all bits of a byte based on booleans.
-        /// </summary>
-        public static byte[] SetBools(this byte[] array, params bool[] bools)
-        {
-            SetBools(ref array, bools);
-            return array;
-        }
-
-        /// <summary>
-        /// Set all bits of a byte based on booleans.
-        /// </summary>
-        public static void SetBools(ref byte[] array, params bool[] bools)
-        {
-            array = new byte[Mathf.CeilToInt(array.Size() / 8f)];
-            if (bools.IsEmpty()) return;
-            byte bitIndex;
-
-            for (ushort i = 0; i < bools.Length; i++)
-            {
-                bitIndex = (byte)(i % 8);
-
-                SetBit(ref array[Mathf.FloorToInt(i / 8f)], ref bitIndex, ref bools[i]);
-            }
-        }
-
-        /// <summary>
-        /// Get all bits of a byte based on booleans.
-        /// </summary>
-        public static bool[] GetBools(this byte @byte) => GetBools(new byte[1] { @byte });
-
-        /// <summary>
-        /// Get all bits of a byte based on booleans.
-        /// </summary>
-        public static bool[] GetBools(this byte[] array) => GetBools(ref array);
-
-        /// <summary>
-        /// Get all bits of a byte based on booleans.
-        /// </summary>
-        public static bool[] GetBools(ref byte[] array)
-        {
-            bool[] result = new bool[array.Size() * 8];
-            if (array.IsEmpty()) return result;
-            byte bitIndex;
-
-            for (ushort i = 0; i < result.Length; i++)
-            {
-                bitIndex = (byte)(i % 8);
-
-                result[i] = GetBit(ref array[Mathf.FloorToInt(i / 8f)], ref bitIndex);
-            }
-
-            return result;
-        }
         #endregion
     }
 }
