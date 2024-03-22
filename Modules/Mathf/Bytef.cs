@@ -40,6 +40,26 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Sets values to bits at byte. Does not check if bits is null.
+        /// </summary>
+        public static void SetBits(ref byte @byte, params bool[] bits)
+        {
+            for (byte i = 0; i < bits.Length && i < 8; i++)
+            {
+                SetBit(ref @byte, ref i, ref bits[i]);
+            }
+        }
+
+        /// <summary>
+        /// Sets values to bits at byte. Does not check if bits is null.
+        /// </summary>
+        public static byte SetBits(byte @byte, params bool[] bits)
+        {
+            SetBits(ref @byte, bits);
+            return @byte;
+        }
+
+        /// <summary>
         /// Sets bit to 0: false
         /// </summary>
         public static void DisableBit(ref byte @byte, ref byte bitIndex) => @byte &= (byte)(1 << bitIndex);
