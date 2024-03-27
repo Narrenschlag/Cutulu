@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using System.Text;
 using System.IO;
 using System;
@@ -9,6 +10,8 @@ namespace Cutulu
     {
         public static string HashEncryptString(this string plaintText, string key) => plaintText.EncryptString(key).EncryptString(key.HashPassword());
         public static string HashDecryptString(this string encryptedText, string key) => encryptedText.DecryptString(key.HashPassword()).DecryptString(key);
+
+        public delegate void UpdateHandler(float progress);
 
         public static string EncryptString(this string plainText, string key, int depth)
         {
@@ -67,6 +70,72 @@ namespace Cutulu
             return Convert.ToBase64String(encryptedBytes);
         }
 
+        public static byte[] Encrypt(this byte[] data, string key)
+        {
+            if (data.IsEmpty() || string.IsNullOrEmpty(key))
+                throw new ArgumentException("Data and key must not be null or empty.");
+
+            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+
+            // Stretch the key to match the length of the plaintext
+            byte[] stretchedKey = StretchKey(keyBytes, data.Length);
+
+            // Perform XOR operation between plaintext and stretched key
+            byte[] encryptedBytes = new byte[data.Length];
+            for (int i = 0; i < data.Length; i++)
+            {
+                encryptedBytes[i] = (byte)(data[i] ^ stretchedKey[i]);
+            }
+
+            // Offset bits based on second bytes in key
+            for (int i = 0, offset; i < keyBytes.Length; i++)
+            {
+                offset = keyBytes[i] * (i % 2 == 0 ? 1 : -1);
+                Bytef.OffsetBits(ref encryptedBytes, ref offset);
+            }
+
+            return encryptedBytes;
+        }
+
+        public static async Task<byte[]> EncryptAsync(this byte[] data, string key, int performance, UpdateHandler onProgress = null)
+        {
+            if (data.IsEmpty() || string.IsNullOrEmpty(key))
+                throw new ArgumentException("Data and key must not be null or empty.");
+
+            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+
+            // Stretch the key to match the length of the plaintext
+            byte[] stretchedKey = StretchKey(keyBytes, data.Length);
+
+            // Perform XOR operation between plaintext and stretched key
+            byte[] encryptedBytes = new byte[data.Length];
+            for (int i = 0; i < data.Length; i++)
+            {
+                encryptedBytes[i] = (byte)(data[i] ^ stretchedKey[i]);
+
+                if (i % performance == 0)
+                {
+                    onProgress?.Invoke(i / (float)keyBytes.Length * .9f);
+                    await Task.Delay(1);
+                }
+            }
+
+            // Offset bits based on second bytes in key
+            for (int i = 0, offset; i < keyBytes.Length; i++)
+            {
+                offset = keyBytes[i] * (i % 2 == 0 ? 1 : -1);
+                Bytef.OffsetBits(ref encryptedBytes, ref offset);
+
+                if (i % performance == 0)
+                {
+                    onProgress?.Invoke(i / (float)keyBytes.Length * .1f + .9f);
+                    await Task.Delay(1);
+                }
+            }
+
+            return encryptedBytes;
+        }
+
         public static string DecryptString(this string encrypted, string key)
         {
             if (string.IsNullOrEmpty(encrypted) || string.IsNullOrEmpty(key))
@@ -93,6 +162,72 @@ namespace Cutulu
             }
 
             return Encoding.UTF8.GetString(decryptedBytes);
+        }
+
+        public static byte[] Decrypt(this byte[] data, string key)
+        {
+            if (data.IsEmpty() || string.IsNullOrEmpty(key))
+                throw new ArgumentException("Encrypted text and key must not be null or empty.");
+
+            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+
+            // Offset bits based on second bytes in key
+            for (int i = 0, offset; i < keyBytes.Length; i++)
+            {
+                offset = keyBytes[i] * (i % 2 == 0 ? -1 : 1);
+                Bytef.OffsetBits(ref data, ref offset);
+            }
+
+            // Stretch the key to match the length of the encrypted data
+            byte[] stretchedKey = StretchKey(keyBytes, data.Length);
+
+            // Perform XOR operation between encrypted data and stretched key to decrypt
+            byte[] decryptedBytes = new byte[data.Length];
+            for (int i = 0; i < data.Length; i++)
+            {
+                decryptedBytes[i] = (byte)(data[i] ^ stretchedKey[i]);
+            }
+
+            return decryptedBytes;
+        }
+
+        public static async Task<byte[]> DecryptAsync(this byte[] data, string key, int performance, UpdateHandler onProgress = null)
+        {
+            if (data.IsEmpty() || string.IsNullOrEmpty(key))
+                throw new ArgumentException("Encrypted text and key must not be null or empty.");
+
+            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+
+            // Offset bits based on second bytes in key
+            for (int i = 0, offset; i < keyBytes.Length; i++)
+            {
+                offset = keyBytes[i] * (i % 2 == 0 ? -1 : 1);
+                Bytef.OffsetBits(ref data, ref offset);
+
+                if (i % performance == 0)
+                {
+                    onProgress?.Invoke(i / (float)keyBytes.Length * .1f);
+                    await Task.Delay(1);
+                }
+            }
+
+            // Stretch the key to match the length of the encrypted data
+            byte[] stretchedKey = StretchKey(keyBytes, data.Length);
+
+            // Perform XOR operation between encrypted data and stretched key to decrypt
+            byte[] decryptedBytes = new byte[data.Length];
+            for (int i = 0; i < data.Length; i++)
+            {
+                decryptedBytes[i] = (byte)(data[i] ^ stretchedKey[i]);
+
+                if (i % performance == 0)
+                {
+                    onProgress?.Invoke(i / (float)data.Length * .9f + .1f);
+                    await Task.Delay(1);
+                }
+            }
+
+            return decryptedBytes;
         }
 
         private static byte[] StretchKey(byte[] keyBytes, int length)

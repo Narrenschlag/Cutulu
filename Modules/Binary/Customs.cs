@@ -1,0 +1,65 @@
+using System.IO;
+using Godot;
+
+namespace Cutulu
+{
+    public struct ColorRGB
+    {
+        public byte R { get; set; }
+        public byte G { get; set; }
+        public byte B { get; set; }
+
+        public ColorRGB(Color color) : this((byte)color.R8, (byte)color.G8, (byte)color.B8) { }
+
+        public ColorRGB(byte r, byte g, byte b)
+        {
+            R = r;
+            G = g;
+            B = b;
+        }
+
+        public Color GetColor(float alpha = 1) => new(R / 255f, G / 255f, B / 255f, alpha);
+
+        public class Formatter : ByteFormatter
+        {
+            public override void Write(object value, BinaryWriter writer)
+            {
+                var obj = (ColorRGB)value;
+
+                writer.Write(obj.R);
+                writer.Write(obj.G);
+                writer.Write(obj.B);
+            }
+
+            public override object Read(BinaryReader reader) => new ColorRGB(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+        }
+    }
+
+    public struct Vector2S
+    {
+        public short X { get; set; }
+        public short Y { get; set; }
+
+        public Vector2S(short x, short y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public Vector3 ToVector3(float y = 0) => new(X, y, Y);
+        public Vector2 ToVector2() => new(X, Y);
+
+        public class Formatter : ByteFormatter
+        {
+            public override void Write(object value, BinaryWriter writer)
+            {
+                var obj = (Vector2S)value;
+
+                writer.Write(obj.X);
+                writer.Write(obj.Y);
+            }
+
+            public override object Read(BinaryReader reader) => new Vector2S(reader.ReadInt16(), reader.ReadInt16());
+        }
+    }
+}

@@ -7,16 +7,24 @@ namespace Cutulu
     /// </summary>
     public static class CutuluByteFormatters
     {
+        private static bool registered;
+
         /// <summary>
         /// Registers formatters for basic structs like Vectors.
         /// </summary>
         public static void Register()
         {
+            if (registered == true) return;
+            else registered = true;
+
             new hyteFormatter().Register<Int4>();
             new qyteFormatter().Register<Int2>();
 
             new middleFormatter().Register<Int24>();
             new umiddleFormatter().Register<UInt24>();
+
+            new ColorRGB.Formatter().Register<ColorRGB>();
+            new Vector2S.Formatter().Register<Vector2S>();
         }
 
         class hyteFormatter : ByteFormatter

@@ -199,7 +199,7 @@ namespace Cutulu
         {
             byte next;
 
-            for (ushort i = 0, n = 1; i < bytes.Length; i += 2, n += 2)
+            for (int i = 0, n = 1; i < bytes.Length; i += 2, n += 2)
             {
                 next = @bytes[n];
 
@@ -252,7 +252,7 @@ namespace Cutulu
             OffsetBytes(ref @bytes, ref _byteOffset);
 
             int _bitOffset = (byte)(bitOffset % 8);
-            for (ushort i = 0; i < @bytes.Length; i++, bitOffset++)
+            for (int i = 0; i < @bytes.Length; i++, bitOffset++)
             {
                 bitOffset %= 8;
 
