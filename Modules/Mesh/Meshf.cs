@@ -45,5 +45,33 @@ namespace Cutulu
             if (meshInstance3D.Mesh.NotNull()) meshInstance3D.Mesh.Dispose();
             meshInstance3D.Mesh = surfaceTool.Commit();
         }
+
+        public static void AddPlane(this SurfaceTool surfaceTool, Vector3 a, Vector3 b, Vector3 delta, Color color, bool clockwise, ref int vertexOffset)
+            => AddPlane(
+                surfaceTool, a, b, b + delta, a + delta,
+                (b - a).Normalized().toRight() * (clockwise ? -1 : 1),
+                color, clockwise, ref vertexOffset
+            );
+
+        public static void AddPlane(this SurfaceTool surfaceTool, Vector3 a, Vector3 b, Vector3 c, Vector3 d, Vector3 normal, Color color, bool clockwise, ref int vertexOffset)
+        {
+            var uvs = new Vector2[4] { Vector2.Zero, Vector2.Right, Vector2.One, Vector2.Up };
+            var vertices = new Vector3[4] { a, b, c, d };
+
+            for (byte i = 0; i < 4; i++)
+            {
+                surfaceTool.SetNormal(normal);
+                surfaceTool.SetColor(color);
+                surfaceTool.SetUV(uvs[i]);
+
+                surfaceTool.AddVertex(vertices[i]);
+            }
+
+            for (byte i = (byte)(clockwise ? 0 : 2), k = 0; k < 3; next(ref i), k++) surfaceTool.AddIndex(vertexOffset + i % 4); // First triangle
+            for (byte i = (byte)(clockwise ? 2 : 0), k = 0; k < 3; next(ref i), k++) surfaceTool.AddIndex(vertexOffset + i % 4); // Second triangle
+            void next(ref byte i) { if (clockwise) i++; else i--; }
+
+            vertexOffset += 4;
+        }
     }
 }
