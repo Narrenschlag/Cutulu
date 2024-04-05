@@ -73,5 +73,67 @@ namespace Cutulu
 
             vertexOffset += 4;
         }
+
+        public static void AddPlane(this SurfaceTool surfaceTool, Vector3 a, Vector3 b, Vector3 normal, Color color, bool clockwise, ref int vertexCount, params Vector4[] cuts)
+        {
+            if (cuts.IsEmpty()) surfaceTool.AddPlane(a, b, normal, color, clockwise, ref vertexCount);
+
+            else
+            {
+                if (cuts[0].X > 0) surfaceTool.AddPlane(a, a.Lerp(b, cuts[0].X), normal, color, clockwise, ref vertexCount);
+
+                for (int i = 0; i < cuts.Length; i++)
+                {
+                    // Draw bot
+                    if (cuts[i].Z > 0) surfaceTool.AddPlane(a.Lerp(b, cuts[i].X), a.Lerp(b, Mathf.Clamp(cuts[i].Y, 0f, 1f)), normal * cuts[i].Z, color, clockwise, ref vertexCount);
+
+                    // Draw top
+                    if (cuts[i].W > 0)
+                    {
+                        var height = normal.Y * cuts[i].W;
+                        var y = normal.Normalized() * (normal.Y - height);
+
+                        surfaceTool.AddPlane(a.Lerp(b, cuts[i].X) + y, a.Lerp(b, Mathf.Clamp(cuts[i].Y, 0f, 1f)) + y, normal.Normalized() * height, color, clockwise, ref vertexCount);
+                    }
+
+                    // Draw follow up
+                    if (cuts[i].Y < 1f)
+                    {
+                        if (i < cuts.Length - 1) surfaceTool.AddPlane(a.Lerp(b, cuts[i].Y), a.Lerp(b, cuts[i + 1].X), normal, color, clockwise, ref vertexCount);
+                        else surfaceTool.AddPlane(a.Lerp(b, cuts[i].Y), b, normal, color, clockwise, ref vertexCount);
+                    }
+                }
+            }
+        }
+    }
+
+    public struct Face
+    {
+        public Vector3 A { get; set; }
+        public Vector3 B { get; set; }
+        public Vector3 D { get; set; }
+
+        public Vector4[] C { get; set; }
+
+        public Face(Vector3 a, Vector3 b, Vector3 d, params Vector4[] cuts)
+        {
+            A = a;
+            B = b;
+
+            D = d;
+            C = cuts;
+        }
+
+        public readonly void Draw(MeshInstance3D meshInstance, Color color)
+        {
+            var surfaceTool = Mesh.PrimitiveType.Triangles.Open();
+            int vertexCount = 0;
+
+            Draw(surfaceTool, color, ref vertexCount);
+            meshInstance.Mesh = surfaceTool.Commit();
+        }
+
+        public readonly void Draw(SurfaceTool surfaceTool, Color color, ref int vertexCount)
+        => surfaceTool.AddPlane(A, B, D, color, true, ref vertexCount, C);
     }
 }
