@@ -154,8 +154,8 @@ namespace Cutulu
             else node.QueueFree();
         }
 
-        public static Vector3 Forward(this Node3D node, bool global = true) => node == null ? Vector3.Forward : (global ? node.GlobalTransform : node.Transform).Basis.Z;
-        public static Vector3 Right(this Node3D node, bool global = true) => node == null ? Vector3.Right : -(global ? node.GlobalTransform : node.Transform).Basis.X;
+        public static Vector3 Forward(this Node3D node, bool global = true) => node == null ? Vector3.Forward : -(global ? node.GlobalTransform : node.Transform).Basis.Z;
+        public static Vector3 Right(this Node3D node, bool global = true) => node == null ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X;
         public static Vector3 Up(this Node3D node, bool global = true) => node == null ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y;
 
         public static T Instantiate<T>(this PackedScene prefab, Node root) where T : Node
@@ -186,6 +186,10 @@ namespace Cutulu
             if (node is CollisionShape3D) (node as CollisionShape3D).Disabled = !active;
             if (node is CanvasItem) (node as CanvasItem).Visible = active;
             if (node is Node3D) (node as Node3D).Visible = active;
+
+            // Camera
+            if (node is Camera2D && active) (node as Camera2D).MakeCurrent();
+            if (node is Camera3D) (node as Camera3D).Current = active;
 
             if (includeChildren)
             {

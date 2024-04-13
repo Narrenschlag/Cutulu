@@ -20,15 +20,14 @@ namespace Cutulu
             return false;
         }
 
-        public static bool RaycastFromCamera(this Camera3D camera, out RaycastHit hit, uint mask = 4294967295)
+        public static void GetRayAt(this Camera3D camera, Vector2 screenPosition, out Vector3 origin, out Vector3 direction)
         {
-            if (Physics.Raycast(camera, out hit, 25, mask))
-            {
-                return true;
-            }
-
-            return false;
+            direction = camera.ProjectRayNormal(screenPosition);
+            origin = camera.ProjectRayOrigin(screenPosition);
         }
+
+        public static bool RaycastFromCamera(this Camera3D camera, out RaycastHit hit, uint mask = 4294967295)
+        => Physics.Raycast(camera, out hit, camera.Far, mask);
 
         public static bool Down(this string name, ref bool valueStore, float threshold = .5f)
         {

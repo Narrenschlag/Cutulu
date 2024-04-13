@@ -48,8 +48,19 @@ namespace Cutulu
         }
 
         #region From Json       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Don't forget the class/struct requires an empty constructor
+        /// </summary>
         public static T json<T>(this string json) => json<T>(json, currentFormat);
+
+        /// <summary>
+        /// Don't forget the class/struct requires an empty constructor
+        /// </summary>
         public static T json<T>(this string json, bool simpleFormat = true, bool indentFormat = false) => json<T>(json, default, simpleFormat, indentFormat);
+
+        /// <summary>
+        /// Don't forget the class/struct requires an empty constructor
+        /// </summary>
         public static T json<T>(this string json, string decryptionKey = null, bool simpleFormat = true, bool indentFormat = false)
         {
             // No json
