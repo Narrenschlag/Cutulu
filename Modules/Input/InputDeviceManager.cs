@@ -15,7 +15,10 @@ namespace Cutulu
         public override void _EnterTree()
         {
             Mode = ModeEnum.Open;
-            Devices = new();
+            Devices = new()
+            {
+                {-1, new(this, -1)} // Add native device
+            };
 
             Input.JoyConnectionChanged += OnDeviceChange;
         }

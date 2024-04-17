@@ -1,4 +1,3 @@
-using Cutulu;
 using Godot;
 
 namespace Cutulu
@@ -35,31 +34,44 @@ namespace Cutulu
         #region Connection Status
         private void OnConnect()
         {
-            DeviceName = Input.GetJoyName(iUDID);
-            var data = Input.GetJoyInfo(iUDID);
-            GUID = Input.GetJoyGuid(iUDID);
             Connected = true;
 
-            RawDeviceName = getString("raw_name", DeviceName);
-            UsbProduct = getString("product_id");
-            UsbVendor = getString("vendor_id");
+            // Native Device aka. Keyboard
+            if (iUDID < 0)
+            {
+                DeviceType = InputDeviceType.Native;
+                RawDeviceName = "NativeDevice";
+                DeviceName = "Native Input";
+            }
 
-            SteamInputIndex = getInteger("steam_input_index", -1);
-            XInputIndex = getInteger("xinput_index");
+            // External Device aka. Gamepad
+            else
+            {
+                DeviceName = Input.GetJoyName(iUDID);
+                var data = Input.GetJoyInfo(iUDID);
+                GUID = Input.GetJoyGuid(iUDID);
 
-            DeviceType =
-                SteamInputIndex >= 0 ? InputDeviceType.Steam :
-                Input.IsJoyKnown(iUDID) ? InputDeviceType.Generic :
-                InputDeviceType.Unknown;
+                RawDeviceName = getString("raw_name", DeviceName);
+                UsbProduct = getString("product_id");
+                UsbVendor = getString("vendor_id");
 
-            string getString(string name, string defaultValue = default) =>
-                data.TryGetValue("vendor_id", out var value) &&
-                string.IsNullOrEmpty(value.AsString()) == false ?
-                value.AsString() : defaultValue;
+                SteamInputIndex = getInteger("steam_input_index", -1);
+                XInputIndex = getInteger("xinput_index");
 
-            int getInteger(string name, int defaultValue = default) =>
-                data.TryGetValue("vendor_id", out var value) ?
-                value.AsInt32() : defaultValue;
+                DeviceType =
+                    SteamInputIndex >= 0 ? InputDeviceType.Steam :
+                    Input.IsJoyKnown(iUDID) ? InputDeviceType.Generic :
+                    InputDeviceType.Unknown;
+
+                string getString(string name, string defaultValue = default) =>
+                    data.TryGetValue("vendor_id", out var value) &&
+                    string.IsNullOrEmpty(value.AsString()) == false ?
+                    value.AsString() : defaultValue;
+
+                int getInteger(string name, int defaultValue = default) =>
+                    data.TryGetValue("vendor_id", out var value) ?
+                    value.AsInt32() : defaultValue;
+            }
         }
 
         public void OnReconnect()
