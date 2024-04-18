@@ -7,9 +7,6 @@ namespace Cutulu
         public long UDID { get; private set; } // Unique Device Identification Index
         public int iUDID { get; private set; } // Integer version of above
 
-        public delegate void OnInputType(InputCode code, float value);
-        public OnInputType OnInput;
-
         public InputDeviceManager Manager { get; private set; }
         public InputDeviceType DeviceType { get; private set; }
         public string RawDeviceName { get; private set; }
