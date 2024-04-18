@@ -39,11 +39,15 @@ namespace Cutulu
 
         public override void _Input(InputEvent @event)
         {
-            // Mouse motion event
-            if (@event is InputEventMouseMotion motion)
+            switch (@event)
             {
-                MouseMotion = motion.Relative;
-                resetMotion = 1;
+                // Mouse motion
+                case InputEventMouseMotion _motion:
+                    MouseMotion = _motion.Relative;
+                    resetMotion = 1;
+                    break;
+
+                default: break;
             }
         }
         #endregion

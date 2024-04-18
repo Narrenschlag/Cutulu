@@ -7,6 +7,9 @@ namespace Cutulu
         public long UDID { get; private set; } // Unique Device Identification Index
         public int iUDID { get; private set; } // Integer version of above
 
+        public delegate void OnInputType(InputCode code, float value);
+        public OnInputType OnInput;
+
         public InputDeviceManager Manager { get; private set; }
         public InputDeviceType DeviceType { get; private set; }
         public string RawDeviceName { get; private set; }
@@ -19,6 +22,8 @@ namespace Cutulu
 
         public int SteamInputIndex { get; private set; }
         public int XInputIndex { get; private set; }
+
+        private bool leftTrigger, rightTrigger;
 
         public InputDevice(InputDeviceManager manager, long udid)
         {
@@ -90,6 +95,23 @@ namespace Cutulu
         }
         #endregion
 
+        #region Debug Functions
+        public void PrintDebug()
+        {
+            Debug.Log($"#############  Device: {DeviceName}  ##############");
+            Debug.Log($"Move: {GetValue(InputCode.MoveRight)}x {GetValue(InputCode.MoveUp)}y");
+            Debug.Log($"Look: {GetValue(InputCode.LookRight)}x {GetValue(InputCode.LookUp)}y");
+            Debug.Log($"Dpad: {GetValue(InputCode.DpadRight)}x {GetValue(InputCode.DpadUp)}y");
+
+            Debug.Log($"Trigger: {GetValue(InputCode.TriggerLeft)}left {GetValue(InputCode.TriggerRight)}right");
+            Debug.Log($"Shoulder: {GetValue(InputCode.ShoulderLeft)}left {GetValue(InputCode.ShoulderRight)}right");
+            Debug.Log($"Sticks: {GetValue(InputCode.StickPressLeft)}left {GetValue(InputCode.StickPressRight)}right");
+
+            Debug.Log($"R0:{GetValue(InputCode.RightSouth)} R1:{GetValue(InputCode.RightEast)} R2:{GetValue(InputCode.RightNorth)} R3:{GetValue(InputCode.RightWest)}");
+            Debug.Log($"Share:{GetValue(InputCode.Start2)} Start:{GetValue(InputCode.Start)} OS:{GetValue(InputCode.OSHome)}");
+        }
+        #endregion
+
         #region Read Inputs
         public bool GetKeyDown(InputCode input, ref bool keyMemory, float threshold = 0.5f, params string[] nativeInputNames)
         {
@@ -136,24 +158,30 @@ namespace Cutulu
             {
                 switch (input)
                 {
-                    case InputCode.CounterStartPause: return button(JoyButton.Back);
-                    case InputCode.StartPause: return button(JoyButton.Start);
-                    case InputCode.OSHome: return button(JoyButton.Guide);
-                    case InputCode.Misc1: return button(JoyButton.Misc1);
+                    case InputCode.OSHome: return button(JoyButton.RightStick);
+                    case InputCode.Start: return button(JoyButton.LeftStick);
+                    case InputCode.Start2: return button(JoyButton.Start);
 
                     case InputCode.MoveRight: return axis(JoyAxis.LeftX);
-                    case InputCode.MoveUp: return axis(JoyAxis.LeftY);
+                    case InputCode.MoveUp: return -axis(JoyAxis.LeftY);
 
-                    case InputCode.LookRight: return axis(JoyAxis.RightX);
-                    case InputCode.LookUp: return axis(JoyAxis.RightY);
+                    case InputCode.LookRight: return axis(JoyAxis.RightY);
+                    case InputCode.LookUp: return -axis(JoyAxis.TriggerLeft);
 
-                    case InputCode.ShoulderRight: return button(JoyButton.RightShoulder);
-                    case InputCode.TriggerRight: return axis(JoyAxis.TriggerRight);
-                    case InputCode.ShoulderLeft: return button(JoyButton.LeftShoulder);
-                    case InputCode.TriggerLeft: return axis(JoyAxis.TriggerLeft);
+                    case InputCode.ShoulderRight: return button(JoyButton.Guide);
+                    case InputCode.ShoulderLeft: return button(JoyButton.Back);
 
-                    case InputCode.StickPressRight: return button(JoyButton.RightStick);
-                    case InputCode.StickPressLeft: return button(JoyButton.LeftStick);
+                    case InputCode.TriggerRight:
+                        if (rightTrigger == false && (rightTrigger = axis(JoyAxis.TriggerRight) != 0) == false) return 0f;
+                        return axis(JoyAxis.TriggerRight) * .5f + .5f;
+
+                    case InputCode.TriggerLeft:
+                        if (leftTrigger == false && (leftTrigger = axis(JoyAxis.RightX) != 0) == false) return 0f;
+                        return axis(JoyAxis.RightX) * .5f + .5f;
+
+
+                    case InputCode.StickPressRight: return button(JoyButton.RightShoulder);
+                    case InputCode.StickPressLeft: return button(JoyButton.LeftShoulder);
 
                     case InputCode.RightNorth: return button(JoyButton.Y);
                     case InputCode.RightWest: return button(JoyButton.X);
@@ -202,10 +230,9 @@ namespace Cutulu
 
     public enum InputCode : byte
     {
-        CounterStartPause,
-        StartPause,
+        Start,
+        Start2,
         OSHome,
-        Misc1,
 
         MoveRight,
         MoveUp,
