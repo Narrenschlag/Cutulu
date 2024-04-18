@@ -30,7 +30,7 @@ namespace Cutulu
 
             OnConnect();
 
-            Debug.Log($"New Device Connected [{UDID}] as '{DeviceName}'");
+            Debug.Log($"+device: [{UDID}] as '{DeviceName}'");
         }
 
         #region Connection Status
@@ -80,7 +80,7 @@ namespace Cutulu
         {
             OnConnect();
 
-            Debug.Log($"Device has Reconnected [{UDID}] as '{DeviceName}'");
+            Debug.Log($"+device [{UDID}] as '{DeviceName}'");
             Input.StartJoyVibration(iUDID, 0.5f, 0.5f, 2.5f);
         }
 
@@ -88,7 +88,7 @@ namespace Cutulu
         {
             Connected = false;
 
-            Debug.Log($"Device Disconnected [{UDID}] as '{DeviceName}'");
+            Debug.Log($"-device [{UDID}] as '{DeviceName}'");
         }
         #endregion
 

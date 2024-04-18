@@ -8,6 +8,9 @@ namespace Cutulu
         public Dictionary<long, InputDevice> Devices { get; private set; }
         public ModeEnum Mode { get; set; }
 
+        public delegate void OnNewDeviceEventHandler(InputDevice device);
+        public OnNewDeviceEventHandler OnNewDevice, OnRemoveDevice;
+
         public Vector2 MouseMotion { get; private set; }
         private byte resetMotion { get; set; }
 
@@ -59,34 +62,34 @@ namespace Cutulu
             if (connected)
             {
                 // Reconnecting device
-                if (Devices.TryGetValue(udid, out var entry))
+                if (Devices.TryGetValue(udid, out var device))
                 {
-                    entry.OnReconnect();
+                    device.OnReconnect();
                 }
 
                 // New device
                 else
                 {
-                    var info = new InputDevice(this, udid);
-                    Devices.Add(udid, info);
+                    device = new InputDevice(this, udid);
+
+                    Devices.Add(udid, device);
+                    OnNewDevice?.Invoke(device);
                 }
             }
 
             // Disconnected
             else
             {
-                if (Mode == ModeEnum.Open)
-                {
-                    Mode = ModeEnum.Locked;
-                    Debug.Log($"Locked.");
-                }
-
                 // Device disconnected
-                if (Devices.TryGetValue(udid, out var entry))
+                if (Devices.TryGetValue(udid, out var device))
                 {
-                    entry.OnDisconnect();
+                    device.OnDisconnect();
 
-                    if (Mode == ModeEnum.Open) Devices.Remove(udid);
+                    if (Mode == ModeEnum.Open)
+                    {
+                        OnRemoveDevice?.Invoke(device);
+                        Devices.Remove(udid);
+                    }
                 }
             }
         }
