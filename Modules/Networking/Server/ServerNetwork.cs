@@ -15,7 +15,7 @@ namespace Cutulu
         public readonly int ListentingPortTcp;
         public bool AcceptNewClients;
 
-        protected readonly TcpListener TcpListener;
+        public readonly TcpListener TcpListener;
         protected readonly R WelcomeTarget;
         protected uint LastUID;
 
@@ -175,7 +175,7 @@ namespace Cutulu
         public void Close()
         {
             TcpListener?.Stop();
-            Clients.Clear();
+            Clients?.Clear();
         }
         #endregion
     }

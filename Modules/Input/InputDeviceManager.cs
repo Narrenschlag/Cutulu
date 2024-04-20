@@ -18,10 +18,10 @@ namespace Cutulu
         public override void _EnterTree()
         {
             Mode = ModeEnum.Open;
-            Devices = new()
-            {
-                {-1, new(this, -1)} // Add native device
-            };
+            Devices = new();
+
+            // Add native device
+            add(new(this, -1));
 
             Input.JoyConnectionChanged += OnDeviceChange;
         }
@@ -68,13 +68,7 @@ namespace Cutulu
                 }
 
                 // New device
-                else
-                {
-                    device = new InputDevice(this, udid);
-
-                    Devices.Add(udid, device);
-                    OnNewDevice?.Invoke(device);
-                }
+                else add(new(this, udid));
             }
 
             // Disconnected
@@ -92,6 +86,12 @@ namespace Cutulu
                     }
                 }
             }
+        }
+
+        private void add(InputDevice device)
+        {
+            Devices.Add(device.UDID, device);
+            OnNewDevice?.Invoke(device);
         }
         #endregion
 
