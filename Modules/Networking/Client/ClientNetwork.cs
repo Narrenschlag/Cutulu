@@ -72,11 +72,11 @@ namespace Cutulu
             switch (method)
             {
                 case Method.Tcp:
-                    Tcp.Send(ref key, value);
+                    Tcp?.Send(ref key, value);
                     break;
 
                 case Method.Udp:
-                    Udp.Send(ref key, value, SafetyId);
+                    Udp?.Send(ref key, value, SafetyId);
                     break;
 
                 default: break;

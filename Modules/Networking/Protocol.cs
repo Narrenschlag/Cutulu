@@ -29,7 +29,7 @@ namespace Cutulu
         {
             if (Connected == false)
             {
-                throw new Exception($"{GetType()} is not connected");
+                throw new Exception($"{GetType()} is not connected. This doesn't have to be an issue due to possible package sending attempts after closing this socket.");
             }
         }
         #endregion
