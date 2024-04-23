@@ -41,7 +41,8 @@ namespace Cutulu
             {
                 Close();
 
-                throw new Exception($"Was not able to establish a udp connection:\n{ex.Message}");
+                Debug.LogError($"Was not able to establish a udp connection: {ex.Message}. Closing server.");
+                return;
             }
 
             Listen();

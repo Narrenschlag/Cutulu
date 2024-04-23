@@ -1,5 +1,7 @@
 using System.Net.Sockets;
 using System.Net;
+using System.Linq;
+using Godot;
 
 namespace Cutulu
 {
@@ -41,6 +43,25 @@ namespace Cutulu
             port = endpoint.Port;
 
             return $"{address}:{port}";
+        }
+
+        /// <summary>
+        /// Returns full IPAddress in you local area network
+        /// </summary>
+        public static IPAddress GetLANIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            return host.AddressList.FirstOrDefault(ip =>
+                ip.AddressFamily == AddressFamily.InterNetwork &&
+                !IPAddress.IsLoopback(ip));
+        }
+
+        /// <summary>
+        /// Opens a web request. If connected to the internet it will return your global IPAddress
+        /// </summary>
+        public static void GetGlobalIPAddressV4(Node node, WebRequest.Result result)
+        {
+            _ = new WebRequest(node, "https://ipinfo.io/ip", result);
         }
     }
 }
