@@ -9,5 +9,45 @@ namespace Cutulu
         {
             return vectorA.X * vectorB.Y - vectorA.Y * vectorB.X;
         }
+
+        /// <summary>
+        /// Try calculate the intersection point C of two points and their directions
+        /// </summary>
+        public static bool TryIntersect(this Vector2 A, Vector2 a, Vector2 B, Vector2 b, out Vector2 C)
+        {
+            // Normalize values
+            a = a.Normalized();
+            b = b.Normalized();
+
+            // Check if directions are parallel
+            if (Mathf.Abs(a.Cross(b)) < Mathf.Epsilon)
+            {
+                C = default;
+                return false;
+            }
+
+            // Calculate t and s
+            var t = (B.X * b.Y - B.Y * b.X - A.X * b.Y + A.Y * b.X) / (a.X * b.Y - a.Y * b.X);
+            var s = (A.X + t * a.X - B.X) / b.X;
+
+            // Check for "Kollinearität (Berührung oder Übereinanderliegen)"
+            // -> meaning that the lines are on each other and have infinite intersections
+            if (Mathf.Abs(t) < Mathf.Epsilon && Mathf.Abs(s) < Mathf.Epsilon)
+            {
+                C = default;
+                return false;
+            }
+
+            // Check for non intersecting vectors
+            if (s < 0 || s > 1)
+            {
+                C = default;
+                return false;
+            }
+
+            // Calculate result
+            C = A + t * a;
+            return true;
+        }
     }
 }
