@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 
 namespace Cutulu
 {
-    public class ClientNetwork<R> : Marker<R> where R : Receiver
+    public class ClientNetwork<R> : Peer<R> where R : Receiver
     {
         public Protocol.Empty OnSetupCompleteEvent;
 

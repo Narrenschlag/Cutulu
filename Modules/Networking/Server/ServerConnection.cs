@@ -5,7 +5,7 @@ using System;
 
 namespace Cutulu
 {
-    public class ServerConnection<R> : Marker<R> where R : Receiver
+    public class ServerConnection<R> : Peer<R> where R : Receiver
     {
         public delegate void ConnectionPacket(ServerConnection<R> connection, ref NetworkPackage package);
         public delegate void Disconnect(ServerConnection<R> connection);

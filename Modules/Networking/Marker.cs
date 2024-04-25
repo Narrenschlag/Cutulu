@@ -3,9 +3,9 @@ using System;
 namespace Cutulu
 {
     /// <summary> 
-    /// A Marker contains the base for Server and Client connentions
+    /// A Peer contains the base for Server and Client connentions
     /// </summary>
-    public class Marker<R> where R : Receiver
+    public class Peer<R> where R : Receiver
     {
         // Unique user identification index
         public uint UUID { private set; get; }
@@ -28,7 +28,7 @@ namespace Cutulu
         public object[] receiver_params;
 
         #region Setup               ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public Marker(uint uuid, ushort safetyId, R receiver = null, Protocol.Packet onReceive = null, Protocol.Empty disconnector = null)
+        public Peer(uint uuid, ushort safetyId, R receiver = null, Protocol.Packet onReceive = null, Protocol.Empty disconnector = null)
         {
             receiver_params = new object[1] { this };
             ignore_receiver_transfer = false;
