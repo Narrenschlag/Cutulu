@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using System.Threading;
 using System.Net;
 using System;
 
@@ -14,6 +15,9 @@ namespace Cutulu
         public readonly Dictionary<uint, ServerConnection<R>> Clients;
         public readonly int ListentingPortTcp;
         public bool AcceptNewClients;
+
+        protected CancellationTokenSource CancelSource;
+        protected CancellationToken Cancel;
 
         public readonly TcpListener TcpListener;
         protected readonly R WelcomeTarget;
@@ -30,6 +34,10 @@ namespace Cutulu
             Endpoints = new Dictionary<IPEndPoint, ServerConnection<R>>();
             Queue = new Dictionary<IPAddress, ServerConnection<R>>();
             Clients = new Dictionary<uint, ServerConnection<R>>();
+
+            // Create a CancellationTokenSource to generate CancellationToken
+            CancelSource = new();
+            Cancel = CancelSource.Token;
 
             WelcomeTarget = welcomeTarget;
             ListentingPortTcp = tcpPort;
@@ -53,6 +61,12 @@ namespace Cutulu
         /// </summary>
         protected virtual async void Auth()
         {
+            // Cancellation is requested
+            if (Cancel.IsCancellationRequested)
+            {
+                return;
+            }
+
             // Ignore new connections
             if (!AcceptNewClients)
             {
@@ -61,7 +75,7 @@ namespace Cutulu
             }
 
             // If a connection exists, the server will accept it
-            TcpClient tcp = await TcpListener.AcceptTcpClientAsync();
+            TcpClient tcp = await TcpListener.AcceptTcpClientAsync(Cancel);
 
             // Register client
             lock (Clients)
@@ -172,8 +186,11 @@ namespace Cutulu
         #endregion
 
         #region Closing         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public void Close()
+        public void Stop()
         {
+            CancelSource?.Cancel();
+            CancelSource = null;
+
             TcpListener?.Stop();
             Clients?.Clear();
         }

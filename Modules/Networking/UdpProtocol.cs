@@ -109,7 +109,7 @@ namespace Cutulu
         /// </summary>
         private async void Listen()
         {
-            while (Connected)
+            while (Connected && Cancel.IsCancellationRequested == false)
                 try
                 {
                     await Receive();
@@ -128,7 +128,7 @@ namespace Cutulu
             if (client == null) return;
 
             // Read package
-            UdpReceiveResult result = await client.ReceiveAsync();
+            UdpReceiveResult result = await client.ReceiveAsync(Cancel);
             byte[] buffer = result.Buffer;
 
             // Invoke callback

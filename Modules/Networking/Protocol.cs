@@ -1,3 +1,4 @@
+using System.Threading;
 using System;
 
 namespace Cutulu
@@ -6,6 +7,9 @@ namespace Cutulu
     {
         public delegate void Packet(ref NetworkPackage package);
         public delegate void Empty();
+
+        protected CancellationTokenSource CancelSource;
+        protected CancellationToken Cancel;
 
         public bool Connected;
         public int Port;
@@ -16,6 +20,10 @@ namespace Cutulu
         /// </summary>
         public Protocol(int port)
         {
+            // Create a CancellationTokenSource to generate CancellationToken
+            CancelSource = new();
+            Cancel = CancelSource.Token;
+
             Connected = false;
             Port = port;
         }
@@ -29,7 +37,7 @@ namespace Cutulu
         {
             if (Connected == false)
             {
-                throw new Exception($"{GetType()} is not connected. This doesn't have to be an issue due to possible package sending attempts after closing this socket.");
+                throw new Exception($"{GetType()} is not connected.");
             }
         }
         #endregion
@@ -40,6 +48,9 @@ namespace Cutulu
         /// </summary>
         public virtual void Close()
         {
+            CancelSource?.Cancel();
+            CancelSource = null;
+
             Connected = false;
         }
         #endregion

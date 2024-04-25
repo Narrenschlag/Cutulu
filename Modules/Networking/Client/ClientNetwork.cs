@@ -4,6 +4,8 @@ namespace Cutulu
 {
     public class ClientNetwork<R> : Marker<R> where R : Receiver
     {
+        public Protocol.Empty OnSetupCompleteEvent;
+
         public TcpProtocol Tcp;
         public UdpProtocol Udp;
 
@@ -13,8 +15,10 @@ namespace Cutulu
         public bool FullyConnected() => TcpConnected && UdpConnected;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, R receiver = null) : base(0, 0, receiver)
+        public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, R receiver = null, Protocol.Empty onSetupComplete = null) : base(0, 0, receiver)
         {
+            OnSetupCompleteEvent = onSetupComplete;
+
             try { Connect(tcpHost, tcpPort, udpHost, udpPort); }
             catch { $"Failed to connect to host".LogError(); }
         }
@@ -59,7 +63,7 @@ namespace Cutulu
         /// </summary>
         protected virtual void OnSetupComplete()
         {
-
+            OnSetupCompleteEvent?.Invoke();
         }
         #endregion
 

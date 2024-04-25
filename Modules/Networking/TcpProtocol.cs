@@ -89,7 +89,7 @@ namespace Cutulu
         /// </summary>
         protected async void Listen()
         {
-            while (Connected)
+            while (Connected && Cancel.IsCancellationRequested == false)
             {
                 try { await Receive(); }
                 catch (Exception ex)
@@ -111,7 +111,7 @@ namespace Cutulu
             byte[] bytes = new byte[2];
 
             // Read length
-            int i = await stream.ReadAsync(bytes.AsMemory(0, 2));
+            int i = await stream.ReadAsync(bytes.AsMemory(0, 2), Cancel);
 
             // Catches disconnect StackOverflow
             if (i < 2) throw new IOException("connection corrupted");
@@ -125,7 +125,7 @@ namespace Cutulu
 
             // Read byte buffer
             bytes = new byte[length];
-            await stream.ReadAsync(bytes.AsMemory(0, length));
+            await stream.ReadAsync(bytes.AsMemory(0, length), Cancel);
 
             // Unpack bytes
             if (Unpack(bytes, out var package))
