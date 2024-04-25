@@ -2,6 +2,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Linq;
 using Godot;
+using System.Net.NetworkInformation;
 
 namespace Cutulu
 {
@@ -48,7 +49,7 @@ namespace Cutulu
         /// <summary>
         /// Returns full IPAddress in you local area network
         /// </summary>
-        public static IPAddress GetLANIPAddress()
+        public static IPAddress GetLanIPv4()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
             return host.AddressList.FirstOrDefault(ip =>
@@ -57,11 +58,49 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Returns full IPAddress in you local area network
+        /// </summary>
+        public static IPAddress GetLanIPv6()
+        {
+            // Get all network interfaces
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+            foreach (NetworkInterface iface in interfaces)
+            {
+                // Filter out loopback and non-operational interfaces
+                if (iface.NetworkInterfaceType != NetworkInterfaceType.Ethernet ||
+                    iface.OperationalStatus != OperationalStatus.Up)
+                {
+                    continue;
+                }
+
+                // Get IPv6 addresses for the selected interface
+                foreach (UnicastIPAddressInformation ip in iface.GetIPProperties().UnicastAddresses)
+                {
+                    if (ip.Address.AddressFamily == AddressFamily.InterNetworkV6 && !ip.Address.IsIPv6LinkLocal && !ip.Address.IsIPv6SiteLocal)
+                    {
+                        return ip.Address;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Opens a web request. If connected to the internet it will return your global IPAddress
         /// </summary>
         public static void GetGlobalIPAddressV4(Node node, WebRequest.Result result)
         {
             _ = new WebRequest(node, "https://ipinfo.io/ip", result);
+        }
+
+        /// <summary>
+        /// Opens a web request. If connected to the internet it will return your global IPAddress
+        /// </summary>
+        public static void GetGlobalIPv6(Node node, WebRequest.Result result)
+        {
+            _ = new WebRequest(node, "https://api6.ipify.org/", result);
         }
     }
 }
