@@ -263,7 +263,7 @@ namespace Cutulu
             using BinaryReader rdr = new(strm);
 
             // Read key and contents
-            package = new(rdr.ReadInt16(), rdr.ReadBytes(buffer.Length - 2), Method.Tcp);
+            package = new(rdr.ReadInt16(), rdr.ReadBytes(buffer.Length - 2), Method.Udp);
 
             // Close streams
             strm.Close();
