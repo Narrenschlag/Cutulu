@@ -1,5 +1,3 @@
-using System;
-
 namespace Cutulu
 {
     public static class Bitf

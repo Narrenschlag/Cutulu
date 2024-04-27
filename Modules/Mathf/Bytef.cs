@@ -120,7 +120,7 @@ namespace Cutulu
         /// <summary>
         /// Sets bit value within byte array
         /// </summary>
-        public static void SetBit(ref byte[] array, ushort bitIndex, bool newValue)
+        public static void SetBit(ref byte[] array, int bitIndex, bool newValue)
         {
             byte _bitIndex = (byte)(bitIndex % 8);
 
