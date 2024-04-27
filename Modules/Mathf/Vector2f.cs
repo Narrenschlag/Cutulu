@@ -49,5 +49,49 @@ namespace Cutulu
             C = A + t * a;
             return true;
         }
+
+        public static (Vector2 min, Vector2 max) MinMax(params Vector2[] values) => (Min(values), Min(values));
+
+        public static Vector2 Min(params Vector2[] values)
+        {
+            var value = values[0];
+
+            for (byte i = 1; i < values.Length && i < byte.MaxValue; i++)
+            {
+                for (byte k = 0; k < 2; k++)
+                {
+                    value[k] = Mathf.Min(value[k], values[i][k]);
+                }
+            }
+
+            return value;
+        }
+
+        public static Vector2 Max(params Vector2[] values)
+        {
+            var value = values[0];
+
+            for (byte i = 1; i < values.Length && i < byte.MaxValue; i++)
+            {
+                for (byte k = 0; k < 2; k++)
+                {
+                    value[k] = Mathf.Max(value[k], values[i][k]);
+                }
+            }
+
+            return value;
+        }
+
+        public static Vector2 Average(params Vector2[] corners)
+        {
+            var sum = corners[0];
+
+            for (int i = 1; i < corners.Length; i++)
+            {
+                sum += corners[i];
+            }
+
+            return sum / corners.Length;
+        }
     }
 }

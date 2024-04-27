@@ -4,6 +4,8 @@ using System.Text;
 using System.IO;
 using System;
 
+using Godot;
+
 namespace Cutulu
 {
     public static class Encryption
@@ -310,6 +312,33 @@ namespace Cutulu
             }
 
             return builder.ToString();
+        }
+
+        public static byte[] Hash(this byte[] input)
+        {
+            using SHA256 sha256 = SHA256.Create();
+            return sha256.ComputeHash(input);
+        }
+
+        public static float Hash(this Vector2 value) => Hash(value.X, value.Y);
+        public static float Hash(float hash1, float hash2)
+        {
+            // Choose prime numbers for best distribution
+            const int prime1 = 17;
+            const int prime2 = 31;
+
+            // Simple combination using multiplication and addition
+            return prime1 * hash1 + prime2 * hash2;
+        }
+
+        public static int Hash(int hash1, int hash2)
+        {
+            // Choose prime numbers for best distribution
+            const int prime1 = 17;
+            const int prime2 = 31;
+
+            // Simple combination using multiplication and addition
+            return prime1 * hash1 + prime2 * hash2;
         }
     }
 }

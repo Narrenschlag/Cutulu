@@ -1,4 +1,4 @@
-using Godot;
+using System;
 
 namespace Cutulu
 {
@@ -298,6 +298,27 @@ namespace Cutulu
         /// Offsets bytes.
         /// </summary>
         public static void OffsetBytes(ref byte[] @bytes, ref int offset) => Core.OffsetElements(ref @bytes, offset);
+        #endregion
+
+        #region Byte Array Combination
+        public static byte[] CombineByteArrays(params byte[][] arrays)
+        {
+            int totalLength = 0;
+            foreach (byte[] array in arrays)
+            {
+                totalLength += array.Length;
+            }
+
+            byte[] result = new byte[totalLength];
+            int offset = 0;
+            foreach (byte[] array in arrays)
+            {
+                Buffer.BlockCopy(array, 0, result, offset, array.Length);
+                offset += array.Length;
+            }
+
+            return result;
+        }
         #endregion
     }
 }
