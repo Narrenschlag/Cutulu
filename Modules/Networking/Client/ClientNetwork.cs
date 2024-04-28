@@ -99,7 +99,7 @@ namespace Cutulu
                     {
                         welcomeHasBeenReceived = true;
 
-                        Debug.Log($"Client to Server: {((IPEndPoint)Udp.client.Client.LocalEndPoint).Port}");
+                        //Debug.Log($"Client to Server: {((IPEndPoint)Udp.client.Client.LocalEndPoint).Port}");
                         Send(11111, ((IPEndPoint)Udp.client.Client.LocalEndPoint).Port, Method.Tcp);
                     }
                     break;

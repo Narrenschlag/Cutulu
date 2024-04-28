@@ -49,6 +49,7 @@ namespace Cutulu
         /// </summary>
         public virtual void Close()
         {
+            //Debug.LogError($"{GetType()} all async operations... Potentially throwing irrelevant error.");
             CancelSource?.Cancel();
             CancelSource = null;
 

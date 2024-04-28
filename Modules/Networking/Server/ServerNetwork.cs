@@ -175,6 +175,7 @@ namespace Cutulu
         public void Stop()
         {
             // Cancel async operations
+            Debug.Log($">_ Cancelling all async server operations... Potentially throwing irrelevant error.");
             CancelSource?.Cancel();
             CancelSource = null;
 
