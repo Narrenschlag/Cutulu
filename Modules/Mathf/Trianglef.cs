@@ -34,23 +34,35 @@ namespace Cutulu
         public static float CenterDistance(Vector2 position, params Vector2[] corners)
         => position.DistanceTo(Vector2f.Average(corners));
 
-        public static float EdgeDistance(Vector2 position, params Vector2[] corners)
+        public static float EdgeDistance(Vector2 position, params Vector2[] corners) => EdgeDistance(position, out _, corners);
+        public static float EdgeDistance(Vector2 position, out int edgeIndex, params Vector2[] corners)
         {
             var max = edge(0);
+            edgeIndex = 0;
 
             for (int i = 1; i < corners.Length; i++)
             {
-                max = Mathf.Max(max, edge(i));
+                var e = edge(i);
+
+                if (e > max)
+                {
+                    edgeIndex = i;
+                    max = e;
+                }
             }
 
             return Mathf.Max(0, max);
 
             float edge(int i)
             {
-                var a = corners[++i % 3];
+                var a = corners[++i % corners.Length];
                 var b = corners[--i];
 
-                return (position - a).Dot((b - a).Normalized().RotatedD(90));
+                var d = (b - a).Normalized();
+                var north = (position - b).Dot(d);
+                var south = (position - a).Dot(-d);
+
+                return Floatf.Max((position - a).Dot(d.RotatedD(90)), north * Core.GoldenCut, south * Core.GoldenCut);
             }
         }
     }
