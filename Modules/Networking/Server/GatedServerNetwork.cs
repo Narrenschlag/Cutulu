@@ -52,6 +52,7 @@ namespace Cutulu
         protected override ServerConnection<R> NewClient(ref TcpClient tcp, uint uid)
         {
             ServerConnection<R> client;
+
             if (tcp.Client != null && tcp.Client.RemoteEndPoint != null)
             {
                 if (tcp.Client.RemoteEndPoint is IPEndPoint endpoint)
@@ -59,13 +60,9 @@ namespace Cutulu
                     IPAddress address = endpoint.Address;
 
                     if (address != null)
-                        lock (Queue)
-                        {
-                            client = new(ref tcp, uid, this, WelcomeTarget);
-
-                            if (Queue.ContainsKey(address)) Queue[address] = client;
-                            else Queue.Add(address, client);
-                        }
+                    {
+                        client = new(ref tcp, uid, this, WelcomeTarget);
+                    }
 
                     else return error($"Client endpoint address is invalid", ref tcp);
                 }

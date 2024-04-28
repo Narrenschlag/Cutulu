@@ -1,3 +1,4 @@
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Cutulu
@@ -32,30 +33,6 @@ namespace Cutulu
 
             Tcp = new TcpProtocol(tcpHost, tcpPort, Receive, Disconnected);
             Udp = new UdpProtocol(udpHost, udpPort, Receive);
-
-            if (TcpConnected = Tcp != null && Tcp.Connected)
-            {
-                SetupUdp();
-            }
-        }
-
-        /// <summary> 
-        /// Sends udp packages to server until<br/> 
-        /// server associated tcp connection with udp connection 
-        /// </summary>
-        private async void SetupUdp()
-        {
-            // Stop if connections associated
-            if (UdpConnected == true) return;
-
-            // Send one byte udp packet with key 0
-            Send(0, Method.Udp);
-
-            // Wait 0.05s to resend association package
-            await Task.Delay(50);
-
-            // Restart the function
-            SetupUdp();
         }
 
         /// <summary> 
@@ -107,22 +84,39 @@ namespace Cutulu
         #endregion
 
         #region Receive Data    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        private bool welcomeHasBeenReceived;
+
         /// <summary>
         /// Receives data from server
         /// </summary>
         public override void Receive(ref NetworkPackage package)
         {
-            // Notify client that server has successfully associated the udp client with the tcp client
-            if (UdpConnected == false && package.Key == 255)
+            switch (package.Key)
             {
-                if (package.TryBuffer(out ushort safetyId))
-                {
-                    SafetyId = safetyId;
-                    UdpConnected = true;
+                // Triggers udp port sending as soon as the tcp is ready
+                case TcpProtocol.WelcomeKey:
+                    if (welcomeHasBeenReceived == false)
+                    {
+                        welcomeHasBeenReceived = true;
 
-                    OnSetupComplete();
-                    return;
-                }
+                        Debug.Log($"Client to Server: {((IPEndPoint)Udp.client.Client.LocalEndPoint).Port}");
+                        Send(11111, ((IPEndPoint)Udp.client.Client.LocalEndPoint).Port, Method.Tcp);
+                    }
+                    break;
+
+                // Notify client that server has successfully associated the udp client with the tcp client
+                case 255:
+                    if (UdpConnected == false && package.TryBuffer(out ushort safetyId))
+                    {
+                        SafetyId = safetyId;
+                        UdpConnected = true;
+
+                        OnSetupComplete();
+                        return;
+                    }
+                    break;
+
+                default: break;
             }
 
             base.Receive(ref package);
@@ -151,7 +145,10 @@ namespace Cutulu
             TcpConnected = false;
 
             Tcp?.Close();
+            Tcp = null;
+
             Udp?.Close();
+            Udp = null;
         }
         #endregion
     }

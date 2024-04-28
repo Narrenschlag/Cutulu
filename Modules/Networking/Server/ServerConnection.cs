@@ -16,12 +16,13 @@ namespace Cutulu
 
         protected Dictionary<uint, ServerConnection<R>> Registry => Server?.Clients;
 
-        public ServerNetwork<R> Server;
-        public IPEndPoint endPoint;
+        public IPEndPoint RemoteTcpEndPoint { get; private set; }
+        public IPEndPoint RemoteUdpEndPoint { get; private set; }
+        public readonly ServerNetwork<R> Server;
 
         public virtual bool Connected() => ConnectedTcp() && ConnectedUdp();
         public bool ConnectedTcp() => tcp != null && tcp.Connected;
-        public bool ConnectedUdp() => endPoint != null;
+        public bool ConnectedUdp() => RemoteUdpEndPoint != null;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary> 
@@ -29,9 +30,11 @@ namespace Cutulu
         /// </summary>
         public ServerConnection(ref TcpClient client, uint uuid, ServerNetwork<R> server, R receiver, Protocol.Packet onReceive = null, Protocol.Empty onDisconnect = null) : base(uuid, (ushort)uuid, receiver, onReceive, onDisconnect)
         {
-            this.onReceive = onReceive;
-            this.Server = server;
-            endPoint = null;
+            OnReceive = onReceive;
+            Server = server;
+
+            RemoteTcpEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
+            RemoteUdpEndPoint = null;
 
             Debug.Log($"+++[{UUID}]");
 
@@ -50,15 +53,18 @@ namespace Cutulu
         /// <summary> 
         /// Finish setup by assigning udp endpoint
         /// </summary>
-        public void Connect(IPEndPoint udpSource)
+        public void ConnectToClientUdp(IPEndPoint udpSource)
         {
             if (udpSource == null) return;
 
-            endPoint = udpSource;
+            RemoteUdpEndPoint = udpSource;
+
             Send(255, SafetyId, Method.Tcp);
+            Server.Endpoints.Set(RemoteUdpEndPoint, this);
 
             // Connection has been setup completely
             onSetupComplete?.Invoke();
+
             OnSetupComplete();
         }
 
@@ -89,7 +95,7 @@ namespace Cutulu
                 case Method.Udp:
                     if (ConnectedUdp())
                     {
-                        Server.globalUdp.Send(ref key, value, endPoint);
+                        Server.globalUdp.Send(ref key, value, RemoteUdpEndPoint);
                     }
                     break;
 
@@ -107,6 +113,20 @@ namespace Cutulu
         /// </summary>
         public override void Receive(ref NetworkPackage package)
         {
+            // Premature packages
+            switch (package.Key)
+            {
+                case 11111:
+                    if (ConnectedUdp() == false && package.TryBuffer(out int udpPort))
+                    {
+                        ConnectToClientUdp(new(RemoteTcpEndPoint.Address, udpPort));
+                        return;
+                    }
+                    break;
+
+                default: break;
+            }
+
             // Handle underlaying base
             base.Receive(ref package);
 
@@ -141,10 +161,10 @@ namespace Cutulu
             }
 
             // Remove from endpoints
-            if (endPoint != null && Server.Endpoints.ContainsKey(endPoint))
+            if (RemoteUdpEndPoint != null && Server.Endpoints.ContainsKey(RemoteUdpEndPoint))
                 lock (Server.Endpoints)
                 {
-                    Server.Endpoints.Remove(endPoint);
+                    Server.Endpoints.Remove(RemoteUdpEndPoint);
                 }
 
             // Message server of disconnection

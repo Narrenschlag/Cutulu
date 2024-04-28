@@ -154,11 +154,8 @@ namespace Cutulu
         /// </summary>
         public override void Close()
         {
-            if (client != null)
-            {
-                client.Close();
-                client = null;
-            }
+            client?.Close();
+            client = null;
 
             base.Close();
         }

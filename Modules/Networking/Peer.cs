@@ -15,7 +15,7 @@ namespace Cutulu
 
         // Local delegates
         public Protocol.Empty onDisconnect;
-        public Protocol.Packet onReceive;
+        public Protocol.Packet OnReceive;
 
         /// <summary> 
         /// TRUE: ignore target receiving and thereby skip it 
@@ -37,7 +37,7 @@ namespace Cutulu
             UUID = uuid;
 
             onDisconnect = disconnector;
-            this.onReceive = onReceive;
+            this.OnReceive = onReceive;
 
             SetReceiver(receiver);
         }
@@ -150,11 +150,11 @@ namespace Cutulu
             }
 
             // Call delegates
-            if (onReceive != null)
+            if (OnReceive != null)
             {
-                lock (onReceive)
+                lock (OnReceive)
                 {
-                    onReceive?.Invoke(ref package);
+                    OnReceive?.Invoke(ref package);
                 }
             }
 

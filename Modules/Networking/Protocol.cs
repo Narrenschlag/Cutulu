@@ -1,5 +1,6 @@
 using System.Threading;
 using System;
+using System.ComponentModel;
 
 namespace Cutulu
 {
@@ -37,7 +38,7 @@ namespace Cutulu
         {
             if (Connected == false)
             {
-                throw new Exception($"{GetType()} is not connected.");
+                throw new WarningException($"{GetType()} is not connected.");
             }
         }
         #endregion

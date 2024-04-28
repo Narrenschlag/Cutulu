@@ -165,7 +165,7 @@ namespace Cutulu
             if (prefab == null) return null;
 
             T t = (T)prefab.Instantiate();
-            root.AddChild(t);
+            if (root.NotNull()) root.AddChild(t);
 
             return t;
         }

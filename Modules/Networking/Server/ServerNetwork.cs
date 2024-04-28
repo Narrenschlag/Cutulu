@@ -31,9 +31,8 @@ namespace Cutulu
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32)
         {
-            Endpoints = new Dictionary<IPEndPoint, ServerConnection<R>>();
-            Queue = new Dictionary<IPAddress, ServerConnection<R>>();
-            Clients = new Dictionary<uint, ServerConnection<R>>();
+            Endpoints = new();
+            Clients = new();
 
             // Create a CancellationTokenSource to generate CancellationToken
             CancelSource = new();
@@ -94,6 +93,7 @@ namespace Cutulu
         protected virtual ServerConnection<R> NewClient(ref TcpClient tcp, uint uid)
         {
             ServerConnection<R> client;
+
             if (tcp.Client != null && tcp.Client.RemoteEndPoint != null)
             {
                 if (tcp.Client.RemoteEndPoint is IPEndPoint endpoint)
@@ -101,13 +101,9 @@ namespace Cutulu
                     IPAddress address = endpoint.Address;
 
                     if (address != null)
-                        lock (Queue)
-                        {
-                            client = new(ref tcp, uid, this, WelcomeTarget);
-
-                            if (Queue.ContainsKey(address)) Queue[address] = client;
-                            else Queue.Add(address, client);
-                        }
+                    {
+                        client = new(ref tcp, uid, this, WelcomeTarget);
+                    }
 
                     else return error($"Client endpoint address is invalid", ref tcp);
                 }
@@ -153,28 +149,18 @@ namespace Cutulu
 
         #region Udp             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public Dictionary<IPEndPoint, ServerConnection<R>> Endpoints;
-        public Dictionary<IPAddress, ServerConnection<R>> Queue;
         public UdpProtocol globalUdp;
         public int UdpPort;
 
-        private void ReceiveUdp(ref NetworkPackage package, IPEndPoint endpoint, ushort safetyId)
+        private void ReceiveUdp(ref NetworkPackage package, IPEndPoint senderEndpoint, ushort safetyId)
         {
             lock (this)
             {
                 // Try find existing linked connection
-                if (Endpoints.TryGetValue(endpoint, out ServerConnection<R> client))
+                if (Endpoints.TryGetValue(senderEndpoint, out ServerConnection<R> client))
                 {
                     // Validate safety id and send accept package
                     if (client?.SafetyId == safetyId) client.Receive(ref package);
-                }
-
-                // Move queued element to endpoint registry
-                else if (Queue.TryGetValue(endpoint.Address, out client))
-                {
-                    Endpoints.Add(endpoint, client);
-                    Queue.Remove(endpoint.Address);
-
-                    client.Connect(endpoint);
                 }
             }
         }
@@ -188,11 +174,23 @@ namespace Cutulu
         #region Closing         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public void Stop()
         {
+            // Cancel async operations
             CancelSource?.Cancel();
             CancelSource = null;
 
-            TcpListener?.Stop();
+            // Close client connections
+            if (Clients.NotEmpty())
+            {
+                foreach (var client in Clients.Values)
+                {
+                    client?.Close();
+                }
+            }
             Clients?.Clear();
+
+            // Close listeners
+            TcpListener?.Stop();
+            globalUdp?.Close();
         }
         #endregion
     }
