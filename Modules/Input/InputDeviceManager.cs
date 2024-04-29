@@ -5,7 +5,10 @@ namespace Cutulu
 {
     public partial class InputDeviceManager : Node
     {
+        [Export] public InputMap InputMapFile { get; set; }
+
         public Dictionary<long, InputDevice> Devices { get; private set; }
+        public Dictionary<string, InputSet> Map { get; private set; }
         public ModeEnum Mode { get; set; }
 
         public delegate void OnNewDeviceEventHandler(InputDevice device);
@@ -17,6 +20,7 @@ namespace Cutulu
         #region Local Node Events
         public override void _EnterTree()
         {
+            Map = InputMapFile.NotNull() ? InputMapFile.GetMap() : new();
             Mode = ModeEnum.Open;
             Devices = new();
 
@@ -96,14 +100,53 @@ namespace Cutulu
         #endregion
 
         #region Read Input
+        // Input Map
+        public bool GetInput(int iUDID, string inputName)
+        => Map.TryGetValue(inputName, out var inputSet) && Devices.TryGetValue(iUDID, out var device) && inputSet.IsPressed(device);
+
+        // Input Map
+        public bool GetInput(string inputName, float threshold = 0.5f)
+        {
+            if (Map.TryGetValue(inputName, out var inputSet))
+            {
+                foreach (var device in Devices.Values)
+                {
+                    if (inputSet.IsPressed(device, threshold)) return true;
+                }
+            }
+
+            return default;
+        }
+
+        // Input Map
+        public float GetInputValue(int iUDID, string inputName)
+        => Map.TryGetValue(inputName, out var inputSet) && Devices.TryGetValue(iUDID, out var device) ? inputSet.Value(device) : default;
+
+        // Input Map
+        public float GetInputValue(string inputName)
+        {
+            if (Map.TryGetValue(inputName, out var inputSet) == false) return default;
+            var maxValue = 0f;
+
+            foreach (var device in Devices.Values)
+            {
+                var value = inputSet.Value(device);
+
+                if (value.abs() >= 1) return value;
+                else if (value.abs() > maxValue.abs()) maxValue = value;
+            }
+
+            return maxValue;
+        }
+
         public bool GetKeyDown(int iUDID, ref bool downRef, InputCode code, float threshold = 0.5f, params string[] nativeInputNames)
-        => Devices.TryGetValue(iUDID, out var device) ? device.GetKeyDown(code, ref downRef, threshold, nativeInputNames) : default;
+        => Devices.TryGetValue(iUDID, out var device) && device.GetKeyDown(code, ref downRef, threshold, nativeInputNames);
 
         public bool GetKeyUp(int iUDID, ref bool upRef, InputCode code, float threshold = 0.5f, params string[] nativeInputNames)
-        => Devices.TryGetValue(iUDID, out var device) ? device.GetKeyUp(code, ref upRef, threshold, nativeInputNames) : default;
+        => Devices.TryGetValue(iUDID, out var device) && device.GetKeyUp(code, ref upRef, threshold, nativeInputNames);
 
         public bool GetKey(int iUDID, InputCode code, float threshold = 0.5f, params string[] nativeInputNames)
-        => Devices.TryGetValue(iUDID, out var device) ? device.GetKey(code, threshold, nativeInputNames) : default;
+        => Devices.TryGetValue(iUDID, out var device) && device.GetKey(code, threshold, nativeInputNames);
 
         public float GetValue(int iUDID, InputCode code, params string[] nativeInputNames)
         => Devices.TryGetValue(iUDID, out var device) ? device.GetValue(code, nativeInputNames) : default;
@@ -124,7 +167,16 @@ namespace Cutulu
             return previous && upRef == false;
         }
 
-        public bool GetKey(InputCode code, float threshold = 0.5f, params string[] nativeInputNames) => GetValue(code, nativeInputNames) >= threshold;
+        public bool GetKey(InputCode code, float threshold = 0.5f, params string[] nativeInputNames)
+        {
+            foreach (var device in Devices.Values)
+            {
+                if (Mathf.Abs(device.GetValue(code, nativeInputNames)) >= threshold) return true;
+            }
+
+            return default;
+        }
+
         public float GetValue(InputCode code, params string[] nativeInputNames)
         {
             var maxValue = 0f;

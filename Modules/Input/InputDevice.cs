@@ -227,6 +227,8 @@ namespace Cutulu
 
     public enum InputCode : byte
     {
+        Invalid,
+
         Start,
         Start2,
         OSHome,
