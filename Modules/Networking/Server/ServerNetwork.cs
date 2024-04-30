@@ -23,7 +23,7 @@ namespace Cutulu
         protected readonly R WelcomeTarget;
         protected uint LastUID;
 
-        public readonly IPListenEnum IPType;
+        public readonly IPType IPType;
 
         /// <summary> 
         /// Amount of clients currently connected to the server 
@@ -31,7 +31,7 @@ namespace Cutulu
         public uint ConnectionCount() => Clients != null ? (uint)Clients.Count : 0;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32, IPListenEnum listenTo = IPListenEnum.Any)
+        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32, IPType listenTo = IPType.Any)
         {
             Endpoints = new();
             Clients = new();
@@ -47,19 +47,19 @@ namespace Cutulu
             LastUID = 0;
 
             $"Server started. tcp-{tcpPort} udp-{udpPort}".Log();
-            globalUdp = new UdpProtocol(udpPort, ReceiveUdp);
+            globalUdp = new UdpProtocol(udpPort, ReceiveUdp, listenTo);
 
             IPType = listenTo;
             var listen = listenTo switch
             {
-                IPListenEnum.ExclusiveIPv4 => IPAddress.Any,
+                IPType.ExclusiveIPv4 => IPAddress.Any,
                 _ => IPAddress.IPv6Any
             };
 
             TcpListener = new TcpListener(listen, tcpPort);
 
-            if (listenTo != IPListenEnum.ExclusiveIPv4) // Enable exclusive listen to IPv6 if wished, else also listen to IPv4
-                TcpListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, listenTo == IPListenEnum.ExclusiveIPv6);
+            if (listenTo != IPType.ExclusiveIPv4) // Enable exclusive listen to IPv6 if wished, else also listen to IPv4
+                TcpListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, listenTo == IPType.ExclusiveIPv6);
 
             TcpListener.Start(maxConnectionsPerTick);
 
@@ -207,12 +207,5 @@ namespace Cutulu
             globalUdp?.Close();
         }
         #endregion
-
-        public enum IPListenEnum
-        {
-            Any,
-            ExclusiveIPv4,
-            ExclusiveIPv6
-        }
     }
 }

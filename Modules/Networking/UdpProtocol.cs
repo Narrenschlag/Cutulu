@@ -20,7 +20,7 @@ namespace Cutulu
         /// <summary> 
         /// Creates handle on server side 
         /// </summary>
-        public UdpProtocol(int port, UdpPacket onReceive_server) : base(port)
+        public UdpProtocol(int port, UdpPacket onReceive_server, IPType listenTo) : base(port)
         {
             serverSideReceive = onReceive_server;
             clientSideReceive = null;
@@ -33,6 +33,22 @@ namespace Cutulu
 
                 // Set the UDP client to reuse the address and port (optional)
                 client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+                //  Set IPType
+                switch (listenTo)
+                {
+                    case IPType.ExclusiveIPv4:
+                        break;
+
+                    case IPType.ExclusiveIPv6:
+                        client.Client.Bind(new IPEndPoint(IPAddress.IPv6Any, port));
+                        break;
+
+                    default:
+                        client.Client.DualMode = true;
+                        client.Client.Bind(new IPEndPoint(IPAddress.IPv6Any, port));
+                        break;
+                }
 
                 // Listens to udp signals
                 Listen();

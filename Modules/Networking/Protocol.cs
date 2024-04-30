@@ -57,4 +57,11 @@ namespace Cutulu
         }
         #endregion
     }
+
+    public enum IPType
+    {
+        Any,
+        ExclusiveIPv4,
+        ExclusiveIPv6
+    }
 }
