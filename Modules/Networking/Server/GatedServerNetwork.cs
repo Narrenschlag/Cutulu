@@ -14,8 +14,8 @@ namespace Cutulu
         private readonly NetworkGatekeeper<R> Gatekeeper;
 
         /// <summary> Simple server that handles tcp only </summary>
-        public GatedServerNetwork(ref Passkey passkey, string[] expected, int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32, IPType listenTo = IPType.Any, params string[] blacklist)
-        : base(tcpPort, udpPort, welcomeTarget, acceptClients, maxConnectionsPerTick, listenTo)
+        public GatedServerNetwork(ref Passkey passkey, string[] expected, int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, IPType listenTo = IPType.Any, bool acceptClients = true, int maxConnectionsPerTick = 32, params string[] blacklist)
+        : base(tcpPort, udpPort, welcomeTarget, listenTo, acceptClients, maxConnectionsPerTick)
         {
             Gatekeeper = new(OnConnectionPassed, passkey, expected, blacklist);
             if (passkey.Key.NotEmpty()) Debug.Log($"Server is gated by using passkey");

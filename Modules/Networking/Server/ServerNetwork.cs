@@ -31,7 +31,7 @@ namespace Cutulu
         public uint ConnectionCount() => Clients != null ? (uint)Clients.Count : 0;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, bool acceptClients = true, int maxConnectionsPerTick = 32, IPType listenTo = IPType.Any)
+        public ServerNetwork(int tcpPort = 5000, int udpPort = 5001, R welcomeTarget = null, IPType listenTo = IPType.Any, bool acceptClients = true, int maxConnectionsPerTick = 32)
         {
             Endpoints = new();
             Clients = new();
@@ -50,13 +50,12 @@ namespace Cutulu
             globalUdp = new UdpProtocol(udpPort, ReceiveUdp, listenTo);
 
             IPType = listenTo;
-            var listen = listenTo switch
+
+            TcpListener = new TcpListener(listenTo switch
             {
                 IPType.ExclusiveIPv4 => IPAddress.Any,
                 _ => IPAddress.IPv6Any
-            };
-
-            TcpListener = new TcpListener(listen, tcpPort);
+            }, tcpPort);
 
             if (listenTo != IPType.ExclusiveIPv4) // Enable exclusive listen to IPv6 if wished, else also listen to IPv4
                 TcpListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, listenTo == IPType.ExclusiveIPv6);

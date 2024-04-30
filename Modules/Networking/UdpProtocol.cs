@@ -72,7 +72,7 @@ namespace Cutulu
         /// <summary> 
         /// Creates handle on client side 
         /// </summary>
-        public UdpProtocol(string host, int udpPort, Packet onReceive_client) : base(udpPort)
+        public UdpProtocol(string host, int udpPort, Packet onReceive_client, IPType ipType) : base(udpPort)
         {
             clientSideReceive = onReceive_client;
             serverSideReceive = null;
@@ -80,9 +80,14 @@ namespace Cutulu
 
             try
             {
-                client = new UdpClient();
+                client = new UdpClient(ipType switch
+                {
+                    IPType.ExclusiveIPv4 => AddressFamily.InterNetwork,
+                    _ => AddressFamily.InterNetworkV6
+                });
                 Connected = true;
 
+                client.Client.DualMode = ipType == IPType.Any;
                 client.Connect(host, udpPort); // Use the same port as the UDP listener and the same adress as tcp endpoint
 
                 // Listens to udp signals
