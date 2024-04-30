@@ -28,7 +28,11 @@ namespace Cutulu
 
             try
             {
-                client = new UdpClient(port);
+                client = new UdpClient(listenTo switch
+                {
+                    IPType.ExclusiveIPv4 => AddressFamily.InterNetwork,
+                    _ => AddressFamily.InterNetworkV6
+                });
                 Connected = true;
 
                 // Set the UDP client to reuse the address and port (optional)
@@ -38,6 +42,7 @@ namespace Cutulu
                 switch (listenTo)
                 {
                     case IPType.ExclusiveIPv4:
+                        client.Client.Bind(new IPEndPoint(IPAddress.Any, port));
                         break;
 
                     case IPType.ExclusiveIPv6:
