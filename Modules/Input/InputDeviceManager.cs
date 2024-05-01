@@ -6,6 +6,7 @@ namespace Cutulu
     public partial class InputDeviceManager : Node
     {
         [Export] public CutuluInputMap InputMapFile { get; set; }
+        [Export] public int MaxDeviceCount { get; set; } = 4;
 
         public Dictionary<long, InputDevice> Devices { get; private set; }
         public Dictionary<string, InputSet> Map { get; private set; }
@@ -15,7 +16,7 @@ namespace Cutulu
         public OnNewDeviceEventHandler OnNewDevice, OnRemoveDevice;
 
         public Vector2 MouseMotion { get; private set; }
-        private byte resetMotion { get; set; }
+        private byte ResetMotion { get; set; }
 
         #region Local Node Events
         public override void _EnterTree()
@@ -25,7 +26,7 @@ namespace Cutulu
             Devices = new();
 
             // Add native device
-            add(new(this, -1));
+            AddDevice(new(this, -1));
 
             Input.JoyConnectionChanged += OnDeviceChange;
         }
@@ -37,10 +38,10 @@ namespace Cutulu
 
         public override void _Process(double delta)
         {
-            if (resetMotion > 0 && resetMotion++ > 1)
+            if (ResetMotion > 0 && ResetMotion++ > 1)
             {
                 MouseMotion = default;
-                resetMotion = 0;
+                ResetMotion = 0;
             }
         }
 
@@ -51,7 +52,7 @@ namespace Cutulu
                 // Mouse motion
                 case InputEventMouseMotion _motion:
                     MouseMotion = _motion.Relative;
-                    resetMotion = 1;
+                    ResetMotion = 1;
                     break;
 
                 default: break;
@@ -72,7 +73,12 @@ namespace Cutulu
                 }
 
                 // New device
-                else add(new(this, udid));
+                else
+                {
+                    // Clamp device count
+                    if (MaxDeviceCount < 1 || MaxDeviceCount > Devices.Count)
+                        AddDevice(new(this, udid));
+                }
             }
 
             // Disconnected
@@ -92,7 +98,7 @@ namespace Cutulu
             }
         }
 
-        private void add(InputDevice device)
+        private void AddDevice(InputDevice device)
         {
             Devices.Add(device.UDID, device);
             OnNewDevice?.Invoke(device);
