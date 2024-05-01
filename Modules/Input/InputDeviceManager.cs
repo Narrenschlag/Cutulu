@@ -5,7 +5,7 @@ namespace Cutulu
 {
     public partial class InputDeviceManager : Node
     {
-        [Export] public InputMap InputMapFile { get; set; }
+        [Export] public CutuluInputMap InputMapFile { get; set; }
 
         public Dictionary<long, InputDevice> Devices { get; private set; }
         public Dictionary<string, InputSet> Map { get; private set; }

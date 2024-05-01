@@ -4,7 +4,7 @@ using Godot;
 namespace Cutulu
 {
     [GlobalClass]
-    public partial class InputMap : Resource
+    public partial class CutuluInputMap : Resource
     {
         [Export] public InputSet[] Default { get; set; }
         [Export] public InputSet[] Override { get; set; }
