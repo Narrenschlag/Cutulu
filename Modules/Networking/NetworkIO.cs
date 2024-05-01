@@ -1,13 +1,17 @@
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net;
+
 using System.Linq;
 using Godot;
-using System.Net.NetworkInformation;
 
 namespace Cutulu
 {
     public static class NetworkIO
     {
+        public const string LocalhostIPv4 = "127.0.0.1";
+        public const string LocalhostIPv6 = "::1";
+
         /// <summary>
         /// Returns address
         /// </summary>

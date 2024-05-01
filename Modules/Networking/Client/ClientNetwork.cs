@@ -13,26 +13,30 @@ namespace Cutulu
         public bool UdpConnected;
         public bool TcpConnected;
 
+        public IPType IPType { get; private set; }
+
         public bool FullyConnected() => TcpConnected && UdpConnected;
 
         #region Setup           ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, R receiver = null, Protocol.Empty onSetupComplete = null) : base(0, 0, receiver)
+        public ClientNetwork(string tcpHost, int tcpPort, string udpHost, int udpPort, R receiver = null, Protocol.Empty onSetupComplete = null, IPType ipType = IPType.Any) : base(0, 0, receiver)
         {
             OnSetupCompleteEvent = onSetupComplete;
 
-            try { Connect(tcpHost, tcpPort, udpHost, udpPort); }
+            try { Connect(tcpHost, tcpPort, udpHost, udpPort, ipType); }
             catch { $"Failed to connect to host".LogError(); }
         }
 
         /// <summary>
         /// Closes current connections and opens new connections
         /// </summary>
-        protected virtual void Connect(string tcpHost, int tcpPort, string udpHost, int udpPort)
+        protected virtual void Connect(string tcpHost, int tcpPort, string udpHost, int udpPort, IPType ipType)
         {
             Close();
 
-            Tcp = new TcpProtocol(tcpHost, tcpPort, Receive, Disconnected);
-            Udp = new UdpProtocol(udpHost, udpPort, Receive);
+            IPType = ipType;
+
+            Tcp = new TcpProtocol(tcpHost, tcpPort, Receive, Disconnected, IPType);
+            Udp = new UdpProtocol(udpHost, udpPort, Receive, IPType);
         }
 
         /// <summary> 

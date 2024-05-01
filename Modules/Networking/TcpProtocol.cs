@@ -44,12 +44,18 @@ namespace Cutulu
         /// <summary> 
         /// Creates handle on client side 
         /// </summary>
-        public TcpProtocol(string host, int port, Packet onReceive, Empty onDisconnect) : base(port)
+        public TcpProtocol(string host, int port, Packet onReceive, Empty onDisconnect, IPType ipType) : base(port)
         {
             this.onDisconnect = onDisconnect;
             this.onReceive = onReceive;
-            client = new TcpClient();
 
+            client = new TcpClient(ipType switch
+            {
+                IPType.ExclusiveIPv4 => AddressFamily.InterNetwork,
+                _ => AddressFamily.InterNetworkV6
+            });
+
+            client.Client.DualMode = ipType == IPType.Any;
             client.Connect(host, port);
 
             // Cancel setup if connection failed
