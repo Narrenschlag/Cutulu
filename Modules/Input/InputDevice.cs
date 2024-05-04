@@ -43,7 +43,7 @@ namespace Cutulu
             {
                 DeviceType = InputDeviceType.Native;
                 RawDeviceName = "NativeDevice";
-                DeviceName = "Native Input";
+                DeviceName = "Native Device";
             }
 
             // External Device aka. Gamepad
