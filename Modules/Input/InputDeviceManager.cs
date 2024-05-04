@@ -22,6 +22,8 @@ namespace Cutulu
         public override void _EnterTree()
         {
             Map = InputMapFile.NotNull() ? InputMapFile.GetMap() : new();
+            Debug.Log($"{Map.Count} inputs have been registered.");
+
             Mode = ModeEnum.Open;
             Devices = new();
 
