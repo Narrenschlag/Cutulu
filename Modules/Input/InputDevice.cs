@@ -110,6 +110,14 @@ namespace Cutulu
         #endregion
 
         #region Read Inputs
+        // Input Map
+        public bool GetInput(string inputName, float threshold = .5f)
+        => Manager.Map.TryGetValue(inputName, out var inputSet) && inputSet.IsPressed(this, threshold);
+
+        // Input Map
+        public float GetInputValue(string inputName)
+        => Manager.Map.TryGetValue(inputName, out var inputSet) ? inputSet.Value(this) : default;
+
         public bool GetKeyDown(InputCode input, ref bool keyMemory, float threshold = 0.5f, params string[] nativeInputNames)
         {
             var previous = keyMemory;
@@ -165,6 +173,7 @@ namespace Cutulu
                     case InputCode.LookRight: return axis(JoyAxis.RightY);
                     case InputCode.LookUp: return -axis(JoyAxis.TriggerLeft);
 
+                    case InputCode.BothShoulders: return Input.IsJoyButtonPressed(iUDID, JoyButton.Guide) && Input.IsJoyButtonPressed(iUDID, JoyButton.Back) ? 1 : 0;
                     case InputCode.ShoulderRight: return button(JoyButton.Guide);
                     case InputCode.ShoulderLeft: return button(JoyButton.Back);
 
@@ -232,6 +241,7 @@ namespace Cutulu
         Start,
         Start2,
         OSHome,
+        BothShoulders,
 
         MoveRight,
         MoveUp,
