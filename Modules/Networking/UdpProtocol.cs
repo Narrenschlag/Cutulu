@@ -20,7 +20,7 @@ namespace Cutulu
         /// <summary> 
         /// Creates handle on server side 
         /// </summary>
-        public UdpProtocol(int port, UdpPacket onReceive_server, IPType listenTo) : base(port)
+        public UdpProtocol(int port, UdpPacket onReceive_server, IPType ipType) : base(port)
         {
             serverSideReceive = onReceive_server;
             clientSideReceive = null;
@@ -28,41 +28,31 @@ namespace Cutulu
 
             try
             {
-                client = new UdpClient(listenTo switch
-                {
-                    IPType.ExclusiveIPv4 => AddressFamily.InterNetwork,
-                    _ => AddressFamily.InterNetworkV6
-                });
-                Connected = true;
-
-                // Set the UDP client to reuse the address and port (optional)
-                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-                //  Set IPType
-                switch (listenTo)
+                switch (ipType)
                 {
                     case IPType.ExclusiveIPv4:
-                        client.Client.Bind(new IPEndPoint(IPAddress.Any, port));
-                        break;
-
-                    case IPType.ExclusiveIPv6:
-                        client.Client.Bind(new IPEndPoint(IPAddress.IPv6Any, port));
+                        (client = new(AddressFamily.InterNetwork))
+                        .Client.Bind(new IPEndPoint(IPAddress.Any, port));
                         break;
 
                     default:
-                        client.Client.DualMode = true;
+                        (client = new(AddressFamily.InterNetworkV6)).Client.DualMode = ipType == IPType.Any;
                         client.Client.Bind(new IPEndPoint(IPAddress.IPv6Any, port));
                         break;
                 }
 
+                // Set the UDP client to reuse the address and port (optional)
+                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
                 // Listens to udp signals
+                Connected = true;
                 Listen();
             }
             catch (Exception ex)
             {
                 Close();
 
-                Debug.LogError($"Was not able to establish a udp connection: {ex.Message}. Closing server.");
+                Debug.LogError($"Was not able to establish a udp connection: {ex.Message}. Closing server.\n{ex.StackTrace}");
                 return;
             }
 
