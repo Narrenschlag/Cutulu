@@ -49,6 +49,9 @@ namespace Cutulu
         public readonly bool TryGet(Value value, out Key key) => Reverse.TryGetValue(value, out key);
         public readonly bool TryGet(Key key, out Value value) => Index.TryGetValue(key, out value);
 
+        public readonly bool Contains(Value value) => Reverse.ContainsKey(value);
+        public readonly bool Contains(Key key) => Index.ContainsKey(key);
+
         public readonly Key Get(Value value) => Reverse[value];
         public readonly Value Get(Key key) => Index[key];
     }

@@ -44,6 +44,7 @@ namespace Cutulu
         /// <summary>
         /// Sets bit.
         /// </summary>
+        public static void SetBit(ref byte @byte, byte bitIndex, bool value) => SetBit(ref @byte, ref bitIndex, ref value);
         public static void SetBit(ref byte @byte, ref byte bitIndex, ref bool value)
         {
             if (value) EnableBit(ref @byte, ref bitIndex);
