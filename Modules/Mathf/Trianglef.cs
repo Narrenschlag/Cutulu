@@ -61,8 +61,9 @@ namespace Cutulu
                 var d = (b - a).Normalized();
                 var north = (position - b).Dot(d);
                 var south = (position - a).Dot(-d);
+                var right = (position - a).Dot(d.RotatedD(90));
 
-                return Floatf.Max((position - a).Dot(d.RotatedD(90)), north * Core.GoldenCut, south * Core.GoldenCut);
+                return Floatf.Max(right, north, south);
             }
         }
     }
