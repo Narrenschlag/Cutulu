@@ -322,6 +322,9 @@ namespace Cutulu
         }
         #endregion
 
+        public const byte EncodedCenterByte = 136;
+        public const byte CenterByte = 128;
+
         public static byte EncodToByteMinus1(this float float1, float float2)
         {
             // Map float range (-1 to 1) to byte range (0 to 15)

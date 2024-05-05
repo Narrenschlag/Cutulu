@@ -22,6 +22,8 @@ namespace Cutulu
 
         private bool leftTrigger, rightTrigger;
 
+        public int GetUniqueHash(int externalId) => Encryption.Hash(externalId, iUDID);
+
         public InputDevice(InputDeviceManager manager, long udid)
         {
             Manager = manager;
