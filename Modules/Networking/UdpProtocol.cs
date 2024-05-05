@@ -80,15 +80,21 @@ namespace Cutulu
 
             try
             {
-                client = new UdpClient(ipType switch
+                switch (ipType)
                 {
-                    IPType.ExclusiveIPv4 => AddressFamily.InterNetwork,
-                    _ => AddressFamily.InterNetworkV6
-                });
-                Connected = true;
+                    case IPType.ExclusiveIPv4:
+                        client = new(host, udpPort);
+                        break;
 
-                client.Client.DualMode = ipType == IPType.Any;
-                client.Connect(host, udpPort); // Use the same port as the UDP listener and the same adress as tcp endpoint
+                    default:
+                        client = new(AddressFamily.InterNetworkV6);
+
+                        client.Client.DualMode = ipType == IPType.Any;
+                        client.Connect(host, udpPort); // Use the same port as the UDP listener and the same adress as tcp endpoint
+                        break;
+                }
+
+                Connected = true;
 
                 // Listens to udp signals
                 if (onReceive_client != null) Listen();

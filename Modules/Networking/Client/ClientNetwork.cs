@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -22,8 +23,9 @@ namespace Cutulu
         {
             OnSetupCompleteEvent = onSetupComplete;
 
-            try { Connect(tcpHost, tcpPort, udpHost, udpPort, ipType); }
-            catch { $"Failed to connect to host".LogError(); }
+            //try { }
+            Connect(tcpHost, tcpPort, udpHost, udpPort, ipType);
+            //catch (Exception ex) { Debug.LogError($"Failed to connect to host. {ex.Message}\n{ex.StackTrace}"); }
         }
 
         /// <summary>
