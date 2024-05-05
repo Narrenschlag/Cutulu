@@ -93,5 +93,14 @@ namespace Cutulu
 
             return sum / corners.Length;
         }
+
+        public static Vector2 ClampNormalized(this Vector2 value)
+        {
+            var normalized = value.Normalized();
+            return new(
+                Mathf.Abs(value.X) > Mathf.Abs(normalized.X) ? normalized.X : value.X,
+                Mathf.Abs(value.Y) > Mathf.Abs(normalized.Y) ? normalized.Y : value.Y
+            );
+        }
     }
 }

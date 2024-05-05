@@ -1,4 +1,5 @@
 using System;
+using Godot;
 
 namespace Cutulu
 {
@@ -320,5 +321,26 @@ namespace Cutulu
             return result;
         }
         #endregion
+
+        public static byte EncodToByteMinus1(this float float1, float float2)
+        {
+            // Map float range (-1 to 1) to byte range (0 to 15)
+            byte byte1 = (byte)(((float1 + 1f) * 7.5f) + 0.5f);
+            byte byte2 = (byte)(((float2 + 1f) * 7.5f) + 0.5f);
+
+            // Combine byte1 and byte2
+            return (byte)((byte1 << 4) | byte2);
+        }
+
+        public static void DecodeFromByteMinus1(this byte encodedByte, out float float1, out float float2)
+        {
+            // Extract byte1 and byte2
+            byte byte1 = (byte)(encodedByte >> 4);
+            byte byte2 = (byte)(encodedByte & 0b00001111);
+
+            // Map byte range (0 to 15) back to float range (-1 to 1)
+            float1 = ((byte1 - 0.5f) / 7.5f) - 1f;
+            float2 = ((byte2 - 0.5f) / 7.5f) - 1f;
+        }
     }
 }
