@@ -18,6 +18,10 @@ namespace Cutulu
         public Vector2 MouseMotion { get; private set; }
         private byte ResetMotion { get; set; }
 
+        private InputTranslation GetTranslation() => Translation ??= CreateTranslation();
+        public virtual InputTranslation CreateTranslation() => new();
+        public InputTranslation Translation { get; private set; }
+
         #region Local Node Events
         public override void _EnterTree()
         {
@@ -28,7 +32,7 @@ namespace Cutulu
             Devices = new();
 
             // Add native device
-            AddDevice(new(this, -1));
+            AddDevice(new(this, GetTranslation(), -1));
 
             Input.JoyConnectionChanged += OnDeviceChange;
         }
@@ -79,7 +83,7 @@ namespace Cutulu
                 {
                     // Clamp device count
                     if (MaxDeviceCount < 1 || MaxDeviceCount > Devices.Count)
-                        AddDevice(new(this, udid));
+                        AddDevice(new(this, GetTranslation(), udid));
                 }
             }
 
@@ -147,51 +151,51 @@ namespace Cutulu
             return maxValue;
         }
 
-        public bool GetKeyDown(int iUDID, ref bool downRef, InputCode code, float threshold = 0.5f, params string[] nativeInputNames)
-        => Devices.TryGetValue(iUDID, out var device) && device.GetKeyDown(code, ref downRef, threshold, nativeInputNames);
+        public bool GetKeyDown(int iUDID, ref bool downRef, InputCode code, float threshold = 0.5f)
+        => Devices.TryGetValue(iUDID, out var device) && device.GetKeyDown(code, ref downRef, threshold);
 
-        public bool GetKeyUp(int iUDID, ref bool upRef, InputCode code, float threshold = 0.5f, params string[] nativeInputNames)
-        => Devices.TryGetValue(iUDID, out var device) && device.GetKeyUp(code, ref upRef, threshold, nativeInputNames);
+        public bool GetKeyUp(int iUDID, ref bool upRef, InputCode code, float threshold = 0.5f)
+        => Devices.TryGetValue(iUDID, out var device) && device.GetKeyUp(code, ref upRef, threshold);
 
-        public bool GetKey(int iUDID, InputCode code, float threshold = 0.5f, params string[] nativeInputNames)
-        => Devices.TryGetValue(iUDID, out var device) && device.GetKey(code, threshold, nativeInputNames);
+        public bool GetKey(int iUDID, InputCode code, float threshold = 0.5f)
+        => Devices.TryGetValue(iUDID, out var device) && device.GetKey(code, threshold);
 
-        public float GetValue(int iUDID, InputCode code, params string[] nativeInputNames)
-        => Devices.TryGetValue(iUDID, out var device) ? device.GetValue(code, nativeInputNames) : default;
+        public float GetValue(int iUDID, InputCode code)
+        => Devices.TryGetValue(iUDID, out var device) ? device.GetValue(code) : default;
 
-        public bool GetKeyDown(InputCode code, ref bool downRef, float threshold = 0.5f, params string[] nativeInputNames)
+        public bool GetKeyDown(InputCode code, ref bool downRef, float threshold = 0.5f)
         {
             var previous = downRef;
 
-            downRef = GetKey(code, threshold, nativeInputNames);
+            downRef = GetKey(code, threshold);
             return previous == false && downRef;
         }
 
-        public bool GetKeyUp(InputCode code, ref bool upRef, float threshold = 0.5f, params string[] nativeInputNames)
+        public bool GetKeyUp(InputCode code, ref bool upRef, float threshold = 0.5f)
         {
             var previous = upRef;
 
-            upRef = GetKey(code, threshold, nativeInputNames);
+            upRef = GetKey(code, threshold);
             return previous && upRef == false;
         }
 
-        public bool GetKey(InputCode code, float threshold = 0.5f, params string[] nativeInputNames)
+        public bool GetKey(InputCode code, float threshold = 0.5f)
         {
             foreach (var device in Devices.Values)
             {
-                if (Mathf.Abs(device.GetValue(code, nativeInputNames)) >= threshold) return true;
+                if (Mathf.Abs(device.GetValue(code)) >= threshold) return true;
             }
 
             return default;
         }
 
-        public float GetValue(InputCode code, params string[] nativeInputNames)
+        public float GetValue(InputCode code)
         {
             var maxValue = 0f;
 
             foreach (var device in Devices.Values)
             {
-                var value = device.GetValue(code, nativeInputNames);
+                var value = device.GetValue(code);
 
                 if (value.abs() >= 1) return value;
                 else if (value.abs() > maxValue.abs()) maxValue = value;

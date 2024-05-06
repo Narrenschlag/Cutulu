@@ -20,12 +20,13 @@ namespace Cutulu
         public int SteamInputIndex { get; private set; }
         public int XInputIndex { get; private set; }
 
-        private bool leftTrigger, rightTrigger;
+        private InputTranslation Translation;
 
         public int GetUniqueHash(int externalId) => Encryption.Hash(externalId, iUDID);
 
-        public InputDevice(InputDeviceManager manager, long udid)
+        public InputDevice(InputDeviceManager manager, InputTranslation translation, long udid)
         {
+            Translation = translation;
             Manager = manager;
             iUDID = (int)udid;
             UDID = udid;
@@ -98,13 +99,13 @@ namespace Cutulu
         public void PrintDebug()
         {
             Debug.Log($"#############  Device: {DeviceName}  ##############");
-            Debug.Log($"Move: {GetValue(InputCode.MoveRight)}x {GetValue(InputCode.MoveUp)}y");
-            Debug.Log($"Look: {GetValue(InputCode.LookRight)}x {GetValue(InputCode.LookUp)}y");
+            Debug.Log($"Move: {GetValue(InputCode.LeftStickRight)}x {GetValue(InputCode.LeftStickUp)}y");
+            Debug.Log($"Look: {GetValue(InputCode.RightStickRight)}x {GetValue(InputCode.RightStickUp)}y");
             Debug.Log($"Dpad: {GetValue(InputCode.DpadRight)}x {GetValue(InputCode.DpadUp)}y");
 
-            Debug.Log($"Trigger: {GetValue(InputCode.TriggerLeft)}left {GetValue(InputCode.TriggerRight)}right");
-            Debug.Log($"Shoulder: {GetValue(InputCode.ShoulderLeft)}left {GetValue(InputCode.ShoulderRight)}right");
-            Debug.Log($"Sticks: {GetValue(InputCode.StickPressLeft)}left {GetValue(InputCode.StickPressRight)}right");
+            Debug.Log($"Trigger: {GetValue(InputCode.LeftTrigger)}left {GetValue(InputCode.RightTrigger)}right");
+            Debug.Log($"Shoulder: {GetValue(InputCode.LeftShoulder)}left {GetValue(InputCode.RightShoulder)}right");
+            Debug.Log($"Sticks: {GetValue(InputCode.LeftStickPress)}left {GetValue(InputCode.RightStickPress)}right");
 
             Debug.Log($"R0:{GetValue(InputCode.RightSouth)} R1:{GetValue(InputCode.RightEast)} R2:{GetValue(InputCode.RightNorth)} R3:{GetValue(InputCode.RightWest)}");
             Debug.Log($"Share:{GetValue(InputCode.Start2)} Start:{GetValue(InputCode.Start)} OS:{GetValue(InputCode.OSHome)}");
@@ -124,7 +125,7 @@ namespace Cutulu
         {
             var previous = keyMemory;
 
-            keyMemory = GetKey(input, threshold, nativeInputNames);
+            keyMemory = GetKey(input, threshold);
             return previous == false && keyMemory;
         }
 
@@ -132,84 +133,51 @@ namespace Cutulu
         {
             var previous = keyMemory;
 
-            keyMemory = GetKey(input, threshold, nativeInputNames);
+            keyMemory = GetKey(input, threshold);
             return previous && keyMemory == false;
         }
 
-        public bool GetKey(InputCode input, float threshold = 0.5f, params string[] nativeInputNames)
-        => GetValue(input, nativeInputNames) >= threshold;
+        public bool GetKey(InputCode input, float threshold = 0.5f)
+        => GetValue(input) >= threshold;
 
-        public float GetValue(InputCode input, params string[] nativeInputNames)
+        public float GetValue(InputCode input)
         {
-            // Default value
-            if (DeviceType == InputDeviceType.Native)
+            // Get values
+            Translation.Translate(input, out var _button, out var _axis, out var natives);
+
+            // Extra overrides for native devices
+            if (natives == null && DeviceType == InputDeviceType.Native)
             {
                 switch (input)
                 {
-                    case InputCode.DpadRight: return axis();
-                    case InputCode.DpadUp: return axis();
+                    case InputCode.RightStickRight: return Manager.MouseMotion.X;
+                    case InputCode.RightStickUp: return Manager.MouseMotion.Y;
 
-                    case InputCode.MoveRight: return axis();
-                    case InputCode.MoveUp: return axis();
-
-                    case InputCode.LookRight: return nativeInputNames.Size() > 0 ? axis() : Manager.MouseMotion.X;
-                    case InputCode.LookUp: return nativeInputNames.Size() > 0 ? axis() : Manager.MouseMotion.Y;
-
-                    default: return nativeInputNames.Size() > 0 ? nativeInputNames[0].GetValue() : default;
+                    default:
+                        break;
                 }
-
-                float axis() => nativeInputNames.Size() > 1 ? nativeInputNames[0].GetValue() - nativeInputNames[1].GetValue() : default;
             }
 
-            else
+            // Overrides for special inputs
+            switch (input)
             {
-                switch (input)
-                {
-                    case InputCode.OSHome: return button(JoyButton.RightStick);
-                    case InputCode.Start: return button(JoyButton.LeftStick);
-                    case InputCode.Start2: return button(JoyButton.Start);
+                case InputCode.BothShoulders: return GetKey(InputCode.LeftShoulder) && GetKey(InputCode.RightShoulder) ? 1f : default;
 
-                    case InputCode.MoveRight: return axis(JoyAxis.LeftX);
-                    case InputCode.MoveUp: return -axis(JoyAxis.LeftY);
+                case InputCode.DpadRight: return GetValue(InputCode.LeftEast) - GetValue(InputCode.LeftWest);
+                case InputCode.DpadUp: return GetValue(InputCode.LeftNorth) - GetValue(InputCode.LeftSouth);
 
-                    case InputCode.LookRight: return axis(JoyAxis.RightY);
-                    case InputCode.LookUp: return -axis(JoyAxis.TriggerLeft);
-
-                    case InputCode.BothShoulders: return Input.IsJoyButtonPressed(iUDID, JoyButton.Guide) && Input.IsJoyButtonPressed(iUDID, JoyButton.Back) ? 1 : 0;
-                    case InputCode.ShoulderRight: return button(JoyButton.Guide);
-                    case InputCode.ShoulderLeft: return button(JoyButton.Back);
-
-                    case InputCode.TriggerRight:
-                        if (rightTrigger == false && (rightTrigger = axis(JoyAxis.TriggerRight) != 0) == false) return 0f;
-                        return axis(JoyAxis.TriggerRight) * .5f + .5f;
-
-                    case InputCode.TriggerLeft:
-                        if (leftTrigger == false && (leftTrigger = axis(JoyAxis.RightX) != 0) == false) return 0f;
-                        return axis(JoyAxis.RightX) * .5f + .5f;
-
-
-                    case InputCode.StickPressRight: return button(JoyButton.RightShoulder);
-                    case InputCode.StickPressLeft: return button(JoyButton.LeftShoulder);
-
-                    case InputCode.RightNorth: return button(JoyButton.Y);
-                    case InputCode.RightWest: return button(JoyButton.X);
-                    case InputCode.RightSouth: return button(JoyButton.A);
-                    case InputCode.RightEast: return button(JoyButton.B);
-
-                    case InputCode.LeftNorth: return button(JoyButton.DpadUp);
-                    case InputCode.LeftWest: return button(JoyButton.DpadLeft);
-                    case InputCode.LeftSouth: return button(JoyButton.DpadDown);
-                    case InputCode.LeftEast: return button(JoyButton.DpadRight);
-
-                    case InputCode.DpadRight: return button(JoyButton.DpadRight) - button(JoyButton.DpadLeft);
-                    case InputCode.DpadUp: return button(JoyButton.DpadUp) - button(JoyButton.DpadDown);
-
-                    default: return default;
-                }
-
-                float button(JoyButton button) => Input.IsJoyButtonPressed(iUDID, button) ? 1f : 0f;
-                float axis(JoyAxis axis) => Input.GetJoyAxis(iUDID, axis);
+                default: break;
             }
+
+            // Native inputs
+            if (DeviceType == InputDeviceType.Native) return natives != null ? natives.Length > 1 ? natives[0].GetValue() - natives[1].GetValue() : natives[0].GetValue() : default;
+
+            // Gamepad inputs
+            else return
+                _button != JoyButton.Invalid ? button(_button) :
+                _axis != JoyAxis.Invalid ? axis(_axis) : default;
+            float axis(JoyAxis axis) => Input.GetJoyAxis(iUDID, axis);
+            float button(JoyButton button) => Input.IsJoyButtonPressed(iUDID, button) ? 1f : 0f;
         }
         #endregion
 
@@ -234,43 +202,5 @@ namespace Cutulu
         Generic,
         Native,
         Steam
-    }
-
-    public enum InputCode : byte
-    {
-        Invalid,
-
-        Start,
-        Start2,
-        OSHome,
-        BothShoulders,
-
-        MoveRight,
-        MoveUp,
-
-        LookRight,
-        LookUp,
-
-        ShoulderRight,
-        TriggerRight,
-
-        ShoulderLeft,
-        TriggerLeft,
-
-        StickPressRight,
-        StickPressLeft,
-
-        RightNorth,
-        RightWest,
-        RightSouth,
-        RightEast,
-
-        DpadRight,
-        DpadUp,
-
-        LeftNorth,
-        LeftWest,
-        LeftSouth,
-        LeftEast
     }
 }
