@@ -18,9 +18,9 @@ namespace Cutulu
         public Vector2 MouseMotion { get; private set; }
         private byte ResetMotion { get; set; }
 
-        private InputTranslation GetTranslation() => Translation ??= CreateTranslation();
-        public virtual InputTranslation CreateTranslation() => new();
-        public InputTranslation Translation { get; private set; }
+        private InputMapper GetTranslation() => Translation ??= CreateTranslation();
+        public virtual InputMapper CreateTranslation() => new();
+        public InputMapper Translation { get; private set; }
 
         #region Local Node Events
         public override void _EnterTree()
@@ -61,6 +61,7 @@ namespace Cutulu
                     ResetMotion = 1;
                     break;
 
+                // Other input
                 default: break;
             }
         }

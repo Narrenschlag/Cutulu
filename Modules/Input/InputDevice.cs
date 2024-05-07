@@ -20,11 +20,11 @@ namespace Cutulu
         public int SteamInputIndex { get; private set; }
         public int XInputIndex { get; private set; }
 
-        private InputTranslation Translation;
+        private InputMapper Translation;
 
         public int GetUniqueHash(int externalId) => Encryption.Hash(externalId, iUDID);
 
-        public InputDevice(InputDeviceManager manager, InputTranslation translation, long udid)
+        public InputDevice(InputDeviceManager manager, InputMapper translation, long udid)
         {
             Translation = translation;
             Manager = manager;
@@ -33,7 +33,7 @@ namespace Cutulu
 
             OnConnect();
 
-            Debug.Log($"+device: [{UDID}] as '{DeviceName}'");
+            Debug.Log($"+device: [{UDID}] as '{DeviceName}' ({GUID})");
         }
 
         #region Connection Status
@@ -83,7 +83,7 @@ namespace Cutulu
         {
             OnConnect();
 
-            Debug.Log($"+device [{UDID}] as '{DeviceName}'");
+            Debug.Log($"+device [{UDID}] as '{DeviceName}' ({GUID})");
             Input.StartJoyVibration(iUDID, 0.5f, 0.5f, 2.5f);
         }
 
@@ -98,6 +98,7 @@ namespace Cutulu
         #region Debug Functions
         public void PrintDebug()
         {
+            /*
             Debug.Log($"#############  Device: {DeviceName}  ##############");
             Debug.Log($"Move: {GetValue(InputCode.LeftStickRight)}x {GetValue(InputCode.LeftStickUp)}y");
             Debug.Log($"Look: {GetValue(InputCode.RightStickRight)}x {GetValue(InputCode.RightStickUp)}y");
@@ -109,6 +110,7 @@ namespace Cutulu
 
             Debug.Log($"R0:{GetValue(InputCode.RightSouth)} R1:{GetValue(InputCode.RightEast)} R2:{GetValue(InputCode.RightNorth)} R3:{GetValue(InputCode.RightWest)}");
             Debug.Log($"Share:{GetValue(InputCode.Start2)} Start:{GetValue(InputCode.Start)} OS:{GetValue(InputCode.OSHome)}");
+            */
         }
         #endregion
 
@@ -121,7 +123,7 @@ namespace Cutulu
         public float GetInputValue(string inputName)
         => Manager.Map.TryGetValue(inputName, out var inputSet) ? inputSet.Value(this) : default;
 
-        public bool GetKeyDown(InputCode input, ref bool keyMemory, float threshold = 0.5f, params string[] nativeInputNames)
+        public bool GetKeyDown(InputCode input, ref bool keyMemory, float threshold = 0.5f)
         {
             var previous = keyMemory;
 
@@ -129,7 +131,7 @@ namespace Cutulu
             return previous == false && keyMemory;
         }
 
-        public bool GetKeyUp(InputCode input, ref bool keyMemory, float threshold = 0.5f, params string[] nativeInputNames)
+        public bool GetKeyUp(InputCode input, ref bool keyMemory, float threshold = 0.5f)
         {
             var previous = keyMemory;
 
@@ -143,41 +145,45 @@ namespace Cutulu
         public float GetValue(InputCode input)
         {
             // Get values
-            Translation.Translate(input, out var _button, out var _axis, out var natives);
+            Translation.Translate(input, out var _button, out var _axis, out var native);
 
-            // Extra overrides for native devices
-            if (natives == null && DeviceType == InputDeviceType.Native)
+            // Native device inputs set in godots input map
+            if (DeviceType == InputDeviceType.Native)
             {
                 switch (input)
                 {
-                    case InputCode.RightStickRight: return Manager.MouseMotion.X;
-                    case InputCode.RightStickUp: return Manager.MouseMotion.Y;
+                    #region Mouse Motion Inputs equalling "mouse" in the native string using any stick axis
+                    case InputCode.RStickNorth | InputCode.LStickNorth | InputCode.RNorth | InputCode.LNorth:
+                        if (mouse()) return Mathf.Max(0, Manager.MouseMotion.Y); else break;
 
-                    default:
-                        break;
+                    case InputCode.RStickWest | InputCode.LStickWest | InputCode.RWest | InputCode.LWest:
+                        if (mouse()) return Mathf.Abs(Mathf.Min(0, Manager.MouseMotion.X)); else break;
+
+                    case InputCode.RStickSouth | InputCode.LStickSouth | InputCode.RSouth | InputCode.LSouth:
+                        if (mouse()) return Mathf.Abs(Mathf.Min(0, Manager.MouseMotion.Y)); else break;
+
+                    case InputCode.RStickEast | InputCode.LStickEast | InputCode.REast | InputCode.LEast:
+                        if (mouse()) return Mathf.Max(0, Manager.MouseMotion.X); else break;
+                    #endregion
+
+                    default: break;
                 }
+
+                return native.NotEmpty() ? Input.GetActionRawStrength(native) : default;
+
+                bool mouse() => native.NotEmpty() && native == "mouse";
             }
-
-            // Overrides for special inputs
-            switch (input)
-            {
-                case InputCode.BothShoulders: return GetKey(InputCode.LeftShoulder) && GetKey(InputCode.RightShoulder) ? 1f : default;
-
-                case InputCode.DpadRight: return GetValue(InputCode.LeftEast) - GetValue(InputCode.LeftWest);
-                case InputCode.DpadUp: return GetValue(InputCode.LeftNorth) - GetValue(InputCode.LeftSouth);
-
-                default: break;
-            }
-
-            // Native inputs
-            if (DeviceType == InputDeviceType.Native) return natives != null ? natives.Length > 1 ? natives[0].GetValue() - natives[1].GetValue() : natives[0].GetValue() : default;
 
             // Gamepad inputs
-            else return
+            else
+            {
+                return
                 _button != JoyButton.Invalid ? button(_button) :
                 _axis != JoyAxis.Invalid ? axis(_axis) : default;
-            float axis(JoyAxis axis) => Input.GetJoyAxis(iUDID, axis);
-            float button(JoyButton button) => Input.IsJoyButtonPressed(iUDID, button) ? 1f : 0f;
+
+                float axis(JoyAxis axis) => Input.GetJoyAxis(iUDID, axis);
+                float button(JoyButton button) => Input.IsJoyButtonPressed(iUDID, button) ? 1f : 0f;
+            }
         }
         #endregion
 
