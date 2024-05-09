@@ -10,8 +10,11 @@ namespace Cutulu
     {
         [Export] private XInputManager Manager { get; set; }
 
-        private static readonly Dictionary<int, DeviceSet> Devices = new();
+        public readonly Dictionary<int, DeviceSet> Devices = new();
+        public delegate void DeviceAddedEvent(DeviceSet set);
         public bool AllReady { get; private set; }
+
+        public DeviceAddedEvent OnDeviceAdd;
 
 
 
@@ -59,6 +62,8 @@ namespace Cutulu
             Devices.Add(device.DeviceId, set);
             set.OnReady += _OnReady;
             _OnReady();
+
+            OnDeviceAdd?.Invoke(set);
         }
 
         private void _RemDevice(XDevice device)
@@ -80,9 +85,22 @@ namespace Cutulu
 
 
 
-        private class DeviceSet
+        public void RequestDevices(DeviceAddedEvent Func)
         {
-            protected readonly XDevice Device;
+            if (Func != null)
+            {
+                foreach (var device in Devices?.Values)
+                {
+                    Func.Invoke(device);
+                }
+            }
+        }
+
+
+
+        public class DeviceSet
+        {
+            public readonly XDevice Device;
             public virtual bool Ready => true;
 
             public delegate void Event();
