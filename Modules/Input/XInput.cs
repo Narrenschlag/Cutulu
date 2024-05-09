@@ -72,7 +72,12 @@ namespace Cutulu
                         break;
 
                     case XInputType.Key:
-                        for (Key k = Key.Space; k <= Key.Asciitilde; k++)
+                        for (Key k = Key.Space; k <= Key.Quoteleft; k++)
+                        {
+                            list.Add(GetXInput(k));
+                        }
+
+                        for (Key k = Key.Braceleft; k <= Key.Asciitilde; k++)
                         {
                             list.Add(GetXInput(k));
                         }
