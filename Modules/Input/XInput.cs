@@ -7,8 +7,8 @@ namespace Cutulu
     public static class XInputf
     {
         #region XInput to XInputType
-        public static XInputType GetType(this XInput input) => GetType(ref input);
-        public static XInputType GetType(ref XInput input)
+        public static XInputType GetXType(this XInput input) => GetXType(ref input);
+        public static XInputType GetXType(ref XInput input)
         {
             // Valid input
             if (input >= XInput.Axis0)
@@ -109,7 +109,7 @@ namespace Cutulu
         public static bool IsPressed(ref int deviceId, ref XInput input)
         {
             // Handle value
-            switch (GetType(ref input))
+            switch (GetXType(ref input))
             {
                 // IO result for buttons
                 case XInputType.Button: return Input.IsJoyButtonPressed(deviceId, (JoyButton)(input + (int)XInput.ButtonOffset));
@@ -142,7 +142,7 @@ namespace Cutulu
         public static float GetValue(ref int deviceId, ref XInput input)
         {
             // Handle value
-            switch (GetType(ref input))
+            switch (GetXType(ref input))
             {
                 case XInputType.Button: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
                 case XInputType.AxisButton: return IsPressed(ref deviceId, ref input) ? 1f : 0f;

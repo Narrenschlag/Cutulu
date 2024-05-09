@@ -23,6 +23,7 @@ namespace Cutulu
         public int SteamInputIndex { get; private set; }
         public int XInputIndex { get; private set; }
 
+        public XInput[] SpecificListenInputs { get; set; } = null;
         public XInputMap InputMap { get; set; }
 
         public int GetUniqueHash(int externalId) => Encryption.Hash(externalId, iUDID);
@@ -101,7 +102,7 @@ namespace Cutulu
         public bool IsPressed(XInput input) => XInputf.IsPressed(Mathf.Min(0, DeviceId), input);
         public float GetValue(XInput input) => XInputf.GetValue(Mathf.Min(0, DeviceId), input);
 
-        public bool ListenForInput(out XInput[] inputs) => ListenForInput(out inputs, DeviceId < 0 ? Manager.XNative : Manager.XGamepad);
+        public bool ListenForInput(out XInput[] inputs) => ListenForInput(out inputs, SpecificListenInputs ?? (DeviceId < 0 ? Manager.XNative : Manager.XGamepad));
         public bool ListenForInput(out XInput[] inputs, params XInput[] range)
         {
             List<XInput> list = null;
