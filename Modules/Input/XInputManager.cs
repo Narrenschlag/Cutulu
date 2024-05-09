@@ -3,14 +3,14 @@ using Godot;
 
 namespace Cutulu
 {
-    public partial class InputDeviceManager : Node
+    public partial class XInputManager : Node
     {
         [Export] public int MaxDeviceCount { get; set; } = 4;
 
-        public readonly Dictionary<long, InputDevice> Devices = new();
+        public readonly Dictionary<long, XDevice> Devices = new();
         public ModeEnum Mode { get; set; }
 
-        public delegate void OnNewDeviceEventHandler(InputDevice device);
+        public delegate void OnNewDeviceEventHandler(XDevice device);
         public OnNewDeviceEventHandler OnNewDevice, OnRemoveDevice;
 
         public readonly XInput[]
@@ -100,7 +100,7 @@ namespace Cutulu
             }
         }
 
-        private void AddDevice(InputDevice device)
+        private void AddDevice(XDevice device)
         {
             Devices.Add(device.UDID, device);
             OnNewDevice?.Invoke(device);
@@ -133,9 +133,9 @@ namespace Cutulu
             return maxValue;
         }
 
-        public bool ListenForInput(out (InputDevice device, XInput[] inputs)[] devices)
+        public bool ListenForInput(out (XDevice device, XInput[] inputs)[] devices)
         {
-            List<(InputDevice device, XInput[] inputs)> list = null;
+            List<(XDevice device, XInput[] inputs)> list = null;
             foreach (var device in Devices.Values)
             {
                 if (device.ListenForInput(out XInput[] input)) (list ??= new()).Add((device, input));
@@ -144,9 +144,9 @@ namespace Cutulu
             return (devices = list?.ToArray()) != null;
         }
 
-        public bool ListenForInput(out (InputDevice device, XInput[] inputs)[] devices, params XInput[] range)
+        public bool ListenForInput(out (XDevice device, XInput[] inputs)[] devices, params XInput[] range)
         {
-            List<(InputDevice device, XInput[] inputs)> list = null;
+            List<(XDevice device, XInput[] inputs)> list = null;
             foreach (var device in Devices.Values)
             {
                 if (device.ListenForInput(out var input, range)) (list ??= new()).Add((device, input));
@@ -182,9 +182,9 @@ namespace Cutulu
             return maxValue;
         }
 
-        public bool ListenForInput(out (InputDevice device, string[] inputs)[] devices, params string[] range)
+        public bool ListenForInput(out (XDevice device, string[] inputs)[] devices, params string[] range)
         {
-            List<(InputDevice device, string[] inputs)> list = null;
+            List<(XDevice device, string[] inputs)> list = null;
             foreach (var device in Devices.Values)
             {
                 if (device.ListenForInput(out var input, range)) (list ??= new()).Add((device, input));

@@ -8,7 +8,7 @@ namespace Cutulu
     /// </summary>
     public partial class XInputSetup : Node
     {
-        [Export] private InputDeviceManager Manager { get; set; }
+        [Export] private XInputManager Manager { get; set; }
 
         private static readonly Dictionary<int, DeviceSet> Devices = new();
         public bool AllReady { get; private set; }
@@ -50,7 +50,7 @@ namespace Cutulu
 
 
 
-        private void _AddDevice(InputDevice device)
+        private void _AddDevice(XDevice device)
         {
             AllReady = false;
 
@@ -61,7 +61,7 @@ namespace Cutulu
             _OnReady();
         }
 
-        private void _RemDevice(InputDevice device)
+        private void _RemDevice(XDevice device)
         {
             Devices.Remove(device.DeviceId);
         }
@@ -82,21 +82,22 @@ namespace Cutulu
 
         private class DeviceSet
         {
-            protected readonly InputDevice Device;
+            protected readonly XDevice Device;
             public virtual bool Ready => true;
 
             public delegate void Event();
             public Event OnReady;
 
-            public DeviceSet(InputDevice device)
+            public DeviceSet(XDevice device)
             {
                 Device = device;
 
-                Debug.Log($"Setting up {Device.DeviceName} as {GetType().Name}");
+                //Debug.Log($"Setting up {Device.DeviceName} as {GetType().Name}");
             }
 
             public virtual void _Process(ref double delta)
             {
+                // Will only be called if wanted
                 if (Device.ListenForInput(out XInput[] inputs) && inputs?.Length > 0)
                 {
                     var str = $"{Device.DeviceName}:";
@@ -113,7 +114,7 @@ namespace Cutulu
 
         private class NativeSet : DeviceSet
         {
-            public NativeSet(InputDevice device) : base(device)
+            public NativeSet(XDevice device) : base(device)
             {
 
             }
@@ -133,7 +134,7 @@ namespace Cutulu
             public override bool Ready => Device.SpecificListenInputs?.Length > 0;
             private readonly List<XInput> TriggerInputs;
 
-            public GamepadSet(InputDevice device) : base(device)
+            public GamepadSet(XDevice device) : base(device)
             {
                 Device.SpecificListenInputs = System.Array.Empty<XInput>(); // Ignore all inputs
                 TriggerRight = XInput.Invalid;
@@ -171,8 +172,6 @@ namespace Cutulu
                         list.Remove(TriggerLeft);
 
                         Device.SpecificListenInputs = list.ToArray();
-
-                        Debug.Log($"Registered Triggers\nRight: {TriggerRight}\nLeft: {TriggerLeft}");
                         OnReady?.Invoke();
                     }
                 }

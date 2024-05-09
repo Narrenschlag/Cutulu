@@ -3,14 +3,14 @@ using Godot;
 
 namespace Cutulu
 {
-    public class InputDevice
+    public class XDevice
     {
         public long UDID { get; private set; } // Unique Device Identification Index
 
         public int iUDID { get; private set; } // Integer version of above
         public int DeviceId { get => iUDID; }
 
-        public InputDeviceManager Manager { get; private set; }
+        public XInputManager Manager { get; private set; }
         public InputDeviceType DeviceType { get; private set; }
         public string RawDeviceName { get; private set; }
         public string DeviceName { get; private set; }
@@ -28,7 +28,7 @@ namespace Cutulu
 
         public int GetUniqueHash(int externalId) => Encryption.Hash(externalId, iUDID);
 
-        public InputDevice(InputDeviceManager manager, long udid, XInputMap map = default)
+        public XDevice(XInputManager manager, long udid, XInputMap map = default)
         {
             Manager = manager;
             iUDID = (int)udid;
