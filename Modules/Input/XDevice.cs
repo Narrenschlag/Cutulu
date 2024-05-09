@@ -38,6 +38,30 @@ namespace Cutulu
             OnConnect();
         }
 
+        #region Remap Inputs
+        public virtual void SetMap(string name)
+        {
+            if (ListenForInput(out XInput[] inputs))
+            {
+                InputMap.Clear(name);
+                InputMap.Override(name, inputs);
+            }
+        }
+
+        public virtual void AddMap(string name)
+        {
+            if (ListenForInput(out XInput[] inputs))
+            {
+                InputMap.Override(name, inputs);
+            }
+        }
+
+        public virtual void ClearMap(string name)
+        {
+            InputMap.Clear(name);
+        }
+        #endregion
+
         #region Connection Status
         private void OnConnect()
         {
@@ -98,6 +122,22 @@ namespace Cutulu
         }
         #endregion
 
+        #region Read Inputs using name
+        public bool IsPressed(string name) => InputMap.Mapping.TryGetValue(XInputMap.ModifyString(name), out var entry) && entry.IsPressed(DeviceId);
+        public float GetValue(string name) => InputMap.Mapping.TryGetValue(XInputMap.ModifyString(name), out var entry) ? entry.GetValue(DeviceId) : default;
+
+        public bool ListenForInput(out string[] inputs, params string[] range)
+        {
+            List<string> list = null;
+            for (int i = 0; i < range?.Length; i++)
+            {
+                if (IsPressed(range[i])) (list ??= new()).Add(XInputMap.ModifyString(range[i]));
+            }
+
+            return (inputs = list?.ToArray()) != null;
+        }
+        #endregion
+
         #region Read Inputs using XInput
         public bool IsPressed(XInput input) => XInputf.IsPressed(Mathf.Min(0, DeviceId), input);
         public float GetValue(XInput input) => XInputf.GetValue(Mathf.Min(0, DeviceId), input);
@@ -109,22 +149,6 @@ namespace Cutulu
             for (int i = 0; i < range?.Length; i++)
             {
                 if (IsPressed(range[i])) (list ??= new()).Add(range[i]);
-            }
-
-            return (inputs = list?.ToArray()) != null;
-        }
-        #endregion
-
-        #region Read Inputs using name
-        public bool IsPressed(string name) => InputMap.Mapping.TryGetValue(XInputMap.ModifyString(name), out var entry) && entry.IsPressed(DeviceId);
-        public float GetValue(string name) => InputMap.Mapping.TryGetValue(XInputMap.ModifyString(name), out var entry) ? entry.GetValue(DeviceId) : default;
-
-        public bool ListenForInput(out string[] inputs, params string[] range)
-        {
-            List<string> list = null;
-            for (int i = 0; i < range?.Length; i++)
-            {
-                if (IsPressed(range[i])) (list ??= new()).Add(XInputMap.ModifyString(range[i]));
             }
 
             return (inputs = list?.ToArray()) != null;
