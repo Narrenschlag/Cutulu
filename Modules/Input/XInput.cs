@@ -77,7 +77,7 @@ namespace Cutulu
                             list.Add(GetXInput(k));
                         }
 
-                        for (Key k = Key.Section; k <= Key.Kp9; k++)
+                        for (Key k = Key.Special; k <= Key.Kp9; k++)
                         {
                             list.Add(GetXInput(k));
                         }

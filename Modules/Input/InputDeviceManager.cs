@@ -7,11 +7,16 @@ namespace Cutulu
     {
         [Export] public int MaxDeviceCount { get; set; } = 4;
 
-        public Dictionary<long, InputDevice> Devices { get; private set; }
+        public readonly Dictionary<long, InputDevice> Devices = new();
         public ModeEnum Mode { get; set; }
 
         public delegate void OnNewDeviceEventHandler(InputDevice device);
         public OnNewDeviceEventHandler OnNewDevice, OnRemoveDevice;
+
+        public readonly XInput[]
+        XAll = XInputf.GetRange(XInputType.AxisButton, XInputType.Button, XInputType.Key).ToArray(),
+        XGamepad = XInputf.GetRange(XInputType.AxisButton, XInputType.Button).ToArray(),
+        XNative = XInputf.GetRange(XInputType.Key).ToArray();
 
         public Vector2 MouseMotion { get; private set; }
         private byte ResetMotion { get; set; }
@@ -20,7 +25,6 @@ namespace Cutulu
         public override void _EnterTree()
         {
             Mode = ModeEnum.Open;
-            Devices = new();
 
             // Add native device
             AddDevice(new(this, -1));
@@ -127,6 +131,17 @@ namespace Cutulu
             }
 
             return maxValue;
+        }
+
+        public bool ListenForInput(out (InputDevice device, XInput[] inputs)[] devices)
+        {
+            List<(InputDevice device, XInput[] inputs)> list = null;
+            foreach (var device in Devices.Values)
+            {
+                if (device.ListenForInput(out XInput[] input)) (list ??= new()).Add((device, input));
+            }
+
+            return (devices = list?.ToArray()) != null;
         }
 
         public bool ListenForInput(out (InputDevice device, XInput[] inputs)[] devices, params XInput[] range)
