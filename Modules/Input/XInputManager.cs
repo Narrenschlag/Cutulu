@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 
@@ -104,6 +105,17 @@ namespace Cutulu
         {
             Devices.Add(device.UDID, device);
             OnNewDevice?.Invoke(device);
+        }
+
+        public void RequestDevices(OnNewDeviceEventHandler Func)
+        {
+            if (Func != null)
+            {
+                foreach (var device in Devices?.Values)
+                {
+                    Func.Invoke(device);
+                }
+            }
         }
         #endregion
 
