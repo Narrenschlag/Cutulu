@@ -5,11 +5,9 @@ namespace Cutulu
 {
     public partial class InputDeviceManager : Node
     {
-        [Export] public CutuluInputMap InputMapFile { get; set; }
         [Export] public int MaxDeviceCount { get; set; } = 4;
 
         public Dictionary<long, InputDevice> Devices { get; private set; }
-        public Dictionary<string, InputSet> Map { get; private set; }
         public ModeEnum Mode { get; set; }
 
         public delegate void OnNewDeviceEventHandler(InputDevice device);
@@ -18,21 +16,14 @@ namespace Cutulu
         public Vector2 MouseMotion { get; private set; }
         private byte ResetMotion { get; set; }
 
-        private InputMapper GetTranslation() => Translation ??= CreateTranslation();
-        public virtual InputMapper CreateTranslation() => new();
-        public InputMapper Translation { get; private set; }
-
         #region Local Node Events
         public override void _EnterTree()
         {
-            Map = InputMapFile.NotNull() ? InputMapFile.GetMap() : new();
-            Debug.Log($"{Map.Count} inputs have been registered.");
-
             Mode = ModeEnum.Open;
             Devices = new();
 
             // Add native device
-            AddDevice(new(this, GetTranslation(), -1));
+            AddDevice(new(this, -1));
 
             Input.JoyConnectionChanged += OnDeviceChange;
         }
@@ -84,7 +75,7 @@ namespace Cutulu
                 {
                     // Clamp device count
                     if (MaxDeviceCount < 1 || MaxDeviceCount > Devices.Count)
-                        AddDevice(new(this, GetTranslation(), udid));
+                        AddDevice(new(this, udid));
                 }
             }
 
@@ -112,97 +103,79 @@ namespace Cutulu
         }
         #endregion
 
-        #region Read Input
-        // Input Map
-        public bool GetInput(int iUDID, string inputName)
-        => Map.TryGetValue(inputName, out var inputSet) && Devices.TryGetValue(iUDID, out var device) && inputSet.IsPressed(device);
-
-        // Input Map
-        public bool GetInput(string inputName, float threshold = 0.5f)
+        #region Global based on XInput
+        public bool IsPressed(XInput input)
         {
-            if (Map.TryGetValue(inputName, out var inputSet))
+            foreach (var device in Devices.Values)
             {
-                foreach (var device in Devices.Values)
-                {
-                    if (inputSet.IsPressed(device, threshold)) return true;
-                }
+                if (device.IsPressed(input)) return true;
             }
 
             return default;
         }
 
-        // Input Map
-        public float GetInputValue(int iUDID, string inputName)
-        => Map.TryGetValue(inputName, out var inputSet) && Devices.TryGetValue(iUDID, out var device) ? inputSet.Value(device) : default;
-
-        // Input Map
-        public float GetInputValue(string inputName)
+        public float GetValue(XInput input)
         {
-            if (Map.TryGetValue(inputName, out var inputSet) == false) return default;
             var maxValue = 0f;
 
             foreach (var device in Devices.Values)
             {
-                var value = inputSet.Value(device);
+                var value = device.GetValue(input);
 
-                if (value.abs() >= 1) return value;
+                if (value.abs() >= 1f) return value;
                 else if (value.abs() > maxValue.abs()) maxValue = value;
             }
 
             return maxValue;
         }
 
-        public bool GetKeyDown(int iUDID, ref bool downRef, InputCode code, float threshold = 0.5f)
-        => Devices.TryGetValue(iUDID, out var device) && device.GetKeyDown(code, ref downRef, threshold);
-
-        public bool GetKeyUp(int iUDID, ref bool upRef, InputCode code, float threshold = 0.5f)
-        => Devices.TryGetValue(iUDID, out var device) && device.GetKeyUp(code, ref upRef, threshold);
-
-        public bool GetKey(int iUDID, InputCode code, float threshold = 0.5f)
-        => Devices.TryGetValue(iUDID, out var device) && device.GetKey(code, threshold);
-
-        public float GetValue(int iUDID, InputCode code)
-        => Devices.TryGetValue(iUDID, out var device) ? device.GetValue(code) : default;
-
-        public bool GetKeyDown(InputCode code, ref bool downRef, float threshold = 0.5f)
+        public bool ListenForInput(out (InputDevice device, XInput[] inputs)[] devices, params XInput[] range)
         {
-            var previous = downRef;
+            List<(InputDevice device, XInput[] inputs)> list = null;
+            foreach (var device in Devices.Values)
+            {
+                if (device.ListenForInput(out var input, range)) (list ??= new()).Add((device, input));
+            }
 
-            downRef = GetKey(code, threshold);
-            return previous == false && downRef;
+            return (devices = list?.ToArray()) != null;
         }
+        #endregion
 
-        public bool GetKeyUp(InputCode code, ref bool upRef, float threshold = 0.5f)
-        {
-            var previous = upRef;
-
-            upRef = GetKey(code, threshold);
-            return previous && upRef == false;
-        }
-
-        public bool GetKey(InputCode code, float threshold = 0.5f)
+        #region Global based on name
+        public bool IsPressed(string name)
         {
             foreach (var device in Devices.Values)
             {
-                if (Mathf.Abs(device.GetValue(code)) >= threshold) return true;
+                if (device.IsPressed(name)) return true;
             }
 
             return default;
         }
 
-        public float GetValue(InputCode code)
+        public float GetValue(string name)
         {
             var maxValue = 0f;
 
             foreach (var device in Devices.Values)
             {
-                var value = device.GetValue(code);
+                var value = device.GetValue(name);
 
-                if (value.abs() >= 1) return value;
+                if (value.abs() >= 1f) return value;
                 else if (value.abs() > maxValue.abs()) maxValue = value;
             }
 
             return maxValue;
+        }
+
+        public bool ListenForInput(out (InputDevice device, string[] inputs)[] devices, params string[] range)
+        {
+            List<(InputDevice device, string[] inputs)> list = null;
+            foreach (var device in Devices.Values)
+            {
+                if (device.ListenForInput(out var input, range)) (list ??= new()).Add((device, input));
+            }
+
+            return (devices = list?.ToArray()) != null;
         }
         #endregion
 

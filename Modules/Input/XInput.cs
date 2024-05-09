@@ -40,6 +40,7 @@ namespace Cutulu
         #region IsPressed
         public static float ButtonPressThreshold { get; set; } = 0.50f;
 
+        public static bool IsPressed(this XInput input, int deviceId) => IsPressed(ref deviceId, ref input);
         public static bool IsPressed(this int deviceId, XInput input) => IsPressed(ref deviceId, ref input);
         public static bool IsPressed(ref int deviceId, ref XInput input)
         {
@@ -72,6 +73,7 @@ namespace Cutulu
         #endregion
 
         #region GetValue
+        public static float GetValue(this XInput input, int deviceId) => GetValue(ref deviceId, ref input);
         public static float GetValue(this int deviceId, XInput input) => GetValue(ref deviceId, ref input);
         public static float GetValue(ref int deviceId, ref XInput input)
         {
