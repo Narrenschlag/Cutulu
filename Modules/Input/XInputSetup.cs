@@ -11,11 +11,14 @@ namespace Cutulu
         [Export] private InputDeviceManager Manager { get; set; }
 
         private static readonly Dictionary<int, DeviceSet> Devices = new();
+        public bool AllReady { get; private set; }
 
 
 
         public override void _EnterTree()
         {
+            AllReady = true;
+
             if (Manager.Devices.Count > 0)
             {
                 foreach (var device in Manager.Devices.Values)
@@ -36,10 +39,12 @@ namespace Cutulu
 
         public override void _Process(double delta)
         {
-            foreach (var device in Devices.Values)
+            if (AllReady == false)
             {
-                //if (device?.Ready == false) 
-                device?._Process(ref delta);
+                foreach (var device in Devices.Values)
+                {
+                    if (device?.Ready == false) device?._Process(ref delta);
+                }
             }
         }
 
@@ -47,12 +52,30 @@ namespace Cutulu
 
         private void _AddDevice(InputDevice device)
         {
-            Devices.Add(device.DeviceId, device.DeviceType == InputDeviceType.Native ? new NativeSet(device) : new GamepadSet(device));
+            AllReady = false;
+
+            DeviceSet set = device.DeviceType == InputDeviceType.Native ? new NativeSet(device) : new GamepadSet(device);
+
+            Devices.Add(device.DeviceId, set);
+            set.OnReady += _OnReady;
+            _OnReady();
         }
 
         private void _RemDevice(InputDevice device)
         {
             Devices.Remove(device.DeviceId);
+        }
+
+        private void _OnReady()
+        {
+            AllReady = true;
+
+            foreach (var set in Devices?.Values)
+            {
+                if ((AllReady = set.Ready) == false) break;
+            }
+
+            Debug.Log($"All Devices ready: {AllReady}");
         }
 
 
@@ -61,6 +84,9 @@ namespace Cutulu
         {
             protected readonly InputDevice Device;
             public virtual bool Ready => true;
+
+            public delegate void Event();
+            public Event OnReady;
 
             public DeviceSet(InputDevice device)
             {
@@ -104,7 +130,7 @@ namespace Cutulu
             public XInput TriggerRight { get; private set; }
             public XInput TriggerLeft { get; private set; }
 
-            public override bool Ready => Device.SpecificListenInputs != null;
+            public override bool Ready => Device.SpecificListenInputs?.Length > 0;
             private readonly List<XInput> TriggerInputs;
 
             public GamepadSet(InputDevice device) : base(device)
@@ -147,11 +173,14 @@ namespace Cutulu
                         Device.SpecificListenInputs = list.ToArray();
 
                         Debug.Log($"Registered Triggers\nRight: {TriggerRight}\nLeft: {TriggerLeft}");
+                        OnReady?.Invoke();
                     }
                 }
 
                 else base._Process(ref delta);
             }
         }
+
+
     }
 }
