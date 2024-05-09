@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 namespace Cutulu
@@ -35,6 +36,59 @@ namespace Cutulu
         public static XInput GetXInput(this JoyAxis axis) => (XInput)(int)axis - (int)JoyAxis.LeftX;
         public static XInput GetXInput(this JoyButton button) => (XInput)(int)button - (int)XInput.ButtonOffset;
         public static XInput GetXInput(this JoyAxis axis, bool readNegative) => (XInput)(2 * ((int)axis - (int)JoyAxis.LeftX) + (readNegative ? 1 : 0)) - (int)XInput.AxisButtonOffset;
+        #endregion
+
+        #region Get Range
+        public static List<XInput> GetRange(params XInputType[] types)
+        {
+            if (types?.Length < 1) return null;
+
+            List<XInput> list = null;
+            for (int i = 0; i < types.Length; i++)
+            {
+                if (types[i] != XInputType.Invalid) list ??= new();
+
+                switch (types[i])
+                {
+                    case XInputType.Axis:
+                        for (XInput k = XInput.Axis0; k <= XInput.Axis5; k++)
+                        {
+                            list.Add(k);
+                        }
+                        break;
+
+                    case XInputType.AxisButton:
+                        for (XInput k = XInput.AxisButton0; k <= XInput.AxisButton11; k++)
+                        {
+                            list.Add(k);
+                        }
+                        break;
+
+                    case XInputType.Button:
+                        for (XInput k = XInput.Button0; k <= XInput.Button21; k++)
+                        {
+                            list.Add(k);
+                        }
+                        break;
+
+                    case XInputType.Key:
+                        for (Key k = Key.Space; k <= Key.Section; k++)
+                        {
+                            list.Add(GetXInput(k));
+                        }
+
+                        for (Key k = Key.Section; k <= Key.Kp9; k++)
+                        {
+                            list.Add(GetXInput(k));
+                        }
+                        break;
+
+                    default: break;
+                }
+            }
+
+            return list;
+        }
         #endregion
 
         #region IsPressed
