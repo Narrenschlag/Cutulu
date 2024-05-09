@@ -14,9 +14,9 @@ namespace Cutulu
         public OnNewDeviceEventHandler OnNewDevice, OnRemoveDevice;
 
         public readonly XInput[]
-        XAll = XInputf.GetRange(XInputType.AxisButton, XInputType.Button, XInputType.Key).ToArray(),
+        XAll = XInputf.GetRange(XInputType.AxisButton, XInputType.Button, XInputType.Mouse, XInputType.Key).ToArray(),
         XGamepad = XInputf.GetRange(XInputType.AxisButton, XInputType.Button).ToArray(),
-        XNative = XInputf.GetRange(XInputType.Key).ToArray();
+        XNative = XInputf.GetRange(XInputType.Mouse, XInputType.Key).ToArray();
 
         public Vector2 MouseMotion { get; private set; }
         private byte ResetMotion { get; set; }

@@ -22,6 +22,9 @@ namespace Cutulu
                 // Button
                 else if (input >= XInput.Button0 && input <= XInput.Button21) return XInputType.Button;
 
+                // Mouse
+                else if (input >= XInput.MouseMin && input <= XInput.MouseMax) return XInputType.Mouse;
+
                 // Key
                 else if (input >= XInput.KeyMin && input <= XInput.KeyMax) return XInputType.Key;
             }
@@ -35,6 +38,7 @@ namespace Cutulu
         public static XInput GetXInput(this Key key) => (XInput)((int)key - (int)XInput.KeyOffset);
         public static XInput GetXInput(this JoyAxis axis) => (XInput)(int)axis - (int)JoyAxis.LeftX;
         public static XInput GetXInput(this JoyButton button) => (XInput)(int)button - (int)XInput.ButtonOffset;
+        public static XInput GetXInput(this MouseButton mouseButton) => (XInput)(int)mouseButton - (int)XInput.MouseOffset;
         public static XInput GetXInput(this JoyAxis axis, bool readNegative) => (XInput)(2 * ((int)axis - (int)JoyAxis.LeftX) + (readNegative ? 1 : 0)) - (int)XInput.AxisButtonOffset;
         #endregion
 
@@ -66,6 +70,13 @@ namespace Cutulu
 
                     case XInputType.Button:
                         for (XInput k = XInput.Button0; k <= XInput.Button21; k++)
+                        {
+                            list.Add(k);
+                        }
+                        break;
+
+                    case XInputType.Mouse:
+                        for (XInput k = XInput.MouseMin; k <= XInput.MouseMax; k++)
                         {
                             list.Add(k);
                         }
@@ -125,6 +136,9 @@ namespace Cutulu
                 // Float result for axis
                 case XInputType.Axis: return Mathf.Abs(GetValue(ref deviceId, ref input)) >= ButtonPressThreshold; // Return -1 to 1
 
+                // IO result for mouse buttons
+                case XInputType.Mouse: return Input.IsMouseButtonPressed((MouseButton)(input + (int)XInput.MouseOffset));
+
                 // IO result for keys
                 case XInputType.Key: return Input.IsKeyPressed((Key)(input + (int)XInput.KeyOffset));
 
@@ -147,7 +161,10 @@ namespace Cutulu
                 case XInputType.Button: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
                 case XInputType.AxisButton: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
                 case XInputType.Axis: return Input.GetJoyAxis(deviceId, (JoyAxis)input);
+
+                case XInputType.Mouse: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
                 case XInputType.Key: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
+
 
                 default:
                     Debug.LogError($"Invalid xInput.");
@@ -167,14 +184,16 @@ namespace Cutulu
         AxisButton = 1,
         Button = 2,
 
-        Key = 10,
+        Mouse = 10,
+        Key = 11,
     }
     #endregion
 
     #region Values
     public enum XInput : int
     {
-        KeyOffset = -512,
+        KeyOffset = -1024,
+        MouseOffset = -512,
         ButtonOffset = -256,
         AxisButtonOffset = -128,
         Invalid = -1,
@@ -222,8 +241,11 @@ namespace Cutulu
         Button20,
         Button21,
 
+        MouseMin = (int)MouseButton.Left - MouseOffset,
+        MouseMax = MouseMin + (int)MouseButton.Xbutton2 - (int)MouseButton.Left,
+
         KeyMin = (int)Key.Space - KeyOffset,
-        KeyMax = KeyMin + (int)Key.Kp9 - (int)Key.Space, // 71 + 120 -> 129 keys
+        KeyMax = KeyMin + (int)Key.Kp9 - (int)Key.Space,
     }
     #endregion
 }
