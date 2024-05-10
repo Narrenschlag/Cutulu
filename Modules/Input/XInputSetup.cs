@@ -146,8 +146,7 @@ namespace Cutulu
         private class GamepadSet : DeviceSet
         {
             // Problematic Inputs
-            public XInput TriggerRight { get; private set; }
-            public XInput TriggerLeft { get; private set; }
+            public XInput[] IgnoreTriggers { get; private set; }
 
             public override bool Ready => Device.SpecificListenInputs?.Length > 0;
             private readonly List<XInput> TriggerInputs;
@@ -155,8 +154,7 @@ namespace Cutulu
             public GamepadSet(XDevice device) : base(device)
             {
                 Device.SpecificListenInputs = System.Array.Empty<XInput>(); // Ignore all inputs
-                TriggerRight = XInput.Invalid;
-                TriggerLeft = XInput.Invalid;
+                IgnoreTriggers = null;
 
                 // Only listen to the press values of potential trigger axies
                 TriggerInputs = new();
@@ -169,25 +167,19 @@ namespace Cutulu
             public override void _Process(ref double delta)
             {
                 // Required to ignore the up values of trigger inputs
-                if (TriggerLeft == XInput.Invalid)
+                if (IgnoreTriggers?.Length != 2)
                 {
-                    if (Device.ListenForInput(out var inputs, TriggerInputs.ToArray()) && inputs?.Length > 0)
+                    if (Device.ListenForInput(out var inputs, TriggerInputs.ToArray()) && inputs?.Length == 2)
                     {
-                        TriggerInputs.Remove(inputs[0]);
-                        TriggerLeft = inputs[0] + 1;
-                    }
-                }
-
-                else if (TriggerRight == XInput.Invalid)
-                {
-                    if (Device.ListenForInput(out var inputs, TriggerInputs.ToArray()) && inputs?.Length > 0)
-                    {
-                        TriggerRight = inputs[0] + 1;
                         TriggerInputs.Clear();
+                        IgnoreTriggers = new XInput[2]{
+                            inputs[0] + 1,
+                            inputs[1] + 1,
+                        };
 
                         var list = new List<XInput>(Device.Manager.XGamepad);
-                        list.Remove(TriggerRight);
-                        list.Remove(TriggerLeft);
+                        list.Remove(IgnoreTriggers[0]);
+                        list.Remove(IgnoreTriggers[1]);
 
                         Device.SpecificListenInputs = list.ToArray();
                         OnReady?.Invoke();
