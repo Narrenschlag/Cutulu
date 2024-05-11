@@ -6,9 +6,9 @@ namespace Cutulu
 {
     public readonly struct XInputMap
     {
-        public readonly Dictionary<string, Entry> Mapping;
+        public readonly Dictionary<string, Entry> Mapping = new();
 
-        public XInputMap() { Mapping = new(); }
+        public XInputMap() => Mapping = new();
         public XInputMap(string name, params XInput[] overrides) : this()
         {
             Override(name, overrides);

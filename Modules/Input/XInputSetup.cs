@@ -57,7 +57,7 @@ namespace Cutulu
         {
             AllReady = false;
 
-            DeviceSet set = device.DeviceType == InputDeviceType.Native ? new NativeSet(device) : new GamepadSet(device);
+            DeviceSet set = device.DeviceType == XDeviceType.Native ? new NativeSet(device) : new GamepadSet(device);
 
             Devices.Add(device.DeviceId, set);
             set.OnReady += _OnReady;

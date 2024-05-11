@@ -11,7 +11,7 @@ namespace Cutulu
         public int DeviceId { get => iUDID; }
 
         public XInputManager Manager { get; private set; }
-        public InputDeviceType DeviceType { get; private set; }
+        public XDeviceType DeviceType { get; private set; }
         public string RawDeviceName { get; private set; }
         public string DeviceName { get; private set; }
         public bool Connected { get; private set; }
@@ -34,26 +34,22 @@ namespace Cutulu
             iUDID = (int)udid;
             UDID = udid;
 
-            InputMap = map;
+            InputMap = map.Mapping == null ? new() : map;
             OnConnect();
         }
 
         #region Remap Inputs
-        public virtual void SetMap(string name)
+        public virtual void SetMap(string name) { if (ListenForInput(out XInput[] inputs)) SetMap(name, inputs); }
+        public virtual void SetMap(string name, params XInput[] inputs)
         {
-            if (ListenForInput(out XInput[] inputs))
-            {
-                InputMap.Clear(name);
-                InputMap.Override(name, inputs);
-            }
+            InputMap.Clear(name);
+            InputMap.Override(name, inputs);
         }
 
-        public virtual void AddMap(string name)
+        public virtual void AddMap(string name) { if (ListenForInput(out XInput[] inputs)) AddMap(name, inputs); }
+        public virtual void AddMap(string name, params XInput[] inputs)
         {
-            if (ListenForInput(out XInput[] inputs))
-            {
-                InputMap.Override(name, inputs);
-            }
+            InputMap.Override(name, inputs);
         }
 
         public virtual void ClearMap(string name)
@@ -70,7 +66,7 @@ namespace Cutulu
             // Native Device aka. Keyboard
             if (iUDID < 0)
             {
-                DeviceType = InputDeviceType.Native;
+                DeviceType = XDeviceType.Native;
                 RawDeviceName = "NativeDevice";
                 DeviceName = "Native Device";
             }
@@ -90,9 +86,9 @@ namespace Cutulu
                 XInputIndex = getInteger("xinput_index");
 
                 DeviceType =
-                    SteamInputIndex >= 0 ? InputDeviceType.Steam :
-                    Input.IsJoyKnown(iUDID) ? InputDeviceType.Generic :
-                    InputDeviceType.Unknown;
+                    SteamInputIndex >= 0 ? XDeviceType.Steam :
+                    Input.IsJoyKnown(iUDID) ? XDeviceType.Generic :
+                    XDeviceType.Unknown;
 
                 string getString(string name, string defaultValue = default) =>
                     data.TryGetValue("vendor_id", out var value) &&
@@ -156,7 +152,7 @@ namespace Cutulu
         #endregion
     }
 
-    public enum InputDeviceType : byte
+    public enum XDeviceType : byte
     {
         Unknown,
         Generic,
