@@ -160,14 +160,35 @@ namespace Cutulu
         public static Vector3 Right(this Node3D node, bool global = true) => node == null ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X;
         public static Vector3 Up(this Node3D node, bool global = true) => node == null ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y;
 
-        public static T Instantiate<T>(this PackedScene prefab, Node root) where T : Node
+        public static T Instantiate<T>(this PackedScene prefab, Node parent, int waitMilliseconds = 0) where T : Node
         {
             if (prefab == null) return null;
 
             T t = (T)prefab.Instantiate();
-            if (root.NotNull()) root.AddChild(t);
+            if (parent.NotNull())
+            {
+                if (waitMilliseconds > 0) parent.SetChild(t);
+                else parent.AddChild(t);
+            }
 
             return t;
+        }
+
+        public static async void SetChild(this Node parent, Node node, int waitMilliseconds)
+        {
+            await Task.Delay(waitMilliseconds);
+            SetChild(parent, node);
+        }
+
+        public static void SetChild(this Node parent, Node node)
+        {
+            if (node == parent) return;
+
+            var previous = node.GetParent();
+            if (previous == parent) return;
+
+            if (previous.NotNull()) lock (previous) previous.RemoveChild(node);
+            if (parent.NotNull()) lock (parent) parent.AddChild(node);
         }
 
         public static T Instantiate<T>(this T prefab, Node root) where T : Node
