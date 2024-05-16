@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System;
 using Godot;
 
 namespace Cutulu
@@ -101,6 +103,61 @@ namespace Cutulu
                 Mathf.Abs(value.X) > Mathf.Abs(normalized.X) ? normalized.X : value.X,
                 Mathf.Abs(value.Y) > Mathf.Abs(normalized.Y) ? normalized.Y : value.Y
             );
+        }
+
+        public static Vector2[] InterpolateEvenly(this Vector2[] originalPoints, int targetLength)
+        {
+            if (originalPoints == null || originalPoints.Length < 2 || targetLength < 2)
+            {
+                throw new ArgumentException("Invalid input data.");
+            }
+
+            // Step 1: Calculate cumulative distances
+            var cumulativeDistances = new float[originalPoints.Length];
+            cumulativeDistances[0] = 0f;
+
+            for (int i = 1; i < originalPoints.Length; i++)
+            {
+                cumulativeDistances[i] = cumulativeDistances[i - 1] + originalPoints[i - 1].DistanceTo(originalPoints[i]);
+            }
+
+            var totalDistance = cumulativeDistances[^1];
+            var intervalDistance = totalDistance / (targetLength - 1);
+
+            // Step 2: Interpolate new points at evenly spaced intervals
+            var newPoints = new List<Vector2>()
+            {
+                originalPoints[0]
+            };
+
+            for (int i = 1; i < targetLength - 1; i++)
+            {
+                var targetDistance = i * intervalDistance;
+                var newPoint = InterpolateAtDistance(originalPoints, cumulativeDistances, targetDistance);
+                newPoints.Add(newPoint);
+            }
+
+            newPoints.Add(originalPoints[^1]);
+
+            return newPoints.ToArray();
+
+            static Vector2 InterpolateAtDistance(Vector2[] points, float[] cumulativeDistances, float targetDistance)
+            {
+                for (int i = 1; i < points.Length; i++)
+                {
+                    if (cumulativeDistances[i] >= targetDistance)
+                    {
+                        var segmentStartDist = cumulativeDistances[i - 1];
+                        var segmentEndDist = cumulativeDistances[i];
+                        var segmentLength = segmentEndDist - segmentStartDist;
+
+                        var t = (targetDistance - segmentStartDist) / segmentLength;
+                        return points[i - 1].Lerp(points[i], t);
+                    }
+                }
+
+                return points[^1]; // Should never reach here if inputs are valid
+            }
         }
     }
 }
