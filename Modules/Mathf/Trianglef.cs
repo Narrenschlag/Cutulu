@@ -31,40 +31,44 @@ namespace Cutulu
             }
         }
 
-        public static float CenterDistance(Vector2 position, params Vector2[] corners)
+        public static float CenterDistance(this Vector2 position, params Vector2[] corners)
         => position.DistanceTo(Vector2f.Average(corners));
 
-        public static float EdgeDistance(Vector2 position, params Vector2[] corners) => EdgeDistance(position, out _, corners);
-        public static float EdgeDistance(Vector2 position, out int edgeIndex, params Vector2[] corners)
+        public static float EdgeDistance(this Vector2 position, params Vector2[] corners) => EdgeDistance(position, out _, corners);
+        public static float EdgeDistance(this Vector2 position, Vector2 a, Vector2 b)
         {
-            var max = edge(0);
-            edgeIndex = 0;
+            // Calculate the direction vector from v1 to v2
+            var dv = b - a;
 
-            for (int i = 1; i < corners.Length; i++)
+            // Calculate the vector from v1 to the given point p
+            var vp = position - a;
+
+            // Project the vector from v1 to p onto the edge (v1, v2)
+            float t = vp.Dot(dv) / dv.Dot(dv);
+
+            // Clamp t to ensure it's within the bounds of the edge
+            t = Mathf.Min(Mathf.Max(t, 0f), 1f);
+
+            // Calculate the closest point on the edge using the projected t value
+            return position.DistanceTo(a + t * dv);
+        }
+
+        public static float EdgeDistance(this Vector2 position, out int edgeIndex, params Vector2[] corners)
+        {
+            var min = EdgeDistance(position, corners[0], corners[^1]);
+            edgeIndex = corners.Length - 1;
+
+            for (int i = 0; i < corners.Length - 1; i++)
             {
-                var e = edge(i);
-
-                if (e > max)
+                var distance = EdgeDistance(position, corners[i], corners[i + 1]);
+                if (distance < min)
                 {
+                    min = distance;
                     edgeIndex = i;
-                    max = e;
                 }
             }
 
-            return Mathf.Max(0, max);
-
-            float edge(int i)
-            {
-                var a = corners[++i % corners.Length];
-                var b = corners[--i];
-
-                var d = (b - a).Normalized();
-                var north = (position - b).Dot(d);
-                var south = (position - a).Dot(-d);
-                var right = (position - a).Dot(d.RotatedD(90));
-
-                return Floatf.Max(right, north, south);
-            }
+            return Mathf.Max(0, min);
         }
     }
 }
