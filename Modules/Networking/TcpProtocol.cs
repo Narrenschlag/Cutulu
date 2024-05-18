@@ -49,14 +49,18 @@ namespace Cutulu
             this.onDisconnect = onDisconnect;
             this.onReceive = onReceive;
 
-            client = new TcpClient(ipType switch
+            switch (ipType)
             {
-                IPType.ExclusiveIPv4 => AddressFamily.InterNetwork,
-                _ => AddressFamily.InterNetworkV6
-            });
+                case IPType.ExclusiveIPv4:
+                    client = new(host, port);
+                    break;
 
-            client.Client.DualMode = ipType == IPType.Any;
-            client.Connect(host, port);
+                default:
+                    client = new(AddressFamily.InterNetworkV6);
+                    client.Client.DualMode = ipType == IPType.Any;
+                    client.Connect(host, port);
+                    break;
+            }
 
             // Cancel setup if connection failed
             if ((Connected = client != null && client.Connected) == false)

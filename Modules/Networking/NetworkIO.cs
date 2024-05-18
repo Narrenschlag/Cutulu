@@ -94,7 +94,7 @@ namespace Cutulu
         /// <summary>
         /// Opens a web request. If connected to the internet it will return your global IPAddress
         /// </summary>
-        public static void GetGlobalIPAddressV4(Node node, WebRequest.Result result)
+        public static void GetGlobalIPv4(Node node, WebRequest.Result result)
         {
             _ = new WebRequest(node, "https://ipinfo.io/ip", result);
         }
