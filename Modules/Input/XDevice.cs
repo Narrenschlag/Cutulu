@@ -134,6 +134,18 @@ namespace Cutulu
         }
         #endregion
 
+        public bool IsAnythingPressed()
+        {
+            var range = SpecificListenInputs ?? (DeviceId < 0 ? Manager.XNative : Manager.XGamepad);
+
+            for (int i = 0; i < range?.Length; i++)
+            {
+                if (IsPressed(range[i])) return true;
+            }
+
+            return false;
+        }
+
         #region Read Inputs using XInput
         public bool IsPressed(XInput input) => XInputf.IsPressed(Mathf.Min(0, DeviceId), input);
         public float GetValue(XInput input) => XInputf.GetValue(Mathf.Min(0, DeviceId), input);

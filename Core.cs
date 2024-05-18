@@ -167,7 +167,7 @@ namespace Cutulu
             T t = (T)prefab.Instantiate();
             if (parent.NotNull())
             {
-                if (waitMilliseconds > 0) parent.SetChild(t);
+                if (waitMilliseconds > 0) parent.SetChild(t, waitMilliseconds);
                 else parent.AddChild(t);
             }
 

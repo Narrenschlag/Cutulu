@@ -119,6 +119,16 @@ namespace Cutulu
         }
         #endregion
 
+        public bool IsAnythingPressed()
+        {
+            foreach (var device in Devices?.Values)
+            {
+                if (device.IsAnythingPressed()) return true;
+            }
+
+            return false;
+        }
+
         #region Global based on XInput
         public bool IsPressed(XInput input)
         {
