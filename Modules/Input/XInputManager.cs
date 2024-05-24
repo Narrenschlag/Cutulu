@@ -4,6 +4,7 @@ using Godot;
 
 namespace Cutulu
 {
+    [GlobalClass]
     public partial class XInputManager : Node
     {
         [Export] public int MaxDeviceCount { get; set; } = 4;

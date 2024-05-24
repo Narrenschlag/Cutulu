@@ -6,6 +6,7 @@ namespace Cutulu
     /// <summary>
     /// Servers to assign special input maps for specific listenings. Mainly used to ignore the up value of left and right triggers on gamepads.
     /// </summary>
+    [GlobalClass]
     public partial class XInputSetup : Node
     {
         [Export] private XInputManager Manager { get; set; }
