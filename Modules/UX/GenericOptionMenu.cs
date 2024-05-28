@@ -16,6 +16,7 @@ namespace Cutulu.UX
         public OptionButton[] Buttons;
         public OptionPointer Pointer;
         public Vector2[][] Points;
+        public Vector2 UpDirection;
         public string[] Options;
 
         public virtual void Setup(float diameter, params string[] options)
@@ -38,6 +39,8 @@ namespace Cutulu.UX
         private float lastValue;
         public void SetValue(int index, float value01)
         {
+            if (Pointer.IsNull() || Buttons.IsEmpty()) return;
+
             Pointer.SetValue(index < 0 ? 0 : index %= Buttons.Length, value01 = Mathf.Min(value01, 1f));
 
             if (lastIndex != index || (lastValue < 1 != value01 < 1))
@@ -78,6 +81,7 @@ namespace Cutulu.UX
                 }
             }
 
+            UpDirection = Vector2.Up;
             switch (Options.Length)
             {
                 case 1:
@@ -85,11 +89,11 @@ namespace Cutulu.UX
                     break;
 
                 case 2:
-                    DrawN(Vector2.Right, 0.75f);
+                    DrawN(UpDirection = Vector2.Right, 0.75f);
                     break;
 
                 default:
-                    DrawN(Vector2.Up, 0.75f - (0.1f * (Options.Length - 2)));
+                    DrawN(UpDirection, 0.75f - (0.1f * (Options.Length - 2)));
                     break;
             }
 
@@ -186,7 +190,7 @@ namespace Cutulu.UX
                     break;
             }
 
-            return Mathf.RoundToInt(Options.Length * angleUp / 360);
+            return Mathf.RoundToInt(Options.Length * angleUp / 360) % Options.Length;
         }
     }
 }
