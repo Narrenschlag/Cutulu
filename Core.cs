@@ -135,6 +135,18 @@ namespace Cutulu
             }
         }
 
+        public static void Clear<T>(this Node parent, int skip = 0, bool forceInstant = false) where T : Node
+        {
+            if (parent.IsNull()) return;
+
+            foreach (Node child in parent.GetNodesInChildren<T>())
+            {
+                if (skip-- > 0 || child.IsNull()) continue;
+
+                child.Destroy(forceInstant);
+            }
+        }
+
         public static async void Destroy(this Node node, float lifeTime, bool forceInstant = false)
         {
             await Task.Delay(Mathf.RoundToInt(lifeTime * 1000));
@@ -182,6 +194,7 @@ namespace Cutulu
 
         public static void SetChild(this Node parent, Node node)
         {
+            if (node.IsNull() || parent.IsNull()) return;
             if (node == parent) return;
 
             var previous = node.GetParent();
