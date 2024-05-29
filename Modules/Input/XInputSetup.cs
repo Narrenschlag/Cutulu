@@ -31,14 +31,14 @@ namespace Cutulu
                 }
             }
 
-            Manager.OnNewDevice += _AddDevice;
-            Manager.OnRemoveDevice += _RemDevice;
+            Manager.OnDeviceAdd += _AddDevice;
+            Manager.OnDeviceRem += _RemDevice;
         }
 
         public override void _ExitTree()
         {
-            Manager.OnNewDevice -= _AddDevice;
-            Manager.OnRemoveDevice -= _RemDevice;
+            Manager.OnDeviceAdd -= _AddDevice;
+            Manager.OnDeviceRem -= _RemDevice;
         }
 
         public override void _Process(double delta)

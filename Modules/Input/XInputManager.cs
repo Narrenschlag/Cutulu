@@ -13,7 +13,7 @@ namespace Cutulu
         public ModeEnum Mode { get; set; }
 
         public delegate void OnNewDeviceEventHandler(XDevice device);
-        public OnNewDeviceEventHandler OnNewDevice, OnRemoveDevice;
+        public OnNewDeviceEventHandler OnDeviceAdd, OnDeviceRem;
 
         public readonly XInput[]
         XAll = XInputf.GetRange(XInputType.AxisButton, XInputType.Button, XInputType.Mouse, XInputType.Key).ToArray(),
@@ -95,7 +95,7 @@ namespace Cutulu
 
                     if (Mode == ModeEnum.Open)
                     {
-                        OnRemoveDevice?.Invoke(device);
+                        OnDeviceRem?.Invoke(device);
                         Devices.Remove(udid);
                     }
                 }
@@ -105,7 +105,7 @@ namespace Cutulu
         private void AddDevice(XDevice device)
         {
             Devices.Add(device.UDID, device);
-            OnNewDevice?.Invoke(device);
+            OnDeviceAdd?.Invoke(device);
         }
 
         public void RequestDevices(OnNewDeviceEventHandler Func)
