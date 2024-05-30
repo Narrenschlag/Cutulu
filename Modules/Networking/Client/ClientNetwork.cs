@@ -39,6 +39,8 @@ namespace Cutulu
 
             Tcp = new TcpProtocol(tcpHost, tcpPort, Receive, Disconnected, IPType);
             Udp = new UdpProtocol(udpHost, udpPort, Receive, IPType);
+
+            TcpConnected = Tcp.Connected;
         }
 
         /// <summary> 
