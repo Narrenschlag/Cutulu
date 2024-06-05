@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 namespace Cutulu
@@ -44,6 +45,63 @@ namespace Cutulu
             }
 
             return value;
+        }
+
+        // Function to compute the centroid of a list of Vector3 points
+        public static Vector3 ComputeCentroid(ICollection<Vector3> points)
+        {
+            var centroid = new Vector3();
+
+            foreach (var point in points)
+            {
+                centroid += point;
+            }
+
+            return centroid / points.Count;
+        }
+
+        // Function to compute the angle between a point and the centroid
+        public static float ComputeAngle(Vector3 centroid, Vector3 point)
+        => Mathf.Atan2(point.Z - centroid.Z, point.X - centroid.X);
+
+        // Function to order the points clockwise
+        public static List<Vector3> OrderClockwise2(this ICollection<Vector3> points)
+        {
+            var list = new List<Vector3>(points);
+            if (list.Count < 3) return list; // No need to sort if less than 3 points
+
+            var centroid = ComputeCentroid(list);
+            list.Sort((a, b) =>
+            {
+                var angleA = ComputeAngle(centroid, a);
+                var angleB = ComputeAngle(centroid, b);
+                return angleB.CompareTo(angleA); // For clockwise sorting
+            });
+
+            return list;
+        }
+
+        public static List<Vector3> OrderClockwise(this ICollection<Vector3> _points, bool invert = false)
+        {
+            var points = new List<Vector3>(_points);
+            var crossProduct = 0f;
+
+            // Calculate the cross product of adjacent edges
+            for (int i = 0; i < points.Count; i++)
+            {
+                var current = points[i];
+                var next = points[(i + 1) % points.Count]; // Wrap around to the first point when reaching the last one
+                var prev = points[(i + points.Count - 1) % points.Count]; // Wrap around to the last point when reaching the first one
+
+                var currentToNext = next - current;
+                var prevToCurrent = current - prev;
+
+                crossProduct += currentToNext.X * prevToCurrent.Z - currentToNext.Z * prevToCurrent.X;
+            }
+
+            // If the cross product is negative, points are ordered clockwise
+            if (invert ? crossProduct >= 0 : crossProduct < 0) points.Reverse();
+            return points;
         }
     }
 }
