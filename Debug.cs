@@ -9,22 +9,22 @@ namespace Cutulu
         /// <summary>
         /// Draws a point in 3d space.
         /// </summary>
-        public static MeshInstance3D Point(this Node node, Vector3 point, Color color, float radius = .05f) => Render.DrawPoint(node, point, color, radius);
+        public static MeshInstance3D Point(this Node node, Vector3 point, Color color, float radius = .05f) => Renderf.DrawPoint(node, point, color, radius);
 
         /// <summary>
         /// Draws a ray in 3d space.
         /// </summary>
-        public static MeshInstance3D Ray(this Node node, Vector3 source, Vector3 dir, Color color) => Render.DrawRay(node, source, dir, color);
+        public static MeshInstance3D Ray(this Node node, Vector3 source, Vector3 dir, Color color) => Renderf.DrawRay(node, source, dir, color);
 
         /// <summary>
         /// Draws a line in 3d space.
         /// </summary>
-        public static MeshInstance3D Line(this Node node, Vector3 from, Vector3 to, Color color) => Render.DrawLine(node, new List<Vector3>() { from, to }, color);
+        public static MeshInstance3D Line(this Node node, Vector3 from, Vector3 to, Color color) => Renderf.DrawLine(node, new List<Vector3>() { from, to }, color);
 
         /// <summary>
         /// Draws a line in 3d space.
         /// </summary>
-        public static MeshInstance3D Line(this Node node, List<Vector3> path, Color color) => Render.DrawLine(node, path, color);
+        public static MeshInstance3D Line(this Node node, List<Vector3> path, Color color) => Renderf.DrawLine(node, path, color);
         #endregion
 
         #region Logging                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -70,5 +70,16 @@ namespace Cutulu
 
             return Mathf.Max(0, min);
         }
+
+        public static Vector3 RayToY(this Vector3 origin, Vector3 direction, float y = 0)
+        {
+            if (direction.Y < 0)
+            {
+                var value = origin.Y - (origin + direction).Y;
+                return origin + direction / value * (origin.Y - y);
+            }
+
+            return default;
+        }
     }
 }

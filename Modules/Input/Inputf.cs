@@ -26,6 +26,13 @@ namespace Cutulu
             origin = camera.ProjectRayOrigin(screenPosition);
         }
 
+        public static Vector3 GetHit(this Camera3D camera, float y = 0) => GetHit(camera, MousePosition(camera), y);
+        public static Vector3 GetHit(this Camera3D camera, Vector2 screenPosition, float y = 0)
+        {
+            GetRayAt(camera, screenPosition, out var origin, out var direction);
+            return Trianglef.RayToY(origin, direction, y);
+        }
+
         public static bool RaycastFromCamera(this Camera3D camera, out RaycastHit hit, uint mask = 4294967295)
         => Physics.Raycast(camera, out hit, camera.Far, mask);
 
