@@ -81,7 +81,7 @@ namespace Cutulu
             return list;
         }
 
-        public static List<Vector3> OrderClockwise(this ICollection<Vector3> _points, bool invert = false)
+        public static List<Vector3> OrderClockwise(this ICollection<Vector3> _points, bool flip = true)
         {
             var points = new List<Vector3>(_points);
             var crossProduct = 0f;
@@ -100,7 +100,7 @@ namespace Cutulu
             }
 
             // If the cross product is negative, points are ordered clockwise
-            if (invert ? crossProduct >= 0 : crossProduct < 0) points.Reverse();
+            if (flip ? crossProduct >= 0 : crossProduct < 0) points.Reverse();
             return points;
         }
     }
