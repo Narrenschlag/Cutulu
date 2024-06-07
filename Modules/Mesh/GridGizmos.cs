@@ -1,12 +1,15 @@
+using System;
 using Godot;
 
 namespace Cutulu
 {
-    public partial class GridGizmo : MeshInstance3D
+    [GlobalClass]
+    [Obsolete($"Use GridGizmo instead", false)]
+    public partial class GridGizmos : MeshInstance3D
     {
-        public GridGizmo(Node parent, string name, Color mainColor, Color subColor, byte gridSize = 16, byte resolution = 4) : base()
+        public GridGizmos(Node parent, string name, Color mainColor, Color subColor, byte gridSize = 16, byte resolution = 4) : base()
         {
-            Name = $"Gizmo_{name.Trim()}";
+            Name = $"Gizmo {name.Trim()}";
             parent.AddChild(this);
 
             GlobalPosition = Vector3.Up * .001f;
@@ -61,12 +64,9 @@ namespace Cutulu
                 surfaceTool.AddVertex(center + forward * length);
             }
 
-            // Dispose old mesh
-            if (Mesh.NotNull()) Mesh.Dispose();
-
             // Create a MeshInstance and add the mesh
             // Generate the mesh
-            Mesh = surfaceTool.Commit();
+            surfaceTool.Apply(this);
 
             // Revert transform
             GlobalPosition = oldPosition;
