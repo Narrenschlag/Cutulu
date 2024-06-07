@@ -13,42 +13,28 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Try calculate the intersection point C of two points and their directions
+        /// Determines if two lines intersect and returns the intersection point.
         /// </summary>
-        public static bool TryIntersect(this Vector2 A, Vector2 a, Vector2 B, Vector2 b, out Vector2 C)
+        /// <param name="A">Origin of the first line.</param>
+        /// <param name="a">Direction of the first line.</param>
+        /// <param name="B">Origin of the second line.</param>
+        /// <param name="b">Direction of the second line.</param>
+        /// <param name="intersection">Output intersection point if the lines intersect.</param>
+        /// <returns>True if the lines intersect, otherwise false.</returns>
+        public static bool TryIntersect(this Vector2 A, Vector2 a, Vector2 B, Vector2 b, out Vector2 intersection)
         {
-            // Normalize values
-            a = a.Normalized();
-            b = b.Normalized();
+            float denominator = a.X * b.Y - a.Y * b.X;
+            intersection = default;
 
-            // Check if directions are parallel
-            if (Mathf.Abs(a.Cross(b)) < Mathf.Epsilon)
+            // Check if lines are parallel (denominator is zero)
+            if (Math.Abs(denominator) < Mathf.Epsilon)
             {
-                C = default;
                 return false;
             }
 
-            // Calculate t and s
-            var t = (B.X * b.Y - B.Y * b.X - A.X * b.Y + A.Y * b.X) / (a.X * b.Y - a.Y * b.X);
-            var s = (A.X + t * a.X - B.X) / b.X;
+            float t = ((B.X - A.X) * b.Y - (B.Y - A.Y) * b.X) / denominator;
 
-            // Check for "Kollinearität (Berührung oder Übereinanderliegen)"
-            // -> meaning that the lines are on each other and have infinite intersections
-            if (Mathf.Abs(t) < Mathf.Epsilon && Mathf.Abs(s) < Mathf.Epsilon)
-            {
-                C = default;
-                return false;
-            }
-
-            // Check for non intersecting vectors
-            if (s < 0 || s > 1)
-            {
-                C = default;
-                return false;
-            }
-
-            // Calculate result
-            C = A + t * a;
+            intersection = A + t * a;
             return true;
         }
 
