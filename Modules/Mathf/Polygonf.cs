@@ -16,13 +16,13 @@ namespace Cutulu
         /// </summary>
         /// <param name="vertices">The array of Vector3 vertices defining the polygon in 2D space.</param>
         /// <returns>An array of integers representing the indices of the vertices that form triangles.</returns>
-        public static int[] Triangulate(this Vector3[] vertices)
+        public static List<int> Triangulate(this Vector3[] vertices)
         {
             var indices = new List<int>();
             var n = vertices.Length;
 
             if (n < 3)
-                return indices.ToArray();
+                return indices;
 
             // Create a list of vertex indices
             var V = new List<int>();
@@ -37,7 +37,7 @@ namespace Cutulu
                 if (count-- <= 0)
                 {
                     //Debug.LogError("Triangulation failed: infinite loop detected");
-                    return indices.ToArray(); // Triangulation failed
+                    return indices; // Triangulation failed
                 }
 
                 // Three consecutive vertices in the polygon
@@ -76,7 +76,7 @@ namespace Cutulu
                 }
             }
 
-            return indices.ToArray();
+            return indices;
         }
 
         private static bool IsEar(int u, int v, int w, List<int> V, Vector3[] vertices)
