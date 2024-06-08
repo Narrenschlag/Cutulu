@@ -103,5 +103,13 @@ namespace Cutulu
             if (flip ? crossProduct >= 0 : crossProduct < 0) points.Reverse();
             return points;
         }
+
+        public static bool TryIntersectFlat(this Vector3 A, Vector3 a, Vector3 B, Vector3 b, out Vector3 C)
+        {
+            var result = A.toXY().TryIntersect(a.toXY(), B.toXY(), b.toXY(), out var c);
+
+            C = c.toXZ();
+            return result;
+        }
     }
 }
