@@ -237,6 +237,12 @@ namespace Cutulu
         /// </summary>
         public static bool TryRead<T>(this string path, out T output, FileType type = FileType.Json)
         {
+            if (path.IsEmpty())
+            {
+                output = default;
+                return false;
+            }
+
             // Check if file exists
             if (Exists(path = path.Trim()))
             {
@@ -267,10 +273,12 @@ namespace Cutulu
                         // Validate T is a class
                         if (typeof(T).IsClass)
                         {
-                            MethodInfo method = typeof(GD).GetMethod("Load", BindingFlags.Public | BindingFlags.Static);
-                            MethodInfo genericMethod = method.MakeGenericMethod(typeof(T));
-
-                            return (output = genericMethod.Invoke(null, new object[1] { path }) is T _output ? _output : default) != null;
+                            var resource = GD.Load(path);
+                            if (resource.NotNull())
+                            {
+                                output = (T)(object)resource;
+                                return true;
+                            }
                         }
 
                         break;
