@@ -1,10 +1,46 @@
-using System.Collections.Generic;
 using Godot;
 
 namespace Cutulu
 {
     public static class Renderf
     {
+        private static OrmMaterial3D vertexMaterial;
+        public static OrmMaterial3D VertexMaterial
+        {
+            get
+            {
+                if (vertexMaterial.IsNull())
+                {
+                    vertexMaterial = new()
+                    {
+                        ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                        VertexColorUseAsAlbedo = true,
+                    };
+                }
+
+                return vertexMaterial;
+            }
+        }
+
+        private static OrmMaterial3D vertexMaterialAlpha;
+        public static OrmMaterial3D VertexMaterialAlpha
+        {
+            get
+            {
+                if (vertexMaterialAlpha.IsNull())
+                {
+                    vertexMaterialAlpha = new()
+                    {
+                        ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                        Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                        VertexColorUseAsAlbedo = true,
+                    };
+                }
+
+                return vertexMaterialAlpha;
+            }
+        }
+
         #region Base Functions		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static MeshInstance3D StartLineMesh(this Color color, out ImmediateMesh mesh)
         {
@@ -27,34 +63,36 @@ namespace Cutulu
             mesh.SurfaceEnd();
         }
 
-        public static MeshInstance3D DrawLine(this Node node, List<Vector3> points, Color color)
+        public static MeshInstance3D DrawLine(this Node parent, Color color, params Vector3[] points)
         {
-            if (color.A <= 0 || points.IsEmpty())
+            if (points.Size() < 2) return default;
+
+            var tool = Mesh.PrimitiveType.LineStrip.Open();
+
+            for (int i = 0; i < points.Length; i++)
             {
-                Debug.LogError($"CannotDrawLineError: No points have been given");
-                return null;
+                tool.SetColor(color);
+                tool.AddVertex(points[i]);
             }
 
-            if (points.Count < 2) return DrawPoint(node, points[0], color);
-
-            MeshInstance3D mesh_instance = StartLineMesh(color, out ImmediateMesh mesh);
-            for (int i = 1; i < points.Count; i++)
+            var mesh = new MeshInstance3D()
             {
-                mesh.SurfaceAddVertex(points[i - 1]);
-                mesh.SurfaceAddVertex(points[i]);
-            }
+                MaterialOverride = VertexMaterial,
+                Mesh = tool.Commit(),
+                Name = "Line",
+            };
 
-            mesh.EndLineMesh();
+            parent.AddChild(mesh);
+            mesh.GlobalPosition = Vector3.Zero;
 
-            node.AddChild(mesh_instance);
-            return mesh_instance;
+            return mesh;
         }
 
         public static MeshInstance3D DrawPoint(this Node node, Vector3 position, Color color, float radius = .05f)
         {
-            MeshInstance3D mesh_instance = new MeshInstance3D();
-            OrmMaterial3D material = new OrmMaterial3D();
-            SphereMesh sphere_mesh = new SphereMesh();
+            MeshInstance3D mesh_instance = new();
+            OrmMaterial3D material = new();
+            SphereMesh sphere_mesh = new();
 
             mesh_instance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
             mesh_instance.Position = position;
@@ -73,8 +111,8 @@ namespace Cutulu
         #endregion
 
         #region Line Functions		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public static MeshInstance3D DrawRay(this Node node, Vector3 source, Vector3 direction, Color color) => DrawLine(node, new List<Vector3>() { source, source + direction }, color);
-        public static MeshInstance3D DrawLine(this Node node, Vector3 from, Vector3 to, Color color) => DrawLine(node, new List<Vector3>() { from, to }, color);
+        public static MeshInstance3D DrawRay(this Node node, Color color, Vector3 source, Vector3 direction) => DrawLine(node, color, new Vector3[2] { source, source + direction });
+        public static MeshInstance3D DrawLine(this Node node, Color color, Vector3 from, Vector3 to) => DrawLine(node, color, new Vector3[2] { from, to });
         #endregion
 
         #region Curve Functions		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

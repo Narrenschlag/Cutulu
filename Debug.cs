@@ -14,17 +14,17 @@ namespace Cutulu
         /// <summary>
         /// Draws a ray in 3d space.
         /// </summary>
-        public static MeshInstance3D Ray(this Node node, Vector3 source, Vector3 dir, Color color) => Renderf.DrawRay(node, source, dir, color);
+        public static MeshInstance3D Ray(this Node node, Vector3 source, Vector3 dir, Color color) => Renderf.DrawRay(node, color, source, dir);
 
         /// <summary>
         /// Draws a line in 3d space.
         /// </summary>
-        public static MeshInstance3D Line(this Node node, Vector3 from, Vector3 to, Color color) => Renderf.DrawLine(node, new List<Vector3>() { from, to }, color);
+        public static MeshInstance3D Line(this Node node, Vector3 from, Vector3 to, Color color) => Renderf.DrawLine(node, color, from, to);
 
         /// <summary>
         /// Draws a line in 3d space.
         /// </summary>
-        public static MeshInstance3D Line(this Node node, List<Vector3> path, Color color) => Renderf.DrawLine(node, path, color);
+        public static MeshInstance3D Line(this Node node, List<Vector3> path, Color color) => Renderf.DrawLine(node, color, path.ToArray());
         #endregion
 
         #region Logging                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

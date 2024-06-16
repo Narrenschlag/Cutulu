@@ -1,0 +1,105 @@
+using System.Collections.Generic;
+using Godot;
+
+namespace Cutulu
+{
+    public static class Pathfinding
+    {
+        public static bool TryFindPath(this PathfindingTarget costFinder, Vector2I start, Vector2I goal, out Vector2I[] path)
+        {
+            return (path = FindPath(costFinder, start, goal)).NotEmpty();
+        }
+
+        public static Vector2I[] FindPath(this PathfindingTarget costFinder, Vector2I start, Vector2I goal)
+        {
+            var openSet = new SortedSet<(float fScore, Vector2I pos)>(Comparer<(float, Vector2I)>.Create((a, b) => a.Item1 == b.Item1 ? (a.Item2.X == b.Item2.X ? a.Item2.Y.CompareTo(b.Item2.Y) : a.Item2.X.CompareTo(b.Item2.X)) : a.Item1.CompareTo(b.Item1)));
+            var cameFrom = new Dictionary<Vector2I, Vector2I>();
+            var gScore = new Dictionary<Vector2I, float>();
+            var fScore = new Dictionary<Vector2I, float>();
+
+            gScore[start] = 0;
+            fScore[start] = HeuristicCostEstimate(start, goal);
+
+            openSet.Add((fScore[start], start));
+
+            while (openSet.Count > 0)
+            {
+                var current = openSet.Min.pos;
+                openSet.Remove(openSet.Min);
+
+                if (current == goal)
+                {
+                    return ReconstructPath(cameFrom, current);
+                }
+
+                foreach (var neighbor in GetNeighbors(current))
+                {
+                    var walkableCost = costFinder.GetCost(neighbor);
+                    if (walkableCost < 1) continue;
+
+                    var tentativeGScore = gScore[current] + walkableCost;
+
+                    if (!gScore.ContainsKey(neighbor) || tentativeGScore < gScore[neighbor])
+                    {
+                        cameFrom[neighbor] = current;
+                        gScore[neighbor] = tentativeGScore;
+                        fScore[neighbor] = gScore[neighbor] + HeuristicCostEstimate(neighbor, goal);
+
+                        if (!openSet.Contains((fScore[neighbor], neighbor)))
+                        {
+                            openSet.Add((fScore[neighbor], neighbor));
+                        }
+                    }
+                }
+            }
+
+            return System.Array.Empty<Vector2I>(); // No path found
+        }
+
+        private static float HeuristicCostEstimate(Vector2I a, Vector2I b)
+        {
+            // Manhattan distance
+            return Mathf.Abs(a.X - b.X) + Mathf.Abs(a.Y - b.Y);
+        }
+
+        private static Vector2I[] ReconstructPath(Dictionary<Vector2I, Vector2I> cameFrom, Vector2I current)
+        {
+            var totalPath = new List<Vector2I> { current };
+
+            while (cameFrom.ContainsKey(current))
+            {
+                current = cameFrom[current];
+                totalPath.Add(current);
+            }
+
+            totalPath.Reverse();
+            return totalPath.ToArray();
+        }
+
+        private static IEnumerable<Vector2I> GetNeighbors(Vector2I node)
+        {
+            var directions = new Vector2I[]
+            {
+                new(0, 1),
+                new(1, 0),
+                new(0, -1),
+                new(-1, 0),
+
+                new(1, 1),
+                new(1, -1),
+                new(-1, 1),
+                new(-1, -1),
+            };
+
+            foreach (var direction in directions)
+            {
+                yield return new Vector2I(node.X + direction.X, node.Y + direction.Y);
+            }
+        }
+    }
+
+    public interface PathfindingTarget
+    {
+        public int GetCost(Vector2I point);
+    }
+}
