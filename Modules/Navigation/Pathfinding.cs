@@ -3,14 +3,18 @@ using Godot;
 
 namespace Cutulu
 {
+    /// <summary>
+    /// You can use this by inherting from IPathfindingTarget and overriding the cost. Just return 0 if you want to make a point unwalkable.
+    /// That's it. When that's done use the extension methods to call your pathfinding.  
+    /// </summary>
     public static class Pathfinding
     {
-        public static bool TryFindPath(this PathfindingTarget costFinder, Vector2I start, Vector2I goal, out Vector2I[] path)
+        public static bool TryFindPath(this IPathfindingTarget costFinder, Vector2I start, Vector2I goal, out Vector2I[] path)
         {
             return (path = FindPath(costFinder, start, goal)).NotEmpty();
         }
 
-        public static Vector2I[] FindPath(this PathfindingTarget costFinder, Vector2I start, Vector2I goal)
+        public static Vector2I[] FindPath(this IPathfindingTarget costFinder, Vector2I start, Vector2I goal)
         {
             var openSet = new SortedSet<(float fScore, Vector2I pos)>(Comparer<(float, Vector2I)>.Create((a, b) => a.Item1 == b.Item1 ? (a.Item2.X == b.Item2.X ? a.Item2.Y.CompareTo(b.Item2.Y) : a.Item2.X.CompareTo(b.Item2.X)) : a.Item1.CompareTo(b.Item1)));
             var cameFrom = new Dictionary<Vector2I, Vector2I>();
@@ -98,7 +102,7 @@ namespace Cutulu
         }
     }
 
-    public interface PathfindingTarget
+    public interface IPathfindingTarget
     {
         public int GetCost(Vector2I point);
     }
