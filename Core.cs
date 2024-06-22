@@ -105,11 +105,13 @@ namespace Cutulu
         /// Returns angle from Vector2.Right. In Degrees.
         /// </summary>
         public static float GetAngleD(this Vector2 direction) => GetAngle(direction).toDegrees();
+        public static float GetAngleD(this Vector2 direction, Vector2 from) => GetAngle(direction, from).toDegrees();
 
         /// <summary>
         /// Returns angle from Vector2.Right. In Radians.
         /// </summary>
-        public static float GetAngle(this Vector2 direction) => direction.Normalized().Angle();
+        public static float GetAngle(this Vector2 direction) => GetAngle(direction, Vector2.Right);
+        public static float GetAngle(this Vector2 direction, Vector2 from) => direction.Normalized().Angle() + from.Normalized().Angle();
 
         /// <summary>
         /// Returns direction from Vector2.Right. In Degrees.
