@@ -339,6 +339,13 @@ namespace Cutulu
             }
         }
         #endregion
+
+        public static void AddEntry(this ZipPacker packer, string path, byte[] buffer)
+        {
+            packer.StartFile(path);
+            packer.WriteFile(buffer);
+            packer.CloseFile();
+        }
     }
 
     public interface IWasJson

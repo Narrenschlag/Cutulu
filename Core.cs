@@ -805,6 +805,15 @@ namespace Cutulu
                 ).ToArray());
         }
 
+        public static string TrimEndUntil(this string str, params char[] ids)
+        {
+            if (ids.IsEmpty()) return str;
+
+            var splits = str.Split(ids, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (splits.Size() < 2) return str;
+            return str[..^splits[^1].Length];
+        }
+
         /// <summary>
         /// Splits string after first instance of seperator
         /// </summary>

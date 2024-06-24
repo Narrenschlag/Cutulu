@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Modding
 {
     public partial class GlbModel : GltfDocument
     {
