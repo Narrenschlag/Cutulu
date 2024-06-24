@@ -5,6 +5,10 @@ using Godot;
 
 namespace Cutulu.Modding
 {
+    /// <summary>
+    /// CORE - Collection of Realms and Entities<br/>
+    /// Allows your players and you to patch your project using asset collections(mods)
+    /// </summary>
     public class CORE
     {
         #region Params
@@ -16,6 +20,9 @@ namespace Cutulu.Modding
         #endregion
 
         #region Constructors
+        /// <summary>
+        /// Creates an empty CORE
+        /// </summary>
         public CORE()
         {
             LoadedNonResources = new();
@@ -24,6 +31,9 @@ namespace Cutulu.Modding
             Addresses = new();
         }
 
+        /// <summary>
+        /// Creates a CORE containing given CORE files
+        /// </summary>
         public CORE(params string[] directories) : this()
         {
             var reader = new ZipReader();
@@ -53,6 +63,9 @@ namespace Cutulu.Modding
         #region Read Data
 
         #region Godot.Resource
+        /// <summary>
+        /// Returns resource of given non-resource type. Checks for null references.
+        /// </summary>
         public T GetResource<T>(string assetName) where T : Resource
         {
             if (LoadedResources.TryGetValue(assetName, out var resource) == false || resource.IsNull())
@@ -108,6 +121,9 @@ namespace Cutulu.Modding
             return resource is T t ? t : default;
         }
 
+        /// <summary>
+        /// Returns array of given resource type. Checks for null references.
+        /// </summary>
         public T[] GetResources<T>(string directory) where T : Resource
         {
             var list = new List<T>();
@@ -127,6 +143,9 @@ namespace Cutulu.Modding
         #endregion
 
         #region Non Godot.Resource
+        /// <summary>
+        /// Returns non-resource of given non-resource type. Checks for null references.
+        /// </summary>
         public T GetNonResource<T>(string assetName, IO.FileType type = IO.FileType.Binary)
         {
             if (LoadedNonResources.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
@@ -154,6 +173,9 @@ namespace Cutulu.Modding
             return nonResource is T t ? t : default;
         }
 
+        /// <summary>
+        /// Returns array of given non-resource type. Checks for null references.
+        /// </summary>
         public T[] GetNonResources<T>(string directory, IO.FileType type = IO.FileType.Binary)
         {
             var list = new List<T>();
@@ -173,6 +195,9 @@ namespace Cutulu.Modding
         #endregion
 
         #region Bytes
+        /// <summary>
+        /// Returns bytes of given asset of given name
+        /// </summary>
         public byte[] GetBytes(string assetName, out string ending)
         {
             byte[] bytes = null;
@@ -207,6 +232,9 @@ namespace Cutulu.Modding
         #endregion
 
         #region Write Data
+        /// <summary>
+        /// Compiles and writes a CORE file to given file path. Also adjusts index if wished.
+        /// </summary>
         public void Compile(string filePath, COREMeta meta, bool adjustIndex = true)
         {
             var writer = new ZipPacker();
@@ -268,7 +296,14 @@ namespace Cutulu.Modding
         #endregion
 
         #region (Un)loading
+        /// <summary>
+        /// Loads in a core file from given path, if possible.
+        /// </summary>
         public void Load(string filePath) => Load(new[] { filePath });
+
+        /// <summary>
+        /// Loads in a core file from given paths, if possible.
+        /// </summary>
         public void Load(params string[] filePaths)
         {
             if (filePaths.IsEmpty()) return;
@@ -280,7 +315,6 @@ namespace Cutulu.Modding
             reader.Close();
         }
 
-        public void Load(ref ZipReader reader, string filePath) => Load(ref reader, new[] { filePath });
         private void Load(ref ZipReader reader, params string[] filePaths)
         {
             if (filePaths.IsEmpty()) return;
@@ -350,6 +384,9 @@ namespace Cutulu.Modding
             }
         }
 
+        /// <summary>
+        /// Unloads either all COREs or given assets/names
+        /// </summary>
         public void Unload(params string[] names)
         {
             if (names.IsEmpty()) LoadedResources.Clear();
