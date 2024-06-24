@@ -70,6 +70,7 @@ namespace Cutulu
 
                                         for (int j = 0; j <= k; j++)
                                         {
+                                            if (j > 0) strng.Append('/');
                                             strng.Append(directorySplits[j]);
                                         }
 
