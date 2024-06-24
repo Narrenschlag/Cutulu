@@ -39,15 +39,16 @@ namespace Cutulu
                         if (reader.FileExists("index.meta") == false) throw new("No index.meta file could be found.");
 
                         var index = Encoding.UTF8.GetString(reader.ReadFile("index.meta"));
+                        var strng = new StringBuilder();
 
                         // Seperated by lines
                         var lines = index.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                         if (lines.NotEmpty())
                         {
-                            for (int k = 0; k < lines.Length; k++)
+                            for (int i = 0; i < lines.Length; i++)
                             {
                                 // Seperated by spaces
-                                var args = lines[k].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                                var args = lines[i].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                                 if (args.Size() != 2) continue;
 
                                 var path = args[1];
@@ -56,19 +57,30 @@ namespace Cutulu
 
                                 var name = args[0];
 
+                                // Global address for the name
                                 Addresses[name] = $"{directory}{file}?{path}";
 
+                                // Add dictionaries with depth for targetting specific types
                                 var directorySplits = name.SplitOnce('/');
                                 if (directorySplits.Size() > 1)
                                 {
-                                    var dir = directorySplits[0];
-
-                                    if (Directories.TryGetValue(dir, out var set) == false || dir.IsEmpty())
+                                    for (int k = 0; k < directorySplits.Length - 1; k++)
                                     {
-                                        Directories[dir] = set = new();
-                                    }
+                                        strng.Clear();
 
-                                    set.Add(name);
+                                        for (int j = 0; j <= k; j++)
+                                        {
+                                            strng.Append(directorySplits[j]);
+                                        }
+
+                                        var dir = strng.ToString();
+                                        if (Directories.TryGetValue(dir, out var set) == false || dir.IsEmpty())
+                                        {
+                                            Directories[dir] = set = new();
+                                        }
+
+                                        set.Add(name);
+                                    }
                                 }
                             }
                         }
