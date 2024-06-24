@@ -340,7 +340,7 @@ namespace Cutulu
         }
         #endregion
 
-        public static void AddEntry(this ZipPacker packer, string path, byte[] buffer)
+        public static void Append(this ZipPacker packer, string path, byte[] buffer)
         {
             packer.StartFile(path);
             packer.WriteFile(buffer);

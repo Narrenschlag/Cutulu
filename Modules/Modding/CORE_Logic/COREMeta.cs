@@ -15,6 +15,8 @@ namespace Cutulu.Modding
         public string Description { get; set; } = "Assets for everyone! Yippie!1!";
 
         public string[] Index { get; set; }
+
+        public int GetFileCount() => Index.Size();
         #endregion
 
         #region Constructors
@@ -53,7 +55,7 @@ namespace Cutulu.Modding
         {
             if (filePath.Exists())
             {
-                if (reader.Open(filePath) == Error.Ok && reader.FileExists("index.meta") && reader.ReadFile("index.meta").TryBuffer(out meta))
+                if (reader.Open(filePath) == Error.Ok && reader.FileExists(CORE.META_PATH) && reader.ReadFile(CORE.META_PATH).TryBuffer(out meta))
                 {
                     return meta != null;
                 }
@@ -61,6 +63,13 @@ namespace Cutulu.Modding
 
             meta = default;
             return false;
+        }
+        #endregion
+
+        #region Debug
+        public string GetMessage()
+        {
+            return $"### CORE META - {Name}({Index.Size()} files)\nby {Author}\n{Description}";
         }
         #endregion
     }

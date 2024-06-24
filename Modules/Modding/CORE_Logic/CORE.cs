@@ -12,11 +12,15 @@ namespace Cutulu.Modding
     public class CORE
     {
         #region Params
+        public const string META_PATH = "CORE.META";
+
         private readonly Dictionary<string, object> LoadedNonResources;
         private readonly Dictionary<string, Resource> LoadedResources;
 
         public readonly Dictionary<string, HashSet<string>> Directories;
         public readonly Dictionary<string, string> Addresses;
+
+        public readonly Dictionary<string, object> CompilePipeline;
         #endregion
 
         #region Constructors
@@ -29,6 +33,8 @@ namespace Cutulu.Modding
             LoadedResources = new();
             Directories = new();
             Addresses = new();
+
+            CompilePipeline = new();
         }
 
         /// <summary>
@@ -237,13 +243,9 @@ namespace Cutulu.Modding
         /// </summary>
         public void Compile(string filePath, COREMeta meta, bool adjustIndex = true)
         {
-            var writer = new ZipPacker();
-            writer.Open(filePath);
-
             if (adjustIndex)
             {
                 var index = new List<string>();
-                meta.Index = index.ToArray();
 
                 if (meta.Index.NotEmpty())
                 {
@@ -253,26 +255,36 @@ namespace Cutulu.Modding
                         if (line.IsEmpty()) continue;
 
                         var split = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                        if (split.Size() != 2) continue;
+                        if (split.Size() < 1) continue;
 
                         var name = split[0];
+                        if (name.IsEmpty()) continue;
 
-                        if (Addresses.TryGetValue(name, out var path))
-                        {
-                            index.Add($"{name} {path}");
-                        }
+                        var path = split.Length > 1 ? split[1] : default;
+
+                        if (path.IsEmpty()) Addresses.TryGetValue(name, out path);
+
+                        if (path.NotEmpty()) index.Add($"{name} {path}");
                     }
                 }
 
                 meta.Index = index.ToArray();
             }
 
-            // Write meta file
-            writer.AddEntry("index.meta", meta.Buffer());
+            if (meta.Index.IsEmpty())
+            {
+                Debug.LogError($"Cannot create an empty CORE file. Add some assets and add them to the index of your meta file.");
+                return;
+            }
+
+            var writer = new ZipPacker();
+            writer.Open(filePath);
 
             // Write indexed files
             if (meta.Index.NotEmpty())
             {
+                var addedPaths = new HashSet<string>();
+
                 for (int i = 0; i < meta.Index.Length; i++)
                 {
                     var line = meta.Index[i];
@@ -284,12 +296,36 @@ namespace Cutulu.Modding
                     var name = split[0];
                     var path = split[1];
 
-                    var bytes = GetBytes(name, out _);
+                    byte[] bytes = null;
+
+                    // Prevent duplicates
+                    if (addedPaths.Contains(path)) continue;
+                    addedPaths.Add(path);
+
+                    if (CompilePipeline.TryGetValue(name, out var obj) && obj != null)
+                    {
+                        if (obj is Resource r)
+                        {
+                            bytes = FileAccess.GetFileAsBytes(r.ResourcePath);
+                        }
+
+                        else
+                        {
+                            bytes = obj.Buffer();
+                        }
+                    }
+
+                    else bytes = GetBytes(name, out _);
+
                     if (bytes.IsEmpty()) continue;
 
-                    writer.AddEntry(path, bytes);
+                    writer.Append(path, bytes);
                 }
             }
+
+            // Write meta file
+            writer.Append(META_PATH, meta.Buffer());
+            var buffer = meta.Buffer();
 
             writer.Close();
         }
@@ -326,7 +362,7 @@ namespace Cutulu.Modding
                     var err = reader.Open(filePath);
                     if (err != Error.Ok) throw new("File is not a zip archive.");
 
-                    if (COREMeta.TryRead(ref reader, filePath, out var meta) == false) throw new("No index.meta file could be found.");
+                    if (COREMeta.TryRead(ref reader, filePath, out var meta) == false) throw new($"No {META_PATH} file could be found.");
 
                     Debug.Log($"Loading CORE '{meta.Name}'({meta.Index.Size()} files) by '{meta.Author}'. ({meta.Description})");
 
@@ -379,7 +415,7 @@ namespace Cutulu.Modding
 
                 catch (Exception ex)
                 {
-                    Debug.LogError($"Cannot load assets of {filePath}\n{ex.Message}\n{ex.StackTrace}");
+                    Debug.LogError($"Cannot load assets of {filePath}: {ex.Message}");
                 }
             }
         }
