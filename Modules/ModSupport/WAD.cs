@@ -61,7 +61,7 @@ namespace Cutulu
                                 Addresses[name] = $"{directory}{file}?{path}";
 
                                 // Add dictionaries with depth for targetting specific types
-                                var directorySplits = name.SplitOnce('/');
+                                var directorySplits = name.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                                 if (directorySplits.Size() > 1)
                                 {
                                     for (int k = 0; k < directorySplits.Length - 1; k++)
