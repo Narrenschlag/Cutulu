@@ -63,12 +63,12 @@ namespace Cutulu
                                 {
                                     var dir = directorySplits[0];
 
-                                    if (Directories.TryGetValue(dir, out var set) == false)
+                                    if (Directories.TryGetValue(dir, out var set) == false || dir.IsEmpty())
                                     {
-                                        Directories.Add(dir, new());
+                                        Directories[dir] = set = new();
                                     }
 
-                                    set.Add(Addresses[name]);
+                                    set.Add(name);
                                 }
                             }
                         }
@@ -78,7 +78,7 @@ namespace Cutulu
 
                     catch (Exception ex)
                     {
-                        Debug.LogError($"Cannot load assets of {directory}{file}.\n{ex.Message}");
+                        Debug.LogError($"Cannot load assets of {directory}{file}\n{ex.Message}\n{ex.StackTrace}");
                     }
                 }
 
@@ -113,17 +113,25 @@ namespace Cutulu
                         // Write a temp file to read the resource from
                         (temp = $"{temp}temp.{ending}").WriteBytes(bytes);
 
-                        // Support for Texture2D
-                        if (type == typeof(Texture2D))
+                        try
                         {
-                            var img = new Image();
-                            img.Load(temp);
+                            // Support for Texture2D
+                            if (type == typeof(Texture2D))
+                            {
+                                var img = new Image();
+                                img.Load(temp);
 
-                            resource = ImageTexture.CreateFromImage(img) as Texture2D;
+                                resource = ImageTexture.CreateFromImage(img) as Texture2D;
+                            }
+
+                            // Load resource from temp file
+                            else resource = GD.Load<T>(temp);
                         }
 
-                        // Load resource from temp file
-                        else resource = GD.Load<T>(temp);
+                        catch (Exception ex)
+                        {
+                            Debug.LogError($"Cannot load {typeof(T).Name}\n{ex.Message}");
+                        }
 
                         temp.DeleteFile();
                     }
