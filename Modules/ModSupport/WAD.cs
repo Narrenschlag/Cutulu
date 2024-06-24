@@ -38,17 +38,18 @@ namespace Cutulu
 
                         if (reader.FileExists("index.meta") == false) throw new("No index.meta file could be found.");
 
-                        var index = Encoding.UTF8.GetString(reader.ReadFile("index.meta"));
+                        if (reader.ReadFile("index.meta").TryBuffer(out WADMeta meta) == false) continue;
+                        Debug.Log($"Loading WAD Pack '{meta.Name}'({meta.Index.Size()} files) by '{meta.Author}'. ({meta.Description})");
+
                         var strng = new StringBuilder();
 
                         // Seperated by lines
-                        var lines = index.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                        if (lines.NotEmpty())
+                        if (meta.Index.NotEmpty())
                         {
-                            for (int i = 0; i < lines.Length; i++)
+                            for (int i = 0; i < meta.Index.Length; i++)
                             {
                                 // Seperated by spaces
-                                var args = lines[i].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                                var args = meta.Index[i].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                                 if (args.Size() != 2) continue;
 
                                 var path = args[1];
