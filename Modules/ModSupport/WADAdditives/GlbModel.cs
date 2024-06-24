@@ -27,5 +27,19 @@ namespace Cutulu
         public Node GenerateScene() => GenerateScene<Node>();
         public Node3D GenerateScene3D() => GenerateScene<Node3D>();
         public T GenerateScene<T>() where T : Node => (T)Data.GenerateScene(State);
+
+        public T Instantiate<T>(Node parent = null) where T : Node
+        {
+            var node = GenerateScene<T>();
+
+            if (parent.NotNull()) parent.AddChild(node);
+
+            if (node is Node3D node3D)
+            {
+                node3D.Position = Vector3.Zero;
+            }
+
+            return node;
+        }
     }
 }

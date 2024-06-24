@@ -81,7 +81,12 @@ namespace Cutulu
                 if (bytes.NotEmpty())
                 {
                     var type = typeof(T);
+
+                    // Support for Models
                     if (type == typeof(GlbModel)) resource = GlbModel.CustomImport(bytes);
+
+                    // Support for OGG files
+                    else if (type == typeof(AudioStream)) resource = AudioStreamOggVorbis.LoadFromBuffer(bytes);
 
                     else
                     {
@@ -92,8 +97,18 @@ namespace Cutulu
                         // Write a temp file to read the resource from
                         (temp = $"{temp}temp.{ending}").WriteBytes(bytes);
 
+                        // Support for Texture2D
+                        if (type == typeof(Texture2D))
+                        {
+                            var img = new Image();
+                            img.Load(temp);
+
+                            resource = ImageTexture.CreateFromImage(img) as Texture2D;
+                        }
+
                         // Load resource from temp file
-                        resource = GD.Load<T>(temp);
+                        else resource = GD.Load<T>(temp);
+
                         temp.DeleteFile();
                     }
                 }
