@@ -8,13 +8,16 @@ namespace Cutulu
     public class WAD
     {
         private Dictionary<string, object> LoadedNonResources;
-        private Dictionary<string, Resource> LoadedResource;
-        private Dictionary<string, string> Addresses;
+        private Dictionary<string, Resource> LoadedResources;
+
+        public Dictionary<string, HashSet<string>> Directories { get; private set; }
+        public Dictionary<string, string> Addresses { get; private set; }
 
         public WAD(params string[] directories)
         {
             LoadedNonResources = new();
-            LoadedResource = new();
+            LoadedResources = new();
+            Directories = new();
             Addresses = new();
             var packCount = 0;
 
@@ -54,6 +57,19 @@ namespace Cutulu
                                 var name = args[0];
 
                                 Addresses[name] = $"{directory}{file}?{path}";
+
+                                var directorySplits = name.SplitOnce('/');
+                                if (directorySplits.Size() > 1)
+                                {
+                                    var dir = directorySplits[0];
+
+                                    if (Directories.TryGetValue(dir, out var set) == false)
+                                    {
+                                        Directories.Add(dir, new());
+                                    }
+
+                                    set.Add(Addresses[name]);
+                                }
                             }
                         }
 
@@ -74,7 +90,7 @@ namespace Cutulu
 
         public T GetResource<T>(string assetName) where T : Resource
         {
-            if (LoadedResource.TryGetValue(assetName, out var resource) == false || resource.IsNull())
+            if (LoadedResources.TryGetValue(assetName, out var resource) == false || resource.IsNull())
             {
                 var bytes = GetBytes(assetName, out var ending);
 
@@ -113,7 +129,7 @@ namespace Cutulu
                     }
                 }
 
-                if (resource.NotNull()) LoadedResource[assetName] = resource;
+                if (resource.NotNull()) LoadedResources[assetName] = resource;
             }
 
             return resource is T t ? t : default;
@@ -167,16 +183,33 @@ namespace Cutulu
             return bytes;
         }
 
+        public T[] GetResources<T>(string directory) where T : Resource
+        {
+            var list = new List<T>();
+
+            if (Directories.TryGetValue(directory, out var set))
+            {
+                foreach (var assetName in set)
+                {
+                    var resource = GetResource<T>(assetName);
+
+                    if (resource.NotNull()) list.Add(resource);
+                }
+            }
+
+            return list.ToArray();
+        }
+
         public void Unload(params string[] names)
         {
-            if (names.IsEmpty()) LoadedResource.Clear();
+            if (names.IsEmpty()) LoadedResources.Clear();
 
             else
             {
                 for (int i = 0; i < names.Length; i++)
                 {
-                    if (LoadedResource.ContainsKey(names[i]))
-                        LoadedResource.Remove(names[i]);
+                    if (LoadedResources.ContainsKey(names[i]))
+                        LoadedResources.Remove(names[i]);
                 }
             }
         }
