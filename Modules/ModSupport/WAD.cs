@@ -7,13 +7,15 @@ namespace Cutulu
 {
     public class WAD
     {
-        private Dictionary<string, Resource> LoadedAssets;
-        private Dictionary<string, string> PassiveAssets;
+        private Dictionary<string, object> LoadedNonResources;
+        private Dictionary<string, Resource> LoadedResource;
+        private Dictionary<string, string> Addresses;
 
         public WAD(params string[] directories)
         {
-            PassiveAssets = new();
-            LoadedAssets = new();
+            LoadedNonResources = new();
+            LoadedResource = new();
+            Addresses = new();
             var packCount = 0;
 
             foreach (var directory in directories)
@@ -51,7 +53,7 @@ namespace Cutulu
 
                                 var name = args[0];
 
-                                PassiveAssets[name] = $"{directory}{file}?{path}";
+                                Addresses[name] = $"{directory}{file}?{path}";
                             }
                         }
 
@@ -67,58 +69,99 @@ namespace Cutulu
                 reader.Close();
             }
 
-            Debug.Log($"Loaded {PassiveAssets.Count} assets from {packCount} asset packs");
+            Debug.Log($"Loaded {Addresses.Count} assets from {packCount} asset packs");
         }
 
         public T GetResource<T>(string assetName) where T : Resource
         {
-            if (LoadedAssets.TryGetValue(assetName, out var resource) == false || resource.IsNull())
+            if (LoadedResource.TryGetValue(assetName, out var resource) == false || resource.IsNull())
             {
-                if (PassiveAssets.TryGetValue(assetName, out var _path))
+                var bytes = GetBytes(assetName, out var ending);
+
+                if (bytes.NotEmpty())
                 {
-                    var path = _path.Split('?', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                    if (path.Size() == 2 && FileAccess.FileExists(path[0]))
+                    var type = typeof(T);
+                    if (type == typeof(GlbModel)) resource = GlbModel.CustomImport(bytes);
+
+                    else
                     {
-                        using var reader = new ZipReader();
-                        reader.Open(path[0]);
+                        // Mkdir the file path
+                        var temp = $"{IO.USER_PATH}.bin/.temp/";
+                        DirAccess.MakeDirRecursiveAbsolute(temp);
 
-                        var filePath = path[1];
+                        // Write a temp file to read the resource from
+                        (temp = $"{temp}temp.{ending}").WriteBytes(bytes);
 
-                        if (reader.FileExists(filePath))
-                        {
-                            // Mkdir the file path
-                            var temp = $"{IO.USER_PATH}.bin/.temp/";
-                            DirAccess.MakeDirRecursiveAbsolute(temp);
-
-                            // Write a temp file to read the resource from
-                            var bytes = reader.ReadFile(filePath);
-                            (temp = $"{temp}temp.tres").WriteBytes(bytes);
-
-                            // Load resource from temp file
-                            resource = GD.Load<T>(temp);
-                            temp.DeleteFile();
-                        }
-
-                        reader.Close();
+                        // Load resource from temp file
+                        resource = GD.Load<T>(temp);
+                        temp.DeleteFile();
                     }
                 }
 
-                if (resource.NotNull()) LoadedAssets[assetName] = resource;
+                if (resource.NotNull()) LoadedResource[assetName] = resource;
             }
 
             return resource is T t ? t : default;
         }
 
+        public T GetNonResource<T>(string assetName)
+        {
+            if (LoadedNonResources.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
+            {
+                var bytes = GetBytes(assetName, out _);
+
+                if (bytes.NotEmpty())
+                {
+                    // Load resource from temp file
+                    nonResource = bytes.Buffer<T>();
+                }
+
+                if (nonResource == null) LoadedNonResources[assetName] = nonResource;
+            }
+
+            return nonResource is T t ? t : default;
+        }
+
+        public byte[] GetBytes(string assetName, out string ending)
+        {
+            byte[] bytes = null;
+            ending = null;
+
+            if (Addresses.TryGetValue(assetName, out var _path))
+            {
+                var path = _path.Split('?', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (path.Size() == 2 && FileAccess.FileExists(path[0]))
+                {
+                    using var reader = new ZipReader();
+
+                    if (reader.Open(path[0]) != Error.Ok) return bytes;
+                    var filePath = path[1];
+
+                    if (reader.FileExists(filePath))
+                    {
+                        var splitEnding = path[1].Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        ending = splitEnding.NotEmpty() ? splitEnding[^1] : null;
+
+                        bytes = reader.ReadFile(filePath);
+                    }
+
+                    reader.Close();
+                }
+            }
+
+            return bytes;
+        }
+
         public void Unload(params string[] names)
         {
-            if (names.IsEmpty()) LoadedAssets.Clear();
+            if (names.IsEmpty()) LoadedResource.Clear();
 
             else
             {
                 for (int i = 0; i < names.Length; i++)
                 {
-                    if (LoadedAssets.ContainsKey(names[i]))
-                        LoadedAssets.Remove(names[i]);
+                    if (LoadedResource.ContainsKey(names[i]))
+                        LoadedResource.Remove(names[i]);
                 }
             }
         }
