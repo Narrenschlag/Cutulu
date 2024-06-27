@@ -8,13 +8,15 @@ namespace Cutulu.Modding
     public class COREMeta
     {
         #region Params
+        public string COREId { get; set; } = "my_core";
         public string IconLocation { get; set; } = "icon.png";
         public string Author { get; set; } = "Narrenschlag";
 
         public string Name { get; set; } = "Asset Pack";
         public string Description { get; set; } = "Assets for everyone! Yippie!1!";
 
-        public string[] Index { get; set; }
+        public string[] Dependencies { get; set; } = null;
+        public string[] Index { get; set; } = null;
 
         public int GetFileCount() => Index.Size();
         #endregion

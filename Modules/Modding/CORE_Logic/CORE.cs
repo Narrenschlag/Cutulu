@@ -18,6 +18,7 @@ namespace Cutulu.Modding
         private readonly Dictionary<string, Resource> LoadedResources;
 
         public readonly Dictionary<string, HashSet<string>> Directories;
+        public readonly Dictionary<string, COREMeta> PresentCOREs;
         public readonly Dictionary<string, string> Addresses;
 
         public readonly Dictionary<string, object> CompilePipeline;
@@ -31,6 +32,7 @@ namespace Cutulu.Modding
         {
             LoadedNonResources = new();
             LoadedResources = new();
+            PresentCOREs = new();
             Directories = new();
             Addresses = new();
 
@@ -351,9 +353,9 @@ namespace Cutulu.Modding
             reader.Close();
         }
 
-        private void Load(ref ZipReader reader, params string[] filePaths)
+        private bool Load(ref ZipReader reader, params string[] filePaths)
         {
-            if (filePaths.IsEmpty()) return;
+            if (filePaths.IsEmpty()) return false;
 
             foreach (var filePath in filePaths)
             {
@@ -366,6 +368,7 @@ namespace Cutulu.Modding
 
                     Debug.Log($"Loading CORE '{meta.Name}'({meta.Index.Size()} files) by '{meta.Author}'. ({meta.Description})");
 
+                    PresentCOREs[meta.COREId] = meta;
                     var strng = new StringBuilder();
 
                     // Seperated by lines
@@ -411,6 +414,7 @@ namespace Cutulu.Modding
                             }
                         }
                     }
+
                 }
 
                 catch (Exception ex)
@@ -418,6 +422,22 @@ namespace Cutulu.Modding
                     Debug.LogError($"Cannot load assets of {filePath}: {ex.Message}");
                 }
             }
+
+            foreach (var meta in PresentCOREs.Values)
+            {
+                if (meta.Dependencies.NotEmpty())
+                {
+                    foreach (var coreId in meta.Dependencies)
+                    {
+                        if (PresentCOREs.ContainsKey(coreId) == false)
+                        {
+                            Debug.LogError($"{meta.Name} is missing dependency core '{coreId}'");
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
