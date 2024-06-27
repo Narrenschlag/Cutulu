@@ -10,6 +10,7 @@ namespace Cutulu
 {
     public static class Core
     {
+        public const StringSplitOptions StringSplit = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
         public const float GoldenCut = 1.618f;
 
         #region Shortcuts               ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -809,7 +810,7 @@ namespace Cutulu
         {
             if (ids.IsEmpty()) return str;
 
-            var splits = str.Split(ids, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var splits = str.Split(ids, StringSplit);
             if (splits.Size() < 2) return str;
             return str[..^splits[^1].Length];
         }
@@ -1010,22 +1011,21 @@ namespace Cutulu
             return source.Split(identifier, StringSplitOptions.TrimEntries)[0];
         }
 
-        public static string TrimToDirectory(this string path)
+        public static string TrimToDirectory(this string path) => TrimToDirectory(path, new[] { '\\', '/' });
+        public static string TrimToDirectory(this string path, params char[] chars)
         {
-            if (string.IsNullOrEmpty(path) || !(path.Contains('/') || path.Contains('\\'))) return path;
+            if (path.IsEmpty() || chars.IsEmpty()) return path;
 
-            char c;
-            for (int i = path.Length; i > 0; i--)
+            var contains = false;
+            for (int i = 0; i < chars.Length; i++)
             {
-                c = path[i - 1];
+                if (path.Contains(chars[i]) == false) continue;
 
-                if (c.Equals('\\') || c.Equals('/'))
-                {
-                    return path[..(i - 1)];
-                }
+                contains = true;
+                break;
             }
 
-            return path;
+            return contains ? path.TrimEndUntil(chars) : path;
         }
 
         public static string ReplaceFirst(this string str, char c, object value)

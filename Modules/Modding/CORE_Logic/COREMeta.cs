@@ -1,3 +1,4 @@
+using System.Text;
 using Godot;
 
 namespace Cutulu.Modding
@@ -8,6 +9,9 @@ namespace Cutulu.Modding
     public class COREMeta
     {
         #region Params
+        public const string META_PATH = $"CORE{META_ENDING}";
+        public const string META_ENDING = ".META";
+
         public string COREId { get; set; } = "my_core";
         public string IconLocation { get; set; } = "icon.png";
         public string Author { get; set; } = "Narrenschlag";
@@ -38,33 +42,15 @@ namespace Cutulu.Modding
         }
         #endregion
 
+        public byte[] GetBuffer() => Encoding.UTF8.GetBytes(this.json());
+
         #region Read Data
         /// <summary>
         /// Tries to read meta file from CORE. Returns true if found and readable.
         /// </summary>
         public static bool TryRead(string filePath, out COREMeta meta)
         {
-            var reader = new ZipReader();
-
-            var result = TryRead(ref reader, filePath, out meta);
-
-            reader.Close();
-
-            return result;
-        }
-
-        public static bool TryRead(ref ZipReader reader, string filePath, out COREMeta meta)
-        {
-            if (filePath.Exists())
-            {
-                if (reader.Open(filePath) == Error.Ok && reader.FileExists(CORE.META_PATH) && reader.ReadFile(CORE.META_PATH).TryBuffer(out meta))
-                {
-                    return meta != null;
-                }
-            }
-
-            meta = default;
-            return false;
+            return OE.TryGetData(filePath, out meta, IO.FileType.Json);
         }
         #endregion
 

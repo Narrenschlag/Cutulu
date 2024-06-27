@@ -12,8 +12,6 @@ namespace Cutulu.Modding
     public class CORE
     {
         #region Params
-        public const string META_PATH = "CORE.META";
-
         private readonly Dictionary<string, object> LoadedNonResources;
         private readonly Dictionary<string, Resource> LoadedResources;
 
@@ -42,29 +40,11 @@ namespace Cutulu.Modding
         /// <summary>
         /// Creates a CORE containing given CORE files
         /// </summary>
-        public CORE(params string[] directories) : this()
+        public CORE(params string[] rootDirectories) : this()
         {
-            var reader = new ZipReader();
-            var packCount = 0;
+            Load(rootDirectories);
 
-            foreach (var directory in directories)
-            {
-                if (DirAccess.DirExistsAbsolute(directory) == false) continue;
-
-                var files = DirAccess.GetFilesAt(directory);
-                if (files.IsEmpty()) continue;
-
-                var paths = new List<string>();
-                foreach (var file in files)
-                {
-                    paths.Add($"{directory}{file}");
-                }
-
-                Load(ref reader, paths.ToArray());
-            }
-
-            Debug.Log($"Loaded {Addresses.Count} assets from {packCount} asset packs");
-            reader.Close();
+            Debug.Log($"Loaded {Addresses.Count} assets from {PresentCOREs.Count} asset packs");
         }
         #endregion
 
@@ -72,55 +52,15 @@ namespace Cutulu.Modding
 
         #region Godot.Resource
         /// <summary>
-        /// Returns resource of given non-resource type. Checks for null references.
+        /// Returns resource of given resource type. Checks for null references.
         /// </summary>
         public T GetResource<T>(string assetName) where T : Resource
         {
             if (LoadedResources.TryGetValue(assetName, out var resource) == false || resource.IsNull())
             {
-                var bytes = GetBytes(assetName, out var ending);
-
-                if (bytes.NotEmpty())
+                if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path, out var loaded, IO.FileType.GDResource))
                 {
-                    var type = typeof(T);
-
-                    // Support for Models
-                    if (type == typeof(GlbModel)) resource = GlbModel.CustomImport(bytes);
-
-                    // Support for OGG files
-                    else if (type == typeof(AudioStream)) resource = AudioStreamOggVorbis.LoadFromBuffer(bytes);
-
-                    else
-                    {
-                        // Mkdir the file path
-                        var temp = $"{IO.USER_PATH}.bin/.temp/";
-                        DirAccess.MakeDirRecursiveAbsolute(temp);
-
-                        // Write a temp file to read the resource from
-                        (temp = $"{temp}temp.{ending}").WriteBytes(bytes);
-
-                        try
-                        {
-                            // Support for Texture2D
-                            if (type == typeof(Texture2D))
-                            {
-                                var img = new Image();
-                                img.Load(temp);
-
-                                resource = ImageTexture.CreateFromImage(img) as Texture2D;
-                            }
-
-                            // Load resource from temp file
-                            else resource = GD.Load<T>(temp);
-                        }
-
-                        catch (Exception ex)
-                        {
-                            Debug.LogError($"Cannot load {typeof(T).Name}\n{ex.Message}");
-                        }
-
-                        temp.DeleteFile();
-                    }
+                    resource = loaded;
                 }
 
                 if (resource.NotNull() && resource is T) LoadedResources[assetName] = resource;
@@ -158,21 +98,9 @@ namespace Cutulu.Modding
         {
             if (LoadedNonResources.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
             {
-                var bytes = GetBytes(assetName, out _);
-
-                if (bytes.NotEmpty())
+                if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path, out var loaded, type))
                 {
-                    // Load resource from temp file
-                    switch (type)
-                    {
-                        case IO.FileType.Json:
-                            nonResource = Encoding.UTF8.GetString(bytes).json<T>();
-                            break;
-
-                        default:
-                            nonResource = bytes.Buffer<T>();
-                            break;
-                    }
+                    nonResource = loaded;
                 }
 
                 if (nonResource is T) LoadedNonResources[assetName] = nonResource;
@@ -208,32 +136,14 @@ namespace Cutulu.Modding
         /// </summary>
         public byte[] GetBytes(string assetName, out string ending)
         {
-            byte[] bytes = null;
-            ending = null;
-
-            if (Addresses.TryGetValue(assetName, out var _path))
+            if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData(path, out var buffer))
             {
-                var path = _path.Split('?', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                if (path.Size() == 2 && FileAccess.FileExists(path[0]))
-                {
-                    using var reader = new ZipReader();
-
-                    if (reader.Open(path[0]) != Error.Ok) return bytes;
-                    var filePath = path[1];
-
-                    if (reader.FileExists(filePath))
-                    {
-                        var splitEnding = path[1].Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                        ending = splitEnding.NotEmpty() ? splitEnding[^1] : null;
-
-                        bytes = reader.ReadFile(filePath);
-                    }
-
-                    reader.Close();
-                }
+                ending = path[path.TrimEndUntil('.').Length..];
+                return buffer;
             }
 
-            return bytes;
+            ending = default;
+            return default;
         }
         #endregion
 
@@ -292,13 +202,12 @@ namespace Cutulu.Modding
                     var line = meta.Index[i];
                     if (adjustIndex == false && line.IsEmpty()) continue;
 
-                    var split = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var split = line.Split(' ', Core.StringSplit);
                     if (adjustIndex == false && split.Size() != 2) continue;
 
                     var name = split[0];
                     var path = split[1];
-
-                    byte[] bytes = null;
+                    byte[] bytes;
 
                     // Prevent duplicates
                     if (addedPaths.Contains(path)) continue;
@@ -326,100 +235,29 @@ namespace Cutulu.Modding
             }
 
             // Write meta file
-            writer.Append(META_PATH, meta.Buffer());
-            var buffer = meta.Buffer();
+            writer.Append(COREMeta.META_PATH, meta.GetBuffer());
 
             writer.Close();
         }
         #endregion
 
-        #region (Un)loading
+        #region Loading
         /// <summary>
-        /// Loads in a core file from given path, if possible.
+        /// Loads in core files from given paths, if possible. Also loads in nested packs in other packs or directories.
         /// </summary>
-        public void Load(string filePath) => Load(new[] { filePath });
-
-        /// <summary>
-        /// Loads in a core file from given paths, if possible.
-        /// </summary>
-        public void Load(params string[] filePaths)
+        public bool Load(params string[] rootDirectories)
         {
-            if (filePaths.IsEmpty()) return;
+            if (rootDirectories.IsEmpty()) return false;
 
-            var reader = new ZipReader();
-
-            Load(ref reader, filePaths);
-
-            reader.Close();
-        }
-
-        private bool Load(ref ZipReader reader, params string[] filePaths)
-        {
-            if (filePaths.IsEmpty()) return false;
-
-            foreach (var filePath in filePaths)
+            foreach (var rootDir in rootDirectories)
             {
-                try
+                var filePaths = new List<string>();
+
+                OE.FindFiles(rootDir, ref filePaths, new[] { COREMeta.META_ENDING }, new[] { ".core" });
+
+                foreach (var filePath in filePaths)
                 {
-                    var err = reader.Open(filePath);
-                    if (err != Error.Ok) throw new("File is not a zip archive.");
-
-                    if (COREMeta.TryRead(ref reader, filePath, out var meta) == false) throw new($"No {META_PATH} file could be found.");
-
-                    Debug.Log($"Loading CORE '{meta.Name}'({meta.Index.Size()} files) by '{meta.Author}'. ({meta.Description})");
-
-                    PresentCOREs[meta.COREId] = meta;
-                    var strng = new StringBuilder();
-
-                    // Seperated by lines
-                    if (meta.Index.NotEmpty())
-                    {
-                        for (int i = 0; i < meta.Index.Length; i++)
-                        {
-                            // Seperated by spaces
-                            var args = meta.Index[i].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                            if (args.Size() != 2) continue;
-
-                            var path = args[1];
-
-                            if (reader.FileExists(path) == false) continue;
-
-                            var name = args[0];
-
-                            // Global address for the name
-                            Addresses[name] = $"{filePath}?{path}";
-
-                            // Add dictionaries with depth for targetting specific types
-                            var directorySplits = name.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                            if (directorySplits.Size() > 1)
-                            {
-                                for (int k = 0; k < directorySplits.Length - 1; k++)
-                                {
-                                    strng.Clear();
-
-                                    for (int j = 0; j <= k; j++)
-                                    {
-                                        if (j > 0) strng.Append('/');
-                                        strng.Append(directorySplits[j]);
-                                    }
-
-                                    var dir = strng.ToString();
-                                    if (Directories.TryGetValue(dir, out var set) == false || dir.IsEmpty())
-                                    {
-                                        Directories[dir] = set = new();
-                                    }
-
-                                    set.Add(name);
-                                }
-                            }
-                        }
-                    }
-
-                }
-
-                catch (Exception ex)
-                {
-                    Debug.LogError($"Cannot load assets of {filePath}: {ex.Message}");
+                    LoadFile(filePath);
                 }
             }
 
@@ -440,6 +278,69 @@ namespace Cutulu.Modding
             return true;
         }
 
+        /// <summary>
+        /// Loads in a core file from given path, if possible.
+        /// </summary>
+        public void LoadFile(string filePath)
+        {
+            // Try read meta file
+            if (COREMeta.TryRead(filePath, out var meta) == false) return;
+
+            var coreDir = filePath.TrimToDirectory('/', '\\', '?');
+
+            if (PresentCOREs.TryGetValue(meta.COREId, out var overwritten))
+                Debug.LogError($"Present CORE <{overwritten.Name}>({meta.COREId}) is overwritten by <{meta.Name}> with the same COREId. This could lead to dependency issues.");
+            PresentCOREs[meta.COREId] = meta;
+
+            if (meta.Index.NotEmpty())
+            {
+                foreach (var entry in meta.Index)
+                {
+                    // Seperated by spaces
+                    var args = entry.Split(' ', Core.StringSplit);
+                    if (args.Size() != 2) continue;
+
+                    var localPath = args[1];
+                    var name = args[0];
+
+                    var path = $"{coreDir}{localPath}";
+                    var strng = new StringBuilder();
+
+                    if (OE.Exists($"{coreDir}{localPath}"))
+                    {
+                        // Global address for the name
+                        Addresses[name] = $"{path}";
+
+                        // Add dictionaries with depth for targetting specific types
+                        var directorySplits = name.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        if (directorySplits.Size() > 1)
+                        {
+                            for (int k = 0; k < directorySplits.Length - 1; k++)
+                            {
+                                strng.Clear();
+
+                                for (int j = 0; j <= k; j++)
+                                {
+                                    if (j > 0) strng.Append('/');
+                                    strng.Append(directorySplits[j]);
+                                }
+
+                                var dir = strng.ToString();
+                                if (Directories.TryGetValue(dir, out var set) == false || dir.IsEmpty())
+                                {
+                                    Directories[dir] = set = new();
+                                }
+
+                                set.Add(name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region Unloading
         /// <summary>
         /// Unloads either all COREs or given assets/names
         /// </summary>
