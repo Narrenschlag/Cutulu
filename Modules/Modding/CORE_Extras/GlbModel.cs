@@ -2,6 +2,9 @@ using Godot;
 
 namespace Cutulu.Modding
 {
+    /// <summary> 
+    /// Used as backend for MeshObject.cs keeping track of the glb model and its data.
+    /// <summary>
     public partial class GlbModel : GltfDocument
     {
         public GltfDocument Data { get; private set; }

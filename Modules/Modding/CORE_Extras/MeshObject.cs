@@ -7,8 +7,10 @@ namespace Cutulu.Modding
     {
         [Export] public Vector3 Position { get; set; }
         [Export] public Vector3 Rotation { get; set; }
+        [Export] public Vector3 Scale { get; set; } = Vector3.One;
 
         [Export] public string MeshGLB { get; set; }
+        [Export] public string BaseMaterial { get; set; }
         [Export] public string[] Materials { get; set; }
 
         public Node3D Instantiate(CORE core, Node parent)
@@ -19,24 +21,30 @@ namespace Cutulu.Modding
             var meshInstance = model.Instantiate<Node3D>(parent);
             meshInstance.RotationDegrees = Rotation;
             meshInstance.Position = Position;
+            meshInstance.Scale = Scale;
 
-            if (Materials.NotEmpty())
+            var baseMaterial = core.GetResource<StandardMaterial3D>(BaseMaterial);
+            var meshes = meshInstance.GetNodesInChildren<MeshInstance3D>();
+            var m = Materials.NotEmpty() ? 0 : int.MinValue;
+
+            if ((baseMaterial != null || m >= 0) && meshes.NotEmpty())
             {
-                var meshes = meshInstance.GetNodesInChildren<MeshInstance3D>();
-
-                if (meshes.NotEmpty())
+                for (int i = 0; i < meshes.Count; i++)
                 {
-                    var m = 0;
+                    var count = meshes[i].GetSurfaceOverrideMaterialCount();
 
-                    for (int i = 0; i < meshes.Count && m < Materials.Length; i++)
+                    for (int k = 0; k < count; k++, m++)
                     {
-                        var count = meshes[i].GetSurfaceOverrideMaterialCount();
-
-                        for (int k = 0; k < count && m < Materials.Length; k++, m++)
+                        if (m >= 0 && m < Materials.Length)
                         {
                             var material = core.GetResource<StandardMaterial3D>(Materials[m]);
 
                             meshes[i].SetSurfaceOverrideMaterial(k, material);
+                        }
+
+                        else
+                        {
+                            meshes[i].SetSurfaceOverrideMaterial(k, baseMaterial);
                         }
                     }
                 }
