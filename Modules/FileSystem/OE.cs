@@ -6,10 +6,14 @@ namespace Cutulu.Modding
 {
     /// <summary>
     /// OE - Odin's Eye is used to find and read files that may be nested in zip files. Important for mod support.
+    /// Using '?' as a directory splitter '/' for (nested) zip files.
     /// </summary>
     public static class OE
     {
         #region Find Data
+        /// <summary>
+        /// Adds found file paths to the references list. Crawling directories and zip files if assigned endings.
+        /// </summary>
         public static void FindFiles(string rootFolder, ref List<string> filePaths, string[] fileEndings, string[] zipFileEndings = null)
         {
             if (rootFolder.EndsWith('/') == false) rootFolder += '/';
@@ -35,7 +39,7 @@ namespace Cutulu.Modding
 
                     for (int z = 0; z < zipFileEndings.Length; z++)
                     {
-                        FindFilesInZip($"{rootFolder}{files[i]}", ref filePaths, fileEndings, zipFileEndings);
+                        CrawlZip($"{rootFolder}{files[i]}", ref filePaths, fileEndings, zipFileEndings);
                     }
                 }
             }
@@ -50,7 +54,7 @@ namespace Cutulu.Modding
             }
         }
 
-        public static void FindFilesInZip(string zipFilePath, ref List<string> filePaths, string[] fileEndings, string[] zipFileEndings)
+        private static void CrawlZip(string zipFilePath, ref List<string> filePaths, string[] fileEndings, string[] zipFileEndings)
         {
             if (zipFileEndings.IsEmpty() || fileEndings.IsEmpty()) return;
             var reader = new ZipReader();
@@ -81,8 +85,8 @@ namespace Cutulu.Modding
                     {
                         if (files[i].EndsWith(zipFileEndings[z]))
                         {
-                            var _buffer = reader.ReadFile(files[i], false);
-                            searchInternal($"{zipFilePath}?{files[i]}", _buffer, ref filePaths);
+                            var _buffer = reader.ReadFile(files[i]);
+                            CrawZipInternal($"{zipFilePath}?{files[i]}", _buffer, ref filePaths);
                         }
                     }
                 }
@@ -90,7 +94,7 @@ namespace Cutulu.Modding
 
             reader.Close();
 
-            void searchInternal(string prePath, byte[] buffer, ref List<string> filePaths)
+            void CrawZipInternal(string prePath, byte[] buffer, ref List<string> filePaths)
             {
                 if (buffer.IsEmpty()) return;
 
@@ -128,8 +132,8 @@ namespace Cutulu.Modding
                     {
                         if (files[i].EndsWith(zipFileEndings[z]))
                         {
-                            var _buffer = reader.ReadFile(files[i], false);
-                            searchInternal($"{prePath}?{files[i]}", _buffer, ref filePaths);
+                            var _buffer = reader.ReadFile(files[i]);
+                            CrawZipInternal($"{prePath}?{files[i]}", _buffer, ref filePaths);
                         }
                     }
                 }
@@ -140,6 +144,9 @@ namespace Cutulu.Modding
         #endregion
 
         #region Read Data
+        /// <summary>
+        /// Returns data from path as given file type if existing and parsable.
+        /// </summary>
         public static bool TryGetData<T>(string path, out T result, IO.FileType type = IO.FileType.Binary)
         {
             if (TryGetData(path, out var buffer) && buffer.NotEmpty())
@@ -178,7 +185,7 @@ namespace Cutulu.Modding
                                 // Write temp zip file
                                 var temp = $"{IO.USER_PATH}.bin/.temp/";
                                 DirAccess.MakeDirRecursiveAbsolute(temp);
-                                (temp += $"buffer.{path[path.TrimEndUntil('.').Length..]}").WriteBytes(buffer);
+                                (temp += $"temp_buffer.{path[path.TrimEndUntil('.').Length..]}").WriteBytes(buffer);
 
                                 // Support for Texture2D
                                 if (t == typeof(Texture2D))
@@ -190,11 +197,14 @@ namespace Cutulu.Modding
                                 }
 
                                 // Load resource from temp file
-                                else result = (T)(object)ResourceLoader.Load(temp, t.FullName);
+                                else result = (T)(object)ResourceLoader.Load(temp, t.FullName, ResourceLoader.CacheMode.Reuse);
 
                                 temp.DeleteFile();
+                            }
 
-                                result = (T)(object)ResourceLoader.Load(temp, typeof(T).Name);
+                            if (result != null)
+                            {
+                                (result as Resource).ResourcePath = $"$temp/{path}";
                             }
 
                             return result != null;
@@ -265,7 +275,7 @@ namespace Cutulu.Modding
                     // Try find zip file
                     if (reader.FileExists(paths[i]))
                     {
-                        buffer = reader.ReadFile(paths[i], false);
+                        buffer = reader.ReadFile(paths[i]);
                     }
 
                     // Cant find file
@@ -290,6 +300,9 @@ namespace Cutulu.Modding
             return buffer.NotEmpty();
         }
 
+        /// <summary>
+        /// Returns if file is existing in either a directory or a (nested) zip file.
+        /// </summary>
         public static bool Exists(string path) => TryGetData(path, out var buffer) && buffer.NotEmpty();
         #endregion
     }
