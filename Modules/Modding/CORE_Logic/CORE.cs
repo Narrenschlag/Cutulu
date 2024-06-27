@@ -56,6 +56,8 @@ namespace Cutulu.Modding
         /// </summary>
         public T GetResource<T>(string assetName) where T : Resource
         {
+            if (assetName.IsEmpty()) return default;
+
             if (LoadedResources.TryGetValue(assetName, out var resource) == false || resource.IsNull())
             {
                 if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path, out var loaded, IO.FileType.GDResource))
@@ -96,6 +98,8 @@ namespace Cutulu.Modding
         /// </summary>
         public T GetNonResource<T>(string assetName, IO.FileType type = IO.FileType.Binary)
         {
+            if (assetName.IsEmpty()) return default;
+
             if (LoadedNonResources.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
             {
                 if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path, out var loaded, type))
@@ -136,7 +140,7 @@ namespace Cutulu.Modding
         /// </summary>
         public byte[] GetBytes(string assetName, out string ending)
         {
-            if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData(path, out var buffer))
+            if (assetName.NotEmpty() && Addresses.TryGetValue(assetName, out var path) && OE.TryGetData(path, out var buffer))
             {
                 ending = path[path.TrimEndUntil('.').Length..];
                 return buffer;
