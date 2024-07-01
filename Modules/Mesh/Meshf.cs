@@ -130,34 +130,4 @@ namespace Cutulu
             }
         }
     }
-
-    public struct Face
-    {
-        public Vector3 A { get; set; }
-        public Vector3 B { get; set; }
-        public Vector3 D { get; set; }
-
-        public Vector4[] C { get; set; }
-
-        public Face(Vector3 a, Vector3 b, Vector3 d, params Vector4[] cuts)
-        {
-            A = a;
-            B = b;
-
-            D = d;
-            C = cuts;
-        }
-
-        public readonly void Draw(MeshInstance3D meshInstance, Color color)
-        {
-            var surfaceTool = Mesh.PrimitiveType.Triangles.Open();
-            int vertexCount = 0;
-
-            Draw(surfaceTool, color, ref vertexCount);
-            meshInstance.Mesh = surfaceTool.Commit();
-        }
-
-        public readonly void Draw(SurfaceTool surfaceTool, Color color, ref int vertexCount)
-        => surfaceTool.AddPlane(A, B, D, color, true, ref vertexCount, C);
-    }
 }
