@@ -119,5 +119,59 @@ namespace Cutulu
             C = c.toXZ();
             return result;
         }
+
+        public static Vector3 IntersectAt(this Vector3 origin, Vector3 direction, float y)
+        {
+            var origin0 = origin.setY(y);
+            var dir0 = direction.setY(y);
+
+            if (origin.TryIntersect(direction, origin0, dir0, out var intersection))
+            {
+                return intersection;
+            }
+
+            return default;
+        }
+
+        public static bool TryIntersect(this Vector3 origin1, Vector3 direction1, Vector3 origin2, Vector3 direction2, out Vector3 intersection)
+        {
+            // Ensure direction vectors are normalized
+            var d1 = direction1.Normalized();
+            var d2 = direction2.Normalized();
+
+            // Calculate the cross product of the direction vectors
+            var crossD1D2 = d1.Cross(d2);
+
+            // If cross product is zero, the lines are parallel or collinear
+            if (crossD1D2.Length() == 0)
+            {
+                intersection = default;
+                return false; // Lines are parallel, no intersection
+            }
+
+            // Calculate the vector between the origins
+            var originDiff = origin2 - origin1;
+
+            // Calculate the determinants
+            var denominator = crossD1D2.LengthSquared();
+            var t1 = originDiff.Cross(d2).Dot(crossD1D2) / denominator;
+            var t2 = originDiff.Cross(d1).Dot(crossD1D2) / denominator;
+
+            // Calculate the potential intersection points
+            var pointOnLine1 = origin1 + t1 * d1;
+            var pointOnLine2 = origin2 + t2 * d2;
+
+            // Check if intersection points are the same (within a small tolerance)
+            if (pointOnLine1.DistanceTo(pointOnLine2) < 0.001f)
+            {
+                intersection = pointOnLine1; // Intersection point
+                return true;
+            }
+            else
+            {
+                intersection = default;
+                return false; // No intersection found
+            }
+        }
     }
 }
