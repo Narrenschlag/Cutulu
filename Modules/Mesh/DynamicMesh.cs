@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Cutulu
@@ -194,6 +195,40 @@ namespace Cutulu
 
             // Compute the cross product to get the normal vector
             return -AB.Cross(AC).Normalized();
+        }
+
+        public static Vector3[] SortClockwise(params Vector3[] points) => SortClockwise(false, points);
+        public static Vector3[] SortClockwise(bool flip, params Vector3[] points)
+        {
+            if (points.IsEmpty()) return points;
+
+            // Calculate the centroid of the points
+            var centroid = CalculateCentroid(points);
+
+            // Calculate angles for each point relative to the centroid
+            var angles = new Dictionary<Vector3, float>();
+            foreach (var point in points)
+            {
+                angles[point] = (float)Mathf.Atan2(point.Z - centroid.Z, point.X - centroid.X);
+            }
+
+            // Sort points by angle
+            points = angles.Keys.ToArray();
+            System.Array.Sort(points, (a, b) => flip ? angles[b].CompareTo(angles[a]) : angles[a].CompareTo(angles[b]));
+
+            return points;
+
+            static Vector3 CalculateCentroid(Vector3[] points)
+            {
+                var centroid = new Vector3();
+
+                foreach (var point in points)
+                {
+                    centroid += point;
+                }
+
+                return centroid / points.Length;
+            }
         }
 
         #endregion
