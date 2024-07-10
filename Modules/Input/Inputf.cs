@@ -7,7 +7,16 @@ namespace Cutulu
         public static bool GetKey(this string name, float threshhold = .5f) => GetValue(name) >= threshhold;
         public static float GetValue(this string name) => Input.GetActionRawStrength(name);
 
-        public static Vector2 MousePosition(this Node node) => node.GetViewport().GetMousePosition();
+        public static Vector2 MousePosition(this Node node, bool clampToScreen = false)
+        {
+            var screen = node.GetViewport().GetMousePosition();
+
+            if (clampToScreen)
+                screen = screen.Clamp(Vector2.Zero, DisplayServer.WindowGetSize());
+
+            return screen;
+        }
+
         public static bool GetMousePosition(this Camera3D camera, out Vector3 globalPosition, uint mask = 4294967295)
         {
             if (RaycastFromCamera(camera, out RaycastHit hit, mask))
