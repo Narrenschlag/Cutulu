@@ -197,9 +197,11 @@ namespace Cutulu.Modding
                                 }
 
                                 // Load resource from temp file
-                                else result = (T)(object)ResourceLoader.Load(temp, t.FullName, ResourceLoader.CacheMode.Reuse);
+                                else result = (T)(object)ResourceLoader.Load(temp, t.Name, ResourceLoader.CacheMode.Reuse);
 
                                 temp.DeleteFile();
+
+
                             }
 
                             if (result != null)
