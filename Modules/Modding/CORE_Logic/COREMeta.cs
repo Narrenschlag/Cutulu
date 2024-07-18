@@ -9,15 +9,15 @@ namespace Cutulu.Modding
     public class COREMeta
     {
         #region Params
-        public const string META_PATH = $"CORE{META_ENDING}";
-        public const string META_ENDING = ".META";
+        public const string META_PATH = $"core{META_ENDING}";
+        public const string META_ENDING = ".index";
 
-        public string COREId { get; set; } = "my_core";
-        public string IconLocation { get; set; } = "icon.png";
+        public string COREId { get; set; } = "generic_core_id";
         public string Author { get; set; } = "Narrenschlag";
+        public string Version { get; set; } = "1.0.0.0";
 
-        public string Name { get; set; } = "Asset Pack";
-        public string Description { get; set; } = "Assets for everyone! Yippie!1!";
+        public string Name { get; set; } = "Core Asset Pack";
+        public string Description { get; set; } = "Utilizing CORE for mod support and asset delivery.";
 
         public string[] Dependencies { get; set; } = null;
         public string[] Index { get; set; } = null;
