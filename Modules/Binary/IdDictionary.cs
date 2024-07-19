@@ -5,7 +5,7 @@ using System;
 
 namespace Cutulu
 {
-    public class IdDictionary<T> where T : struct
+    public class IdDictionary<T>
     {
         private Dictionary<int, T> Main;
         private Dictionary<T, int> Rvrs;
@@ -108,9 +108,14 @@ namespace Cutulu
             using var stream = new MemoryStream(data);
             using var reader = new BinaryReader(stream);
 
+            return Decode(reader);
+        }
+
+        public static IdDictionary<T> Decode(BinaryReader reader)
+        {
             var result = new IdDictionary<T>();
 
-            if (stream.Length >= 8)
+            if (reader.BaseStream != null && reader.BaseStream.Length >= 8)
             {
                 result.lastIdx = reader.ReadInt32();
                 var count = reader.ReadInt32();
