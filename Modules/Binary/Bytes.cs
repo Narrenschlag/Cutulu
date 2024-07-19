@@ -309,7 +309,7 @@ namespace Cutulu
 
                 for (ushort i = 0; i < properties.Length; i++)
                 {
-                    FromBytes(properties[i].PropertyType, out object value, reader);
+                    FromBytes(properties[i].PropertyType, out var value, reader);
                     properties[i].SetValue(output, value);
                 }
             }
