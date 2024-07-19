@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 using System.IO;
 using System;
 
@@ -47,6 +48,8 @@ namespace Cutulu
                 throw new KeyNotFoundException($"Key {key} not found.");
             }
         }
+
+        public T[] GetValues() => Main.Values.ToArray();
 
         public int Append(T value)
         {
