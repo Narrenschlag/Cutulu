@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Reflection;
 using System.IO;
@@ -72,6 +73,38 @@ namespace Cutulu
         #region Utility                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         private static bool IsDeserializableValue(ref Type type) => type.IsPrimitive || type == typeof(string) || (AdditionalFormatters != null && AdditionalFormatters.ContainsKey(type));
         private static bool SerializeAsContainer(ref Type type) => IsDeserializableValue(ref type) == false && type != typeof(string);
+
+        public static int GetExpectedSizeOf<T>(this T obj) => GetSizeOf<T>();
+        public static int GetSizeOf<T>()
+        {
+            if (typeof(T).Equals(typeof(string)))
+            {
+                Debug.LogError($"typeof(string) is not supported for GetSizeOf() as it has a generic length.");
+                return 0;
+            }
+
+            return Marshal.SizeOf(typeof(T));
+        }
+
+        /// <summary>
+        /// Gets the number of bytes remaining in the BinaryReader's underlying stream.
+        /// </summary>
+        /// <param name="reader">The BinaryReader to check.</param>
+        /// <returns>The number of bytes remaining in the stream.</returns>
+        public static long BytesRemaining(this BinaryReader reader)
+        {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
+            // Cast the underlying stream to MemoryStream to get its Length property
+            if (reader.BaseStream is MemoryStream memoryStream)
+            {
+                return memoryStream.Length - memoryStream.Position;
+            }
+
+            // For other types of streams, you may not be able to determine the length
+            throw new InvalidOperationException("Cannot determine the number of remaining bytes for this type of stream.");
+        }
         #endregion
 
         #region To Bytes                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,8 +208,39 @@ namespace Cutulu
         {
             try
             {
-                output = Buffer<T>(bytes, out bool failed);
+                output = Buffer<T>(bytes, out var failed);
                 return failed == false;
+            }
+
+            catch
+            {
+                output = default;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Tries reading generic value from BinaryReader.
+        /// <br/>Only reads values that can be buffered and not strings.
+        /// </summary>
+        public static bool TryBuffer<T>(this BinaryReader reader, out T output)
+        {
+            try
+            {
+                if (typeof(T).Equals(typeof(string)))
+                {
+                    output = (T)(object)reader.ReadString();
+
+                    return true;
+                }
+
+                else
+                {
+                    var buffer = reader.ReadBytes(GetSizeOf<T>());
+                    output = Buffer<T>(buffer, out var failed);
+
+                    return failed == false;
+                }
             }
 
             catch
@@ -318,6 +382,40 @@ namespace Cutulu
         /// </summary>
         public void Register<TargetType>(bool overrideExisting = true)
         => Bytes.RegisterFormatter(typeof(TargetType), this, overrideExisting);
+    }
+    #endregion
+
+    #region BinaryReader Extension      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>
+    /// Extends the binary read for generics
+    /// </summary>
+    public static class BinaryReaderExtensions
+    {
+        /// <summary>
+        /// Uses the Marshal to allocate data from binary reader and cast it into generic Type : struct
+        /// </summary>
+        public static T ReadViaMarshal<T>(this BinaryReader reader) where T : struct
+        {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
+            var size = Marshal.SizeOf(typeof(T));
+            var bytes = reader.ReadBytes(size);
+
+            if (bytes.Length != size)
+                throw new EndOfStreamException("Could not read enough bytes for the specified type.");
+
+            var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            try
+            {
+                var pointer = handle.AddrOfPinnedObject();
+                return (T)Marshal.PtrToStructure(pointer, typeof(T));
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
     }
     #endregion
 }
