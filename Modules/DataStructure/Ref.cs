@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace Cutulu
 {
+    /// <summary>
+    /// Keeps track of a value of any type. Use 'Changed' to hook on to any changes.
+    /// </summary>
     public class Ref<T>
     {
         public System.Action<T> Changed;
@@ -38,6 +41,9 @@ namespace Cutulu
         }
     }
 
+    /// <summary>
+    /// Keeps track of a value of any type. Use 'Changed' to hook on to any changes. Allows to bind Ref<T> and update them all at the same time before calling 'Changed'.
+    /// </summary>
     public class SharedRef<T> : Ref<T>
     {
         private List<Ref<T>> _bindings { get; set; } = new();
@@ -49,20 +55,24 @@ namespace Cutulu
             {
                 if (_value.Equals(value) == false)
                 {
-                    _value = value;
-
                     // Update all bound values
-                    foreach (var bind in _bindings)
+                    for (var i = _bindings.Count - 1; i >= 0; i--)
                     {
-                        bind.Value = _value;
+                        if (_bindings[i] == null)
+                            _bindings.RemoveAt(i);
+
+                        else
+                            _bindings[i].Value = value;
                     }
+
+                    _value = value;
 
                     Changed?.Invoke(value);
                 }
             }
         }
 
-        public void Add(Ref<T> target)
+        public void Bind(Ref<T> target)
         {
             _bindings.Add(target);
 
@@ -70,7 +80,7 @@ namespace Cutulu
             target.Value = _value;
         }
 
-        public void Remove(Ref<T> target)
+        public void Unbind(Ref<T> target)
         {
             _bindings.Remove(target);
         }
