@@ -383,6 +383,14 @@ namespace Cutulu
         public void Register<TargetType>(bool overrideExisting = true)
         => Bytes.RegisterFormatter(typeof(TargetType), this, overrideExisting);
     }
+
+    /// <summary>
+    /// Used to create custom generic formatters for non primitive data structures
+    /// </summary>
+    public class GenericByteFormatter<T> : ByteFormatter
+    {
+        public void Register() => Register<T>();
+    }
     #endregion
 
     #region BinaryReader Extension      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
