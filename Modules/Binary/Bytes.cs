@@ -130,8 +130,14 @@ namespace Cutulu
 
         private static void ToBytes(Type type, ref object value, BinaryWriter writer)
         {
+            // Just write buffer
+            if (value is byte[] buffer)
+            {
+                writer.Write(buffer);
+            }
+
             // Arrays
-            if (type.IsArray && value is Array array)
+            else if (type.IsArray && value is Array array)
             {
                 writer.Write((ushort)array.Length);
                 type = type.GetElementType();
