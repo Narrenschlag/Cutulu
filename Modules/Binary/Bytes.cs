@@ -425,10 +425,19 @@ namespace Cutulu
                 var pointer = handle.AddrOfPinnedObject();
                 return (T)Marshal.PtrToStructure(pointer, typeof(T));
             }
+            
             finally
             {
                 handle.Free();
             }
+        }
+
+        /// <summary>
+        /// Returns all remaining bytes in stream of BinaryReader
+        /// </summary>
+        public static byte[] ReadRemainingBytes(this BinaryReader reader)
+        {
+            return reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
         }
     }
     #endregion
