@@ -6,7 +6,9 @@ namespace Cutulu
     public class XDevice
     {
         public long UDID { get; private set; } // Unique Device Identification Index
+
         public long RDID { get; set; } // Remote Device Identification Index
+        public bool RReady { get; set; } = false; // Remote Ready
 
         public int iUDID { get; private set; } // Integer version of above
         public int DeviceId { get => iUDID; }
