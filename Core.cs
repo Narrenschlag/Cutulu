@@ -524,6 +524,22 @@ namespace Cutulu
         public static bool NotEmpty<T>(this List<T> list) => list != null && list.Count > 0;
         public static bool IsEmpty<T>(this List<T> list) => !NotEmpty(list);
 
+        public static bool TryAdd<T>(this List<T> list, T value)
+        {
+            if (list.Contains(value)) return false;
+
+            list.Add(value);
+            return true;
+        }
+
+        public static bool TryRemove<T>(this List<T> list, T value)
+        {
+            if (list.Contains(value) == false) return false;
+
+            list.Remove(value);
+            return true;
+        }
+
         public static T RandomElement<T>(this List<T> list, T @default = default) => list.NotEmpty() ? list[Random.Range(0, list.Count)] : @default;
         #endregion
 
