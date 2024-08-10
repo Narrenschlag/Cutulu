@@ -30,6 +30,12 @@ namespace Cutulu
             // Add native device
             AddDevice(new(this, -1));
 
+            // Add existing
+            foreach (var existing in Input.GetConnectedJoypads())
+            {
+                OnDeviceChange(existing, true);
+            }
+
             Input.JoyConnectionChanged += OnDeviceChange;
         }
 
