@@ -150,8 +150,8 @@ namespace Cutulu
         }
 
         #region Read Inputs using XInput
-        public bool IsPressed(XInput input) => XInputf.IsPressed(Mathf.Min(0, DeviceId), input);
-        public float GetValue(XInput input) => XInputf.GetValue(Mathf.Min(0, DeviceId), input);
+        public bool IsPressed(XInput input) => XInputf.IsPressed(iUDID, input);
+        public float GetValue(XInput input) => XInputf.GetValue(iUDID, input);
 
         public bool ListenForInput(out XInput[] inputs) => ListenForInput(out inputs, SpecificListenInputs ?? (DeviceId < 0 ? Manager.XNative : Manager.XGamepad));
         public bool ListenForInput(out XInput[] inputs, params XInput[] range)
