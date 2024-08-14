@@ -9,14 +9,14 @@ namespace Cutulu.Modding
     /// CORE - Collection of Realms and Entities<br/>
     /// Allows your players and you to patch your project using asset collections(mods)
     /// </summary>
-    public class CORE
+    public class CoRE
     {
         #region Params
         private readonly Dictionary<string, object> LoadedNonResources;
         private readonly Dictionary<string, Resource> LoadedResources;
 
         public readonly Dictionary<string, HashSet<string>> Directories;
-        public readonly Dictionary<string, COREMeta> PresentCOREs;
+        public readonly Dictionary<string, CoREMeta> PresentCOREs;
         public readonly Dictionary<string, string> Addresses;
 
         public readonly Dictionary<string, object> CompilePipeline;
@@ -26,7 +26,7 @@ namespace Cutulu.Modding
         /// <summary>
         /// Creates an empty CORE
         /// </summary>
-        public CORE()
+        public CoRE()
         {
             LoadedNonResources = new();
             LoadedResources = new();
@@ -40,7 +40,7 @@ namespace Cutulu.Modding
         /// <summary>
         /// Creates a CORE containing given CORE files
         /// </summary>
-        public CORE(params string[] rootDirectories) : this()
+        public CoRE(params string[] rootDirectories) : this()
         {
             Load(rootDirectories);
 
@@ -157,7 +157,7 @@ namespace Cutulu.Modding
         /// <summary>
         /// Compiles and writes a CORE file to given file path. Also adjusts index if wished.
         /// </summary>
-        public void Compile(string filePath, COREMeta meta, bool adjustIndex = true)
+        public void Compile(string filePath, CoREMeta meta, bool adjustIndex = true)
         {
             if (adjustIndex)
             {
@@ -206,7 +206,7 @@ namespace Cutulu.Modding
                     var line = meta.Index[i];
                     if (adjustIndex == false && line.IsEmpty()) continue;
 
-                    var split = line.Split(' ', Core.StringSplit);
+                    var split = line.Split(' ', Cutulu.Core.StringSplit);
                     if (adjustIndex == false && split.Size() != 2) continue;
 
                     var name = split[0];
@@ -239,7 +239,7 @@ namespace Cutulu.Modding
             }
 
             // Write meta file
-            writer.Append(COREMeta.META_PATH, meta.GetBuffer());
+            writer.Append(CoREMeta.META_PATH, meta.GetBuffer());
 
             writer.Close();
         }
@@ -257,7 +257,7 @@ namespace Cutulu.Modding
             {
                 var filePaths = new List<string>();
 
-                OE.FindFiles(rootDir, ref filePaths, new[] { COREMeta.META_ENDING }, new[] { ".core" });
+                OE.FindFiles(rootDir, ref filePaths, new[] { CoREMeta.META_ENDING }, new[] { ".core" });
 
                 foreach (var filePath in filePaths)
                 {
@@ -288,7 +288,7 @@ namespace Cutulu.Modding
         public void LoadFile(string filePath)
         {
             // Try read meta file
-            if (COREMeta.TryRead(filePath, out var meta) == false) return;
+            if (CoREMeta.TryRead(filePath, out var meta) == false) return;
 
             var coreDir = filePath.TrimToDirectory('/', '\\', '?');
 
@@ -301,7 +301,7 @@ namespace Cutulu.Modding
                 foreach (var entry in meta.Index)
                 {
                     // Seperated by spaces
-                    var args = entry.Split(' ', Core.StringSplit);
+                    var args = entry.Split(' ', Cutulu.Core.StringSplit);
                     if (args.Size() != 2) continue;
 
                     var localPath = args[1];

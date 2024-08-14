@@ -6,7 +6,7 @@ namespace Cutulu.Modding
     /// <summary>
     /// Contains important meta data as author, name, icon and description. Aswell as the file index used to locate the files that can be loaded.
     /// </summary>
-    public class COREMeta
+    public class CoREMeta
     {
         #region Params
         public const string META_PATH = $"core{META_ENDING}";
@@ -26,12 +26,12 @@ namespace Cutulu.Modding
         #endregion
 
         #region Constructors
-        public COREMeta() { }
+        public CoREMeta() { }
 
         /// <summary>
         /// Creates custom CORE meta. Has to be written down by using CORE.Compile.
         /// </summary>
-        public COREMeta(string author, string name, string description, params string[] index)
+        public CoREMeta(string author, string name, string description, params string[] index)
         {
             Author = author;
 
@@ -48,7 +48,7 @@ namespace Cutulu.Modding
         /// <summary>
         /// Tries to read meta file from CORE. Returns true if found and readable.
         /// </summary>
-        public static bool TryRead(string filePath, out COREMeta meta)
+        public static bool TryRead(string filePath, out CoREMeta meta)
         {
             return OE.TryGetData(filePath, out meta, IO.FileType.Json);
         }
