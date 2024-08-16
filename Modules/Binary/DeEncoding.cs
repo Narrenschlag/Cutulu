@@ -252,8 +252,6 @@ namespace Cutulu
 
                 return output;
             }
-
-            return default;
         }
         #endregion
 
