@@ -12,8 +12,7 @@ namespace Cutulu
 
         public Mask()
         {
-            "Cannot create empty mask. needs atleast one bit!".Throw();
-            Bits = null;
+            throw new("Cannot create empty mask. needs atleast one bit!");
         }
 
         public Mask(int bitCount, bool fill = false)

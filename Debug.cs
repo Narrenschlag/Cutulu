@@ -1,32 +1,9 @@
-using System.Collections.Generic;
 using Godot;
 
 namespace Cutulu
 {
     public static class Debug
     {
-        #region Rendering 3D Functions  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>
-        /// Draws a point in 3d space.
-        /// </summary>
-        public static MeshInstance3D Point(this Node node, Vector3 point, Color color, float radius = .05f) => Renderf.DrawPoint(node, point, color, radius);
-
-        /// <summary>
-        /// Draws a ray in 3d space.
-        /// </summary>
-        public static MeshInstance3D Ray(this Node node, Vector3 source, Vector3 dir, Color color) => Renderf.DrawRay(node, color, source, dir);
-
-        /// <summary>
-        /// Draws a line in 3d space.
-        /// </summary>
-        public static MeshInstance3D Line(this Node node, Vector3 from, Vector3 to, Color color) => Renderf.DrawLine(node, color, from, to);
-
-        /// <summary>
-        /// Draws a line in 3d space.
-        /// </summary>
-        public static MeshInstance3D Line(this Node node, List<Vector3> path, Color color) => Renderf.DrawLine(node, color, path.ToArray());
-        #endregion
-
         #region Logging                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Logs an error message.
@@ -74,11 +51,6 @@ namespace Cutulu
 
             Log(result + " }");
         }
-
-        /// <summary>
-        /// Throws an error message and stop code from continuing.
-        /// </summary>
-        public static void Throw(this string message) => throw new System.Exception(message);
         #endregion
     }
 }

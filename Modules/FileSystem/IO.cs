@@ -5,7 +5,6 @@ using DA = Godot.DirAccess;
 using System.Text.Json;
 using System;
 using Godot;
-using System.Reflection;
 
 namespace Cutulu
 {
@@ -76,10 +75,10 @@ namespace Cutulu
             {
                 t = JsonSerializer.Deserialize<T>(json, JsonOptions(simpleFormat, indentFormat));
             }
+
             catch (Exception error)
             {
-                $"json: {json}\n{error.Message}".Throw();
-                return default;
+                throw new($"json: {json}\n{error.Message}");
             }
 
             // Update custom json setup
@@ -124,7 +123,7 @@ namespace Cutulu
         public static void WriteString(this string path, string content, string encryptionKey = null)
         {
             // Check if the path is valid and create dir if non existant
-            if (path.IsEmpty()) "No path assigned!".Throw();
+            if (path.IsEmpty()) throw new("No path assigned!");
             MkDir(path = path.Trim());
 
             // Encrypt content
@@ -149,7 +148,7 @@ namespace Cutulu
                 return;
             }
 
-            if (path.IsEmpty()) "No path assigned!".Throw();
+            if (path.IsEmpty()) throw new("No path assigned!");
 
             MkDir(path = path.Trim());
 
@@ -166,8 +165,8 @@ namespace Cutulu
         public static string ReadString(this string path, string decryptionKey = null)
         {
             // Check if the path is valid and create dir if non existant
-            if (path.IsEmpty()) "No path assigned!".Throw();
-            if (!Exists(path)) $"Path '{path}' does not exists.".Throw();
+            if (path.IsEmpty()) throw new("No path assigned!");
+            if (!Exists(path)) throw new($"Path '{path}' does not exists.");
 
             // Open file
             FA file = FA.Open(path, FA.ModeFlags.Read);
@@ -186,8 +185,8 @@ namespace Cutulu
         public static byte[] ReadBytes(this string path)
         {
             // Check if the path is valid and create dir if non existant
-            if (path.IsEmpty()) "No path assigned!".Throw();
-            if (path.Exists() == false) $"No file found at <{path}>.".Throw();
+            if (path.IsEmpty()) throw new("No path assigned!");
+            if (path.Exists() == false) throw new($"No file found at <{path}>.");
 
             FA file = FA.Open(path, FA.ModeFlags.Read);
             return file.GetBuffer((long)file.GetLength());

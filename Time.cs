@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Godot;
 
 namespace Cutulu
@@ -65,40 +66,39 @@ namespace Cutulu
         /// </summary>
         public static ushort Year { get; private set; }
 
-        public delegate void EmptyEvent();
-        public static EmptyEvent onMinuteElapsed;
-        public static EmptyEvent onHourElapsed;
-        public static EmptyEvent onDayElapsed;
+        public static Action MinuteElapsed { get; set; }
+        public static Action HourElapsed { get; set; }
+        public static Action DayElapsed { get; set; }
 
-        public static void Setup(Node master) => OnMinuteElapsed(false, master);
+        static Time()
+        {
+            OnMinuteElapsed();
+        }
         #endregion
 
         #region Private     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        private static void OnMinuteElapsed() => OnMinuteElapsed(true);
-        private static void OnMinuteElapsed(bool callDelegate, Node masterNode = null)
+        private static async void OnMinuteElapsed()
         {
-            ushort day = DayOfWeek;
-            ushort hour = Hour;
+            var day = DayOfWeek;
+            var hour = Hour;
             UpdateInternal();
 
+            // The order of calling these delegates
+            // simplifies the workflow a lot
+
+            // Every day
+            if (day != DayOfWeek) DayElapsed?.Invoke();
+
+            // Every hour
+            if (hour != Hour) HourElapsed?.Invoke();
+
+            // Every minute
+            MinuteElapsed?.Invoke();
+
+            await Task.Delay(Mathf.RoundToInt((60f - Seconds) * 1000));
+
             // Recall this function every 60s
-            masterNode.QueueAction(OnMinuteElapsed, 60f - Seconds);
-
-            // Call delegate voids
-            if (callDelegate)
-            {
-                // The order of calling these delegates
-                // simplifies the workflow a lot
-
-                // Every day
-                if (day != DayOfWeek && onDayElapsed != null) onDayElapsed();
-
-                // Every hour
-                if (hour != Hour && onHourElapsed != null) onHourElapsed();
-
-                // Every minute
-                onMinuteElapsed?.Invoke();
-            }
+            OnMinuteElapsed();
         }
 
         private static void UpdateInternal()

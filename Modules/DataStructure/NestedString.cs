@@ -135,7 +135,7 @@ namespace Cutulu
 
             void up(ref int i)
             {
-                if (current.Parent == null) $"Depth out of range at char {i}".Throw();
+                if (current.Parent == null) throw new($"Depth out of range at char {i}");
 
                 if (current.Value.Trim().IsEmpty()) current.Value = null;
                 if (current.Children.IsEmpty()) current.Children = null;
