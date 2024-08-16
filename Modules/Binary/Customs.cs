@@ -25,9 +25,9 @@ namespace Cutulu
 
         public readonly Color RGB32(float alpha = 1) => new(R / 255f, G / 255f, B / 255f, alpha);
 
-        public class Formatter : ByteFormatter
+        public class Formatter : BinaryEncoder<ColorRGB>
         {
-            public override void Write(object value, BinaryWriter writer)
+            public override void Encode(BinaryWriter writer, ref object value)
             {
                 var obj = (ColorRGB)value;
 
@@ -36,7 +36,7 @@ namespace Cutulu
                 writer.Write(obj.B);
             }
 
-            public override object Read(BinaryReader reader) => new ColorRGB(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+            public override object Decode(BinaryReader reader) => new ColorRGB(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
         }
     }
 
@@ -54,9 +54,9 @@ namespace Cutulu
         public Vector3 ToVector3(float y = 0) => new(X, y, Y);
         public Vector2 ToVector2() => new(X, Y);
 
-        public class Formatter : ByteFormatter
+        public class Formatter : BinaryEncoder<Vector2S>
         {
-            public override void Write(object value, BinaryWriter writer)
+            public override void Encode(BinaryWriter writer, ref object value)
             {
                 var obj = (Vector2S)value;
 
@@ -64,7 +64,7 @@ namespace Cutulu
                 writer.Write(obj.Y);
             }
 
-            public override object Read(BinaryReader reader) => new Vector2S(reader.ReadInt16(), reader.ReadInt16());
+            public override object Decode(BinaryReader reader) => new Vector2S(reader.ReadInt16(), reader.ReadInt16());
         }
     }
 
@@ -74,11 +74,11 @@ namespace Cutulu
 
         public Vector38(byte x, byte y, byte z) => Values = new byte[3] { x, y, z };
 
-        public class Formatter : ByteFormatter
+        public class Formatter : BinaryEncoder<Vector38>
         {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((Vector38)value).Values);
+            public override void Encode(BinaryWriter writer, ref object value) => writer.Write(((Vector38)value).Values);
 
-            public override object Read(BinaryReader reader) => new Vector38(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+            public override object Decode(BinaryReader reader) => new Vector38(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
         }
     }
 }

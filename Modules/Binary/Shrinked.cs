@@ -44,7 +44,7 @@ namespace Cutulu
 
                 // Short
                 case 2:
-                    writer.Write(((short)value).Buffer());
+                    writer.Write(((short)value).Encode());
                     break;
 
                 // Middle
@@ -54,7 +54,7 @@ namespace Cutulu
 
                 // Int
                 default:
-                    writer.Write(value.Buffer());
+                    writer.Write(value.Encode());
                     break;
             }
         }
@@ -87,7 +87,7 @@ namespace Cutulu
                 // Short
                 case 2:
                     type = typeof(short);
-                    return buffer.Buffer<short>();
+                    return buffer.Decode<short>();
 
                 // Middle
                 case 3:
@@ -97,7 +97,7 @@ namespace Cutulu
                 // Int
                 default:
                     type = typeof(int);
-                    return buffer.Buffer<int>();
+                    return buffer.Decode<int>();
             }
         }
 

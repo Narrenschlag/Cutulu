@@ -100,7 +100,7 @@ namespace Cutulu
             foreach (var entry in Main)
             {
                 writer.Write(entry.Key);
-                writer.Write(entry.Value.Buffer());
+                writer.Write(entry.Value.Encode());
             }
 
             return stream.ToArray();
@@ -127,7 +127,7 @@ namespace Cutulu
                 {
                     var idx = reader.ReadInt32();
 
-                    if (reader.TryBuffer<T>(out var val) == false) break;
+                    if (reader.TryDecode<T>(out var val) == false) break;
 
                     result[idx] = val;
                 }

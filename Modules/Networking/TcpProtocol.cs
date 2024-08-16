@@ -171,7 +171,7 @@ namespace Cutulu
         public static byte[] Package<T>(ref short key, ref T value)
         {
             // Convert to bytes
-            byte[] bytes = value == null ? Array.Empty<byte>() : value.Buffer();
+            byte[] bytes = value == null ? Array.Empty<byte>() : value.Encode();
 
             // Establish streams
             using MemoryStream strm = new();

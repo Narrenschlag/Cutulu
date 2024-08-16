@@ -190,7 +190,7 @@ namespace Cutulu
         public static byte[] PackageS2C<T>(ref short key, ref T value)
         {
             // Convert to bytes
-            var bytes = value == null ? Array.Empty<byte>() : value.Buffer();
+            var bytes = value == null ? Array.Empty<byte>() : value.Encode();
 
             // Establish streams
             using MemoryStream strm = new();
@@ -215,7 +215,7 @@ namespace Cutulu
         public static byte[] PackageC2S<T>(ref short key, ref T value, ref ushort udpSafety)
         {
             // Convert to bytes
-            var bytes = value == null ? Array.Empty<byte>() : value.Buffer();
+            var bytes = value == null ? Array.Empty<byte>() : value.Encode();
 
             // Establish streams
             using MemoryStream strm = new();

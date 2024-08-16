@@ -7,48 +7,28 @@ namespace Cutulu
     /// </summary>
     public static class CutuluByteFormatters
     {
-        private static bool registered;
-
-        /// <summary>
-        /// Registers formatters for basic structs like Vectors.
-        /// </summary>
-        public static void Register()
+        class hyteFormatter : BinaryEncoder<Int4>
         {
-            if (registered == true) return;
-            else registered = true;
-
-            new hyteFormatter().Register<Int4>();
-            new qyteFormatter().Register<Int2>();
-
-            new middleFormatter().Register<Int24>();
-            new umiddleFormatter().Register<UInt24>();
-
-            new ColorRGB.Formatter().Register<ColorRGB>();
-            new Vector2S.Formatter().Register<Vector2S>();
+            public override void Encode(BinaryWriter writer, ref object value) => writer.Write(((Int4)value).Byte);
+            public override object Decode(BinaryReader reader) => new Int4() { Byte = reader.ReadByte() };
         }
 
-        class hyteFormatter : ByteFormatter
+        class qyteFormatter : BinaryEncoder<Int2>
         {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((Int4)value).Byte);
-            public override object Read(BinaryReader reader) => new Int4() { Byte = reader.ReadByte() };
+            public override void Encode(BinaryWriter writer, ref object value) => writer.Write(((Int2)value).Byte);
+            public override object Decode(BinaryReader reader) => new Int2() { Byte = reader.ReadByte() };
         }
 
-        class qyteFormatter : ByteFormatter
+        class middleFormatter : BinaryEncoder<Int24>
         {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((Int2)value).Byte);
-            public override object Read(BinaryReader reader) => new Int2() { Byte = reader.ReadByte() };
+            public override void Encode(BinaryWriter writer, ref object value) => writer.Write(((Int24)value).Bytes);
+            public override object Decode(BinaryReader reader) => new Int24() { Bytes = reader.ReadBytes(3) };
         }
 
-        class middleFormatter : ByteFormatter
+        class umiddleFormatter : BinaryEncoder<UInt24>
         {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((Int24)value).Bytes);
-            public override object Read(BinaryReader reader) => new Int24() { Bytes = reader.ReadBytes(3) };
-        }
-
-        class umiddleFormatter : ByteFormatter
-        {
-            public override void Write(object value, BinaryWriter writer) => writer.Write(((UInt24)value).Bytes);
-            public override object Read(BinaryReader reader) => new UInt24() { Bytes = reader.ReadBytes(3) };
+            public override void Encode(BinaryWriter writer, ref object value) => writer.Write(((UInt24)value).Bytes);
+            public override object Decode(BinaryReader reader) => new UInt24() { Bytes = reader.ReadBytes(3) };
         }
     }
 }

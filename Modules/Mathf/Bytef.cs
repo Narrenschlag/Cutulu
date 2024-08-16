@@ -275,10 +275,10 @@ namespace Cutulu
         /// </summary>
         public static void OffsetBits<T>(ref T value, ref int bitOffset)
         {
-            byte[] bytes = value.Buffer();
+            byte[] bytes = value.Encode();
 
             OffsetBits(ref bytes, ref bitOffset);
-            value = bytes.Buffer<T>();
+            value = bytes.Decode<T>();
         }
         #endregion
 

@@ -252,7 +252,7 @@ namespace Cutulu
                 {
                     // Handle binary reading
                     case FileType.Binary:
-                        return path.ReadBytes().TryBuffer(out output);
+                        return path.ReadBytes().TryDecode(out output);
 
                     // Handle json reading
                     case FileType.Json:
@@ -313,7 +313,7 @@ namespace Cutulu
             {
                 // Handle binary writing
                 case FileType.Binary:
-                    WriteBytes(path, input.Buffer());
+                    WriteBytes(path, input.Encode());
                     return true;
 
                 // Handle json writing

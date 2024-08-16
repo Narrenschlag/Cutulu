@@ -127,31 +127,6 @@ namespace Cutulu
             public int[] Values() => new int[2] { Value1, Value2 };
         }
 
-        public class BitArray : ByteFormatter
-        {
-            private readonly byte[] data;
-
-            public BitArray(params bool[] bools)
-            {
-                data = new byte[(bools.Length + 7) / 8];
-
-                for (int i = 0; i < bools.Length; i++)
-                {
-                    this[i] = bools[i];
-                }
-            }
-
-            public bool this[int index]
-            {
-                get => (data[index / 8] & (1 << (index % 8))) != 0;
-                set
-                {
-                    if (value) data[index / 8] |= (byte)(1 << (index % 8));
-                    else data[index / 8] &= (byte)~(1 << (index % 8));
-                }
-            }
-        }
-
         public class MusicalNote
         {
             public string Pitch { get; set; } // e.g., C, D, E, F, G, A, B

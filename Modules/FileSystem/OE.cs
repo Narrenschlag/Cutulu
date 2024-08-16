@@ -155,7 +155,7 @@ namespace Cutulu.Modding
                 {
                     case IO.FileType.Binary:
                         Debug.Log($"buffer[{buffer.Length}] to {typeof(T).Name}");
-                        return buffer.TryBuffer(out result);
+                        return buffer.TryDecode(out result);
 
                     case IO.FileType.Json:
                         try

@@ -19,7 +19,7 @@ namespace Cutulu
         public Method Method { get; private set; }
         public short Key { get; private set; }
 
-        public static NetworkPackage Create<T>(short key, T value, Method method) => new(key, value.Buffer(), method);
+        public static NetworkPackage Create<T>(short key, T value, Method method) => new(key, value.Encode(), method);
         public NetworkPackage(short key, byte[] content, Method method)
         {
             Content = content ?? Array.Empty<byte>();
@@ -27,7 +27,7 @@ namespace Cutulu
             Key = key;
         }
 
-        public readonly bool TryBuffer<T>(out T value) => Content.TryBuffer(out value);
+        public readonly bool TryBuffer<T>(out T value) => Content.TryDecode(out value);
         public readonly int ByteSize() => Content.Length;
     }
 }

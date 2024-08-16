@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dfr0wbu5a8a7w"]
+
+[ext_resource type="Script" path="res://Cutulu/UnitTests/DeEncodingTest.cs" id="1_17h0s"]
+
+[node name="DeEncoding" type="Node"]
+script = ExtResource("1_17h0s")

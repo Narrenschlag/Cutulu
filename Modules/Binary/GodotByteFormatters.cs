@@ -8,22 +8,10 @@ namespace Cutulu
     /// </summary>
     public static class GodotByteFormatters
     {
-        /// <summary>
-        /// Registers formatters for basic structs like Vectors.
-        /// </summary>
-        public static void Register()
-        {
-            new Vector3IFormatter().Register<Vector3I>(false);
-            new Vector3Formatter().Register<Vector3>(false);
-
-            new Vector2IFormatter().Register<Vector2I>(false);
-            new Vector2Formatter().Register<Vector2>(false);
-        }
-
         #region Vector3         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        class Vector3IFormatter : ByteFormatter
+        class Vector3IEncoder : BinaryEncoder<Vector3I>
         {
-            public override void Write(object value, BinaryWriter writer)
+            public override void Encode(BinaryWriter writer, ref object value)
             {
                 Vector3I _ = (Vector3I)value;
                 for (int i = 0; i < 3; i++)
@@ -32,24 +20,24 @@ namespace Cutulu
                 }
             }
 
-            public override object Read(BinaryReader reader)
+            public override object Decode(BinaryReader reader)
             {
                 return new Vector3I(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());
             }
         }
 
-        class Vector3Formatter : ByteFormatter
+        class Vector3Formatter : BinaryEncoder<Vector3>
         {
-            public override void Write(object value, BinaryWriter writer)
+            public override void Encode(BinaryWriter writer, ref object value)
             {
-                Vector3 _ = (Vector3)value;
+                var _ = (Vector3)value;
                 for (int i = 0; i < 3; i++)
                 {
                     writer.Write(_[i]);
                 }
             }
 
-            public override object Read(BinaryReader reader)
+            public override object Decode(BinaryReader reader)
             {
                 return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
             }
@@ -57,9 +45,9 @@ namespace Cutulu
         #endregion
 
         #region Vector2         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        class Vector2IFormatter : ByteFormatter
+        class Vector2IFormatter : BinaryEncoder<Vector2I>
         {
-            public override void Write(object value, BinaryWriter writer)
+            public override void Encode(BinaryWriter writer, ref object value)
             {
                 Vector2I _ = (Vector2I)value;
                 for (int i = 0; i < 2; i++)
@@ -68,15 +56,15 @@ namespace Cutulu
                 }
             }
 
-            public override object Read(BinaryReader reader)
+            public override object Decode(BinaryReader reader)
             {
                 return new Vector2I(reader.ReadInt32(), reader.ReadInt32());
             }
         }
 
-        class Vector2Formatter : ByteFormatter
+        class Vector2Formatter : BinaryEncoder<Vector2>
         {
-            public override void Write(object value, BinaryWriter writer)
+            public override void Encode(BinaryWriter writer, ref object value)
             {
                 Vector2 _ = (Vector2)value;
                 for (int i = 0; i < 2; i++)
@@ -85,7 +73,7 @@ namespace Cutulu
                 }
             }
 
-            public override object Read(BinaryReader reader)
+            public override object Decode(BinaryReader reader)
             {
                 return new Vector2(reader.ReadSingle(), reader.ReadSingle());
             }

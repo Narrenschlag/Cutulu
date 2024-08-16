@@ -226,7 +226,7 @@ namespace Cutulu.Modding
 
                         else
                         {
-                            bytes = obj.Buffer();
+                            bytes = obj.Encode();
                         }
                     }
 
