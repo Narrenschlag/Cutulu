@@ -58,6 +58,8 @@ namespace Cutulu
 
         public static void Encode(BinaryWriter writer, ref object obj)
         {
+            if (obj == null) return;
+
             switch (obj)
             {
                 case byte[] v: writer.Write(v); break;
