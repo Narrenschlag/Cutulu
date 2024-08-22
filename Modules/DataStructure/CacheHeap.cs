@@ -4,16 +4,16 @@ using Godot;
 
 namespace Cutulu
 {
-    public class EnumCacheHeap<E, V> where E : struct, Enum
+    public class CacheHeap<V>
     {
-        public readonly Dictionary<E, KeyValuePair<short, V>> Data = new();
+        public readonly Dictionary<int, KeyValuePair<short, V>> Data = new();
 
-        public EnumCacheHeap()
+        public CacheHeap()
         {
 
         }
 
-        public bool TrySet(E key, V value, short stamp)
+        public bool TrySet(int key, V value, short stamp)
         {
             if (TryGetStamp(key, out var _stamp) && _stamp > stamp && Mathf.Abs(_stamp - stamp) < short.MaxValue)
                 return false;
@@ -22,7 +22,7 @@ namespace Cutulu
             return true;
         }
 
-        public short Set(E key, V value)
+        public short Set(int key, V value)
         {
             var stamp = TryGetStamp(key, out var _stamp) ? _stamp : short.MinValue;
 
@@ -30,13 +30,13 @@ namespace Cutulu
             return stamp;
         }
 
-        public short Set(E key, V value, short stamp)
+        public short Set(int key, V value, short stamp)
         {
             Data[key] = new(stamp, value);
             return stamp;
         }
 
-        public short Override(E key, V value)
+        public short Override(int key, V value)
         {
             var stamp = TryGetStamp(key, out var _stamp) ? _stamp : short.MaxValue;
 
@@ -44,12 +44,12 @@ namespace Cutulu
             return stamp;
         }
 
-        public T Get<T>(E key) where T : V
+        public T Get<T>(int key) where T : V
         {
             return TryGet(key, out T t) ? t : default;
         }
 
-        public bool TryGet<T>(E key, out T output) where T : V
+        public bool TryGet<T>(int key, out T output) where T : V
         {
             if (Data.TryGetValue(key, out var entry) && entry.Value is T t)
             {
@@ -61,7 +61,7 @@ namespace Cutulu
             return false;
         }
 
-        public bool TryGetStamp(E key, out short stamp)
+        public bool TryGetStamp(int key, out short stamp)
         {
             if (Data.TryGetValue(key, out var entry))
             {
