@@ -15,8 +15,8 @@ namespace Cutulu.Modding
         private readonly Dictionary<string, Resource> LoadedResources;
 
         public readonly Dictionary<string, HashSet<string>> Directories;
-        public readonly Dictionary<string, Mod> LoadedMods;
         public readonly Dictionary<string, string> Addresses;
+        public readonly Dictionary<string, Mod> LoadedMods;
 
         public readonly Dictionary<string, object> CompilePipeline;
         #endregion
@@ -49,31 +49,47 @@ namespace Cutulu.Modding
 
         #region Read Data
 
+        public T Get<T>(string identifier)
+        {
+            return TryGet(identifier, out T t) ? t : default;
+        }
+
+        public bool TryGet<T>(string identifier, out T output)
+        {
+            if (typeof(T).IsSubclassOf(typeof(Resource)))
+                output = GetResource<T>(identifier);
+
+            else
+                output = GetNonResource<T>(identifier);
+
+            return output is not null;
+        }
+
         #region Godot.Resource
         /// <summary>
         /// Returns resource of given resource type. Checks for null references.
         /// </summary>
-        public T GetResource<T>(string assetName) where T : Resource
+        private T GetResource<T>(string assetName)
         {
             if (assetName.IsEmpty()) return default;
+
+            object output = null;
 
             if (LoadedResources.TryGetValue(assetName, out var resource) == false || resource.IsNull())
             {
                 if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path, out var loaded, IO.FileType.GDResource))
-                {
-                    resource = loaded;
-                }
+                    output = loaded;
 
-                if (resource.NotNull() && resource is T) LoadedResources[assetName] = resource;
+                if (output is T && output is Resource _output) LoadedResources[assetName] = _output;
             }
 
-            return resource is T t ? t : default;
+            return output is T t ? t : default;
         }
 
         /// <summary>
         /// Returns array of given resource type. Checks for null references.
         /// </summary>
-        public T[] GetResources<T>(string directory) where T : Resource
+        private T[] GetResources<T>(string directory) where T : Resource
         {
             var list = new List<T>();
 
@@ -152,7 +168,7 @@ namespace Cutulu.Modding
 
         #endregion
 
-        #region Write Data
+        #region Compile
         /// <summary>
         /// Compiles and writes a mod file to given file path. Also adjusts index if wished.
         /// </summary>
