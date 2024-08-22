@@ -13,9 +13,9 @@ namespace Cutulu.Modding
         [Export] public string BaseMaterial { get; set; }
         [Export] public string[] Materials { get; set; }
 
-        public Node3D Instantiate(CoRE core, Node parent)
+        public Node3D Instantiate(Manager manager, Node parent)
         {
-            var model = core.GetResource<GlbModel>(MeshGLB);
+            var model = manager.GetResource<GlbModel>(MeshGLB);
             if (model.IsNull()) return null;
 
             var meshInstance = model.Instantiate<Node3D>(parent);
@@ -23,7 +23,7 @@ namespace Cutulu.Modding
             meshInstance.Position = Position;
             meshInstance.Scale = Scale;
 
-            var baseMaterial = core.GetResource<StandardMaterial3D>(BaseMaterial);
+            var baseMaterial = manager.GetResource<StandardMaterial3D>(BaseMaterial);
             var meshes = meshInstance.GetNodesInChildren<MeshInstance3D>();
             var m = Materials.NotEmpty() ? 0 : int.MinValue;
 
@@ -37,7 +37,7 @@ namespace Cutulu.Modding
                     {
                         if (m >= 0 && m < Materials.Length)
                         {
-                            var material = core.GetResource<StandardMaterial3D>(Materials[m]);
+                            var material = manager.GetResource<StandardMaterial3D>(Materials[m]);
 
                             meshes[i].SetSurfaceOverrideMaterial(k, material);
                         }

@@ -6,17 +6,16 @@ using Godot;
 namespace Cutulu.Modding
 {
     /// <summary>
-    /// CORE - Collection of Realms and Entities<br/>
     /// Allows your players and you to patch your project using asset collections(mods)
     /// </summary>
-    public class CoRE
+    public class Manager
     {
         #region Params
         private readonly Dictionary<string, object> LoadedNonResources;
         private readonly Dictionary<string, Resource> LoadedResources;
 
         public readonly Dictionary<string, HashSet<string>> Directories;
-        public readonly Dictionary<string, CoREMeta> PresentCOREs;
+        public readonly Dictionary<string, Mod> LoadedMods;
         public readonly Dictionary<string, string> Addresses;
 
         public readonly Dictionary<string, object> CompilePipeline;
@@ -24,27 +23,27 @@ namespace Cutulu.Modding
 
         #region Constructors
         /// <summary>
-        /// Creates an empty CORE
+        /// Creates an empty mod
         /// </summary>
-        public CoRE()
+        public Manager()
         {
             LoadedNonResources = new();
             LoadedResources = new();
-            PresentCOREs = new();
             Directories = new();
+            LoadedMods = new();
             Addresses = new();
 
             CompilePipeline = new();
         }
 
         /// <summary>
-        /// Creates a CORE containing given CORE files
+        /// Creates a mod containing given mod files
         /// </summary>
-        public CoRE(params string[] rootDirectories) : this()
+        public Manager(params string[] rootDirectories) : this()
         {
             Load(rootDirectories);
 
-            Debug.Log($"Loaded {Addresses.Count} assets from {PresentCOREs.Count} asset packs");
+            Debug.Log($"Loaded {Addresses.Count} assets from {LoadedMods.Count} asset packs");
         }
         #endregion
 
@@ -155,9 +154,9 @@ namespace Cutulu.Modding
 
         #region Write Data
         /// <summary>
-        /// Compiles and writes a CORE file to given file path. Also adjusts index if wished.
+        /// Compiles and writes a mod file to given file path. Also adjusts index if wished.
         /// </summary>
-        public void Compile(string filePath, CoREMeta meta, bool adjustIndex = true)
+        public void Compile(string filePath, Mod meta, bool adjustIndex = true)
         {
             if (adjustIndex)
             {
@@ -189,7 +188,7 @@ namespace Cutulu.Modding
 
             if (meta.Index.IsEmpty())
             {
-                Debug.LogError($"Cannot create an empty CORE file. Add some assets and add them to the index of your meta file.");
+                Debug.LogError($"Cannot create an empty mod file. Add some assets and add them to the index of your meta file.");
                 return;
             }
 
@@ -206,7 +205,7 @@ namespace Cutulu.Modding
                     var line = meta.Index[i];
                     if (adjustIndex == false && line.IsEmpty()) continue;
 
-                    var split = line.Split(' ', Cutulu.Core.StringSplit);
+                    var split = line.Split(' ', Core.StringSplit);
                     if (adjustIndex == false && split.Size() != 2) continue;
 
                     var name = split[0];
@@ -239,7 +238,7 @@ namespace Cutulu.Modding
             }
 
             // Write meta file
-            writer.Append(CoREMeta.META_PATH, meta.GetBuffer());
+            writer.Append($"generated{Mod.FILE_ENDING}", meta.GetBuffer());
 
             writer.Close();
         }
@@ -247,7 +246,7 @@ namespace Cutulu.Modding
 
         #region Loading
         /// <summary>
-        /// Loads in core files from given paths, if possible. Also loads in nested packs in other packs or directories.
+        /// Loads in mod files from given paths, if possible. Also loads in nested packs in other packs or directories.
         /// </summary>
         public bool Load(params string[] rootDirectories)
         {
@@ -257,7 +256,7 @@ namespace Cutulu.Modding
             {
                 var filePaths = new List<string>();
 
-                OE.FindFiles(rootDir, ref filePaths, new[] { CoREMeta.META_ENDING }, new[] { ".core" });
+                OE.FindFiles(rootDir, ref filePaths, new[] { Mod.FILE_ENDING }, new[] { ".zip" });
 
                 foreach (var filePath in filePaths)
                 {
@@ -265,15 +264,15 @@ namespace Cutulu.Modding
                 }
             }
 
-            foreach (var meta in PresentCOREs.Values)
+            foreach (var meta in LoadedMods.Values)
             {
                 if (meta.Dependencies.NotEmpty())
                 {
-                    foreach (var coreId in meta.Dependencies)
+                    foreach (var modId in meta.Dependencies)
                     {
-                        if (PresentCOREs.ContainsKey(coreId) == false)
+                        if (LoadedMods.ContainsKey(modId) == false)
                         {
-                            Debug.LogError($"{meta.Name} is missing dependency core '{coreId}'");
+                            Debug.LogError($"{meta.Name} is missing dependency mod '{modId}'. Maybe the loading order is wrong.");
                         }
                     }
                 }
@@ -283,34 +282,34 @@ namespace Cutulu.Modding
         }
 
         /// <summary>
-        /// Loads in a core file from given path, if possible.
+        /// Loads in a mod file from given path, if possible.
         /// </summary>
         public void LoadFile(string filePath)
         {
             // Try read meta file
-            if (CoREMeta.TryRead(filePath, out var meta) == false) return;
+            if (Mod.TryRead(filePath, out var meta) == false) return;
 
-            var coreDir = filePath.TrimToDirectory('/', '\\', '?');
+            var modDir = filePath.TrimToDirectory('/', '\\', '?');
 
-            if (PresentCOREs.TryGetValue(meta.COREId, out var overwritten))
-                Debug.LogError($"Present CORE <{overwritten.Name}>({meta.COREId}) is overwritten by <{meta.Name}> with the same COREId. This could lead to dependency issues.");
-            PresentCOREs[meta.COREId] = meta;
+            if (LoadedMods.TryGetValue(meta.ModId, out var overwritten))
+                Debug.LogError($"Present mod <{overwritten.Name}>({meta.ModId}) is overwritten by <{meta.Name}> with the same identifier. This could lead to dependency issues.");
+            LoadedMods[meta.ModId] = meta;
 
             if (meta.Index.NotEmpty())
             {
                 foreach (var entry in meta.Index)
                 {
                     // Seperated by spaces
-                    var args = entry.Split(' ', Cutulu.Core.StringSplit);
+                    var args = entry.Split(' ', Core.StringSplit);
                     if (args.Size() != 2) continue;
 
                     var localPath = args[1];
                     var name = args[0];
 
-                    var path = $"{coreDir}{localPath}";
+                    var path = $"{modDir}{localPath}";
                     var strng = new StringBuilder();
 
-                    if (OE.Exists($"{coreDir}{localPath}"))
+                    if (OE.Exists($"{modDir}{localPath}"))
                     {
                         // Global address for the name
                         Addresses[name] = $"{path}";
@@ -346,7 +345,7 @@ namespace Cutulu.Modding
 
         #region Unloading
         /// <summary>
-        /// Unloads either all COREs or given assets/names
+        /// Unloads either all mods or given assets/names
         /// </summary>
         public void Unload(params string[] names)
         {

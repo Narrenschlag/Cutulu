@@ -6,18 +6,17 @@ namespace Cutulu.Modding
     /// <summary>
     /// Contains important meta data as author, name, icon and description. Aswell as the file index used to locate the files that can be loaded.
     /// </summary>
-    public class CoREMeta
+    public class Mod
     {
         #region Params
-        public const string META_PATH = $"core{META_ENDING}";
-        public const string META_ENDING = ".index";
+        public const string FILE_ENDING = ".mod";
 
-        public string COREId { get; set; } = "generic_core_id";
-        public string Author { get; set; } = "Narrenschlag";
+        public string Author { get; set; } = "author_name";
         public string Version { get; set; } = "1.0.0.0";
+        public string ModId { get; set; } = "mod_id";
+        public string Name { get; set; } = "mod_name";
 
-        public string Name { get; set; } = "Core Asset Pack";
-        public string Description { get; set; } = "Utilizing CORE for mod support and asset delivery.";
+        public string Description { get; set; } = "mod_description";
 
         public string[] Dependencies { get; set; } = null;
         public string[] Index { get; set; } = null;
@@ -26,19 +25,18 @@ namespace Cutulu.Modding
         #endregion
 
         #region Constructors
-        public CoREMeta() { }
+        public Mod() { }
 
         /// <summary>
-        /// Creates custom CORE meta. Has to be written down by using CORE.Compile.
+        /// Creates custom mod. Has to be written down by using Manager.Compile.
         /// </summary>
-        public CoREMeta(string author, string name, string description, params string[] index)
+        public Mod(string author, string name, string description, params string[] index)
         {
             Author = author;
-
-            Name = name;
-            Description = description;
-
             Index = index;
+            Name = name;
+
+            Description = description;
         }
         #endregion
 
@@ -46,9 +44,9 @@ namespace Cutulu.Modding
 
         #region Read Data
         /// <summary>
-        /// Tries to read meta file from CORE. Returns true if found and readable.
+        /// Tries to read mod file from directory. Returns true if found and readable.
         /// </summary>
-        public static bool TryRead(string filePath, out CoREMeta meta)
+        public static bool TryRead(string filePath, out Mod meta)
         {
             return OE.TryGetData(filePath, out meta, IO.FileType.Json);
         }
@@ -57,7 +55,7 @@ namespace Cutulu.Modding
         #region Debug
         public string GetMessage()
         {
-            return $"### CORE META - {Name}({Index.Size()} files)\nby {Author}\n{Description}";
+            return $"### Mod - {Name}({Index.Size()} files)\nby {Author}\n{Description}";
         }
         #endregion
     }
