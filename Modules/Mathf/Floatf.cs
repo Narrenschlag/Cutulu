@@ -27,5 +27,7 @@ namespace Cutulu
 
             return value;
         }
+
+        public static float IfNanDefault(this float value) => Mathf.IsNaN(value) ? default : value;
     }
 }

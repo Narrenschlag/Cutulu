@@ -203,8 +203,21 @@ namespace Cutulu
             var previous = node.GetParent();
             if (previous == parent) return;
 
+            Vector3 position = default, rotation = default;
+            if (node is Node3D node3D)
+            {
+                position = node3D.GlobalPosition;
+                rotation = node3D.GlobalRotation;
+            }
+
             if (previous.NotNull()) lock (previous) previous.RemoveChild(node);
             if (parent.NotNull()) lock (parent) parent.AddChild(node);
+
+            if (node is Node3D _node3D)
+            {
+                _node3D.GlobalPosition = position;
+                _node3D.GlobalRotation = rotation;
+            }
         }
 
         public static T Instantiate<T>(this T prefab, Node root) where T : Node
@@ -219,6 +232,8 @@ namespace Cutulu
 
         public static void SetActive(this Node node, bool active, bool includeChildren = false)
         {
+            if (node.IsNull()) return;
+
             node.ProcessMode = active ? Node.ProcessModeEnum.Pausable : Node.ProcessModeEnum.Disabled;
 
             if (node is CollisionObject3D) (node as CollisionObject3D).DisableMode = active ? CollisionObject3D.DisableModeEnum.KeepActive : CollisionObject3D.DisableModeEnum.Remove;
@@ -237,7 +252,7 @@ namespace Cutulu
             }
         }
 
-        public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true, byte layerDepth = 0) where T : Node
+        public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true, byte layerDepth = 0)
         {
             List<T> list = new();
             loop(node, includeSelf, 0);
@@ -258,7 +273,8 @@ namespace Cutulu
 
             void add(Node node)
             {
-                if (node is T) list.Add(node as T);
+                if (node is T t)
+                    list.Add(t);
             }
         }
 
