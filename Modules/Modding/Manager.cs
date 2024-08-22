@@ -200,17 +200,17 @@ namespace Cutulu.Modding
         public void LoadMod(string filePath)
         {
             // Try read meta file
-            if (Mod.TryRead(filePath, out var meta) == false) return;
+            if (Mod.TryRead(filePath, out var mod) == false) return;
 
             var modDir = filePath.TrimToDirectory('/', '\\', '?');
 
-            if (Mods.TryGetValue(meta.ModId, out var overwritten))
-                Debug.LogError($"Present mod <{overwritten.Name}>({meta.ModId}) is overwritten by <{meta.Name}> with the same identifier. This could lead to dependency issues.");
-            Mods[meta.ModId] = meta;
+            if (Mods.TryGetValue(mod.ModId, out var overwritten))
+                Debug.LogError($"Present mod <{overwritten.Name}>({mod.ModId}) is overwritten by <{mod.Name}> with the same identifier. This could lead to dependency issues.");
+            Mods[mod.ModId] = mod;
 
-            if (meta.Index.NotEmpty())
+            if (mod.Index.NotEmpty())
             {
-                foreach (var entry in meta.Index)
+                foreach (var entry in mod.Index)
                 {
                     // Seperated by spaces
                     var args = entry.Split(' ', Core.StringSplit);
