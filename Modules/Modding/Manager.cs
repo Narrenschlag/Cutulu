@@ -11,14 +11,11 @@ namespace Cutulu.Modding
     public class Manager
     {
         #region Params
-        private readonly Dictionary<string, object> LoadedNonResources;
-        private readonly Dictionary<string, Resource> LoadedResources;
+        public readonly Dictionary<string, HashSet<string>> Directories = new();
+        public readonly Dictionary<string, string> Addresses = new();
 
-        public readonly Dictionary<string, HashSet<string>> Directories;
-        public readonly Dictionary<string, string> Addresses;
-        public readonly Dictionary<string, Mod> LoadedMods;
-
-        public readonly Dictionary<string, object> CompilePipeline;
+        private readonly Dictionary<string, object> Loaded = new();
+        public readonly Dictionary<string, Mod> LoadedMods = new();
         #endregion
 
         #region Constructors
@@ -27,13 +24,7 @@ namespace Cutulu.Modding
         /// </summary>
         public Manager()
         {
-            LoadedNonResources = new();
-            LoadedResources = new();
-            Directories = new();
-            LoadedMods = new();
-            Addresses = new();
 
-            CompilePipeline = new();
         }
 
         /// <summary>
@@ -65,48 +56,6 @@ namespace Cutulu.Modding
             return output is not null;
         }
 
-        #region Godot.Resource
-        /// <summary>
-        /// Returns resource of given resource type. Checks for null references.
-        /// </summary>
-        private T GetResource<T>(string assetName)
-        {
-            if (assetName.IsEmpty()) return default;
-
-            object output = null;
-
-            if (LoadedResources.TryGetValue(assetName, out var resource) == false || resource.IsNull())
-            {
-                if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path, out var loaded, IO.FileType.GDResource))
-                    output = loaded;
-
-                if (output is T && output is Resource _output) LoadedResources[assetName] = _output;
-            }
-
-            return output is T t ? t : default;
-        }
-
-        /// <summary>
-        /// Returns array of given resource type. Checks for null references.
-        /// </summary>
-        private T[] GetResources<T>(string directory) where T : Resource
-        {
-            var list = new List<T>();
-
-            if (Directories.TryGetValue(directory, out var set))
-            {
-                foreach (var assetName in set)
-                {
-                    var resource = GetResource<T>(assetName);
-
-                    if (resource.NotNull()) list.Add(resource);
-                }
-            }
-
-            return list.ToArray();
-        }
-        #endregion
-
         #region Non Godot.Resource
         /// <summary>
         /// Returns non-resource of given non-resource type. Checks for null references.
@@ -115,14 +64,14 @@ namespace Cutulu.Modding
         {
             if (assetName.IsEmpty()) return default;
 
-            if (LoadedNonResources.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
+            if (Loaded.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
             {
                 if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path, out var loaded, type))
                 {
                     nonResource = loaded;
                 }
 
-                if (nonResource is T) LoadedNonResources[assetName] = nonResource;
+                if (nonResource is T) Loaded[assetName] = nonResource;
             }
 
             return nonResource is T t ? t : default;
@@ -149,6 +98,46 @@ namespace Cutulu.Modding
         }
         #endregion
 
+        #region Godot.Resource
+        /// <summary>
+        /// Returns resource of given resource type. Checks for null references.
+        /// </summary>
+        private T GetResource<T>(string assetName)
+        {
+            if (assetName.IsEmpty()) return default;
+
+            if (Loaded.TryGetValue(assetName, out var output) == false || output is not T)
+            {
+                if (Addresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path, out var loaded, IO.FileType.GDResource))
+                    output = loaded;
+
+                if (output is T && output is Resource _output) Loaded[assetName] = _output;
+            }
+
+            return output is T t ? t : default;
+        }
+
+        /// <summary>
+        /// Returns array of given resource type. Checks for null references.
+        /// </summary>
+        private T[] GetResources<T>(string directory) where T : Resource
+        {
+            var list = new List<T>();
+
+            if (Directories.TryGetValue(directory, out var set))
+            {
+                foreach (var assetName in set)
+                {
+                    var resource = GetResource<T>(assetName);
+
+                    if (resource.NotNull()) list.Add(resource);
+                }
+            }
+
+            return list.ToArray();
+        }
+        #endregion
+
         #region Bytes
         /// <summary>
         /// Returns bytes of given asset of given name
@@ -168,98 +157,6 @@ namespace Cutulu.Modding
 
         #endregion
 
-        #region Compile
-        /// <summary>
-        /// Compiles and writes a mod file to given file path. Also adjusts index if wished.
-        /// </summary>
-        public void Compile(string filePath, Mod meta, bool adjustIndex = true)
-        {
-            if (adjustIndex)
-            {
-                var index = new List<string>();
-
-                if (meta.Index.NotEmpty())
-                {
-                    for (int i = 0; i < meta.Index.Length; i++)
-                    {
-                        var line = meta.Index[i];
-                        if (line.IsEmpty()) continue;
-
-                        var split = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                        if (split.Size() < 1) continue;
-
-                        var name = split[0];
-                        if (name.IsEmpty()) continue;
-
-                        var path = split.Length > 1 ? split[1] : default;
-
-                        if (path.IsEmpty()) Addresses.TryGetValue(name, out path);
-
-                        if (path.NotEmpty()) index.Add($"{name} {path}");
-                    }
-                }
-
-                meta.Index = index.ToArray();
-            }
-
-            if (meta.Index.IsEmpty())
-            {
-                Debug.LogError($"Cannot create an empty mod file. Add some assets and add them to the index of your meta file.");
-                return;
-            }
-
-            var writer = new ZipPacker();
-            writer.Open(filePath);
-
-            // Write indexed files
-            if (meta.Index.NotEmpty())
-            {
-                var addedPaths = new HashSet<string>();
-
-                for (int i = 0; i < meta.Index.Length; i++)
-                {
-                    var line = meta.Index[i];
-                    if (adjustIndex == false && line.IsEmpty()) continue;
-
-                    var split = line.Split(' ', Core.StringSplit);
-                    if (adjustIndex == false && split.Size() != 2) continue;
-
-                    var name = split[0];
-                    var path = split[1];
-                    byte[] bytes;
-
-                    // Prevent duplicates
-                    if (addedPaths.Contains(path)) continue;
-                    addedPaths.Add(path);
-
-                    if (CompilePipeline.TryGetValue(name, out var obj) && obj != null)
-                    {
-                        if (obj is Resource r)
-                        {
-                            bytes = FileAccess.GetFileAsBytes(r.ResourcePath);
-                        }
-
-                        else
-                        {
-                            bytes = obj.Encode();
-                        }
-                    }
-
-                    else bytes = GetBytes(name, out _);
-
-                    if (bytes.IsEmpty()) continue;
-
-                    writer.Append(path, bytes);
-                }
-            }
-
-            // Write meta file
-            writer.Append($"generated{Mod.FILE_ENDING}", meta.GetBuffer());
-
-            writer.Close();
-        }
-        #endregion
-
         #region Loading
         /// <summary>
         /// Loads in mod files from given paths, if possible. Also loads in nested packs in other packs or directories.
@@ -276,7 +173,7 @@ namespace Cutulu.Modding
 
                 foreach (var filePath in filePaths)
                 {
-                    LoadFile(filePath);
+                    LoadMod(filePath);
                 }
             }
 
@@ -300,7 +197,7 @@ namespace Cutulu.Modding
         /// <summary>
         /// Loads in a mod file from given path, if possible.
         /// </summary>
-        public void LoadFile(string filePath)
+        public void LoadMod(string filePath)
         {
             // Try read meta file
             if (Mod.TryRead(filePath, out var meta) == false) return;
@@ -365,14 +262,14 @@ namespace Cutulu.Modding
         /// </summary>
         public void Unload(params string[] names)
         {
-            if (names.IsEmpty()) LoadedResources.Clear();
+            if (names.IsEmpty()) Loaded.Clear();
 
             else
             {
                 for (int i = 0; i < names.Length; i++)
                 {
-                    if (LoadedResources.ContainsKey(names[i]))
-                        LoadedResources.Remove(names[i]);
+                    if (Loaded.ContainsKey(names[i]))
+                        Loaded.Remove(names[i]);
                 }
             }
         }
