@@ -48,6 +48,8 @@ namespace Cutulu
         #region Encode
         public static byte[] Encode(this object obj)
         {
+            if (obj == null) return Array.Empty<byte>();
+
             using var memory = new MemoryStream();
             using var writer = new BinaryWriter(memory);
 
