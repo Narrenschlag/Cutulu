@@ -15,7 +15,7 @@ namespace Cutulu.Modding
         public readonly Dictionary<string, string> Addresses = new();
 
         private readonly Dictionary<string, object> Loaded = new();
-        public readonly Dictionary<string, Mod> LoadedMods = new();
+        public readonly Dictionary<string, Mod> Mods = new();
         #endregion
 
         #region Constructors
@@ -34,7 +34,7 @@ namespace Cutulu.Modding
         {
             Load(rootDirectories);
 
-            Debug.Log($"Loaded {Addresses.Count} assets from {LoadedMods.Count} asset packs");
+            Debug.Log($"Loaded {Addresses.Count} assets from {Mods.Count} asset packs");
         }
         #endregion
 
@@ -177,15 +177,15 @@ namespace Cutulu.Modding
                 }
             }
 
-            foreach (var meta in LoadedMods.Values)
+            foreach (var mod in Mods.Values)
             {
-                if (meta.Dependencies.NotEmpty())
+                if (mod.Dependencies.NotEmpty())
                 {
-                    foreach (var modId in meta.Dependencies)
+                    foreach (var modId in mod.Dependencies)
                     {
-                        if (LoadedMods.ContainsKey(modId) == false)
+                        if (Mods.ContainsKey(modId) == false)
                         {
-                            Debug.LogError($"{meta.Name} is missing dependency mod '{modId}'. Maybe the loading order is wrong.");
+                            Debug.LogError($"{mod.Name} is missing dependency mod '{modId}'. Maybe the loading order is wrong.");
                         }
                     }
                 }
@@ -204,9 +204,9 @@ namespace Cutulu.Modding
 
             var modDir = filePath.TrimToDirectory('/', '\\', '?');
 
-            if (LoadedMods.TryGetValue(meta.ModId, out var overwritten))
+            if (Mods.TryGetValue(meta.ModId, out var overwritten))
                 Debug.LogError($"Present mod <{overwritten.Name}>({meta.ModId}) is overwritten by <{meta.Name}> with the same identifier. This could lead to dependency issues.");
-            LoadedMods[meta.ModId] = meta;
+            Mods[meta.ModId] = meta;
 
             if (meta.Index.NotEmpty())
             {

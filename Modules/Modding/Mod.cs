@@ -18,7 +18,7 @@ namespace Cutulu.Modding
         public string Description { get; set; } = "mod_description";
 
         public string[] Dependencies { get; set; } = null;
-        public string[] Index { get; set; } = null;
+        public string[] Index { get; set; } = new[] { "asset_name asset/path" };
 
         public int GetFileCount() => Index.Size();
         #endregion
@@ -48,13 +48,6 @@ namespace Cutulu.Modding
         public static bool TryRead(string filePath, out Mod meta)
         {
             return OE.TryGetData(filePath, out meta, IO.FileType.Json);
-        }
-        #endregion
-
-        #region Debug
-        public string GetMessage()
-        {
-            return $"### Mod - {Name}({Index.Size()} files)\nby {Author}\n{Description}";
         }
         #endregion
     }
