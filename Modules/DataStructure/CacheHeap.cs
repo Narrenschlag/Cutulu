@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System;
 using Godot;
 
 namespace Cutulu
@@ -13,9 +12,13 @@ namespace Cutulu
 
         }
 
+        public int Count => Data.Count;
+
+        public static bool CanOverride(int oldStamp, int newStamp) => oldStamp > newStamp && Mathf.Abs(oldStamp - newStamp) < int.MaxValue;
+
         public bool TrySet(int key, V value, short stamp)
         {
-            if (TryGetStamp(key, out var _stamp) && _stamp > stamp && Mathf.Abs(_stamp - stamp) < short.MaxValue)
+            if (TryGetStamp(key, out var _stamp) && CanOverride(_stamp, stamp))
                 return false;
 
             Data[key] = new(stamp, value);
@@ -47,6 +50,11 @@ namespace Cutulu
         public T Get<T>(int key) where T : V
         {
             return TryGet(key, out T t) ? t : default;
+        }
+
+        public bool Contains(int key)
+        {
+            return Data.ContainsKey(key);
         }
 
         public bool TryGet<T>(int key, out T output) where T : V
