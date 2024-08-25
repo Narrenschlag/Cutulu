@@ -158,6 +158,7 @@ namespace Cutulu.Modding
         #endregion
 
         #region Loading
+
         /// <summary>
         /// Loads in mod files from given paths, if possible. Also loads in nested packs in other packs or directories.
         /// </summary>
@@ -254,9 +255,11 @@ namespace Cutulu.Modding
                 }
             }
         }
+
         #endregion
 
         #region Unloading
+
         /// <summary>
         /// Unloads either all mods or given assets/names
         /// </summary>
@@ -273,6 +276,19 @@ namespace Cutulu.Modding
                 }
             }
         }
+
+        #endregion
+
+        #region QOL Features
+
+        public N Instantiate<N>(string asset, Node parent, bool asClient) where N : Node
+        {
+            var packed = Get<PackedScene>(asset);
+            if (packed.IsNull()) return null;
+
+            return SharedAsset.Instantiate<N>(packed, parent, asClient);
+        }
+
         #endregion
     }
 }
