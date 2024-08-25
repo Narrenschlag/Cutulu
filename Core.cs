@@ -195,13 +195,13 @@ namespace Cutulu
             SetChild(parent, node);
         }
 
-        public static void SetChild(this Node parent, Node node)
+        public static void SetChild(this Node newParent, Node node)
         {
-            if (node.IsNull() || parent.IsNull()) return;
-            if (node == parent) return;
+            if (node.IsNull() || newParent.IsNull()) return;
+            if (node == newParent) return;
 
-            var previous = node.GetParent();
-            if (previous == parent) return;
+            var oldParent = node.GetParent();
+            if (oldParent == newParent) return;
 
             Vector3 position = default, rotation = default;
             if (node is Node3D node3D)
@@ -210,8 +210,8 @@ namespace Cutulu
                 rotation = node3D.GlobalRotation;
             }
 
-            if (previous.NotNull()) lock (previous) previous.RemoveChild(node);
-            if (parent.NotNull()) lock (parent) parent.AddChild(node);
+            if (oldParent.NotNull()) lock (oldParent) oldParent.RemoveChild(node);
+            if (newParent.NotNull()) lock (newParent) newParent.AddChild(node);
 
             if (node is Node3D _node3D)
             {

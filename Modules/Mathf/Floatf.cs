@@ -29,5 +29,22 @@ namespace Cutulu
         }
 
         public static float IfNanDefault(this float value) => Mathf.IsNaN(value) ? default : value;
+
+        // Converts a float (-1 to 1) to a byte (0 to 255)
+        public static byte FloatToByte(this float value)
+        {
+            // Clamp the value to ensure it stays within the expected range
+            value = Mathf.Clamp(value, -1f, 1f);
+
+            // Scale from [-1, 1] to [0, 255]
+            return (byte)((value + 1) * 127.5f);
+        }
+
+        // Converts a byte (0 to 255) back to a float (-1 to 1)
+        public static float ByteToFloat(this byte value)
+        {
+            // Scale from [0, 255] to [-1, 1]
+            return (value / 127.5f) - 1;
+        }
     }
 }
