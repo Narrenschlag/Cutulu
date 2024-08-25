@@ -1,7 +1,7 @@
 using Cutulu;
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Modding
 {
     public partial class SharedAsset : Node
     {
