@@ -38,19 +38,24 @@ namespace Cutulu.Modding
         {
             if (packed.IsNull()) return null;
 
-            var node = packed.Instantiate<Node>();
-            if (node is SharedAsset shared)
+            var node = packed.Instantiate<Node>(parent);
+            if (node is N n && n.NotNull())
             {
-                return shared.Unpack<N>(parent, asClient);
+                //Debug.LogError($"Load asset typeof({n.GetType().Name}) as typeof({typeof(N)})");
+                return n;
             }
 
-            else if (node is N n)
+            else if (node is SharedAsset shared && shared.NotNull())
             {
-                return n;
+                var unpacked = shared.Unpack<N>(parent, asClient);
+
+                //Debug.LogError($"Unpacking asset as typeof({typeof(N)}): {unpacked.NotNull()} @{unpacked.GetParent().Name}");
+                return unpacked;
             }
 
             else
             {
+                //Debug.LogError($"scene {packed.ResourcePath} couldn't be instantiated as typeof({typeof(N).Name}) as it is typeof({node.GetType().Name})");
                 node.Destroy();
                 return null;
             }

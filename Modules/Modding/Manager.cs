@@ -284,9 +284,14 @@ namespace Cutulu.Modding
         public N Instantiate<N>(string asset, Node parent, bool asClient) where N : Node
         {
             var packed = Get<PackedScene>(asset);
-            if (packed.IsNull()) return null;
 
-            return SharedAsset.Instantiate<N>(packed, parent, asClient);
+            if (packed.IsNull())
+            {
+                Debug.LogError($"Couldn't find asset '{asset}' of typeof({typeof(N).Name})");
+                return null;
+            }
+
+            return SharedAsset.Instantiate<N>(Get<PackedScene>(asset), parent, asClient);
         }
 
         #endregion
