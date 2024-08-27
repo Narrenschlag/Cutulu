@@ -14,12 +14,14 @@ namespace Cutulu
 
         public int Count => Data.Count;
 
-        public static bool CanOverride(int oldStamp, int newStamp) => oldStamp > newStamp && Mathf.Abs(oldStamp - newStamp) < int.MaxValue;
+        public static bool CanOverride(int oldStamp, int newStamp) => Mathf.Abs(oldStamp - newStamp) > short.MaxValue || newStamp > oldStamp;
 
         public bool TrySet(int key, V value, short stamp)
         {
-            if (TryGetStamp(key, out var _stamp) && CanOverride(_stamp, stamp))
+            if (TryGetStamp(key, out var _stamp) && CanOverride(_stamp, stamp) == false)
+            {
                 return false;
+            }
 
             Data[key] = new(stamp, value);
             return true;
