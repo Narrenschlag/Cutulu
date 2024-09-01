@@ -46,5 +46,22 @@ namespace Cutulu
             // Scale from [0, 255] to [-1, 1]
             return (value / 127.5f) - 1;
         }
+
+        // Converts a float (0 to 1) to a byte (0 to 255)
+        public static byte FloatToByte01(this float value)
+        {
+            // Clamp the value to ensure it stays within the expected range
+            value = Mathf.Clamp(value, 0f, 1f);
+
+            // Scale from [0, 1] to [0, 255]
+            return (byte)Mathf.RoundToInt(value * 255f);
+        }
+
+        // Converts a byte (0 to 255) back to a float (-1 to 1)
+        public static float ByteToFloat01(this byte value)
+        {
+            // Scale from [0, 255] to [0, 1]
+            return value / 255f;
+        }
     }
 }

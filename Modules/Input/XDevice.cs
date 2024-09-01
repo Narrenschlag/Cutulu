@@ -123,7 +123,8 @@ namespace Cutulu
 
         #region Read Inputs using name
         public bool IsPressed(string name) => InputMap.Mapping.TryGetValue(XInputMap.ModifyString(name), out var entry) && entry.IsPressed(DeviceId);
-        public float GetValue(string name) => InputMap.Mapping.TryGetValue(XInputMap.ModifyString(name), out var entry) ? entry.GetValue(DeviceId) : default;
+        public float GetValue01(string name) => InputMap.Mapping.TryGetValue(XInputMap.ModifyString(name), out var entry) ? entry.GetValue(DeviceId) : default;
+        public byte GetValue255(string name) => InputMap.Mapping.TryGetValue(XInputMap.ModifyString(name), out var entry) ? entry.GetValue(DeviceId).FloatToByte01() : default;
 
         public bool ListenForInput(out string[] inputs, params string[] range)
         {

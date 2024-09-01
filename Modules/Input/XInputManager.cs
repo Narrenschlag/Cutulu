@@ -201,7 +201,7 @@ namespace Cutulu
 
             foreach (var device in Devices.Values)
             {
-                var value = device.GetValue(name);
+                var value = device.GetValue01(name);
 
                 if (value.abs() >= 1f) return value;
                 else if (value.abs() > maxValue.abs()) maxValue = value;

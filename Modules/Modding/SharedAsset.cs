@@ -49,7 +49,7 @@ namespace Cutulu.Modding
             {
                 var unpacked = shared.Unpack<N>(parent, asClient);
 
-                //Debug.LogError($"Unpacking asset as typeof({typeof(N)}): {unpacked.NotNull()} @{unpacked.GetParent().Name}");
+                //Debug.LogError($"Unpacking asset as typeof({typeof(N)}): {unpacked.NotNull()}"); //@{unpacked.GetParent().Name}");
                 return unpacked;
             }
 
