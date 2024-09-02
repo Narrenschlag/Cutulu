@@ -159,12 +159,19 @@ namespace Cutulu
             switch (GetXType(ref input))
             {
                 case XInputType.Button: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
-                case XInputType.AxisButton: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
                 case XInputType.Axis: return Input.GetJoyAxis(deviceId, (JoyAxis)input);
 
                 case XInputType.Mouse: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
                 case XInputType.Key: return IsPressed(ref deviceId, ref input) ? 1f : 0f;
 
+                case XInputType.AxisButton:
+                    var threshold = ButtonPressThreshold;
+                    ButtonPressThreshold = 0.05f;
+
+                    var result = IsPressed(ref deviceId, ref input) ? Mathf.Abs(GetValue(deviceId, ((input - XInput.AxisButton0) / 2) + XInput.Axis0) - ButtonPressThreshold) / (1f - ButtonPressThreshold) : 0f;
+                    ButtonPressThreshold = threshold;
+
+                    return result;
 
                 default:
                     Debug.LogError($"Invalid xInput.");
