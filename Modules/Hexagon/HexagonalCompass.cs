@@ -40,7 +40,7 @@ namespace Cutulu
             var r = (-1f / 3f * position2D.X + Mathf.Sqrt(3) / 3f * position2D.Y) / CellSize;
             var s = -q - r;
 
-            return CubeRound(new Vector3(q, -q - r, r));
+            return CubeRound(new Vector3(q, s, r));
         }
 
         /// <summary>
