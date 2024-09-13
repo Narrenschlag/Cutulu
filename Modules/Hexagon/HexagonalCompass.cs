@@ -7,58 +7,56 @@ namespace Cutulu
     /// </summary>
     public partial struct HexagonalCompass
     {
-        // Hexagonal properties
-        private readonly float CellSize;
-        private readonly Vector3 Forward, Right, Up;
-        private readonly Vector3[] Values = new Vector3[12];
+        public static readonly Vector3I[] Directions = new Vector3I[]
+        {
+            new(1, -1, 0), new(1, 0, -1), new(0, 1, -1),
+            new(-1, 1, 0), new(-1, 0, 1), new(0, -1, 1)
+        };
 
-        // Constructor
+        // Hexagonal properties
+        public readonly float CellSize;
+        public readonly Vector3 Forward, Right, Up;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public HexagonalCompass(Vector3 forward, float cellSize)
         {
             CellSize = cellSize;
 
+            Up = forward.toUp();
+            Right = forward.toRight(Up);
             Forward = forward.Normalized();
-            Up = forward.toUp().Normalized();
-            Right = forward.toRight(Up).Normalized();
-
-            InitializeValues();
         }
 
-        // Initializes the 12 directional values
-        private void InitializeValues()
+        /// <summary>
+        /// Converts a world position (Vector3) to hexagonal coordinates
+        /// </summary>
+        public Vector3I WorldToHex(Vector3 position, Vector3 offset = default)
         {
-            for (int i = 0; i < 12; i++)
-            {
-                var angle = (30f * i).toRadians(); // Rotating by 30° increments
+            var position2D = new Vector2(Right.Dot(position -= offset), Forward.Dot(position));
 
-                var x = Mathf.Cos(angle);
-                var y = 0; // Assuming flat-top hexes; for pointy-top, adjust this logic
-                var z = Mathf.Sin(angle);
-
-                Values[i] = new Vector3(x, y, z).Normalized();
-            }
-        }
-
-        // Converts a world position (Vector3) to hexagonal coordinates
-        public Vector3I WorldToHex(Vector3 position)
-        {
-            var q = (2f / 3f * position.X) / CellSize;
-            var r = (-1f / 3f * position.X + Mathf.Sqrt(3) / 3f * position.Z) / CellSize;
+            var q = (2f / 3f * position2D.X) / CellSize;
+            var r = (-1f / 3f * position2D.X + Mathf.Sqrt(3) / 3f * position2D.Y) / CellSize;
             var s = -q - r;
 
             return CubeRound(new Vector3(q, -q - r, r));
         }
 
-        // Converts hexagonal coordinates to world position
+        /// <summary>
+        /// Converts hexagonal coordinates to world position
+        /// </summary>
         public Vector3 HexToWorld(Vector3I hex, Vector3 offset = default)
         {
             var x = CellSize * (3f / 2f * hex.X);
-            var z = CellSize * (Mathf.Sqrt(3) * (hex.Z + hex.X / 2f));
+            var y = CellSize * (Mathf.Sqrt(3) * (hex.Z + hex.X / 2f));
 
-            return new Vector3(x, 0, z) + offset; // Y is set to 0 (ground level)
+            return Right * x + Forward * y + offset; // Y is set to 0 (ground level)
         }
 
-        // Rounds cube coordinates to nearest hexagonal coordinates
+        /// <summary>
+        /// Rounds cube coordinates to nearest hexagonal coordinates
+        /// </summary>
         private Vector3I CubeRound(Vector3 cube)
         {
             var rx = Mathf.RoundToInt(cube.X);
@@ -87,43 +85,106 @@ namespace Cutulu
             return new Vector3I(rx, ry, rz);
         }
 
-        // Returns the six corner points of the hexagon centered at hex coordinates
-        public Vector3[] GetHexCorners(Vector3I hex)
+        /// <summary>
+        /// Returns the six corner points of the hexagon centered at hex coordinates
+        /// </summary>
+        public Vector3[] GetVertices(Vector3I hex)
         {
             var corners = new Vector3[6];
 
             for (int i = 0; i < 6; i++)
             {
-                var corner = HexCorner(hex, i);
+                var corner = GetVertice(hex, i);
                 corners[i] = corner;
             }
 
             return corners;
         }
 
-        // Returns a single corner of a hexagon (i is 0 to 5)
-        private Vector3 HexCorner(Vector3I hex, int cornerIndex)
+        /// <summary>
+        /// Returns a single corner of a hexagon (i is 0 to 5)
+        /// </summary>
+        private Vector3 GetVertice(Vector3I hex, int cornerIndex)
         {
-            var angle = (60f * cornerIndex).toRadians(); // 60° between corners
-            var worldPos = HexToWorld(hex);
+            var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
 
-            var x = worldPos.X + CellSize * Mathf.Cos(angle);
-            var z = worldPos.Z + CellSize * Mathf.Sin(angle);
-
-            return new Vector3(x, 0, z); // Y is set to 0
+            return HexToWorld(hex) + dir * CellSize;
         }
 
-        // Returns the neighboring hex in a given direction (0 to 5 for the six main directions)
+        /// <summary>
+        /// Returns the neighboring hexagons
+        /// </summary>
+        public Vector3I[] GetRange(Vector3I hex, int ringCount)
+        {
+            if (ringCount < 1)
+                return new[] { hex };
+
+            var result = new Vector3I[1 + 3 * ringCount * (ringCount + 1)];
+            var N = ringCount;
+
+            for (int i = 0, q = -N; -N <= q && q <= +N; q++)
+            {
+                for (var r = Mathf.Max(-N, -q - N); Mathf.Max(-N, -q - N) <= r && r <= Mathf.Min(+N, -q + N); r++)
+                {
+                    var s = -q - r;
+
+                    result[i++] = hex + new Vector3I(q, r, s);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the neighboring hexagons in a specific ring, centered around the given hex
+        /// </summary>
+        public Vector3I[] GetRing(Vector3I hex, int ringCount)
+        {
+            if (ringCount < 1)
+                return new[] { hex };
+
+            var result = new Vector3I[6 * ringCount]; // Each ring has 6 * ringCount hexes
+            var i = 0;
+
+            // Start with the first hex in the ring, offset from the center hex
+            var currentHex = hex + new Vector3I(-ringCount, 0, ringCount);
+
+            // Traverse the hexes in the ring
+            foreach (var direction in Directions)
+            {
+                for (var step = 0; step < ringCount; step++)
+                {
+                    result[i++] = currentHex;
+                    currentHex += direction; // Move in the current direction
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the neighboring hexagons
+        /// </summary>
+        public Vector3I[] GetNeighbors(Vector3I hex)
+        {
+            // Hexagonal grid directions (Q,R,S)
+            return new[]{
+                GetNeighbor(hex, 0),
+                GetNeighbor(hex, 1),
+                GetNeighbor(hex, 2),
+                GetNeighbor(hex, 3),
+                GetNeighbor(hex, 4),
+                GetNeighbor(hex, 5),
+            };
+        }
+
+        /// <summary>
+        /// Returns the neighboring hexagon in a given direction (0 to 5 for the six main directions)
+        /// </summary>
         public Vector3I GetNeighbor(Vector3I hex, int direction)
         {
             // Hexagonal grid directions (Q,R,S)
-            var directions = new Vector3I[]
-            {
-                new(1, -1, 0), new(1, 0, -1), new(0, 1, -1),
-                new(-1, 1, 0), new(-1, 0, 1), new(0, -1, 1)
-            };
-
-            return hex + directions[direction % 6];
+            return hex + Directions[direction % 6];
         }
     }
 }

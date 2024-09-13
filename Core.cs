@@ -675,10 +675,10 @@ namespace Cutulu
         public static void pasteZ(this float value, ref Vector3 v3) => v3.Z = value;
 
         public static Vector3 toRight(this Vector3 forward) => toRight(forward, Vector3.Up);
-        public static Vector3 toRight(this Vector3 forward, Vector3 up) => forward.Normalized().Cross(up.Normalized());
+        public static Vector3 toRight(this Vector3 forward, Vector3 up) => forward.Cross(up).Normalized();
 
         public static Vector3 toUp(this Vector3 forward) => toRight(forward, Vector3.Right);
-        public static Vector3 toUp(this Vector3 forward, Vector3 right) => -forward.Normalized().Cross(right.Normalized());
+        public static Vector3 toUp(this Vector3 forward, Vector3 right) => -forward.Cross(right).Normalized();
 
         public static Vector3 toXZ(this Vector2 value, float y = 0) => new(value.X, y, value.Y);
 
