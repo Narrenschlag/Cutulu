@@ -116,7 +116,7 @@ namespace Cutulu
         /// </summary>
         public Vector3I[] GetRange(Vector3I hex, int ringCount)
         {
-            if (ringCount < 1)
+            if ((ringCount = Mathf.Abs(ringCount)) < 1)
                 return new[] { hex };
 
             var result = new Vector3I[1 + 3 * ringCount * (ringCount + 1)];
@@ -140,7 +140,7 @@ namespace Cutulu
         /// </summary>
         public Vector3I[] GetRing(Vector3I hex, int ringCount)
         {
-            if (ringCount < 1)
+            if ((ringCount = Mathf.Abs(ringCount)) < 1)
                 return new[] { hex };
 
             var result = new Vector3I[6 * ringCount]; // Each ring has 6 * ringCount hexes
