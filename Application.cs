@@ -31,5 +31,24 @@ namespace Cutulu
             set => DisplayServer.ClipboardSet(value);
             get => DisplayServer.ClipboardGet();
         }
+
+        public static bool Fullscreen
+        {
+            get => DisplayServer.WindowGetMode() == DisplayServer.WindowMode.Fullscreen;
+            set => SetFullscreen(value);
+        }
+
+        private static void SetFullscreen(bool enabled)
+        {
+            if (enabled && Fullscreen == false)
+            {
+                DisplayServer.WindowSetMode(DisplayServer.WindowMode.Fullscreen);
+            }
+
+            else if (enabled == false && Fullscreen)
+            {
+                DisplayServer.WindowSetMode(DisplayServer.WindowMode.Maximized);
+            }
+        }
     }
 }

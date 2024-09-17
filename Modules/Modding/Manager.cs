@@ -281,6 +281,9 @@ namespace Cutulu.Modding
 
         #region QOL Features
 
+        /// <summary>
+        /// Instantiates a node from given SharedAsset
+        /// </summary>
         public N Instantiate<N>(string asset, Node parent, bool asClient) where N : Node
         {
             var packed = Get<PackedScene>(asset);
@@ -292,6 +295,22 @@ namespace Cutulu.Modding
             }
 
             return SharedAsset.Instantiate<N>(Get<PackedScene>(asset), parent, asClient);
+        }
+
+        /// <summary>
+        /// Instantiates a node from given asset
+        /// </summary>
+        public N Instantiate<N>(string asset, Node parent) where N : Node
+        {
+            var packed = Get<PackedScene>(asset);
+
+            if (packed.IsNull())
+            {
+                Debug.LogError($"Couldn't find asset '{asset}' of typeof({typeof(N).Name})");
+                return null;
+            }
+
+            return packed.Instantiate<N>(parent);
         }
 
         #endregion
