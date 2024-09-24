@@ -1,7 +1,8 @@
-using Godot;
-
 namespace Cutulu
 {
+    using Cutulu;
+    using Godot;
+
     /// <summary>
     /// Hexagonal Compass used to calculate points and positions on a hexagonal grid
     /// </summary>
@@ -32,7 +33,7 @@ namespace Cutulu
         /// <summary>
         /// Converts a world position (Vector3) to hexagonal coordinates
         /// </summary>
-        public Vector3I WorldToHex(Vector3 position, Vector3 offset = default)
+        public Vector3I WorldToCube(Vector3 position, Vector3 offset = default)
         {
             var position2D = new Vector2(Right.Dot(position -= offset), Forward.Dot(position));
 
@@ -46,12 +47,53 @@ namespace Cutulu
         /// <summary>
         /// Converts hexagonal coordinates to world position
         /// </summary>
-        public Vector3 HexToWorld(Vector3I hex, Vector3 offset = default)
+        public Vector3 CubeToWorld(Vector3I hex, Vector3 offset = default)
         {
             var x = CellSize * (3f / 2f * hex.X);
             var y = CellSize * (Mathf.Sqrt(3) * (hex.Z + hex.X / 2f));
 
             return Right * x + Forward * y + offset; // Y is set to 0 (ground level)
+        }
+
+        /// <summary>
+        /// Converts 2D grid coordinates to world position
+        /// </summary>
+        public Vector3 GridToWorld(Vector2I grid, Vector3 offset = default)
+        {
+            return CubeToWorld(GridToCube(grid), offset);
+        }
+
+        /// <summary>
+        /// Converts world position to hexagonal coordinates
+        /// </summary>
+        public Vector2I WorldToGrid(Vector3 position, Vector3 offset = default)
+        {
+            return CubeToGrid(WorldToCube(position, offset));
+        }
+
+        /// <summary>
+        /// Converts Cube coordinates to 2D grid coordinates (Vector2I)
+        /// </summary>
+        public Vector2I CubeToGrid(Vector3I cube)
+        {
+            // For axial coordinates (x = q, y = r)
+            var x = cube.X; // q
+            var y = cube.Y; // r
+
+            // Ignore s, as it is derived from q and r
+            return new(x, y);
+        }
+
+        /// <summary>
+        /// Converts 2D grid coordinates to Cube coordinates (Vector3I)
+        /// </summary>
+        public Vector3I GridToCube(Vector2I grid)
+        {
+            var q = grid.X;
+            var r = grid.Y;
+            var s = -q - r; // s = -q - r for cube coordinates
+
+            return new(q, r, s);
         }
 
         /// <summary>
@@ -82,7 +124,7 @@ namespace Cutulu
                 rz = -rx - ry;
             }
 
-            return new Vector3I(rx, ry, rz);
+            return new(rx, ry, rz);
         }
 
         /// <summary>
@@ -108,7 +150,7 @@ namespace Cutulu
         {
             var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
 
-            return HexToWorld(hex) + dir * CellSize;
+            return CubeToWorld(hex) + dir * CellSize;
         }
 
         /// <summary>
@@ -185,6 +227,49 @@ namespace Cutulu
         {
             // Hexagonal grid directions (Q,R,S)
             return hex + Directions[direction % 6];
+        }
+
+        /// <summary>
+        /// Returns path based on path cost
+        /// </summary>
+        public bool TryGetPath(IPathfindingTarget target, Vector3I start, Vector3I end, out Vector3I[] path)
+        {
+            return (path = GetPath(target, start, end)).NotEmpty();
+        }
+
+        /// <summary>
+        /// Returns path based on path cost
+        /// </summary>
+        public bool TryGetPath(IPathfindingTarget target, Vector2I start, Vector2I end, out Vector2I[] path)
+        {
+            return (path = GetPath(target, start, end)).NotEmpty();
+        }
+
+        /// <summary>
+        /// Returns path based on path cost
+        /// </summary>
+        public Vector3I[] GetPath(IPathfindingTarget target, Vector3I start, Vector3I end)
+        {
+            Pathfinding.TryFindPath(target, CubeToGrid(start), CubeToGrid(end), out var _path);
+
+            var path = new Vector3I[_path.Length];
+
+            for (int i = 0; i < _path.Length; i++)
+            {
+                path[i] = GridToCube(_path[i]);
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// Returns path based on path cost
+        /// </summary>
+        public Vector2I[] GetPath(IPathfindingTarget target, Vector2I start, Vector2I end)
+        {
+            Pathfinding.TryFindPath(target, start, end, out var path);
+
+            return path;
         }
     }
 }

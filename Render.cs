@@ -95,7 +95,6 @@ namespace Cutulu
             SphereMesh sphere_mesh = new();
 
             mesh_instance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
-            mesh_instance.Position = position;
             mesh_instance.Mesh = sphere_mesh;
 
             sphere_mesh.Material = material;
@@ -106,6 +105,8 @@ namespace Cutulu
             material.AlbedoColor = color;
 
             node.AddChild(mesh_instance);
+            mesh_instance.GlobalPosition = position;
+
             return mesh_instance;
         }
         #endregion

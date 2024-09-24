@@ -21,6 +21,9 @@ namespace Cutulu
             var gScore = new Dictionary<Vector2I, float>();
             var fScore = new Dictionary<Vector2I, float>();
 
+            var neighbours = costFinder.GetNeighbors();
+            Vector2I neighbour;
+
             gScore[start] = 0;
             fScore[start] = HeuristicCostEstimate(start, goal);
 
@@ -36,22 +39,24 @@ namespace Cutulu
                     return ReconstructPath(cameFrom, current);
                 }
 
-                foreach (var neighbor in GetNeighbors(current))
+                foreach (var _neighbour in neighbours)
                 {
-                    var walkableCost = costFinder.GetCost(neighbor);
+                    neighbour = _neighbour + current;
+
+                    var walkableCost = costFinder.GetCost(neighbour);
                     if (walkableCost < 1) continue;
 
                     var tentativeGScore = gScore[current] + walkableCost;
 
-                    if (!gScore.ContainsKey(neighbor) || tentativeGScore < gScore[neighbor])
+                    if (!gScore.ContainsKey(neighbour) || tentativeGScore < gScore[neighbour])
                     {
-                        cameFrom[neighbor] = current;
-                        gScore[neighbor] = tentativeGScore;
-                        fScore[neighbor] = gScore[neighbor] + HeuristicCostEstimate(neighbor, goal);
+                        cameFrom[neighbour] = current;
+                        gScore[neighbour] = tentativeGScore;
+                        fScore[neighbour] = gScore[neighbour] + HeuristicCostEstimate(neighbour, goal);
 
-                        if (!openSet.Contains((fScore[neighbor], neighbor)))
+                        if (!openSet.Contains((fScore[neighbour], neighbour)))
                         {
-                            openSet.Add((fScore[neighbor], neighbor));
+                            openSet.Add((fScore[neighbour], neighbour));
                         }
                     }
                 }
@@ -104,6 +109,11 @@ namespace Cutulu
 
     public interface IPathfindingTarget
     {
+        /// <summary>
+        /// Return 0 if you want to make a point unwalkable.
+        /// </summary>
         public int GetCost(Vector2I point);
+
+        public IEnumerable<Vector2I> GetNeighbors();
     }
 }
