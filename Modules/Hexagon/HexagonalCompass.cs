@@ -1,6 +1,5 @@
 namespace Cutulu
 {
-    using Cutulu;
     using Godot;
 
     /// <summary>
@@ -8,27 +7,36 @@ namespace Cutulu
     /// </summary>
     public partial struct HexagonalCompass
     {
+        /// <summary>
+        /// Cubic hexagonal neighbours
+        /// </summary>
         public static readonly Vector3I[] CubeNeighbours = new Vector3I[]
         {
             new(+0, -1, +1), new(+1, -1, +0), new(+1, +0, -1),
             new(+0, +1, -1), new(-1, +1, +0), new(-1, +0, +1)
         };
 
+        /// <summary>
+        /// Grid hexagonal neighbours
+        /// </summary>
         public static readonly Vector2I[] GridNeighbours = new Vector2I[]{
             new(+0, -1), new(+1, -1), new(+1, +0),
             new(+0, +1), new(-1, +1), new(-1, +0),
         };
 
         // Hexagonal properties
-        public readonly float CellSize;
         public readonly Vector3 Forward, Right, Up;
+        public readonly float CellSize;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public HexagonalCompass(Vector3 forward, float cellSize)
+        public HexagonalCompass(Vector3 forward = default, float cellSize = 1f)
         {
             CellSize = cellSize;
+
+            if (forward == default)
+                forward = Vector3.Forward;
 
             Up = forward.toUp();
             Right = forward.toRight(Up);
@@ -47,6 +55,37 @@ namespace Cutulu
             var s = -q - r;
 
             return CubeRound(new Vector3(q, s, r));
+        }
+
+        /// <summary>
+        /// Rounds cube coordinates to nearest hexagonal coordinates
+        /// </summary>
+        private Vector3I CubeRound(Vector3 cube)
+        {
+            var rx = Mathf.RoundToInt(cube.X);
+            var ry = Mathf.RoundToInt(cube.Y);
+            var rz = Mathf.RoundToInt(cube.Z);
+
+            var x_diff = Mathf.Abs(rx - cube.X);
+            var y_diff = Mathf.Abs(ry - cube.Y);
+            var z_diff = Mathf.Abs(rz - cube.Z);
+
+            if (x_diff > y_diff && x_diff > z_diff)
+            {
+                rx = -ry - rz;
+            }
+
+            else if (y_diff > z_diff)
+            {
+                ry = -rx - rz;
+            }
+
+            else
+            {
+                rz = -rx - ry;
+            }
+
+            return new(rx, ry, rz);
         }
 
         /// <summary>
@@ -102,37 +141,6 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Rounds cube coordinates to nearest hexagonal coordinates
-        /// </summary>
-        private Vector3I CubeRound(Vector3 cube)
-        {
-            var rx = Mathf.RoundToInt(cube.X);
-            var ry = Mathf.RoundToInt(cube.Y);
-            var rz = Mathf.RoundToInt(cube.Z);
-
-            var x_diff = Mathf.Abs(rx - cube.X);
-            var y_diff = Mathf.Abs(ry - cube.Y);
-            var z_diff = Mathf.Abs(rz - cube.Z);
-
-            if (x_diff > y_diff && x_diff > z_diff)
-            {
-                rx = -ry - rz;
-            }
-
-            else if (y_diff > z_diff)
-            {
-                ry = -rx - rz;
-            }
-
-            else
-            {
-                rz = -rx - ry;
-            }
-
-            return new(rx, ry, rz);
-        }
-
-        /// <summary>
         /// Returns the six corner points of the hexagon centered at hex coordinates
         /// </summary>
         public Vector3[] GetVertices(Vector3I hex)
@@ -156,6 +164,32 @@ namespace Cutulu
             var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
 
             return CubeToWorld(hex) + dir * CellSize;
+        }
+
+        /// <summary>
+        /// Returns the six corner points of the hexagon centered at hex coordinates
+        /// </summary>
+        public Vector3[] GetVertices(Vector2I hex)
+        {
+            var corners = new Vector3[6];
+
+            for (int i = 0; i < 6; i++)
+            {
+                var corner = GetVertice(hex, i);
+                corners[i] = corner;
+            }
+
+            return corners;
+        }
+
+        /// <summary>
+        /// Returns a single corner of a hexagon (i is 0 to 5)
+        /// </summary>
+        private Vector3 GetVertice(Vector2I hex, int cornerIndex)
+        {
+            var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
+
+            return GridToWorld(hex) + dir * CellSize;
         }
 
         /// <summary>
