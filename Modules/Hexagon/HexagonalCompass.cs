@@ -8,10 +8,15 @@ namespace Cutulu
     /// </summary>
     public partial struct HexagonalCompass
     {
-        public static readonly Vector3I[] Directions = new Vector3I[]
+        public static readonly Vector3I[] CubeNeighbours = new Vector3I[]
         {
-            new(1, -1, 0), new(1, 0, -1), new(0, 1, -1),
-            new(-1, 1, 0), new(-1, 0, 1), new(0, -1, 1)
+            new(+0, -1, +1), new(+1, -1, +0), new(+1, +0, -1),
+            new(+0, +1, -1), new(-1, +1, +0), new(-1, +0, +1)
+        };
+
+        public static readonly Vector2I[] GridNeighbours = new Vector2I[]{
+            new(+0, -1), new(+1, -1), new(+1, +0),
+            new(+0, +1), new(-1, +1), new(-1, +0),
         };
 
         // Hexagonal properties
@@ -192,7 +197,7 @@ namespace Cutulu
             var currentHex = hex + new Vector3I(-ringCount, 0, ringCount);
 
             // Traverse the hexes in the ring
-            foreach (var direction in Directions)
+            foreach (var direction in CubeNeighbours)
             {
                 for (var step = 0; step < ringCount; step++)
                 {
@@ -207,7 +212,7 @@ namespace Cutulu
         /// <summary>
         /// Returns the neighboring hexagons
         /// </summary>
-        public Vector3I[] GetNeighbors(Vector3I hex)
+        public Vector3I[] GetNeighbors(Vector3I hex = default)
         {
             // Hexagonal grid directions (Q,R,S)
             return new[]{
@@ -226,7 +231,7 @@ namespace Cutulu
         public Vector3I GetNeighbor(Vector3I hex, int direction)
         {
             // Hexagonal grid directions (Q,R,S)
-            return hex + Directions[direction % 6];
+            return hex + CubeNeighbours[direction % 6];
         }
 
         /// <summary>
