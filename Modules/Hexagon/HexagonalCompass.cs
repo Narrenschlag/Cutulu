@@ -194,7 +194,7 @@ namespace Cutulu
             var i = 0;
 
             // Start with the first hex in the ring, offset from the center hex
-            var currentHex = hex + new Vector3I(-ringCount, 0, ringCount);
+            var currentHex = hex + CubeNeighbours[4] * ringCount;
 
             // Traverse the hexes in the ring
             foreach (var direction in CubeNeighbours)
