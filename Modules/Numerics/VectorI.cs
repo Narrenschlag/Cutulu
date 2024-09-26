@@ -56,38 +56,38 @@ namespace Cutulu.Numerics
 
             return vector;
         }
-    }
 
-    public class VectorIEncoder : BinaryEncoder<VectorI>
-    {
-        public override void Encode(System.IO.BinaryWriter writer, ref object value)
+        class Encoder : BinaryEncoder<VectorI>
         {
-            var vector = (VectorI)value;
-
-            writer.Write((byte)vector.Numbers[0].Buffer.Length);
-            writer.Write((byte)vector.Numbers.Length);
-
-            for (var i = 0; i < vector.Numbers.Length; i++)
+            public override void Encode(System.IO.BinaryWriter writer, ref object value)
             {
-                writer.Write(vector.Numbers[i].Buffer);
-            }
-        }
+                var numbers = ((VectorI)value).Numbers;
 
-        public override object Decode(System.IO.BinaryReader reader)
-        {
-            var bytes = reader.ReadByte();
-            var count = reader.ReadByte();
+                writer.Write((byte)numbers[0].Buffer.Length);
+                writer.Write((byte)numbers.Length);
 
-            var numbers = new Number[count];
-            for (var i = 0; i < count; i++)
-            {
-                numbers[i] = new() { Buffer = reader.ReadBytes(bytes), };
+                for (var i = 0; i < numbers.Length; i++)
+                {
+                    writer.Write(numbers[i].Buffer);
+                }
             }
 
-            return new VectorI()
+            public override object Decode(System.IO.BinaryReader reader)
             {
-                Numbers = numbers,
-            };
+                var bytes = reader.ReadByte();
+                var count = reader.ReadByte();
+
+                var vector = new VectorI() { Numbers = new Number[count] };
+                for (var i = 0; i < count; i++)
+                {
+                    vector.Numbers[i] = new()
+                    {
+                        Buffer = reader.ReadBytes(bytes),
+                    };
+                }
+
+                return vector;
+            }
         }
     }
 }

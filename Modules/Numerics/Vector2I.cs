@@ -5,49 +5,50 @@ namespace Cutulu.Numerics
     /// </summary>
     public partial struct Vector2I
     {
-        public int Y => Vector.Numbers.Length > 1 ? Vector.Numbers[1].GetInt() : 0;
-        public int X => Vector.Numbers[0].GetInt();
+        public readonly int Y => Vector.Numbers.Length > 1 ? Vector.Numbers[1].GetInt() : 0;
+        public readonly int X => Vector.Numbers[0].GetInt();
 
-        public VectorI Vector;
+        private VectorI Vector;
 
         public Vector2I() { Vector = new VectorI(0, 0); }
 
+        public Vector2I(Godot.Vector2I vector) : this(vector.X, vector.Y) { }
         public Vector2I(int x, int y)
         {
             Vector = new VectorI(x, y);
         }
 
-        public readonly Godot.Vector2I Value => Vector.GetVector2I();
-    }
+        public readonly Godot.Vector2I Godot => Vector.GetVector2I();
 
-    public class VectorI2Encoder : BinaryEncoder<Vector2I>
-    {
-        public override void Encode(System.IO.BinaryWriter writer, ref object value)
+        class VectorI2Encoder : BinaryEncoder<Vector2I>
         {
-            var vector = (Vector2I)value;
-
-            writer.Write((byte)vector.Vector.Numbers[0].Buffer.Length);
-
-            for (var i = 0; i < 2; i++)
+            public override void Encode(System.IO.BinaryWriter writer, ref object value)
             {
-                writer.Write(vector.Vector.Numbers[i].Buffer);
-            }
-        }
+                var numbers = ((Vector2I)value).Vector.Numbers;
+                writer.Write((byte)numbers[0].Buffer.Length);
 
-        public override object Decode(System.IO.BinaryReader reader)
-        {
-            var bytes = reader.ReadByte();
+                for (byte i = 0; i < 2; i++)
+                {
+                    if (numbers.Length <= i)
+                        writer.Write(new byte[numbers[0].Buffer.Length]);
 
-            var numbers = new Number[2];
-            for (var i = 0; i < 2; i++)
-            {
-                numbers[i] = new() { Buffer = reader.ReadBytes(bytes), };
+                    else
+                        writer.Write(numbers[i].Buffer);
+                }
             }
 
-            return new Vector2I()
+            public override object Decode(System.IO.BinaryReader reader)
             {
-                Vector = new VectorI() { Numbers = new[] { numbers[0], numbers[1] } },
-            };
+                var vector = new Vector2I() { Vector = new() { Numbers = new Number[2] } };
+                var byteCount = reader.ReadByte();
+
+                for (byte i = 0; i < 2; i++)
+                {
+                    vector.Vector.Numbers[i] = new() { Buffer = reader.ReadBytes(byteCount), };
+                }
+
+                return vector;
+            }
         }
     }
 }
