@@ -51,7 +51,7 @@ namespace Cutulu
                 {
                     neighbour = _neighbour + current;
 
-                    var walkableCost = costFinder.GetCost(neighbour);
+                    var walkableCost = costFinder.GetCost(ref current, ref neighbour);
                     if (walkableCost < 1) continue;
 
                     var tentativeGScore = gScore[current] + walkableCost;
@@ -109,7 +109,7 @@ namespace Cutulu
         /// <summary>
         /// Return 0 if you want to make a point unwalkable.
         /// </summary>
-        public int GetCost(Vector2I point);
+        public int GetCost(ref Vector2I previous, ref Vector2I next);
 
         /// <summary>
         /// Returns possible neighbours
