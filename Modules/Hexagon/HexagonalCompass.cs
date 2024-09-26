@@ -360,6 +360,9 @@ namespace Cutulu
             return path;
         }
 
+        /// <summary>
+        /// Returns distance between two points
+        /// </summary>
         public float Distance(Vector2I start, Vector2I end)
         {
             var vec = start - end;
