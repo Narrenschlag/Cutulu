@@ -14,8 +14,7 @@ namespace Cutulu.Numerics
             Buffer.Length == 8 ? NumberType.Long :
             Buffer.Length == 4 ? NumberType.Int :
             Buffer.Length == 2 ? NumberType.Short :
-            Buffer[0] < 0 ? NumberType.SByte :
-            NumberType.Byte;
+            NumberType.SByte;
 
         public Number() { Buffer = null; }
         public Number(object value)
@@ -33,13 +32,7 @@ namespace Cutulu.Numerics
                         return;
 
                     case short v:
-                        if (IsByte(v))
-                        {
-                            value = (byte)v;
-                            break;
-                        }
-
-                        else if (IsSByte(v))
+                        if (IsSByte(v))
                         {
                             value = (sbyte)v;
                             break;
@@ -87,7 +80,6 @@ namespace Cutulu.Numerics
             }
 
             static bool IsSByte(short value) => value <= sbyte.MaxValue && value >= sbyte.MinValue;
-            static bool IsByte(short value) => value <= byte.MaxValue && value >= byte.MinValue;
             static bool IsShort(int value) => value <= short.MaxValue && value >= short.MinValue;
             static bool IsInt(long value) => value <= int.MaxValue && value >= int.MinValue;
         }
@@ -97,7 +89,6 @@ namespace Cutulu.Numerics
             return GetNumberType() switch
             {
                 NumberType.SByte => Buffer.Decode<sbyte>(),
-                NumberType.Byte => Buffer.Decode<byte>(),
                 NumberType.Short => Buffer.Decode<short>(),
                 NumberType.Int => Buffer.Decode<int>(),
                 NumberType.Long => (int)Buffer.Decode<long>(),
@@ -105,7 +96,7 @@ namespace Cutulu.Numerics
             };
         }
 
-        public class NumberEncoder : BinaryEncoder<Number>
+        class Encoder : BinaryEncoder<Number>
         {
             public override void Encode(System.IO.BinaryWriter writer, ref object value)
             {
@@ -127,7 +118,6 @@ namespace Cutulu.Numerics
         Invalid,
 
         SByte,
-        Byte,
         Short,
         Int,
         Long,
