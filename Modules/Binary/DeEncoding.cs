@@ -231,7 +231,7 @@ namespace Cutulu
             // Arrays
             if (type.IsArray)
             {
-                ushort length = reader.ReadUInt16();
+                var length = reader.ReadUInt16();
                 type = type.GetElementType();
 
                 var array = Array.CreateInstance(type, length);
