@@ -1,16 +1,16 @@
-namespace Cutulu.Numerics
+namespace Cutulu
 {
     using Godot;
 
     /// <summary>
     /// Represents a vector. Dynamic in it's byte size.
     /// </summary>
-    public partial struct VectorI
+    public partial struct NumberXI
     {
         public Number[] Numbers { get; set; }
 
-        public VectorI() { Numbers = new Number[2] { default, default, }; }
-        public VectorI(int x, int y, params int[] z)
+        public NumberXI() { Numbers = new Number[2] { default, default, }; }
+        public NumberXI(int x, int y, params int[] z)
         {
             if (z.IsEmpty())
             {
@@ -57,11 +57,11 @@ namespace Cutulu.Numerics
             return vector;
         }
 
-        class Encoder : BinaryEncoder<VectorI>
+        class Encoder : BinaryEncoder<NumberXI>
         {
             public override void Encode(System.IO.BinaryWriter writer, ref object value)
             {
-                var numbers = ((VectorI)value).Numbers;
+                var numbers = ((NumberXI)value).Numbers;
 
                 writer.Write((byte)numbers[0].Buffer.Length);
                 writer.Write((byte)numbers.Length);
@@ -77,7 +77,7 @@ namespace Cutulu.Numerics
                 var bytes = reader.ReadByte();
                 var count = reader.ReadByte();
 
-                var vector = new VectorI() { Numbers = new Number[count] };
+                var vector = new NumberXI() { Numbers = new Number[count] };
                 for (var i = 0; i < count; i++)
                 {
                     vector.Numbers[i] = new()

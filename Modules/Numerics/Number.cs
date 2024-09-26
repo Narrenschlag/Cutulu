@@ -1,4 +1,4 @@
-namespace Cutulu.Numerics
+namespace Cutulu
 {
     using System;
 
