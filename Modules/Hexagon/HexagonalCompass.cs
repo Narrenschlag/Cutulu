@@ -50,12 +50,14 @@ namespace Cutulu
         {
             var position2D = new Vector2(Right.Dot(position -= offset), Forward.Dot(position));
 
-            var q = (2f / 3f * position2D.X) / CellSize;
+            var q = 2f / 3f * position2D.X / CellSize;
             var r = (-1f / 3f * position2D.X + Mathf.Sqrt(3) / 3f * position2D.Y) / CellSize;
             var s = -q - r;
 
             return CubeRound(new Vector3(q, s, r));
         }
+
+        public int GetS(Vector2I grid) => -grid.X - grid.Y;
 
         /// <summary>
         /// Rounds cube coordinates to nearest hexagonal coordinates
@@ -137,7 +139,7 @@ namespace Cutulu
             var r = grid.Y;
             var s = -q - r; // s = -q - r for cube coordinates
 
-            return new(q, r, s);
+            return new(q, r, GetS(grid));
         }
 
         /// <summary>
@@ -207,9 +209,7 @@ namespace Cutulu
             {
                 for (var r = Mathf.Max(-N, -q - N); Mathf.Max(-N, -q - N) <= r && r <= Mathf.Min(+N, -q + N); r++)
                 {
-                    var s = -q - r;
-
-                    result[i++] = hex + new Vector3I(q, r, s);
+                    result[i++] = hex + new Vector3I(q, r, -q - r);
                 }
             }
 
@@ -232,6 +232,55 @@ namespace Cutulu
 
             // Traverse the hexes in the ring
             foreach (var direction in CubeNeighbours)
+            {
+                for (var step = 0; step < ringCount; step++)
+                {
+                    result[i++] = currentHex;
+                    currentHex += direction; // Move in the current direction
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the neighboring hexagons
+        /// </summary>
+        public Vector2I[] GetRange(Vector2I hex, int ringCount)
+        {
+            if ((ringCount = Mathf.Abs(ringCount)) < 1)
+                return new[] { hex };
+
+            var result = new Vector2I[1 + 3 * ringCount * (ringCount + 1)];
+            var N = ringCount;
+
+            for (int i = 0, q = -N; -N <= q && q <= +N; q++)
+            {
+                for (var r = Mathf.Max(-N, -q - N); Mathf.Max(-N, -q - N) <= r && r <= Mathf.Min(+N, -q + N); r++)
+                {
+                    result[i++] = hex + new Vector2I(q, r);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the neighboring hexagons in a specific ring, centered around the given hex
+        /// </summary>
+        public Vector2I[] GetRing(Vector2I hex, int ringCount)
+        {
+            if ((ringCount = Mathf.Abs(ringCount)) < 1)
+                return new[] { hex };
+
+            var result = new Vector2I[6 * ringCount]; // Each ring has 6 * ringCount hexes
+            var i = 0;
+
+            // Start with the first hex in the ring, offset from the center hex
+            var currentHex = hex + GridNeighbours[4] * ringCount;
+
+            // Traverse the hexes in the ring
+            foreach (var direction in GridNeighbours)
             {
                 for (var step = 0; step < ringCount; step++)
                 {
@@ -309,6 +358,13 @@ namespace Cutulu
             Pathfinding.TryFindPath(target, start, end, out var path);
 
             return path;
+        }
+
+        public float Distance(Vector2I start, Vector2I end)
+        {
+            var vec = start - end;
+
+            return (Mathf.Abs(vec.X) + Mathf.Abs(vec.X + vec.Y) + Mathf.Abs(vec.Y)) * 0.5f;
         }
     }
 }
