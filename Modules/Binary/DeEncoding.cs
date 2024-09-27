@@ -173,6 +173,16 @@ namespace Cutulu
             return Decode(reader, type);
         }
 
+        public static T Decode<T>(this BinaryReader reader)
+        {
+            if (TryDecode(reader, typeof(T), out var obj) && obj is T val)
+            {
+                return val;
+            }
+
+            return default;
+        }
+
         public static bool TryDecode<T>(this BinaryReader reader, out T value)
         {
             if (TryDecode(reader, typeof(T), out var obj) && obj is T val)
