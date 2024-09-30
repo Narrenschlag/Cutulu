@@ -169,8 +169,9 @@ namespace Cutulu
             if (!Exists(path)) throw new($"Path '{path}' does not exists.");
 
             // Open file
-            FA file = FA.Open(path, FA.ModeFlags.Read);
-            string content = file.GetAsText();
+            var file = FA.Open(path, FA.ModeFlags.Read);
+            var content = file.GetAsText();
+            file.Close();
 
             // Decrypt content
             if (decryptionKey.NotEmpty())
@@ -182,14 +183,19 @@ namespace Cutulu
         /// <summary>
         /// Read bytes from file at given path.
         /// </summary>
-        public static byte[] ReadBytes(this string path)
+        public static byte[] ReadBytes(this string path, ulong length = default)
         {
             // Check if the path is valid and create dir if non existant
             if (path.IsEmpty()) throw new("No path assigned!");
             if (path.Exists() == false) throw new($"No file found at <{path}>.");
 
-            FA file = FA.Open(path, FA.ModeFlags.Read);
-            return file.GetBuffer((long)file.GetLength());
+            var file = FA.Open(path, FA.ModeFlags.Read);
+            var fileLength = file.GetLength();
+
+            var buffer = file.GetBuffer(length == default || length > fileLength ? (long)fileLength : (long)length);
+            file.Close();
+
+            return buffer;
         }
 
         /// <summary>

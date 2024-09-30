@@ -345,5 +345,94 @@ namespace Cutulu
             float1 = ((byte1 - 0.5f) / 7.5f) - 1f;
             float2 = ((byte2 - 0.5f) / 7.5f) - 1f;
         }
+
+        public static byte[] ToBytes(this string hex)
+        {
+            if (hex.IsEmpty()) return null;
+
+            hex = hex.Replace(" ", ""); // Remove any spaces
+
+            if (hex.Length % 2 != 0)
+                throw new("Hexadecimal string must have an even number of characters.");
+
+            var bytes = new byte[hex.Length / 2];
+            for (var i = 0; i < hex.Length; i += 2)
+            {
+                bytes[i / 2] = System.Convert.ToByte(hex.Substring(i, 2), 16);
+            }
+
+            return bytes;
+        }
+
+        public static string ToHex(this byte[] bytes)
+        {
+            if (bytes.IsEmpty()) return null;
+
+            var hex = new System.Text.StringBuilder(bytes.Length * 2);
+            foreach (var b in bytes)
+            {
+                hex.AppendFormat("{0:X2}", b);
+            }
+
+            return hex.ToString();
+        }
+
+        /// <summary>
+        /// Determines whether a byte array contains the specified sequence of bytes.
+        /// </summary>
+        /// <param name="caller">The byte array to be searched.</param>
+        /// <param name="array">The byte to be found.</param>
+        /// <returns>The first location of the sequence within the array, -1 if the sequence is not found.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        public static int Contains(this byte[] caller, byte[] array)
+        {
+            byte startValue, endValue;
+            int result, arrayLength, searchBoundary, j, startLocation, endOffset;
+
+            if (caller == null)
+                throw new($"{nameof(caller)}");
+            if (array == null)
+                throw new($"{nameof(array)}");
+            if (caller.Length == 0 || array.Length == 0)
+                throw new($"Argument {(caller.Length == 0 ? nameof(caller) : nameof(array))} is empty.");
+
+            if (array.Length > caller.Length)
+                return -1;
+
+            startValue = array[0];
+            arrayLength = array.Length;
+
+            if (arrayLength > 1)
+            {
+                result = -1;
+                endValue = array[^1];
+                endOffset = arrayLength - 1;
+                searchBoundary = caller.Length - arrayLength;
+                startLocation = -1;
+
+                while ((startLocation = System.Array.IndexOf(caller, startValue, startLocation + 1)) >= 0)
+                {
+                    if (startLocation > searchBoundary)
+                        break;
+
+                    if (caller[startLocation + endOffset] == endValue)
+                    {
+                        for (j = 1; j < endOffset && caller[startLocation + j] == array[j]; j++) { }
+
+                        if (j == endOffset)
+                        {
+                            result = startLocation;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                result = System.Array.IndexOf(caller, startValue);
+            }
+            return result;
+        }
     }
 }
