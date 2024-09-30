@@ -138,8 +138,8 @@ namespace Cutulu
         /// Grid hexagonal neighbours
         /// </summary>
         public static readonly Vector2I[] AxialNeighbours = new Vector2I[]{
-            new(+0, -1), new(+1, -1), new(+1, +0),
-            new(+0, +1), new(-1, +1), new(-1, +0),
+            new(-1, +0), new(-1, +1), new(+0, +1),
+            new(+1, +0), new(+1, -1), new(+0, -1),
         };
 
         /// <summary>   
