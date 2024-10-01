@@ -78,8 +78,7 @@ namespace Cutulu
 
             for (int i = 0; i < 6; i++)
             {
-                var corner = GetVertice(cubic, i);
-                corners[i] = corner;
+                corners[i] = GetVertice(cubic, i);
             }
 
             return corners;
@@ -88,7 +87,7 @@ namespace Cutulu
         /// <summary>
         /// Returns a single corner of a hexagon (i is 0 to 5)
         /// </summary>
-        private Vector3 GetVertice(Vector3I cubic, int cornerIndex)
+        public Vector3 GetVertice(Vector3I cubic, int cornerIndex)
         {
             var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
 
@@ -104,8 +103,7 @@ namespace Cutulu
 
             for (int i = 0; i < 6; i++)
             {
-                var corner = GetVertice(axial, i);
-                corners[i] = corner;
+                corners[i] = GetVertice(axial, i);
             }
 
             return corners;
@@ -114,7 +112,7 @@ namespace Cutulu
         /// <summary>
         /// Returns a single corner of a hexagon (i is 0 to 5)
         /// </summary>
-        private Vector3 GetVertice(Vector2I axial, int cornerIndex)
+        public Vector3 GetVertice(Vector2I axial, int cornerIndex)
         {
             var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
 
