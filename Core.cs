@@ -106,7 +106,7 @@ namespace Cutulu
         /// Returns angle from Vector2.Right. In Degrees.
         /// </summary>
         public static float GetAngleD(this Vector2 direction) => GetAngle(direction).toDegrees();
-        public static float GetAngleD(this Vector2 direction, Vector2 from) => GetAngle(direction, from).toDegrees();
+        public static float GetAngleD(this Vector2 direction, Vector2 from) => GetAngle(direction, from).toDegrees().AbsMod(360f);
 
         /// <summary>
         /// Returns angle from Vector2.Right. In Radians.
@@ -406,6 +406,14 @@ namespace Cutulu
             }
 
             return false;
+        }
+
+        public static T ModulatedElement<T>(this T[] array, int i)
+        {
+            if (array.IsEmpty()) return default;
+            var mod = i % array.Length;
+
+            return array[mod < 0 ? mod + array.Length : mod];
         }
 
         public static bool NotEmpty<T>(this T[] array)

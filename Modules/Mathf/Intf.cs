@@ -28,5 +28,12 @@ namespace Cutulu
 
             return value;
         }
+
+        public static int AbsMod(this int value, int modulus)
+        {
+            var _value = value % modulus;
+
+            return _value < 0 ? _value + modulus : _value;
+        }
     }
 }

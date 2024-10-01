@@ -63,5 +63,12 @@ namespace Cutulu
             // Scale from [0, 255] to [0, 1]
             return value / 255f;
         }
+
+        public static float AbsMod(this float value, float modulus)
+        {
+            var _value = value % modulus;
+
+            return _value < 0 ? _value + modulus : _value;
+        }
     }
 }
