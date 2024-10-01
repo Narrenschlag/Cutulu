@@ -153,5 +153,31 @@ namespace Cutulu
         {
             return new(Cutulu.Random.Range(a.X, b.X), Cutulu.Random.Range(a.Y, b.Y));
         }
+
+        public static Vector2 Sum(this Vector2[] b)
+        {
+            if (b.IsEmpty()) return default;
+            var sum = Vector2.Zero;
+
+            for (ushort i = 0; i < b.Length; i++)
+            {
+                sum += b[i];
+            }
+
+            return sum;
+        }
+
+        public static Vector2I Sum(this Vector2I[] b)
+        {
+            if (b.IsEmpty()) return default;
+            var sum = Vector2I.Zero;
+
+            for (ushort i = 0; i < b.Length; i++)
+            {
+                sum += b[i];
+            }
+
+            return sum;
+        }
     }
 }

@@ -173,5 +173,31 @@ namespace Cutulu
                 return false; // No intersection found
             }
         }
+
+        public static Vector3 Sum(this Vector3[] b)
+        {
+            if (b.IsEmpty()) return default;
+            var sum = Vector3.Zero;
+
+            for (ushort i = 0; i < b.Length; i++)
+            {
+                sum += b[i];
+            }
+
+            return sum;
+        }
+
+        public static Vector3I Sum(this Vector3I[] b)
+        {
+            if (b.IsEmpty()) return default;
+            var sum = Vector3I.Zero;
+
+            for (ushort i = 0; i < b.Length; i++)
+            {
+                sum += b[i];
+            }
+
+            return sum;
+        }
     }
 }
