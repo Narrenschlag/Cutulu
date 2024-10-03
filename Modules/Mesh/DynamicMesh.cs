@@ -233,11 +233,4 @@ namespace Cutulu
 
         #endregion
     }
-
-    public enum MeshType
-    {
-        Points,
-        Lines, LineFan,
-        Triangles, TriangleFan,
-    }
 }
