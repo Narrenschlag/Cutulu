@@ -129,7 +129,10 @@ namespace Cutulu
         {
             if (camera.IsNull()) return;
 
-            var bitBuilder = new BitBuilder((uint)1);
+            var bitBuilder = new BitBuilder((uint)0)
+            {
+                [0] = true
+            };
 
             if (keys.NotEmpty())
             {
