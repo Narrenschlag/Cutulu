@@ -1,126 +1,112 @@
 namespace Cutulu
 {
     using System.Collections.Generic;
+    using System.Collections;
     using System;
+    using Godot;
 
     /// <summary>
     /// A simple wrapper for binary data that allows for easy reading and writing of bits and bytes.
     /// </summary>
-    public class BitBuilder
+    public class BitBuilder : IEnumerable<bool>
     {
-        private int writeBitPosition;
-        private int readBitPosition;
-        private List<byte> buffer;
+        private readonly List<bool> buffer;
 
         /// <summary>
         /// Creates a new BitBuilder.
         /// </summary>
         public BitBuilder(object value = null)
         {
-            buffer = new List<byte>(value == null ? Array.Empty<byte>() : value.Encode());
-            writeBitPosition = buffer.Count * 8;
-            readBitPosition = 0;
+            buffer = new();
+
+            var bytes = value == null ? Array.Empty<byte>() : value.Encode();
+            for (var i = 0; i < bytes.Length; i++)
+            {
+                for (var k = 0; k < 8; k++)
+                {
+                    // Add bits to buffer
+                    buffer.Add((bytes[i] & (1 << (7 - k))) != 0);
+                }
+            }
         }
+
+        // Indexer to make 'Index' act like an array
+        public bool this[int index]
+        {
+            get { return buffer[index]; }  // Get value at the given index
+            set
+            {
+                buffer[index] = value;
+                Debug.Log($"{index} >>> {value}");
+            }  // Set value at the given index
+        }
+
+        /// <summary>
+        /// Returns the buffer as a bit array.
+        /// </summary>
+        public bool[] BitBuffer => buffer.ToArray();
 
         /// <summary>
         /// Returns the buffer as a byte array.
         /// </summary>
-        public byte[] Buffer => buffer.ToArray();
-
-        public int BitLength => buffer.Count * 8;
-        public int ByteLength => buffer.Count;
-
-        /// <summary>
-        /// Returns buffer as given type T.
-        /// </summary>
-        public bool TryGetValue<T>(out T value) => Buffer.TryDecode(out value);
-
-        /// <summary>
-        /// Returns buffer as given type T.
-        /// </summary>
-        public T GetValue<T>() => Buffer.Decode<T>();
-
-        /// <summary>
-        /// Writes the buffer to the stream.
-        /// </summary>
-        public void Write(byte[] data)
+        public byte[] ByteBuffer
         {
-            buffer.AddRange(data);
-            writeBitPosition += data.Length * 8;
-        }
-
-        /// <summary>
-        /// Encodes object and writes the buffer to the stream.
-        /// </summary>
-        public void Write(object value) => Write(value.Encode());
-
-        /// <summary>
-        /// Writes individual bits to the buffer.
-        /// </summary>
-        public void WriteBits(params bool[] bits)
-        {
-            foreach (bool bit in bits)
+            get
             {
-                var byteIndex = writeBitPosition / 8;
-                var bitIndex = writeBitPosition % 8;
+                var result = new byte[ByteLength];
 
-                if (byteIndex >= buffer.Count)
+                for (var i = 0; i < buffer.Count; i++)
                 {
-                    buffer.Add(0);
+                    if (buffer[i])
+                    {
+                        var byteIndex = i / 8;
+                        var bitIndex = (byte)(i % 8);
+
+                        Bitf.EnableBit(ref result[byteIndex], ref bitIndex);
+                    }
                 }
 
-                if (bit)
+                return result;
+            }
+        }
+
+        public int ByteLength => Mathf.CeilToInt(buffer.Count / 8.0f);
+        public int Length => buffer.Count;
+
+        public IEnumerator<bool> GetEnumerator()
+        {
+            return buffer.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(bool value)
+        {
+            buffer.Add(value);
+        }
+
+        public void Insert(int index, bool value)
+        {
+            buffer.Insert(index, value);
+        }
+
+        public void RemoveAt(int index)
+        {
+            buffer.RemoveAt(index);
+        }
+
+        public void SetRange(int first, int length, params bool[] values)
+        {
+            for (var i = 0; i < length;)
+            {
+                for (var k = 0; k < values.Length && i < length; k++, i++)
                 {
-                    buffer[byteIndex] |= (byte)(1 << (7 - bitIndex));
+                    this[first + i] = values[k];
                 }
-
-                writeBitPosition++;
             }
-        }
-
-        /// <summary>
-        /// Reads the stream into a byte array.
-        /// </summary>
-        public byte[] Read(int length)
-        {
-            if (length > buffer.Count - (readBitPosition / 8))
-                throw new ArgumentOutOfRangeException(nameof(length), "Not enough bytes available.");
-
-            var result = buffer.GetRange(readBitPosition / 8, length).ToArray();
-            readBitPosition += length * 8;
-            return result;
-        }
-
-        /// <summary>
-        /// Reads individual bits from the buffer.
-        /// </summary>
-        public bool[] ReadBits(int length)
-        {
-            if (length < 0)
-                throw new ArgumentOutOfRangeException(nameof(length), "Length must be non-negative.");
-
-            var availableBits = buffer.Count * 8 - readBitPosition;
-            if (length > availableBits)
-                throw new ArgumentOutOfRangeException(nameof(length), $"Not enough bits available. Requested: {length}, Available: {availableBits}");
-
-            var result = new bool[length];
-            for (int i = 0; i < length; i++)
-            {
-                var byteIndex = readBitPosition / 8;
-                var bitIndex = readBitPosition % 8;
-                result[i] = (buffer[byteIndex] & (1 << (7 - bitIndex))) != 0;
-                readBitPosition++;
-            }
-
-            // Remove fully read bytes
-            var bytesToRemove = readBitPosition / 8;
-            if (bytesToRemove > 0)
-            {
-                buffer.RemoveRange(0, bytesToRemove);
-                readBitPosition %= 8;
-            }
-
-            return result;
         }
     }
 }
