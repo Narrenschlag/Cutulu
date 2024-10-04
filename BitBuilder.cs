@@ -19,26 +19,14 @@ namespace Cutulu
         {
             buffer = new();
 
-            var bytes = value == null ? Array.Empty<byte>() : value.Encode();
-            for (var i = 0; i < bytes.Length; i++)
-            {
-                for (var k = 0; k < 8; k++)
-                {
-                    // Add bits to buffer
-                    buffer.Add((bytes[i] & (1 << (7 - k))) != 0);
-                }
-            }
+            Add(value);
         }
 
         // Indexer to make 'Index' act like an array
         public bool this[int index]
         {
             get { return buffer[index]; }  // Get value at the given index
-            set
-            {
-                buffer[index] = value;
-                Debug.Log($"{index} >>> {value}");
-            }  // Set value at the given index
+            set { buffer[index] = value; } // Set value at the given index
         }
 
         /// <summary>
@@ -81,6 +69,20 @@ namespace Cutulu
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public void Add(object value)
+        {
+            var bytes = value == null ? Array.Empty<byte>() : value.Encode();
+
+            for (var i = 0; i < bytes.Length; i++)
+            {
+                for (var k = 0; k < 8; k++)
+                {
+                    // Add bits to buffer
+                    buffer.Add((bytes[i] & (1 << (7 - k))) != 0);
+                }
+            }
         }
 
         public void Add(bool value)
