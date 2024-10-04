@@ -56,12 +56,12 @@ namespace Cutulu
             Indecies.Clear();
         }
 
-        public static void SetVision(MeshInstance3D mesh, params Key[] keys)
+        public static void SetVision(bool value, MeshInstance3D mesh, params Key[] keys)
         {
-            SetVision(new[] { mesh }, keys);
+            SetVision(value, new[] { mesh }, keys);
         }
 
-        public static void SetVision(MeshInstance3D[] meshes, params Key[] keys)
+        public static void SetVision(bool value, MeshInstance3D[] meshes, params Key[] keys)
         {
             if (meshes.IsEmpty()) return;
 
@@ -84,7 +84,7 @@ namespace Cutulu
             {
                 if (Keys.TryGetValue(keys[i], out var maskIdx))
                 {
-                    bitBuilder[maskIdx + 1] = true;
+                    bitBuilder[maskIdx + 1] = value;
                 }
             }
 
@@ -99,31 +99,8 @@ namespace Cutulu
             }
         }
 
-        public static void EnableVision(MeshInstance3D mesh, params Key[] keys)
-        {
-            if (mesh.IsNull()) return;
-
-            if (keys.IsEmpty())
-            {
-                mesh.Visible = true;
-                mesh.Layers = 1;
-
-                return;
-            }
-
-            var bitBuilder = new BitBuilder(mesh.Layers);
-            mesh.Visible = true;
-
-            for (var i = 0; i < keys.Length; i++)
-            {
-                if (Keys.TryGetValue(keys[i], out var maskIdx))
-                {
-                    bitBuilder[maskIdx + 1] = true;
-                }
-            }
-
-            mesh.Layers = bitBuilder.ByteBuffer.Decode<uint>();
-        }
+        public static void EnableVision(MeshInstance3D mesh, params Key[] keys) => SetVision(true, mesh, keys);
+        public static void DisableVision(MeshInstance3D mesh, params Key[] keys) => SetVision(false, mesh, keys);
 
         public static void Apply(Camera3D camera, params Key[] keys)
         {
