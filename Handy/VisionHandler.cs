@@ -24,6 +24,8 @@ namespace Cutulu
 
             else
             {
+                MaxIndex = Mathf.Clamp(MaxIndex, 1, 31);
+
                 for (var i = 1; i < MaxIndex; i++)
                 {
                     if (Indecies.Contains(i) == false)
