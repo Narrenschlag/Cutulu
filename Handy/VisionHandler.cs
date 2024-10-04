@@ -41,6 +41,8 @@ namespace Cutulu
 
         public static void Remove(Key key)
         {
+            if (key is Node n && n.IsNull()) return;
+
             if (Keys.TryGetValue(key, out var idx))
             {
                 Keys.Remove(key);
