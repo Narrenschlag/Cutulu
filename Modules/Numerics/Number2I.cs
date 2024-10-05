@@ -20,12 +20,15 @@ namespace Cutulu
 
         public readonly Godot.Vector2I Godot => Vector.GetVector2I();
 
+        public static implicit operator Godot.Vector2I(Number2I value) => value.Godot;
+        public static implicit operator Number2I(Godot.Vector2I value) => new(value);
+
         class VectorI2Encoder : BinaryEncoder<Number2I>
         {
             public override void Encode(System.IO.BinaryWriter writer, ref object value)
             {
                 var numbers = ((Number2I)value).Vector.Numbers;
-                writer.Write((byte)numbers[0].Buffer.Length);
+                writer.Write(Number.GetNumberId(numbers));
 
                 for (byte i = 0; i < 2; i++)
                 {
@@ -40,11 +43,11 @@ namespace Cutulu
             public override object Decode(System.IO.BinaryReader reader)
             {
                 var vector = new Number2I() { Vector = new() { Numbers = new Number[2] } };
-                var byteCount = reader.ReadByte();
+                var byteCount = Number.ReadNumberId(reader.ReadByte());
 
                 for (byte i = 0; i < 2; i++)
                 {
-                    vector.Vector.Numbers[i] = new() { Buffer = reader.ReadBytes(byteCount), };
+                    vector.Vector.Numbers[i] = new() { Buffer = reader.ReadBytes((int)byteCount[i]), };
                 }
 
                 return vector;

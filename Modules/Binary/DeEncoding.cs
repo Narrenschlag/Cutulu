@@ -173,6 +173,7 @@ namespace Cutulu
             return Decode(reader, type);
         }
 
+        public static T Read<T>(this BinaryReader reader) => Decode<T>(reader);
         public static T Decode<T>(this BinaryReader reader)
         {
             if (TryDecode(reader, typeof(T), out var obj) && obj is T val)

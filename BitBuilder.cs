@@ -8,7 +8,7 @@ namespace Cutulu
     /// <summary>
     /// A simple wrapper for binary data that allows for easy reading and writing of bits and bytes.
     /// </summary>
-    public class BitBuilder : IEnumerable<bool>
+    public readonly struct BitBuilder : IEnumerable<bool>
     {
         private readonly List<bool> buffer;
 
@@ -71,6 +71,49 @@ namespace Cutulu
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Adds a binary pattern of bits to the buffer.
+        /// 00000001 is a byte with value 1.
+        /// Every non 0 value is considered as '1'.
+        /// </summary>
+        public void AddBinary(string pattern)
+        {
+            if (pattern.IsEmpty()) return;
+
+            for (var i = pattern.Length - 1; i >= 0; i--)
+            {
+                Add(pattern[i]);
+            }
+        }
+
+        public string ReadBinary(int position, int length)
+        {
+            var result = string.Empty;
+
+            for (var i = 0; i < length; i++)
+            {
+                result += position < Length && this[position + i] ? '1' : '0';
+            }
+
+            return result;
+        }
+
+        public void Fill(int targetLength, bool value)
+        {
+            for (var i = 0; i < targetLength - Length; i++)
+            {
+                buffer.Add(value);
+            }
+        }
+
+        public void Add(int length, bool value)
+        {
+            for (var i = 0; i < length; i++)
+            {
+                buffer.Add(value);
+            }
+        }
+
         public void Add(object value)
         {
             var bytes = value == null ? Array.Empty<byte>() : value.Encode();
@@ -100,15 +143,31 @@ namespace Cutulu
             buffer.RemoveAt(index);
         }
 
-        public void SetRange(int first, int length, params bool[] values)
+        public void SetRange(int index, int length, params bool[] values)
         {
             for (var i = 0; i < length;)
             {
                 for (var k = 0; k < values.Length && i < length; k++, i++)
                 {
-                    this[first + i] = values[k];
+                    this[index + i] = values[k];
                 }
             }
+        }
+
+        public byte GetByte(int startIndex, int length)
+        {
+            if (length > 8) throw new($"Cannot get byte with length greater than 8.");
+
+            var result = default(byte);
+            var k = default(byte);
+
+            for (int i = startIndex; i < startIndex + length && i < Length; i++, k++)
+            {
+                if (this[i])
+                    Bitf.EnableBit(ref result, ref k);
+            }
+
+            return result;
         }
     }
 }

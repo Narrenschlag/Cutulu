@@ -84,6 +84,30 @@ namespace Cutulu
             static bool IsInt(long value) => value <= int.MaxValue && value >= int.MinValue;
         }
 
+        public readonly sbyte GetSByte()
+        {
+            return GetNumberType() switch
+            {
+                NumberType.SByte => Buffer.Decode<sbyte>(),
+                NumberType.Short => (sbyte)Buffer.Decode<short>(),
+                NumberType.Int => (sbyte)Buffer.Decode<int>(),
+                NumberType.Long => (sbyte)Buffer.Decode<long>(),
+                _ => default,
+            };
+        }
+
+        public readonly short GetShort()
+        {
+            return GetNumberType() switch
+            {
+                NumberType.SByte => Buffer.Decode<sbyte>(),
+                NumberType.Short => Buffer.Decode<short>(),
+                NumberType.Int => (short)Buffer.Decode<int>(),
+                NumberType.Long => (short)Buffer.Decode<long>(),
+                _ => default,
+            };
+        }
+
         public readonly int GetInt()
         {
             return GetNumberType() switch
@@ -95,6 +119,75 @@ namespace Cutulu
                 _ => default,
             };
         }
+
+        public readonly long GetLong()
+        {
+            return GetNumberType() switch
+            {
+                NumberType.SByte => Buffer.Decode<sbyte>(),
+                NumberType.Short => Buffer.Decode<short>(),
+                NumberType.Int => Buffer.Decode<int>(),
+                NumberType.Long => Buffer.Decode<long>(),
+                _ => default,
+            };
+        }
+
+        public static byte GetNumberId(params Number[] numbers)
+        {
+            if (numbers.Length > 4) throw new($"Can only identify up to 4 numbers at a time.");
+
+            var bitBuilder = new BitBuilder(default(byte));
+
+            for (var i = 0; i < numbers.Length; i++)
+            {
+                switch (numbers[i].GetNumberType())
+                {
+                    case NumberType.SByte:
+                        bitBuilder.AddBinary("00");
+                        break;
+
+                    case NumberType.Short:
+                        bitBuilder.AddBinary("01");
+                        break;
+
+                    case NumberType.Int:
+                        bitBuilder.AddBinary("10");
+                        break;
+
+                    case NumberType.Long:
+                        bitBuilder.AddBinary("11");
+                        break;
+                }
+            }
+
+            bitBuilder.Fill(8, false);
+
+            return bitBuilder.ByteBuffer[0];
+        }
+
+        public static NumberType[] ReadNumberId(byte numberId)
+        {
+            var bitBuilder = new BitBuilder(numberId);
+            var result = new NumberType[4];
+
+            for (var i = 0; i < 4; i++)
+            {
+                result[i] = (NumberType)bitBuilder.GetByte(i * 2, 2);
+                result[i]++;
+            }
+
+            return result;
+        }
+
+        public static implicit operator Number(sbyte value) => new(value);
+        public static implicit operator Number(short value) => new(value);
+        public static implicit operator Number(int value) => new(value);
+        public static implicit operator Number(long value) => new(value);
+
+        public static implicit operator sbyte(Number value) => value.GetSByte();
+        public static implicit operator short(Number value) => value.GetShort();
+        public static implicit operator int(Number value) => value.GetInt();
+        public static implicit operator long(Number value) => value.GetLong();
 
         class Encoder : BinaryEncoder<Number>
         {
