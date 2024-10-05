@@ -103,21 +103,21 @@ namespace Cutulu
                     value.AsInt32() : defaultValue;
             }
 
-            Debug.Log($"+device: [{UDID}] as '{DeviceName}'");
+            Debug.Log($"+device({UDID}, {DeviceName})");
         }
 
         public void OnReconnect()
         {
             OnConnect();
 
-            Input.StartJoyVibration(iUDID, 0.5f, 0.5f, 2.5f);
+            //Input.StartJoyVibration(iUDID, 0.5f, 0.5f, 2.5f);
         }
 
         public void OnDisconnect()
         {
             Connected = false;
 
-            Debug.Log($"-device [{UDID}] as '{DeviceName}'");
+            Debug.Log($"-device({UDID}, {DeviceName})");
         }
         #endregion
 
