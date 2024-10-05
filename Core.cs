@@ -558,7 +558,7 @@ namespace Cutulu
 
         public static bool TryRemove<T>(this List<T> list, T value)
         {
-            if (list.Contains(value) == false) return false;
+            if (value == null || list.Contains(value) == false) return false;
 
             list.Remove(value);
             return true;
