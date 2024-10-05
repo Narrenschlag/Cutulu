@@ -100,8 +100,8 @@ namespace Cutulu
 
                     if (Mode == ModeEnum.Open)
                     {
-                        OnDeviceRem?.Invoke(device);
                         Devices.Remove(udid);
+                        OnDeviceRem?.Invoke(device);
                     }
                 }
             }
