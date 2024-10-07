@@ -299,17 +299,25 @@ namespace Cutulu
             return result;
         }
 
+        /// <summary>
+        /// Convert an index to cubic coordinates (q, r, s)
+        /// </summary>
         public static Vector3I IndexToCubic(int index)
         {
             return AxialToCubic(IndexToAxial(index));
         }
 
+        /// <summary>
+        /// Convert cubic coordinates (q, r, s) to an index
+        /// </summary>
         public static int CubicToIndex(Vector3I cubic)
         {
             return AxialToIndex(CubicToAxial(cubic));
         }
 
-        // Convert axial coordinates (q, r) to an index
+        /// <summary>
+        /// Convert axial coordinates (q, r) to an index
+        /// </summary>
         public static int AxialToIndex(Vector2I axial)
         {
             var ring = Mathf.Max(Mathf.Abs(axial.X), Mathf.Max(Mathf.Abs(axial.Y), Mathf.Abs(-axial.X - axial.Y)));
@@ -324,33 +332,23 @@ namespace Cutulu
             return indexStartOfRing + positionInRing;
         }
 
-        // Convert an index to axial coordinates (q, r)
+        /// <summary>
+        /// Convert an index to axial coordinates (q, r)
+        /// </summary>
         public static Vector2I IndexToAxial(int index)
         {
-            if (index == 0) return new Vector2I(0, 0);
+            if (index == 0) return default;
 
             // Find the ring the index belongs to
-            int ring = 0;
-            int indexStartOfRing = 0;
-            int cellsInRing;
+            var ring = GetRing(index);
 
-            do
-            {
-                ring++;
-                indexStartOfRing = 1 + 3 * (ring - 1) * ring;
-                cellsInRing = 6 * ring;
-            }
-            while (index >= indexStartOfRing + cellsInRing);
-
-            int positionInRing = index - indexStartOfRing;
-
-            return GetAxialFromPositionInRing(ring, positionInRing);
+            return GetAxialFromPositionInRing(ring, index - GetStartIndex(ring));
         }
 
         // Helper function to find the position of an axial coordinate within a ring
         private static int GetPositionInRing(Vector2I axial, int ring)
         {
-            var _ring = GetRing(Vector2I.Zero, ring);
+            var _ring = GetRing(default(Vector2I), ring);
 
             for (var i = 0; i < _ring.Length; i++)
             {
@@ -369,19 +367,28 @@ namespace Cutulu
             return _ring[positionInRing];
         }
 
+        /// <summary>
+        /// Returns ring value of an index
+        /// </summary>
         public static int GetRing(int index)
         {
             return Mathf.CeilToInt((Mathf.Sqrt(12 * index + 9) - 3) / 6f);
         }
 
+        /// <summary>
+        /// Returns start index of a ring
+        /// </summary>
         public static int GetStartIndex(int ring)
         {
             return GetCellCount(ring - 1);
         }
 
+        /// <summary>
+        /// Returns cell count of a ring and all the previous rings
+        /// </summary>
         public static int GetCellCount(int ringCount)
         {
-            return ringCount < 2 ? 1 : 3 * (int)Mathf.Pow(ringCount, 2) + 3 * ringCount + 1;
+            return ringCount < 1 ? 1 : 3 * (int)Mathf.Pow(ringCount, 2) + 3 * ringCount + 1;
         }
 
         /// <summary>
