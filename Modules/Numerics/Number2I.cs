@@ -5,8 +5,8 @@ namespace Cutulu
     /// </summary>
     public partial struct Number2I
     {
-        public readonly int Y => Vector.Numbers.Length > 1 ? Vector.Numbers[1].GetInt() : 0;
-        public readonly int X => Vector.Numbers[0].GetInt();
+        public readonly int Y => Vector.Numbers.Length > 1 ? Vector.Numbers[1].GetUInt() : 0;
+        public readonly int X => Vector.Numbers[0].GetUInt();
 
         private NumberXI Vector;
 

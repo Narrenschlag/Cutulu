@@ -5,64 +5,64 @@ namespace Cutulu
     /// <summary>
     /// Represents a number. Dynamic in it's byte size.
     /// </summary>
-    public partial struct Number
+    public partial struct UNumber
     {
         public byte[] Buffer { get; set; }
 
-        public readonly TypeEnum GetNumberType() =>
+        public readonly TypeEnum GetTypeEnum() =>
             Buffer.IsEmpty() ? TypeEnum.Invalid :
-            Buffer.Length == 8 ? TypeEnum.Long :
-            Buffer.Length == 4 ? TypeEnum.Int :
-            Buffer.Length == 2 ? TypeEnum.Short :
-            TypeEnum.SByte;
+            Buffer.Length == 8 ? TypeEnum.ULong :
+            Buffer.Length == 4 ? TypeEnum.UInt :
+            Buffer.Length == 2 ? TypeEnum.UShort :
+            TypeEnum.Byte;
 
-        public Number() { Buffer = null; }
-        public Number(object value)
+        public UNumber() { Buffer = null; }
+        public UNumber(object value)
         {
             while (true)
             {
                 switch (value)
                 {
-                    case sbyte v:
+                    case byte v:
                         Buffer = v.Encode();
                         return;
 
-                    case short v:
-                        if (IsSByte(ref v))
+                    case ushort v:
+                        if (IsByte(ref v))
                         {
-                            value = (sbyte)v;
+                            value = (byte)v;
                             break;
                         }
 
-                        // Is short
+                        // Is ushort
                         else
                         {
                             Buffer = v.Encode();
                             return;
                         }
 
-                    case int v:
-                        if (IsShort(ref v))
+                    case uint v:
+                        if (IsUShort(ref v))
                         {
                             value = (short)v;
                             break;
                         }
 
-                        // Is int
+                        // Is uint
                         else
                         {
                             Buffer = v.Encode();
                             return;
                         }
 
-                    case long v:
-                        if (IsInt(ref v))
+                    case ulong v:
+                        if (IsUInt(ref v))
                         {
                             value = (int)v;
                             break;
                         }
 
-                        // Is long
+                        // Is ulong
                         else
                         {
                             Buffer = v.Encode();
@@ -75,60 +75,60 @@ namespace Cutulu
                 }
             }
 
-            static bool IsSByte(ref short value) => value <= sbyte.MaxValue && value >= sbyte.MinValue;
-            static bool IsShort(ref int value) => value <= short.MaxValue && value >= short.MinValue;
-            static bool IsInt(ref long value) => value <= int.MaxValue && value >= int.MinValue;
+            static bool IsByte(ref ushort value) => value <= byte.MaxValue && value >= byte.MinValue;
+            static bool IsUShort(ref uint value) => value <= ushort.MaxValue && value >= ushort.MinValue;
+            static bool IsUInt(ref ulong value) => value <= uint.MaxValue && value >= uint.MinValue;
         }
 
-        public readonly sbyte GetByte()
+        public readonly byte GetByte()
         {
-            return GetNumberType() switch
+            return GetTypeEnum() switch
             {
-                TypeEnum.SByte => Buffer.Decode<sbyte>(),
-                TypeEnum.Short => (sbyte)Buffer.Decode<short>(),
-                TypeEnum.Int => (sbyte)Buffer.Decode<int>(),
-                TypeEnum.Long => (sbyte)Buffer.Decode<long>(),
+                TypeEnum.Byte => Buffer.Decode<byte>(),
+                TypeEnum.UShort => (byte)Buffer.Decode<ushort>(),
+                TypeEnum.UInt => (byte)Buffer.Decode<uint>(),
+                TypeEnum.ULong => (byte)Buffer.Decode<ulong>(),
                 _ => default,
             };
         }
 
-        public readonly short GetUShort()
+        public readonly ushort GetUShort()
         {
-            return GetNumberType() switch
+            return GetTypeEnum() switch
             {
-                TypeEnum.SByte => Buffer.Decode<sbyte>(),
-                TypeEnum.Short => Buffer.Decode<short>(),
-                TypeEnum.Int => (short)Buffer.Decode<int>(),
-                TypeEnum.Long => (short)Buffer.Decode<long>(),
+                TypeEnum.Byte => Buffer.Decode<byte>(),
+                TypeEnum.UShort => Buffer.Decode<ushort>(),
+                TypeEnum.UInt => (ushort)Buffer.Decode<uint>(),
+                TypeEnum.ULong => (ushort)Buffer.Decode<ulong>(),
                 _ => default,
             };
         }
 
-        public readonly int GetUInt()
+        public readonly uint GetUInt()
         {
-            return GetNumberType() switch
+            return GetTypeEnum() switch
             {
-                TypeEnum.SByte => Buffer.Decode<sbyte>(),
-                TypeEnum.Short => Buffer.Decode<short>(),
-                TypeEnum.Int => Buffer.Decode<int>(),
-                TypeEnum.Long => (int)Buffer.Decode<long>(),
+                TypeEnum.Byte => Buffer.Decode<byte>(),
+                TypeEnum.UShort => Buffer.Decode<ushort>(),
+                TypeEnum.UInt => Buffer.Decode<uint>(),
+                TypeEnum.ULong => (uint)Buffer.Decode<ulong>(),
                 _ => default,
             };
         }
 
-        public readonly long GetULong()
+        public readonly ulong GetULong()
         {
-            return GetNumberType() switch
+            return GetTypeEnum() switch
             {
-                TypeEnum.SByte => Buffer.Decode<sbyte>(),
-                TypeEnum.Short => Buffer.Decode<short>(),
-                TypeEnum.Int => Buffer.Decode<int>(),
-                TypeEnum.Long => Buffer.Decode<long>(),
+                TypeEnum.Byte => Buffer.Decode<byte>(),
+                TypeEnum.UShort => Buffer.Decode<ushort>(),
+                TypeEnum.UInt => Buffer.Decode<uint>(),
+                TypeEnum.ULong => Buffer.Decode<ulong>(),
                 _ => default,
             };
         }
 
-        public static byte GetNumberId(params Number[] numbers)
+        public static byte GetNumberId(params UNumber[] numbers)
         {
             if (numbers.Length > 4) throw new($"Can only identify up to 4 numbers at a time.");
 
@@ -136,21 +136,21 @@ namespace Cutulu
 
             for (var i = 0; i < numbers.Length; i++)
             {
-                switch (numbers[i].GetNumberType())
+                switch (numbers[i].GetTypeEnum())
                 {
-                    case TypeEnum.SByte:
+                    case TypeEnum.Byte:
                         bitBuilder.AddBinary("00");
                         break;
 
-                    case TypeEnum.Short:
+                    case TypeEnum.UShort:
                         bitBuilder.AddBinary("01");
                         break;
 
-                    case TypeEnum.Int:
+                    case TypeEnum.UInt:
                         bitBuilder.AddBinary("10");
                         break;
 
-                    case TypeEnum.Long:
+                    case TypeEnum.ULong:
                         bitBuilder.AddBinary("11");
                         break;
                 }
@@ -175,15 +175,15 @@ namespace Cutulu
             return result;
         }
 
-        public static implicit operator Number(sbyte value) => new(value);
-        public static implicit operator Number(short value) => new(value);
-        public static implicit operator Number(int value) => new(value);
-        public static implicit operator Number(long value) => new(value);
+        public static implicit operator UNumber(byte value) => new(value);
+        public static implicit operator UNumber(ushort value) => new(value);
+        public static implicit operator UNumber(uint value) => new(value);
+        public static implicit operator UNumber(ulong value) => new(value);
 
-        public static implicit operator sbyte(Number value) => value.GetByte();
-        public static implicit operator short(Number value) => value.GetUShort();
-        public static implicit operator int(Number value) => value.GetUInt();
-        public static implicit operator long(Number value) => value.GetULong();
+        public static implicit operator byte(UNumber value) => value.GetByte();
+        public static implicit operator ushort(UNumber value) => value.GetUShort();
+        public static implicit operator uint(UNumber value) => value.GetUInt();
+        public static implicit operator ulong(UNumber value) => value.GetULong();
 
         class Encoder : BinaryEncoder<Number>
         {
@@ -205,10 +205,10 @@ namespace Cutulu
         {
             Invalid,
 
-            SByte,
-            Short,
-            Int,
-            Long,
+            Byte,
+            UShort,
+            UInt,
+            ULong,
         }
     }
 }
