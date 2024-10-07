@@ -304,78 +304,69 @@ namespace Cutulu
             return AxialToCubic(IndexToAxial(index));
         }
 
-        public static Vector2I IndexToAxial(int index)
-        {
-            if (index == default) return default; // Center hex
-
-            // Calculate the ring count using the same mathematical approach
-            var ringCount = GetRing(index);
-
-            // Find the starting index of the current ring
-            // Calculate the offset within the current ring
-            var start = index - GetStartIndex(ringCount);
-
-            // Each ring has 6 sides, so each segment spans 60°
-            var totalHexesInRing = 6 * ringCount;
-            var anglePerHex = 360f / totalHexesInRing; // Each hex in the ring corresponds to a portion of 360°
-
-            // Calculate the angular position of the current hex
-            var angle = start * anglePerHex;
-
-            // Determine which sector the angle falls into (0-60°, 60-120°, ..., 300-360°)
-            var sector = Mathf.FloorToInt(angle / 60f);
-
-            // Calculate the position within the sector (angular offset within the sector)
-            var offsetInSector = start - (sector * ringCount);
-
-            // Get the starting hex for this sector (relative to axial space)
-            var startHex = AxialNeighbours[sector] * ringCount;
-
-            // Move along the sector direction based on the offset
-            return startHex + AxialNeighbours[sector] * offsetInSector;
-        }
-
         public static int CubicToIndex(Vector3I cubic)
         {
             return AxialToIndex(CubicToAxial(cubic));
         }
 
-        /// <summary>
-        /// Converts the axial coordinates of a hexagon back to the corresponding index in the flattened hexagonal ring array using angle-based optimization.
-        /// </summary>
-        /// <param name="axial">The axial coordinates of the hexagon.</param>
-        /// <returns>The corresponding index of the hexagon in the ring array.</returns>
+        // Convert axial coordinates (q, r) to an index
         public static int AxialToIndex(Vector2I axial)
         {
-            // Special case for the center hex
-            if (axial == default) return default;
+            var ring = Mathf.Max(Mathf.Abs(axial.X), Mathf.Max(Mathf.Abs(axial.Y), Mathf.Abs(-axial.X - axial.Y)));
+            if (ring == 0) return 0;
 
-            // Calculate the ring count (distance from the center)
-            var ringCount = Mathf.Max(Mathf.Abs(axial.X), Mathf.Max(Mathf.Abs(axial.Y), Mathf.Abs(-axial.X - axial.Y)));
+            // First cell of the current ring
+            var indexStartOfRing = 1 + 3 * (ring - 1) * ring;
 
-            // Calculate the angle of the hex in polar coordinates (from 0° to 360°)
-            var angle = Mathf.Atan2(axial.Y, axial.X).toDegrees(); // Convert from radians to degrees
-            if (angle < 0) angle += 360f; // Ensure the angle is positive
+            // Position in the ring
+            var positionInRing = GetPositionInRing(axial, ring);
 
-            // Each sector (60°) corresponds to a different direction in axial space
-            var sector = Mathf.FloorToInt(angle / 60f);
+            return indexStartOfRing + positionInRing;
+        }
 
-            // Calculate the starting hex in the given sector (AxialNeighbours[4] is the first hex of the ring)
-            var startHex = AxialNeighbours[4] * ringCount;
+        // Convert an index to axial coordinates (q, r)
+        public static Vector2I IndexToAxial(int index)
+        {
+            if (index == 0) return new Vector2I(0, 0);
 
-            // Determine the offset in the sector by calculating how far the axial coordinates are from the start of the sector
-            var sectorOffset = 0;
-            while (startHex != axial && sectorOffset < ringCount)
+            // Find the ring the index belongs to
+            int ring = 0;
+            int indexStartOfRing = 0;
+            int cellsInRing;
+
+            do
             {
-                startHex += AxialNeighbours[sector];
-                sectorOffset++;
+                ring++;
+                indexStartOfRing = 1 + 3 * (ring - 1) * ring;
+                cellsInRing = 6 * ring;
+            }
+            while (index >= indexStartOfRing + cellsInRing);
+
+            int positionInRing = index - indexStartOfRing;
+
+            return GetAxialFromPositionInRing(ring, positionInRing);
+        }
+
+        // Helper function to find the position of an axial coordinate within a ring
+        private static int GetPositionInRing(Vector2I axial, int ring)
+        {
+            var _ring = GetRing(Vector2I.Zero, ring);
+
+            for (var i = 0; i < _ring.Length; i++)
+            {
+                if (axial == _ring[i])
+                    return i;
             }
 
-            // Calculate the final index within the ring
-            var ringIndex = sector * ringCount + sectorOffset + 2 * ringCount;
+            return default;
+        }
 
-            // Return the final index by adding the ring index to the starting index of the ring
-            return GetStartIndex(ringCount) + ringIndex.AbsMod(ringCount * 6);
+        // Helper function to find axial coordinates from ring and position
+        private static Vector2I GetAxialFromPositionInRing(int ring, int positionInRing)
+        {
+            var _ring = GetRing(Vector2I.Zero, ring);
+
+            return _ring[positionInRing];
         }
 
         public static int GetRing(int index)
@@ -385,12 +376,12 @@ namespace Cutulu
 
         public static int GetStartIndex(int ring)
         {
-            return ring == 0 ? 0 : GetCellCount(ring) - ring * 6;
+            return GetCellCount(ring - 1);
         }
 
         public static int GetCellCount(int ringCount)
         {
-            return 3 * (int)Mathf.Pow(ringCount, 2) + 3 * ringCount + 1;
+            return ringCount < 2 ? 1 : 3 * (int)Mathf.Pow(ringCount, 2) + 3 * ringCount + 1;
         }
 
         /// <summary>
