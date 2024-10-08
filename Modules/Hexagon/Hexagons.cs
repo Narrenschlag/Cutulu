@@ -128,16 +128,26 @@ namespace Cutulu
         /// </summary>
         public static readonly Vector3I[] CubicNeighbours = new Vector3I[]
         {
-            new(+0, -1, +1), new(+1, -1, +0), new(+1, +0, -1),
-            new(+0, +1, -1), new(-1, +1, +0), new(-1, +0, +1)
+            new(+1, +0, -1),
+            new(+0, +1, -1),
+            new(-1, +1, +0),
+
+            new(-1, +0, +1),
+            new(+0, -1, +1),
+            new(+1, -1, +0),
         };
 
         /// <summary>
         /// Grid hexagonal neighbours
         /// </summary>
         public static readonly Vector2I[] AxialNeighbours = new Vector2I[]{
-            new(-1, +0), new(-1, +1), new(+0, +1),
-            new(+1, +0), new(+1, -1), new(+0, -1),
+            new(+1, +0),
+            new(+0, +1),
+            new(-1, +1),
+
+            new(-1, +0),
+            new(+0, -1),
+            new(+1, -1),
         };
 
         /// <summary>   
@@ -199,6 +209,96 @@ namespace Cutulu
             var s = -q - r; // s = -q - r for cube coordinates
 
             return new(q, r, s);
+        }
+
+        /// <summary>
+        /// Convert an index to cubic coordinates (q, r, s)
+        /// </summary>
+        public static Vector3I IndexToCubic(int index)
+        {
+            return AxialToCubic(IndexToAxial(index));
+        }
+
+        /// <summary>
+        /// Convert cubic coordinates (q, r, s) to an index
+        /// </summary>
+        public static int CubicToIndex(Vector3I cubic)
+        {
+            return AxialToIndex(CubicToAxial(cubic));
+        }
+
+        /// <summary>
+        /// Convert axial coordinates (q, r) to an index
+        /// </summary>
+        public static int AxialToIndex(Vector2I axial)
+        {
+            var ring = Mathf.Max(Mathf.Abs(axial.X), Mathf.Max(Mathf.Abs(axial.Y), Mathf.Abs(-axial.X - axial.Y)));
+            if (ring == 0) return 0;
+
+            // First cell of the current ring
+            var indexStartOfRing = 1 + 3 * (ring - 1) * ring;
+
+            // Position in the ring
+            var positionInRing = GetPositionInRing(axial, ring);
+
+            return indexStartOfRing + positionInRing;
+        }
+
+        /// <summary>
+        /// Convert an index to axial coordinates (q, r)
+        /// </summary>
+        public static Vector2I IndexToAxial(int index)
+        {
+            if (index == 0) return default;
+
+            var ring = GetRing(index);
+
+            // Start with the first hex in the ring, offset from the center hex
+            var positionInRing = index - GetStartIndex(ring);
+            var currentHex = AxialNeighbours[4] * ring;
+            var i = 0;
+
+            var mod = positionInRing % ring;
+            var cnt = (positionInRing - mod) / ring;
+
+            for (; i < cnt;)
+            {
+                currentHex += AxialNeighbours[i++] * ring;
+            }
+
+            return currentHex + AxialNeighbours[i] * mod;
+        }
+
+        // Helper function to find the position of an axial coordinate within a ring
+        // Really wished this was simpler to find somewhere so enjoy it. It scales.
+        private static int GetPositionInRing(Vector2I axial, int ring)
+        {
+            // Start with the first hex in the ring, offset from the center hex
+            var currentHex = AxialNeighbours[4] * ring;
+            if (currentHex == axial) return 0;
+
+            var _i = 0;
+
+            var ang = Vector2.Zero.GetAngleD(axial).AbsMod(360);
+            if (ang <= 0) ang = 360;
+
+            for (byte i = 0; i < AxialNeighbours.Length; i++)
+            {
+                var min = Vector2.Zero.GetAngleD(AxialNeighbours.ModulatedElement(i - 2));
+
+                var max = Vector2.Zero.GetAngleD(AxialNeighbours.ModulatedElement(i - 1)).AbsMod(360);
+                if (max <= 0) max = 360;
+
+                if (min >= ang || ang > max)
+                {
+                    currentHex += AxialNeighbours[i] * ring;
+                    _i += ring;
+                }
+
+                else break;
+            }
+
+            return _i + Mathf.FloorToInt(GetDistance(currentHex, axial));
         }
 
         /// <summary>
@@ -300,71 +400,63 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Convert an index to cubic coordinates (q, r, s)
+        /// Returns the neighboring hexagons
         /// </summary>
-        public static Vector3I IndexToCubic(int index)
+        public static int[] GetRange(int index, int ringCount)
         {
-            return AxialToCubic(IndexToAxial(index));
-        }
+            var range = GetRange(IndexToAxial(index), ringCount);
+            var iRange = new int[range.Length];
 
-        /// <summary>
-        /// Convert cubic coordinates (q, r, s) to an index
-        /// </summary>
-        public static int CubicToIndex(Vector3I cubic)
-        {
-            return AxialToIndex(CubicToAxial(cubic));
-        }
-
-        /// <summary>
-        /// Convert axial coordinates (q, r) to an index
-        /// </summary>
-        public static int AxialToIndex(Vector2I axial)
-        {
-            var ring = Mathf.Max(Mathf.Abs(axial.X), Mathf.Max(Mathf.Abs(axial.Y), Mathf.Abs(-axial.X - axial.Y)));
-            if (ring == 0) return 0;
-
-            // First cell of the current ring
-            var indexStartOfRing = 1 + 3 * (ring - 1) * ring;
-
-            // Position in the ring
-            var positionInRing = GetPositionInRing(axial, ring);
-
-            return indexStartOfRing + positionInRing;
-        }
-
-        /// <summary>
-        /// Convert an index to axial coordinates (q, r)
-        /// </summary>
-        public static Vector2I IndexToAxial(int index)
-        {
-            if (index == 0) return default;
-
-            // Find the ring the index belongs to
-            var ring = GetRing(index);
-
-            return GetAxialFromPositionInRing(ring, index - GetStartIndex(ring));
-        }
-
-        // Helper function to find the position of an axial coordinate within a ring
-        private static int GetPositionInRing(Vector2I axial, int ring)
-        {
-            var _ring = GetRing(default(Vector2I), ring);
-
-            for (var i = 0; i < _ring.Length; i++)
+            for (var i = 0; i < range.Length; i++)
             {
-                if (axial == _ring[i])
-                    return i;
+                iRange[i] = AxialToIndex(range[i]);
             }
 
-            return default;
+            return iRange;
         }
 
-        // Helper function to find axial coordinates from ring and position
-        private static Vector2I GetAxialFromPositionInRing(int ring, int positionInRing)
+        /// <summary>
+        /// Returns the neighboring hexagons in a specific ring, centered around the given hex
+        /// </summary>
+        public static int[] GetRing(int index, int ringCount)
         {
-            var _ring = GetRing(Vector2I.Zero, ring);
+            var ring = GetRing(IndexToAxial(index), ringCount);
+            var iRing = new int[ring.Length];
 
-            return _ring[positionInRing];
+            for (var i = 0; i < ring.Length; i++)
+            {
+                iRing[i] = AxialToIndex(ring[i]);
+            }
+
+            return iRing;
+        }
+
+        /// <summary>   
+        /// Returns distance between two points
+        /// </summary>
+        public static float GetDistance(Vector3I a, Vector3I b)
+        {
+            return (Mathf.Abs(a.X - b.X)
+            + Mathf.Abs(a.Y - b.Y)
+            + Mathf.Abs(a.Z - b.Z)) / 2;
+        }
+
+        /// <summary>
+        /// Returns distance between two points
+        /// </summary>
+        public static float GetDistance(Vector2I a, Vector2I b)
+        {
+            return (Mathf.Abs(a.X - b.X)
+            + Mathf.Abs(a.X + a.Y - b.X - b.Y)
+            + Mathf.Abs(a.Y - b.Y)) / 2;
+        }
+
+        /// <summary>
+        /// Returns distance between two points
+        /// </summary>
+        public static float GetDistance(int a, int b)
+        {
+            return GetDistance(IndexToAxial(a), IndexToAxial(b));
         }
 
         /// <summary>
@@ -482,16 +574,6 @@ namespace Cutulu
             Pathfinding.TryFindPath(target, start, end, out var path);
 
             return path;
-        }
-
-        /// <summary>
-        /// Returns distance between two points
-        /// </summary>
-        public static float Distance(Vector2I start, Vector2I end)
-        {
-            var vec = start - end;
-
-            return (Mathf.Abs(vec.X) + Mathf.Abs(vec.X + vec.Y) + Mathf.Abs(vec.Y)) * 0.5f;
         }
 
         #endregion
