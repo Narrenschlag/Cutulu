@@ -462,6 +462,22 @@ namespace Cutulu
         /// <summary>
         /// Returns ring value of an index
         /// </summary>
+        public static int GetRing(Vector3I cubic)
+        {
+            return Mathf.CeilToInt(GetDistance(cubic, default));
+        }
+
+        /// <summary>
+        /// Returns ring value of an index
+        /// </summary>
+        public static int GetRing(Vector2I axial)
+        {
+            return Mathf.CeilToInt(GetDistance(axial, default));
+        }
+
+        /// <summary>
+        /// Returns ring value of an index
+        /// </summary>
         public static int GetRing(int index)
         {
             return Mathf.CeilToInt((Mathf.Sqrt(12 * index + 9) - 3) / 6f);
