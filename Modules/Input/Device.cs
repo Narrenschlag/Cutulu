@@ -65,7 +65,7 @@ namespace Cutulu
 
         private void OnConnect()
         {
-            var data = Godot.Input.GetJoyInfo(iUDID);
+            var data = iUDID != -1 ? Godot.Input.GetJoyInfo(iUDID) : null;
             var i = default(int); // index cache
             var n = string.Empty; // name cache
             Connected = true;
