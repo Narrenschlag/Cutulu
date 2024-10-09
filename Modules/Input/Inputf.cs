@@ -5,7 +5,7 @@ namespace Cutulu
     public static class Inputf
     {
         public static bool GetKey(this string name, float threshhold = .5f) => GetValue(name) >= threshhold;
-        public static float GetValue(this string name) => Input.GetActionRawStrength(name);
+        public static float GetValue(this string name) => Godot.Input.GetActionRawStrength(name);
 
         public static Vector2 MousePosition(this Node node, bool clampToScreen = false)
         {
@@ -67,7 +67,7 @@ namespace Cutulu
         {
             capturedMouse = value;
 
-            Input.MouseMode = capturedMouse ? Input.MouseModeEnum.Captured : Input.MouseModeEnum.Visible;
+            Godot.Input.MouseMode = capturedMouse ? Godot.Input.MouseModeEnum.Captured : Godot.Input.MouseModeEnum.Visible;
         }
 
         #region Server - Client Communication

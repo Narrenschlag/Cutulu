@@ -4,19 +4,19 @@ using Godot;
 
 namespace Cutulu
 {
-    public readonly struct XInputMap
+    public readonly struct InputMap
     {
         public readonly Dictionary<string, Entry> Mapping = new();
 
-        public XInputMap() => Mapping = new();
-        public XInputMap(string name, params XInput[] overrides) : this()
+        public InputMap() => Mapping = new();
+        public InputMap(string name, params InputEnum[] overrides) : this()
         {
             Override(name, overrides);
         }
 
         public static string ModifyString(string name) => name.Trim().ToLower();
 
-        public void Override(string name, params XInput[] overrides)
+        public void Override(string name, params InputEnum[] overrides)
         {
             if (overrides == null) return;
 
@@ -64,7 +64,7 @@ namespace Cutulu
                 Inputs = inputs;
             }
 
-            public Entry(params XInput[] inputs)
+            public Entry(params InputEnum[] inputs)
             {
                 if (inputs?.Length < 1) Inputs = null;
                 else
@@ -81,7 +81,7 @@ namespace Cutulu
             {
                 for (int i = 0; i < Inputs?.Length; i++)
                 {
-                    if (((XInput)Inputs[i]).IsPressed(deviceId)) return true;
+                    if (((InputEnum)Inputs[i]).IsPressed(deviceId)) return true;
                 }
 
                 return default;
@@ -89,19 +89,19 @@ namespace Cutulu
 
             public float GetValue(int deviceId)
             {
-                float value = default;
-                float max = default;
+                var value = default(float);
+                var max = default(float);
 
                 for (int i = 0; i < Inputs?.Length; i++)
                 {
-                    if (Mathf.Abs(value = ((XInput)Inputs[i]).GetValue(deviceId)) >= 1f) return value;
+                    if (Mathf.Abs(value = ((InputEnum)Inputs[i]).GetValue(deviceId)) >= 1f) return value;
                     if (Math.Abs(value) > Mathf.Abs(max)) max = value;
                 }
 
                 return max;
             }
 
-            public static Entry operator +(Entry entry, XInput input)
+            public static Entry operator +(Entry entry, InputEnum input)
             {
                 var list = entry.Inputs == null ? new() : new List<int>(entry.Inputs);
                 if (list.Contains((int)input)) return entry;
@@ -110,7 +110,7 @@ namespace Cutulu
                 return new(list.ToArray());
             }
 
-            public static Entry operator -(Entry entry, XInput input)
+            public static Entry operator -(Entry entry, InputEnum input)
             {
                 if (entry.Inputs == null) return entry;
 

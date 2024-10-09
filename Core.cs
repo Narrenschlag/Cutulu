@@ -810,7 +810,7 @@ namespace Cutulu
         #endregion
 
         #region Input Functions         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public static float GetInputValue(this string name) => Input.GetActionRawStrength(name);
+        public static float GetInputValue(this string name) => Godot.Input.GetActionRawStrength(name);
 
         public static Vector2 GetInputVector(this string negativeX, string positiveX, string negativeY, string positiveY) => new(GetInputAxis(negativeX, positiveX), GetInputAxis(negativeY, positiveY));
         public static float GetInputAxis(this string negative, string positive) => -negative.GetInputValue() + positive.GetInputValue();

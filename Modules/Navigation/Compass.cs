@@ -8,6 +8,6 @@ namespace Cutulu
         /// Returns compass angle in degrees
         /// </summary>
         public static float NavigationAngle()
-        => Input.GetGyroscope()[1].toDegrees();
+        => Godot.Input.GetGyroscope()[1].toDegrees();
     }
 }

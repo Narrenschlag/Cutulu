@@ -31,6 +31,7 @@ namespace Cutulu
 
         public static int AbsMod(this int value, int modulus)
         {
+            if (modulus == default) return value;
             var _value = value % modulus;
 
             return _value < 0 ? _value + modulus : _value;
