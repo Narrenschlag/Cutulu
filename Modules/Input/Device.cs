@@ -17,6 +17,7 @@ namespace Cutulu
         public InputManager Manager { get; private set; }
         public InfoStruct Info { get; private set; }
         public bool Connected { get; private set; }
+        public bool IsFake { get; private set; }
         public InputMap InputMap { get; set; }
 
         public readonly List<InputEnum> Whitelist = new();
@@ -24,12 +25,14 @@ namespace Cutulu
 
         public int GetUniqueHash(int externalId) => Encryption.Hash(externalId, iUDID);
 
-        public Device(InputManager manager, long udid, InputMap map = default)
+        public Device(InputManager manager, long udid, InputMap map = default, bool isFake = false)
         {
             Manager = manager;
             UDID = udid;
 
             InputMap = map.Mapping == null ? new() : map;
+            IsFake = isFake;
+
             OnConnect();
         }
 
@@ -65,13 +68,19 @@ namespace Cutulu
 
         private void OnConnect()
         {
-            var data = iUDID != -1 ? Godot.Input.GetJoyInfo(iUDID) : null;
+            var data = iUDID != -1 && IsFake == false ? Godot.Input.GetJoyInfo(iUDID) : null;
+
             var i = default(int); // index cache
             var n = string.Empty; // name cache
             Connected = true;
 
             // Assign device info
-            Info = iUDID < 0 ? new()
+            Info = IsFake ? new()
+            {
+                DeviceType = TypeEnum.Unknown,
+                RawDeviceName = "FakeDevice",
+                DeviceName = "Fake Device",
+            } : iUDID < 0 ? new()
 
             // Native Device aka. Keyboard
             {
@@ -227,7 +236,7 @@ namespace Cutulu
             Unknown,
             Generic,
             Native,
-            Steam
+            Steam,
         }
 
         /// <summary>
