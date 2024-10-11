@@ -172,15 +172,17 @@ namespace Cutulu
             return (devices = list?.ToArray()) != null;
         }
 
-        public bool ListenForInput(out (Device device, InputEnum[] inputs)[] devices, params InputEnum[] range)
+        public bool ListenForInput(bool whitelist, out (Device device, InputEnum[] inputs)[] devices, params InputEnum[] range)
         {
-            List<(Device device, InputEnum[] inputs)> list = null;
+            var list = new List<(Device device, InputEnum[] inputs)>();
+
             foreach (var device in Devices.Values)
             {
-                if (device.ListenForInput(out var input, range)) (list ??= new()).Add((device, input));
+                if (device.ListenForInput(whitelist, out var input, range)) list.Add((device, input));
             }
 
-            return (devices = list?.ToArray()) != null;
+            devices = list.ToArray();
+            return devices.Length > 0;
         }
         #endregion
 

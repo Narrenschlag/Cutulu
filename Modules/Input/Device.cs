@@ -128,27 +128,36 @@ namespace Cutulu
 
         #region Black- and Whitelist
 
-        public InputEnum[] ConsiderBlacklist(InputEnum[] array)
+        public InputEnum[] GetRange(out bool whitelist)
         {
-            var list = new List<InputEnum>();
+            whitelist = Whitelist.NotEmpty();
 
-            for (int i = 0; i < array?.Length; i++)
-            {
-                if (Blacklist.Contains(array[i]) == false)
-                    list.Add(array[i]);
-            }
-
-            return list.ToArray();
-        }
-
-        public InputEnum[] GetRange()
-        {
-            return Whitelist.NotEmpty() ? Whitelist.ToArray() : ConsiderBlacklist(DeviceId < 0 ? Manager.XNative : Manager.XGamepad);
+            return whitelist ? Whitelist.ToArray() : DeviceId < 0 ? Manager.XNative : Manager.XGamepad;
         }
 
         #endregion
 
         #region Read Inputs using name
+
+        public bool IsJustPressed(string name, ref bool reference)
+        {
+            var pressed = IsPressed(name);
+
+            var result = pressed && !reference;
+
+            reference = pressed;
+            return result;
+        }
+
+        public bool IsJustReleased(string name, ref bool reference)
+        {
+            var pressed = IsPressed(name);
+
+            var result = !pressed && reference;
+
+            reference = pressed;
+            return result;
+        }
 
         public bool IsPressed(string name) => InputMap.Mapping.TryGetValue(InputMap.ModifyString(name), out var entry) && entry.IsPressed(DeviceId);
         public float GetValue01(string name) => InputMap.Mapping.TryGetValue(InputMap.ModifyString(name), out var entry) ? entry.GetValue(DeviceId) : default;
@@ -167,11 +176,11 @@ namespace Cutulu
 
         public bool IsAnythingPressed()
         {
-            var range = GetRange();
+            var range = GetRange(out var whitelist);
 
             for (int i = 0; i < range?.Length; i++)
             {
-                if (IsPressed(range[i])) return true;
+                if ((whitelist || Blacklist.Contains(range[i]) == false) && IsPressed(range[i])) return true;
             }
 
             return false;
@@ -184,14 +193,23 @@ namespace Cutulu
         public bool IsPressed(InputEnum input) => Input.IsPressed(iUDID, input);
         public float GetValue(InputEnum input) => Input.GetValue(iUDID, input);
 
-        public bool ListenForInput(out InputEnum[] inputs) => ListenForInput(out inputs, GetRange());
-        public bool ListenForInput(out InputEnum[] inputs, params InputEnum[] range)
+        public bool ListenForInput(out InputEnum[] inputs)
+        {
+            var range = GetRange(out var whitelist);
+
+            return ListenForInput(whitelist, out inputs, range);
+        }
+
+        /// <summary>
+        /// Whitelist=true skips the blacklist check
+        /// </summary>
+        public bool ListenForInput(bool whitelist, out InputEnum[] inputs, params InputEnum[] range)
         {
             var list = new List<InputEnum>();
 
             for (int i = 0; i < range?.Length; i++)
             {
-                if (IsPressed(range[i]))
+                if ((whitelist || Blacklist.Contains(range[i]) == false) && IsPressed(range[i]))
                     list.Add(range[i]);
             }
 

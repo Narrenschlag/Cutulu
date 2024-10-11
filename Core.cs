@@ -252,6 +252,47 @@ namespace Cutulu
             }
         }
 
+        public static List<T> GetNodesInParents<T>(this Node node, bool includeSelf = true, byte layerDepth = 0)
+        {
+            var depth = layerDepth > 0;
+            var list = new List<T>();
+
+            if (includeSelf == false && node.NotNull())
+                node = node.GetParent();
+            else layerDepth++;
+
+            while (node.NotNull())
+            {
+                if (depth && layerDepth-- < 1) break;
+
+                if (node is T t) list.Add(t);
+
+                node = node.GetParent();
+            }
+
+            return list;
+        }
+
+        public static T GetNodeInParents<T>(this Node node, bool includeSelf = true, byte layerDepth = 0)
+        {
+            var depth = layerDepth > 0;
+
+            if (includeSelf == false && node.NotNull())
+                node = node.GetParent();
+            else layerDepth++;
+
+            while (node.NotNull())
+            {
+                if (depth && layerDepth-- < 1) break;
+
+                if (node is T t) return t;
+
+                node = node.GetParent();
+            }
+
+            return default(T);
+        }
+
         public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true, byte layerDepth = 0)
         {
             List<T> list = new();
@@ -386,6 +427,36 @@ namespace Cutulu
 
         #region Array Functions         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static ushort Size<T>(this T[] array) => array == null ? (ushort)0 : (ushort)array.Length;
+
+        public static T[] Mask<T>(this T[] array, T[] mask, bool inside = true)
+        {
+            var list = new List<T>();
+
+            for (var i = 0; i < array.Length; i++)
+            {
+                if (mask.Contains(array[i]) == inside)
+                    list.Add(array[i]);
+            }
+
+            return list.ToArray();
+        }
+
+        public static bool SequenceEquals<T>(this T[] array, T[] b)
+        {
+            if (array.Size() != b.Size()) return false;
+            if (array == b) return true;
+
+            if (array.NotEmpty())
+            {
+                for (var i = 0; i < array.Length; i++)
+                {
+                    if (b.Contains(array[i]) == false)
+                        return false;
+                }
+            }
+
+            return true;
+        }
 
         public static bool Compare<T>(this T[] array, T[] other)
         {
