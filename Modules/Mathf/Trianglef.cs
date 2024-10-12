@@ -73,5 +73,25 @@ namespace Cutulu
 
         public static Vector3 RayToY(this Vector3 origin, Vector3 direction, float y = 0)
         => origin.IntersectAt(direction, y);
+
+        public static float FindYOnTriangle(Vector3 A, Vector3 B, Vector3 C, Vector3 p)
+        {
+            // Step 1: Calculate two vectors from the triangle points
+            var AB = B - A;
+            var AC = C - A;
+
+            // Step 2: Compute the normal of the triangle's plane
+            var normal = AB.Cross(AC);
+
+            // Step 3: Plane equation is: Ax + By + Cz + D = 0
+            // Where (A, B, C) are the components of the normal vector
+            var D = -normal.Dot(A); // Compute D using point A
+
+            // Step 4: Solve for Y in the plane equation Ax + By + Cz + D = 0
+            // Given that A = normal.x, B = normal.y, C = normal.z:
+            // normal.X * p.X + normal.Y * p.Y + normal.Z * p.Z + D = 0
+            // Solve for p.Y: p.Y = (-normal.X * p.X - normal.Z * p.Z - D) / normal.Y
+            return (-normal.X * p.X - normal.Z * p.Z - D) / normal.Y;
+        }
     }
 }
