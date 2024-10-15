@@ -70,6 +70,22 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Converts a world position into an index (Vector3) 
+        /// </summary>
+        public readonly int WorldToIndex(Vector3 position, Vector3 offset = default)
+        {
+            return AxialToIndex(WorldToAxial(position, offset));
+        }
+
+        /// <summary>
+        /// Converts an index to world position (Vector3)
+        /// </summary>
+        public readonly Vector3 IndexToWorld(int index, Vector3 offset = default)
+        {
+            return AxialToWorld(IndexToAxial(index), offset);
+        }
+
+        /// <summary>
         /// Returns the six corner points of the hexagon centered at hex coordinates
         /// </summary>
         public Vector3[] GetVertices(Vector3I cubic)

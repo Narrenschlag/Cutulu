@@ -38,10 +38,10 @@ namespace Cutulu
         => (float)value / Mathf.Pow(10, decimals);
 
         public static float ToFloat(this byte value, byte decimals = 2)
-        => (float)value / Mathf.Pow(10, decimals);
+        => value / Mathf.Pow(10, decimals);
 
         public static float ToFloat(this sbyte value, byte decimals = 2)
-        => (float)value / Mathf.Pow(10, decimals);
+        => value / Mathf.Pow(10, decimals);
         #endregion
     }
 }
