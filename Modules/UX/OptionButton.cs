@@ -1,11 +1,11 @@
-using Godot;
-
 namespace Cutulu.UX
 {
+    using Godot;
+
     [GlobalClass]
     public partial class OptionButton : RichTextLabel
     {
-        private string Text;
+        private new string Text;
         private Color Color;
 
         public string Prefix { get; set; }

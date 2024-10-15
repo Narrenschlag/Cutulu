@@ -1,8 +1,7 @@
-using System;
-using Godot;
-
 namespace Cutulu
 {
+    using Godot;
+
     using P = CinemaPerspective;
     public partial class Cinema : Node3D
     {
@@ -85,7 +84,7 @@ namespace Cutulu
             Target(target, instant);
         }
 
-        public static void SetGlobalPosition(Vector3 globalPosition)
+        public new static void SetGlobalPosition(Vector3 globalPosition)
         {
             if (Singleton.NotNull() && perspective.NotNull())
             {
