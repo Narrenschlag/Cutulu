@@ -43,6 +43,22 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Converts world position to hexagonal coordinates
+        /// </summary>
+        public Vector2I WorldToAxial(Vector3 position, Vector3 offset = default)
+        {
+            return CubicToAxial(WorldToCubic(position, offset));
+        }
+
+        /// <summary>
+        /// Converts a world position into an index (Vector3) 
+        /// </summary>
+        public readonly int WorldToIndex(Vector3 position, Vector3 offset = default)
+        {
+            return AxialToIndex(WorldToAxial(position, offset));
+        }
+
+        /// <summary>
         /// Converts hexagonal coordinates to world position
         /// </summary>
         public Vector3 CubicToWorld(Vector3I cubic, Vector3 offset = default)
@@ -59,22 +75,6 @@ namespace Cutulu
         public Vector3 AxialToWorld(Vector2I axial, Vector3 offset = default)
         {
             return CubicToWorld(AxialToCubic(axial), offset);
-        }
-
-        /// <summary>
-        /// Converts world position to hexagonal coordinates
-        /// </summary>
-        public Vector2I WorldToAxial(Vector3 position, Vector3 offset = default)
-        {
-            return CubicToAxial(WorldToCubic(position, offset));
-        }
-
-        /// <summary>
-        /// Converts a world position into an index (Vector3) 
-        /// </summary>
-        public readonly int WorldToIndex(Vector3 position, Vector3 offset = default)
-        {
-            return AxialToIndex(WorldToAxial(position, offset));
         }
 
         /// <summary>
@@ -101,16 +101,6 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Returns a single corner of a hexagon (i is 0 to 5)
-        /// </summary>
-        public Vector3 GetVertice(Vector3I cubic, int cornerIndex)
-        {
-            var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
-
-            return CubicToWorld(cubic) + dir * CellSize;
-        }
-
-        /// <summary>
         /// Returns the six corner points of the hexagon centered at hex coordinates
         /// </summary>
         public Vector3[] GetVertices(Vector2I axial)
@@ -126,6 +116,31 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Returns the six corner points of the hexagon centered at hex coordinates
+        /// </summary>
+        public Vector3[] GetVertices(int index)
+        {
+            var corners = new Vector3[6];
+
+            for (int i = 0; i < 6; i++)
+            {
+                corners[i] = GetVertice(index, i);
+            }
+
+            return corners;
+        }
+
+        /// <summary>
+        /// Returns a single corner of a hexagon (i is 0 to 5)
+        /// </summary>
+        public Vector3 GetVertice(Vector3I cubic, int cornerIndex)
+        {
+            var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
+
+            return CubicToWorld(cubic) + dir * CellSize;
+        }
+
+        /// <summary>
         /// Returns a single corner of a hexagon (i is 0 to 5)
         /// </summary>
         public Vector3 GetVertice(Vector2I axial, int cornerIndex)
@@ -133,6 +148,16 @@ namespace Cutulu
             var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
 
             return AxialToWorld(axial) + dir * CellSize;
+        }
+
+        /// <summary>
+        /// Returns a single corner of a hexagon (i is 0 to 5)
+        /// </summary>
+        public Vector3 GetVertice(int index, int cornerIndex)
+        {
+            var dir = Forward.Rotated(Up, (60f * cornerIndex + 30f).toRadians()); // 60° between corners
+
+            return IndexToWorld(index) + dir * CellSize;
         }
 
         #endregion
@@ -169,38 +194,7 @@ namespace Cutulu
         /// <summary>   
         /// Returns s value for cubic coordinate from axial coordinate
         /// </summary>
-        public static int GetS(Vector2I axial) => -axial.X - axial.Y;
-
-        /// <summary>
-        /// Rounds cube coordinates to nearest hexagonal coordinates
-        /// </summary>
-        private static Vector3I CubicRound(Vector3 cubic)
-        {
-            var rx = Mathf.RoundToInt(cubic.X);
-            var ry = Mathf.RoundToInt(cubic.Y);
-            var rz = Mathf.RoundToInt(cubic.Z);
-
-            var x_diff = Mathf.Abs(rx - cubic.X);
-            var y_diff = Mathf.Abs(ry - cubic.Y);
-            var z_diff = Mathf.Abs(rz - cubic.Z);
-
-            if (x_diff > y_diff && x_diff > z_diff)
-            {
-                rx = -ry - rz;
-            }
-
-            else if (y_diff > z_diff)
-            {
-                ry = -rx - rz;
-            }
-
-            else
-            {
-                rz = -rx - ry;
-            }
-
-            return new(rx, ry, rz);
-        }
+        public static int GetCubicS(Vector2I axial) => -axial.X - axial.Y;
 
         /// <summary>
         /// Converts Cube coordinates to 2D grid coordinates (Vector2I)
@@ -216,6 +210,14 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Convert cubic coordinates (q, r, s) to an index
+        /// </summary>
+        public static int CubicToIndex(Vector3I cubic)
+        {
+            return AxialToIndex(CubicToAxial(cubic));
+        }
+
+        /// <summary>
         /// Converts 2D grid coordinates to Cube coordinates (Vector3I)
         /// </summary>
         public static Vector3I AxialToCubic(Vector2I axial)
@@ -225,22 +227,6 @@ namespace Cutulu
             var s = -q - r; // s = -q - r for cube coordinates
 
             return new(q, r, s);
-        }
-
-        /// <summary>
-        /// Convert an index to cubic coordinates (q, r, s)
-        /// </summary>
-        public static Vector3I IndexToCubic(int index)
-        {
-            return AxialToCubic(IndexToAxial(index));
-        }
-
-        /// <summary>
-        /// Convert cubic coordinates (q, r, s) to an index
-        /// </summary>
-        public static int CubicToIndex(Vector3I cubic)
-        {
-            return AxialToIndex(CubicToAxial(cubic));
         }
 
         /// <summary>
@@ -258,6 +244,14 @@ namespace Cutulu
             var positionInRing = GetPositionInRing(axial, ring);
 
             return indexStartOfRing + positionInRing;
+        }
+
+        /// <summary>
+        /// Convert an index to cubic coordinates (q, r, s)
+        /// </summary>
+        public static Vector3I IndexToCubic(int index)
+        {
+            return AxialToCubic(IndexToAxial(index));
         }
 
         /// <summary>
@@ -285,38 +279,6 @@ namespace Cutulu
             return currentHex + AxialNeighbours[i] * mod;
         }
 
-        // Helper function to find the position of an axial coordinate within a ring
-        // Really wished this was simpler to find somewhere so enjoy it. It scales.
-        private static int GetPositionInRing(Vector2I axial, int ring)
-        {
-            // Start with the first hex in the ring, offset from the center hex
-            var currentHex = AxialNeighbours[4] * ring;
-            if (currentHex == axial) return 0;
-
-            var _i = 0;
-
-            var ang = Vector2.Zero.GetAngleD(axial).AbsMod(360);
-            if (ang <= 0) ang = 360;
-
-            for (byte i = 0; i < AxialNeighbours.Length; i++)
-            {
-                var min = Vector2.Zero.GetAngleD(AxialNeighbours.ModulatedElement(i - 2));
-
-                var max = Vector2.Zero.GetAngleD(AxialNeighbours.ModulatedElement(i - 1)).AbsMod(360);
-                if (max <= 0) max = 360;
-
-                if (min >= ang || ang > max)
-                {
-                    currentHex += AxialNeighbours[i] * ring;
-                    _i += ring;
-                }
-
-                else break;
-            }
-
-            return _i + Mathf.FloorToInt(GetDistance(currentHex, axial));
-        }
-
         /// <summary>
         /// Returns the neighboring hexagons
         /// </summary>
@@ -340,6 +302,44 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Returns the neighboring hexagons
+        /// </summary>
+        public static Vector2I[] GetRange(Vector2I axial, int ringCount)
+        {
+            if ((ringCount = Mathf.Abs(ringCount)) < 1)
+                return new[] { axial };
+
+            var result = new Vector2I[1 + 3 * ringCount * (ringCount + 1)];
+            var N = ringCount;
+
+            for (int i = 0, q = -N; -N <= q && q <= +N; q++)
+            {
+                for (var r = Mathf.Max(-N, -q - N); Mathf.Max(-N, -q - N) <= r && r <= Mathf.Min(+N, -q + N); r++)
+                {
+                    result[i++] = axial + new Vector2I(q, r);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Returns the neighboring hexagons
+        /// </summary>
+        public static int[] GetRange(int index, int ringCount)
+        {
+            var range = GetRange(IndexToAxial(index), ringCount);
+            var iRange = new int[range.Length];
+
+            for (var i = 0; i < range.Length; i++)
+            {
+                iRange[i] = AxialToIndex(range[i]);
+            }
+
+            return iRange;
+        }
+
+        /// <summary>
         /// Returns the neighboring hexagons in a specific ring, centered around the given hex
         /// </summary>
         public static Vector3I[] GetRing(Vector3I cubic, int ringCount)
@@ -360,28 +360,6 @@ namespace Cutulu
                 {
                     result[i++] = currentHex;
                     currentHex += direction; // Move in the current direction
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Returns the neighboring hexagons
-        /// </summary>
-        public static Vector2I[] GetRange(Vector2I axial, int ringCount)
-        {
-            if ((ringCount = Mathf.Abs(ringCount)) < 1)
-                return new[] { axial };
-
-            var result = new Vector2I[1 + 3 * ringCount * (ringCount + 1)];
-            var N = ringCount;
-
-            for (int i = 0, q = -N; -N <= q && q <= +N; q++)
-            {
-                for (var r = Mathf.Max(-N, -q - N); Mathf.Max(-N, -q - N) <= r && r <= Mathf.Min(+N, -q + N); r++)
-                {
-                    result[i++] = axial + new Vector2I(q, r);
                 }
             }
 
@@ -413,22 +391,6 @@ namespace Cutulu
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Returns the neighboring hexagons
-        /// </summary>
-        public static int[] GetRange(int index, int ringCount)
-        {
-            var range = GetRange(IndexToAxial(index), ringCount);
-            var iRange = new int[range.Length];
-
-            for (var i = 0; i < range.Length; i++)
-            {
-                iRange[i] = AxialToIndex(range[i]);
-            }
-
-            return iRange;
         }
 
         /// <summary>
@@ -516,53 +478,80 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Returns the neighboring hexagons
+        /// Returns the neighbouring hexagons
         /// </summary>
-        public static Vector3I[] GetNeighbors(Vector3I cubic = default)
+        public static Vector3I[] GetNeighbours(Vector3I cubic = default)
         {
             // Hexagonal grid directions (Q,R,S)
             return new[]{
-                GetNeighbor(cubic, 0),
-                GetNeighbor(cubic, 1),
-                GetNeighbor(cubic, 2),
-                GetNeighbor(cubic, 3),
-                GetNeighbor(cubic, 4),
-                GetNeighbor(cubic, 5),
+                GetNeighbour(cubic, 0),
+                GetNeighbour(cubic, 1),
+                GetNeighbour(cubic, 2),
+                GetNeighbour(cubic, 3),
+                GetNeighbour(cubic, 4),
+                GetNeighbour(cubic, 5),
             };
         }
 
         /// <summary>
-        /// Returns the neighboring hexagon in a given direction (0 to 5 for the six main directions)
+        /// Returns the neighbouring hexagons
         /// </summary>
-        public static Vector3I GetNeighbor(Vector3I cubic, int direction)
-        {
-            // Hexagonal grid directions (Q,R,S)
-            return cubic + CubicNeighbours[direction % 6];
-        }
-
-        /// <summary>
-        /// Returns the neighboring hexagons
-        /// </summary>
-        public static Vector2I[] GetNeighbors(Vector2I axial = default)
+        public static Vector2I[] GetNeighbours(Vector2I axial = default)
         {
             // Hexagonal grid directions (Q,R,S)
             return new[]{
-                GetNeighbor(axial, 0),
-                GetNeighbor(axial, 1),
-                GetNeighbor(axial, 2),
-                GetNeighbor(axial, 3),
-                GetNeighbor(axial, 4),
-                GetNeighbor(axial, 5),
+                GetNeighbour(axial, 0),
+                GetNeighbour(axial, 1),
+                GetNeighbour(axial, 2),
+                GetNeighbour(axial, 3),
+                GetNeighbour(axial, 4),
+                GetNeighbour(axial, 5),
             };
         }
 
         /// <summary>
-        /// Returns the neighboring hexagon in a given direction (0 to 5 for the six main directions)
+        /// Returns the neighbouring hexagons
         /// </summary>
-        public static Vector2I GetNeighbor(Vector2I axial, int direction)
+        public static int[] GetNeighbours(int index = default)
+        {
+            var axial = IndexToAxial(index);
+
+            // Hexagonal grid directions (Q,R,S)
+            return new[]{
+                AxialToIndex(GetNeighbour(axial, 0)),
+                AxialToIndex(GetNeighbour(axial, 1)),
+                AxialToIndex(GetNeighbour(axial, 2)),
+                AxialToIndex(GetNeighbour(axial, 3)),
+                AxialToIndex(GetNeighbour(axial, 4)),
+                AxialToIndex(GetNeighbour(axial, 5)),
+            };
+        }
+
+        /// <summary>
+        /// Returns the neighbouring hexagon in a given direction (0 to 5 for the six main directions)
+        /// </summary>
+        public static Vector3I GetNeighbour(Vector3I cubic, int direction)
         {
             // Hexagonal grid directions (Q,R,S)
-            return axial + AxialNeighbours[direction % 6];
+            return cubic + CubicNeighbours[direction.AbsMod(6)];
+        }
+
+        /// <summary>
+        /// Returns the neighbouring hexagon in a given direction (0 to 5 for the six main directions)
+        /// </summary>
+        public static Vector2I GetNeighbour(Vector2I axial, int direction)
+        {
+            // Hexagonal grid directions (Q,R,S)
+            return axial + AxialNeighbours[direction.AbsMod(6)];
+        }
+
+        /// <summary>
+        /// Returns the neighbouring hexagon in a given direction (0 to 5 for the six main directions)
+        /// </summary>
+        public static int GetNeighbour(int index, int direction)
+        {
+            // Hexagonal grid directions (Q,R,S)
+            return AxialToIndex(GetNeighbour(IndexToAxial(index), direction));
         }
 
         /// <summary>
@@ -577,6 +566,14 @@ namespace Cutulu
         /// Returns path based on path cost
         /// </summary>
         public static bool TryGetPath(IPathfindingTarget target, Vector2I start, Vector2I end, out Vector2I[] path)
+        {
+            return (path = GetPath(target, start, end)).NotEmpty();
+        }
+
+        /// <summary>
+        /// Returns path based on path cost
+        /// </summary>
+        public static bool TryGetPath(IPathfindingTarget target, int start, int end, out int[] path)
         {
             return (path = GetPath(target, start, end)).NotEmpty();
         }
@@ -606,6 +603,92 @@ namespace Cutulu
             Pathfinding.TryFindPath(target, start, end, out var path);
 
             return path;
+        }
+
+        /// <summary>
+        /// Returns path based on path cost
+        /// </summary>
+        public static int[] GetPath(IPathfindingTarget target, int start, int end)
+        {
+            Pathfinding.TryFindPath(target, IndexToAxial(start), IndexToAxial(end), out var _path);
+
+            var path = new int[_path.Length];
+
+            for (int i = 0; i < _path.Length; i++)
+            {
+                path[i] = AxialToIndex(_path[i]);
+            }
+
+            return path;
+        }
+
+        #endregion
+
+        #region Private Static Helper Functions
+
+        /// <summary>
+        /// Rounds cube coordinates to nearest hexagonal coordinates
+        /// </summary>
+        private static Vector3I CubicRound(Vector3 cubic)
+        {
+            var rx = Mathf.RoundToInt(cubic.X);
+            var ry = Mathf.RoundToInt(cubic.Y);
+            var rz = Mathf.RoundToInt(cubic.Z);
+
+            var x_diff = Mathf.Abs(rx - cubic.X);
+            var y_diff = Mathf.Abs(ry - cubic.Y);
+            var z_diff = Mathf.Abs(rz - cubic.Z);
+
+            if (x_diff > y_diff && x_diff > z_diff)
+            {
+                rx = -ry - rz;
+            }
+
+            else if (y_diff > z_diff)
+            {
+                ry = -rx - rz;
+            }
+
+            else
+            {
+                rz = -rx - ry;
+            }
+
+            return new(rx, ry, rz);
+        }
+
+        /// <summary>
+        /// Helper function to find the position of an axial coordinate within a ring
+        /// Really wished this was simpler to find somewhere so enjoy it. It scales.
+        /// </summary>
+        private static int GetPositionInRing(Vector2I axial, int ring)
+        {
+            // Start with the first hex in the ring, offset from the center hex
+            var currentHex = AxialNeighbours[4] * ring;
+            if (currentHex == axial) return 0;
+
+            var _i = 0;
+
+            var ang = Vector2.Zero.GetAngleD(axial).AbsMod(360);
+            if (ang <= 0) ang = 360;
+
+            for (byte i = 0; i < AxialNeighbours.Length; i++)
+            {
+                var min = Vector2.Zero.GetAngleD(AxialNeighbours.ModulatedElement(i - 2));
+
+                var max = Vector2.Zero.GetAngleD(AxialNeighbours.ModulatedElement(i - 1)).AbsMod(360);
+                if (max <= 0) max = 360;
+
+                if (min >= ang || ang > max)
+                {
+                    currentHex += AxialNeighbours[i] * ring;
+                    _i += ring;
+                }
+
+                else break;
+            }
+
+            return _i + Mathf.FloorToInt(GetDistance(currentHex, axial));
         }
 
         #endregion
