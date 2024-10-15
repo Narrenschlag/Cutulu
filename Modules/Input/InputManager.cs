@@ -1,8 +1,9 @@
-using System.Collections.Generic;
-using Godot;
-
 namespace Cutulu
 {
+    using System.Collections.Generic;
+    using System;
+    using Godot;
+
     [GlobalClass]
     public partial class InputManager : Node
     {
@@ -12,7 +13,7 @@ namespace Cutulu
         public ModeEnum Mode { get; set; }
 
         public delegate void OnNewDeviceEventHandler(Device device);
-        public OnNewDeviceEventHandler OnDeviceAdd, OnDeviceRem;
+        public event Action<Device> AddedDevice, RemovedDevice;
 
         public readonly InputEnum[]
         XAll = Input.GetRange(Input.TypeEnum.AxisButton, Input.TypeEnum.Button, Input.TypeEnum.Mouse, Input.TypeEnum.Key).ToArray(),
@@ -101,7 +102,7 @@ namespace Cutulu
                     if (Mode == ModeEnum.Open)
                     {
                         Devices.Remove(udid);
-                        OnDeviceRem?.Invoke(device);
+                        RemovedDevice?.Invoke(device);
                     }
                 }
             }
@@ -110,10 +111,10 @@ namespace Cutulu
         private void AddDevice(Device device)
         {
             Devices.Add(device.UDID, device);
-            OnDeviceAdd?.Invoke(device);
+            AddedDevice?.Invoke(device);
         }
 
-        public void RequestDevices(OnNewDeviceEventHandler Func)
+        public void RequestDevices(Action<Device> Func)
         {
             if (Func != null)
             {
