@@ -26,6 +26,9 @@ namespace Cutulu
         #region Local Node Events
         public override void _EnterTree()
         {
+            // Already setup
+            if (Devices.NotEmpty()) return;
+
             Mode = ModeEnum.Open;
 
             // Add native device
