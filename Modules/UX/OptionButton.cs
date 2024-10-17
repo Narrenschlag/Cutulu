@@ -40,7 +40,7 @@ namespace Cutulu.UX
             SetColor(color);
         }
 
-        public void SetText(string text)
+        public new void SetText(string text)
         {
             Name = $"Option {text}";
             Text = text;
