@@ -26,18 +26,20 @@ namespace Cutulu
         #region Local Node Events
         public override void _EnterTree()
         {
-            // Already setup
-            if (Devices.NotEmpty()) return;
-
-            Mode = ModeEnum.Open;
-
-            // Add native device
-            AddDevice(new(this, -1));
-
-            // Add existing
-            foreach (var existing in Godot.Input.GetConnectedJoypads())
+            // Not yet setup
+            if (Devices.IsEmpty())
             {
-                OnDeviceChange(existing, true);
+
+                Mode = ModeEnum.Open;
+
+                // Add native device
+                AddDevice(new(this, -1));
+
+                // Add existing
+                foreach (var existing in Godot.Input.GetConnectedJoypads())
+                {
+                    OnDeviceChange(existing, true);
+                }
             }
 
             Godot.Input.JoyConnectionChanged += OnDeviceChange;

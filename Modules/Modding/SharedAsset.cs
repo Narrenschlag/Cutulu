@@ -11,6 +11,7 @@ namespace Cutulu.Modding
         {
             if ((asClient ? Client : Host) is not N n)
             {
+                Debug.LogR($"[color=orange]Failed to unpack shared asset for [i]{(asClient ? "Client" : "Host")}[/i] as [i]{typeof(N).Name}[/i]. Check your SharedAsset scene.[/color]");
                 this.Destroy();
                 return null;
             }
