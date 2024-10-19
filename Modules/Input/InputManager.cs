@@ -29,25 +29,24 @@ namespace Cutulu
             // Not yet setup
             if (Devices.IsEmpty())
             {
-
                 Mode = ModeEnum.Open;
 
                 // Add native device
-                AddDevice(new(this, -1));
+                _AddDevice(new(this, -1));
 
                 // Add existing
                 foreach (var existing in Godot.Input.GetConnectedJoypads())
                 {
-                    OnDeviceChange(existing, true);
+                    _DeviceChange(existing, true);
                 }
             }
 
-            Godot.Input.JoyConnectionChanged += OnDeviceChange;
+            Godot.Input.JoyConnectionChanged += _DeviceChange;
         }
 
         public override void _ExitTree()
         {
-            Godot.Input.JoyConnectionChanged -= OnDeviceChange;
+            Godot.Input.JoyConnectionChanged -= _DeviceChange;
         }
 
         public override void _Process(double delta)
@@ -76,7 +75,7 @@ namespace Cutulu
         #endregion
 
         #region Device Event
-        private void OnDeviceChange(long udid, bool connected)
+        private void _DeviceChange(long udid, bool connected)
         {
             // Connected
             if (connected)
@@ -84,7 +83,7 @@ namespace Cutulu
                 // Reconnecting device
                 if (Devices.TryGetValue(udid, out var device))
                 {
-                    device.OnReconnect();
+                    device._Reconnect();
                 }
 
                 // New device
@@ -92,7 +91,7 @@ namespace Cutulu
                 {
                     // Clamp device count
                     if (MaxDeviceCount < 1 || MaxDeviceCount > Devices.Count)
-                        AddDevice(new(this, udid));
+                        _AddDevice(new(this, udid));
                 }
             }
 
@@ -102,7 +101,7 @@ namespace Cutulu
                 // Device disconnected
                 if (Devices.TryGetValue(udid, out var device))
                 {
-                    device.OnDisconnect();
+                    device._Disconnect();
 
                     if (Mode == ModeEnum.Open)
                     {
@@ -113,7 +112,7 @@ namespace Cutulu
             }
         }
 
-        private void AddDevice(Device device)
+        private void _AddDevice(Device device)
         {
             Devices.Add(device.UDID, device);
             AddedDevice?.Invoke(device);

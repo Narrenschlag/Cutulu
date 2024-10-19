@@ -33,7 +33,7 @@ namespace Cutulu
             InputMap = map.Mapping == null ? new() : map;
             IsFake = isFake;
 
-            OnConnect();
+            _Connect();
         }
 
         #region Remap Inputs
@@ -66,7 +66,7 @@ namespace Cutulu
 
         #region Connection Status
 
-        private void OnConnect()
+        private void _Connect()
         {
             var data = iUDID != -1 && IsFake == false ? Godot.Input.GetJoyInfo(iUDID) : null;
 
@@ -119,14 +119,12 @@ namespace Cutulu
             Debug.Log($"+device({UDID}, {Info.DeviceName})");
         }
 
-        public void OnReconnect()
+        public void _Reconnect()
         {
-            OnConnect();
-
-            //Vibrate(0.5f, 0.5f, 2.5f);
+            _Connect();
         }
 
-        public void OnDisconnect()
+        public void _Disconnect()
         {
             Connected = false;
 
