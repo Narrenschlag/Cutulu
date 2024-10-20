@@ -1,10 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Godot;
-
 namespace Cutulu
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using Godot;
+
     /// <summary>
     /// Highly GPU optimized mesh generation tool for fast and easy use. Allows for fast polygon and wall meshes to be added.
     /// </summary>
@@ -22,7 +21,6 @@ namespace Cutulu
         private readonly List<Vertex> Vertices = new();
 
         private bool useAlpha;
-        private int lastIdx;
 
         public MeshBuilder(MeshType type) : this(type, Colors.White) { }
         public MeshBuilder(MeshType type, Color baseColor)
@@ -88,10 +86,8 @@ namespace Cutulu
 
         public void Clear()
         {
-            Offset = default;
-
             useAlpha = false;
-            lastIdx = 0;
+            Offset = default;
 
             PositionNormals.Clear();
             Triangles.Clear();

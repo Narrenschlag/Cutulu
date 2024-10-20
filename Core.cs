@@ -1,13 +1,13 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Text;
-using System.Linq;
-using System;
-
-using Godot;
-
 namespace Cutulu
 {
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using System.Text;
+    using System.Linq;
+    using System;
+
+    using Godot;
+
     public static class Core
     {
         public const StringSplitOptions StringSplit = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;

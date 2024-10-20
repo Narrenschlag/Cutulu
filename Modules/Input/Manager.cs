@@ -44,7 +44,7 @@ namespace Cutulu.Input
             GD.JoyConnectionChanged += _ChangedDevice;
         }
 
-        public virtual void Close()
+        public virtual void Stop()
         {
             if (Running == false) return;
 

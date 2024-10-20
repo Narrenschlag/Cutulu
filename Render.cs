@@ -1,7 +1,7 @@
-using Godot;
-
 namespace Cutulu
 {
+    using Godot;
+
     public static class Renderf
     {
         private static OrmMaterial3D vertexMaterial;

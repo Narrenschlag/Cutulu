@@ -1,9 +1,9 @@
-using System;
-using System.Threading.Tasks;
-using Godot;
-
 namespace Cutulu
 {
+    using System.Threading.Tasks;
+    using System;
+    using Godot;
+
     /// <summary>
     /// Has to be setup once provided with a root node it is working with
     /// </summary>
