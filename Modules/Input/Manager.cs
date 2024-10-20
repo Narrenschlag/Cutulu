@@ -25,7 +25,8 @@ namespace Cutulu.Input
 
         public virtual void Start()
         {
-            if (Running) return;
+            if (Running == true) return;
+            Running = true;
 
             Devices.Clear();
 
@@ -47,6 +48,7 @@ namespace Cutulu.Input
         public virtual void Stop()
         {
             if (Running == false) return;
+            Running = false;
 
             GD.JoyConnectionChanged -= _ChangedDevice;
         }
