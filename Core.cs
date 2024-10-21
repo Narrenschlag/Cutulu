@@ -150,6 +150,18 @@ namespace Cutulu
             }
         }
 
+        public static void ClearAndDestroy<T>(this ICollection<T> collection) where T : Node
+        {
+            foreach (var node in collection)
+            {
+                if (node.IsNull()) continue;
+
+                node.Destroy();
+            }
+
+            collection.Clear();
+        }
+
         public static async void Destroy(this Node node, float lifeTime, bool forceInstant = false)
         {
             await Task.Delay(Mathf.RoundToInt(lifeTime * 1000));
@@ -636,6 +648,18 @@ namespace Cutulu
         }
 
         public static T RandomElement<T>(this List<T> list, T @default = default) => list.NotEmpty() ? list[Random.Range(0, list.Count)] : @default;
+
+        public static void Shuffle<T>(this List<T> list)
+        {
+            if (list.IsEmpty()) return;
+
+            var n = list.Count;
+            while (n > 1)
+            {
+                var k = Random.RangeIncluded(0, --n);
+                (list[k], list[n]) = (list[n], list[k]);
+            }
+        }
         #endregion
 
         #region Dictionary Functions    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
