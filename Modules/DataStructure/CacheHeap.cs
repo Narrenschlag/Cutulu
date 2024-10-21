@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using Godot;
-
 namespace Cutulu
 {
+    using System.Collections.Generic;
+    using Godot;
+
     public class CacheHeap<V>
     {
         public readonly Dictionary<int, KeyValuePair<short, V>> Data = new();
