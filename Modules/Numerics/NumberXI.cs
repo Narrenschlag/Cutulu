@@ -32,17 +32,17 @@ namespace Cutulu
 
         public readonly Godot.Vector2I GetVector2I()
         {
-            return new(Numbers[0].GetUInt(), Numbers.Length > 1 ? Numbers[1].GetUInt() : 0);
+            return new(Numbers[0].GetInt(), Numbers.Length > 1 ? Numbers[1].GetInt() : 0);
         }
 
         public readonly Vector3I GetVector3I()
         {
-            return new Vector3I(Numbers[0].GetUInt(), Numbers.Length > 1 ? Numbers[1].GetUInt() : 0, Numbers.Length > 2 ? Numbers[2].GetUInt() : 0);
+            return new Vector3I(Numbers[0].GetInt(), Numbers.Length > 1 ? Numbers[1].GetInt() : 0, Numbers.Length > 2 ? Numbers[2].GetInt() : 0);
         }
 
         public readonly Vector4I GetVector4I()
         {
-            return new Vector4I(Numbers[0].GetUInt(), Numbers.Length > 1 ? Numbers[1].GetUInt() : 0, Numbers.Length > 2 ? Numbers[2].GetUInt() : 0, Numbers.Length > 3 ? Numbers[3].GetUInt() : 0);
+            return new Vector4I(Numbers[0].GetInt(), Numbers.Length > 1 ? Numbers[1].GetInt() : 0, Numbers.Length > 2 ? Numbers[2].GetInt() : 0, Numbers.Length > 3 ? Numbers[3].GetInt() : 0);
         }
 
         public readonly int[] GetVectorI(int count)
@@ -51,7 +51,7 @@ namespace Cutulu
 
             for (int i = 0; i < count; i++)
             {
-                vector[i] = Numbers[i].GetUInt();
+                vector[i] = Numbers[i].GetInt();
             }
 
             return vector;

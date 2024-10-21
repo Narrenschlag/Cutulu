@@ -80,7 +80,7 @@ namespace Cutulu
             static bool IsInt(ref long value) => value <= int.MaxValue && value >= int.MinValue;
         }
 
-        public readonly sbyte GetByte()
+        public readonly sbyte GetSByte()
         {
             return GetNumberType() switch
             {
@@ -92,7 +92,7 @@ namespace Cutulu
             };
         }
 
-        public readonly short GetUShort()
+        public readonly short GetShort()
         {
             return GetNumberType() switch
             {
@@ -104,7 +104,7 @@ namespace Cutulu
             };
         }
 
-        public readonly int GetUInt()
+        public readonly int GetInt()
         {
             return GetNumberType() switch
             {
@@ -116,7 +116,7 @@ namespace Cutulu
             };
         }
 
-        public readonly long GetULong()
+        public readonly long GetLong()
         {
             return GetNumberType() switch
             {
@@ -180,10 +180,10 @@ namespace Cutulu
         public static implicit operator Number(int value) => new(value);
         public static implicit operator Number(long value) => new(value);
 
-        public static implicit operator sbyte(Number value) => value.GetByte();
-        public static implicit operator short(Number value) => value.GetUShort();
-        public static implicit operator int(Number value) => value.GetUInt();
-        public static implicit operator long(Number value) => value.GetULong();
+        public static implicit operator sbyte(Number value) => value.GetSByte();
+        public static implicit operator short(Number value) => value.GetShort();
+        public static implicit operator int(Number value) => value.GetInt();
+        public static implicit operator long(Number value) => value.GetLong();
 
         class Encoder : BinaryEncoder<Number>
         {
