@@ -168,6 +168,23 @@ namespace Cutulu.Input
             return false;
         }
 
+        public Godot.Vector2 GetVectorClamped(string positiveX, string negativeX, string positiveY, string negativeY)
+        {
+            return new Godot.Vector2(GetAxis(positiveX, negativeX), GetAxis(positiveY, negativeY)).ClampNormalized();
+        }
+
+        public Godot.Vector2 GetVector(string positiveX, string negativeX, string positiveY, string negativeY, bool normalize = false)
+        {
+            var vector = new Godot.Vector2(GetAxis(positiveX, negativeX), GetAxis(positiveY, negativeY));
+
+            return normalize ? vector.Normalized() : vector;
+        }
+
+        public float GetAxis(string positive, string negative)
+        {
+            return GetValue01(positive) - GetValue01(negative);
+        }
+
         #endregion
 
         #region Read Inputs using XInput
