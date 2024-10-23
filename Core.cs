@@ -187,6 +187,9 @@ namespace Cutulu
         public static Vector3 Right(this Node3D node, bool global = true) => node == null ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X;
         public static Vector3 Up(this Node3D node, bool global = true) => node == null ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y;
 
+        public static bool TryInstantiate<T>(this PackedScene prefab, Node parent, out T instance, int waitMilliseconds = 0) where T : Node
+        => (instance = Instantiate<T>(prefab, parent, waitMilliseconds)).NotNull();
+
         public static T Instantiate<T>(this PackedScene prefab, Node parent, int waitMilliseconds = 0) where T : Node
         {
             if (prefab == null) return null;
