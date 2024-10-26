@@ -198,6 +198,20 @@ namespace Cutulu
             return buffer;
         }
 
+        public static ulong GetFileSize(this string path)
+        {
+            if (Exists(path))
+            {
+                var file = FA.Open(path, FA.ModeFlags.Read);
+                var fileLength = file.GetLength();
+                file.Close();
+
+                return fileLength;
+            }
+
+            return 0;
+        }
+
         /// <summary>
         /// Check if file exists at given path
         /// </summary>
