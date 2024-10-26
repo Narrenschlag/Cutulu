@@ -1,7 +1,7 @@
-using Godot;
-
 namespace Cutulu.Modding
 {
+    using Godot;
+
     public partial class SharedAsset : Node
     {
         [Export] private Node Client { get; set; }
