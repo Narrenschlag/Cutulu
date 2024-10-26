@@ -79,5 +79,22 @@ namespace Cutulu
             }
         }
         #endregion
+
+        class ColorFormatter : BinaryEncoder<Color>
+        {
+            public override void Encode(BinaryWriter writer, ref object value)
+            {
+                Color _ = (Color)value;
+                for (int i = 0; i < 4; i++)
+                {
+                    writer.Write(_[i]);
+                }
+            }
+
+            public override object Decode(BinaryReader reader)
+            {
+                return new Color(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+            }
+        }
     }
 }
