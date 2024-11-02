@@ -251,20 +251,33 @@ namespace Cutulu
 
             node.ProcessMode = active ? Node.ProcessModeEnum.Pausable : Node.ProcessModeEnum.Disabled;
 
-            if (node is CollisionObject3D) (node as CollisionObject3D).DisableMode = active ? CollisionObject3D.DisableModeEnum.KeepActive : CollisionObject3D.DisableModeEnum.Remove;
-            if (node is CollisionShape3D) (node as CollisionShape3D).Disabled = !active;
-            if (node is CanvasItem) (node as CanvasItem).Visible = active;
-            if (node is Node3D) (node as Node3D).Visible = active;
+            if (node is CollisionObject3D co) co.DisableMode = active ? CollisionObject3D.DisableModeEnum.KeepActive : CollisionObject3D.DisableModeEnum.Remove;
+            else if (node is CollisionShape3D cs) cs.Disabled = !active;
+
+            if (node is CanvasItem ci) ci.Visible = active;
+            else if (node is Node3D n3) n3.Visible = active;
 
             // Camera
-            if (node is Camera2D && active) (node as Camera2D).MakeCurrent();
-            if (node is Camera3D) (node as Camera3D).Current = active;
+            if (active && node is Camera2D c2) c2.MakeCurrent();
+            else if (node is Camera3D c3) c3.Current = active;
 
             if (includeChildren)
             {
                 foreach (Node child in node.GetNodesInChildren<Node>(false))
                     SetActive(child, false);
             }
+        }
+
+        public static bool IsActive(this Node node)
+        {
+            if (node.IsNull()) return false;
+
+            return node switch
+            {
+                CanvasItem n => n.Visible,
+                Node3D n => n.Visible,
+                _ => true
+            };
         }
 
         public static List<T> GetNodesInParents<T>(this Node node, bool includeSelf = true, byte layerDepth = 0)

@@ -160,6 +160,15 @@ namespace Cutulu
             return IndexToWorld(index) + dir * CellSize;
         }
 
+        public Vector3 GetClosestPoint(Vector2I axial, Vector3 position)
+        {
+            if (WorldToAxial(position).Equals(axial)) return position;
+
+            var vertices = GetVertices(axial).SortByDistanceTo(position);
+
+            return position.TryIntersectFlat(AxialToWorld(axial), vertices[0], vertices[1] - vertices[0], out var C) ? C : position;
+        }
+
         #endregion
 
         #region Static

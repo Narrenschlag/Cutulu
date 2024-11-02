@@ -56,25 +56,44 @@ namespace Cutulu
             Indecies.Clear();
         }
 
-        public static void SetVision(bool value, MeshInstance3D mesh, params Key[] keys)
+        public static bool IsVisible(MeshInstance3D node, params Key[] keys) => IsVisibleT(node, keys);
+        public static bool IsVisible(CanvasItem node, params Key[] keys) => IsVisibleT(node, keys);
+        private static bool IsVisibleT(Node node, params Key[] keys)
         {
-            SetVision(value, new[] { mesh }, keys);
+            if (node.IsNull() || keys.IsEmpty()) return false;
+
+            var value = node is CanvasItem ci ? ci.VisibilityLayer : node is MeshInstance3D mi ? mi.Layers : 0;
+            if (value < 1) return keys.IsEmpty();
+
+            var bitBuilder = new BitBuilder(value);
+            for (var i = 0; i < keys.Length; i++)
+            {
+                if (keys[i] == null || (keys[i] is Node n && n.IsNull())) continue;
+
+                if (Keys.TryGetValue(keys[i], out var maskIdx))
+                {
+                    if (bitBuilder[maskIdx + 1] == false) return false;
+                }
+
+                else return false;
+            }
+
+            return true;
         }
 
-        public static void SetVision(bool value, MeshInstance3D[] meshes, params Key[] keys)
+        public static void SetVision(MeshInstance3D mesh, bool value, params Key[] keys) => SetVision(new[] { mesh }, value, keys);
+        public static void SetVision(CanvasItem canvas, bool value, params Key[] keys) => SetVision(new[] { canvas }, value, keys);
+
+        public static void SetVision(MeshInstance3D[] nodes, bool value, params Key[] keys) => SetVisionT(value, nodes, keys);
+        public static void SetVision(CanvasItem[] nodes, bool value, params Key[] keys) => SetVisionT(value, nodes, keys);
+
+        private static void SetVisionT<T>(bool value, T[] nodes, params Key[] keys) where T : Node
         {
-            if (meshes.IsEmpty()) return;
+            if (nodes.IsEmpty()) return;
 
             if (keys.IsEmpty())
             {
-                for (var i = 0; i < meshes.Length; i++)
-                {
-                    if (meshes[i].IsNull()) continue;
-
-                    meshes[i].Visible = true;
-                    meshes[i].Layers = 1;
-                }
-
+                ResetVision(nodes);
                 return;
             }
 
@@ -82,6 +101,8 @@ namespace Cutulu
 
             for (var i = 0; i < keys.Length; i++)
             {
+                if (keys[i] == null || (keys[i] is Node n && n.IsNull())) continue;
+
                 if (Keys.TryGetValue(keys[i], out var maskIdx))
                 {
                     bitBuilder[maskIdx + 1] = value;
@@ -90,17 +111,51 @@ namespace Cutulu
 
             var layers = bitBuilder.ByteBuffer.Decode<uint>();
 
-            for (var i = 0; i < meshes.Length; i++)
+            for (var i = 0; i < nodes.Length; i++)
             {
-                if (meshes[i].IsNull()) continue;
+                if (nodes[i].IsNull()) continue;
 
-                meshes[i].Visible = true;
-                meshes[i].Layers = layers;
+                switch (nodes[i])
+                {
+                    case MeshInstance3D mesh:
+                        mesh.Layers = layers;
+                        mesh.Visible = true;
+                        break;
+
+                    case CanvasItem ci:
+                        ci.VisibilityLayer = layers;
+                        ci.Visible = true;
+                        break;
+                }
             }
         }
 
-        public static void EnableVision(MeshInstance3D mesh, params Key[] keys) => SetVision(true, mesh, keys);
-        public static void DisableVision(MeshInstance3D mesh, params Key[] keys) => SetVision(false, mesh, keys);
+        public static void ResetVision<T>(T[] nodes) where T : Node
+        {
+            for (var i = 0; i < nodes.Length; i++)
+            {
+                if (nodes[i].IsNull()) continue;
+
+                switch (nodes[i])
+                {
+                    case MeshInstance3D mesh:
+                        mesh.Layers = 1;
+                        mesh.Visible = true;
+                        break;
+
+                    case CanvasItem ci:
+                        ci.VisibilityLayer = 1;
+                        ci.Visible = true;
+                        break;
+                }
+            }
+        }
+
+        public static void EnableVision(MeshInstance3D node, params Key[] keys) => SetVision(node, true, keys);
+        public static void EnableVision(CanvasItem node, params Key[] keys) => SetVision(node, true, keys);
+
+        public static void DisableVision(MeshInstance3D node, params Key[] keys) => SetVision(node, false, keys);
+        public static void DisableVision(CanvasItem node, params Key[] keys) => SetVision(node, false, keys);
 
         public static void Apply(Camera3D camera, params Key[] keys)
         {
