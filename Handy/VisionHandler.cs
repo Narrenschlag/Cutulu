@@ -97,33 +97,19 @@ namespace Cutulu
                 return;
             }
 
-            var bitBuilder = new BitBuilder((uint)0);
-
             for (var i = 0; i < keys.Length; i++)
             {
                 if (keys[i] == null || (keys[i] is Node n && n.IsNull())) continue;
 
-                if (Keys.TryGetValue(keys[i], out var maskIdx))
-                {
-                    bitBuilder[maskIdx + 1] = value;
-                }
-            }
-
-            var layers = bitBuilder.ByteBuffer.Decode<uint>();
-
-            for (var i = 0; i < nodes.Length; i++)
-            {
-                if (nodes[i].IsNull()) continue;
-
                 switch (nodes[i])
                 {
                     case MeshInstance3D mesh:
-                        mesh.Layers = layers;
+                        SetBit(mesh, keys[i], value);
                         mesh.Visible = true;
                         break;
 
                     case CanvasItem ci:
-                        ci.VisibilityLayer = layers;
+                        SetBit(ci, keys[i], value);
                         ci.Visible = true;
                         break;
                 }
@@ -178,6 +164,60 @@ namespace Cutulu
             }
 
             camera.CullMask = bitBuilder.ByteBuffer.Decode<uint>();
+        }
+
+        public static void SetBit(MeshInstance3D mesh, int i, bool value)
+        {
+            mesh.Layers = new BitBuilder(mesh.Layers)
+            {
+                [i] = value
+            }.ByteBuffer.Decode<uint>();
+        }
+
+        public static void SetBit(MeshInstance3D mesh, Key key, bool value)
+        {
+            if (key == null || Keys.TryGetValue(key, out var i) == false) return;
+
+            Debug.Log($"{i}_{value}");
+
+            mesh.Layers = new BitBuilder(mesh.Layers)
+            {
+                [i + 1] = value
+            }.ByteBuffer.Decode<uint>();
+        }
+
+        public static void SetBit(CanvasItem canvas, Key key, bool value)
+        {
+            if (key == null || Keys.TryGetValue(key, out var i) == false) return;
+
+            var bit = new BitBuilder(canvas.VisibilityLayer);
+            bit[i + 1] = value;
+
+            canvas.VisibilityLayer = bit.ByteBuffer.Decode<uint>();
+        }
+
+        public static bool GetBit(MeshInstance3D mesh, Key key)
+        {
+            if (key == null || Keys.TryGetValue(key, out var i) == false) return false;
+
+            return new BitBuilder(mesh.Layers)[i + 1];
+        }
+
+        public static bool GetBit(CanvasItem canvas, Key key)
+        {
+            if (key == null || Keys.TryGetValue(key, out var i) == false) return false;
+
+            return new BitBuilder(canvas.VisibilityLayer)[i + 1];
+        }
+
+        public static void DisableBits(MeshInstance3D mesh)
+        {
+            mesh.Layers = default;
+        }
+
+        public static void EnableBits(MeshInstance3D mesh)
+        {
+            mesh.Layers = uint.MaxValue;
         }
     }
 }
