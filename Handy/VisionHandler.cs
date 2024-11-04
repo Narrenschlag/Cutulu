@@ -3,6 +3,9 @@ using Godot;
 
 namespace Cutulu
 {
+    /// <summary>
+    /// Handles visibility based on layers, using keys with assigned idxs.
+    /// </summary>
     public static class VisionHandler<Key>
     {
         private readonly static Dictionary<Key, int> Keys = new();
@@ -10,6 +13,9 @@ namespace Cutulu
 
         public static int MaxIndex { get; set; } = 16;
 
+        /// <summary>
+        /// Adds key to dictionary and assigns it an index. Ignores if already contained.
+        /// </summary>
         public static void Add(Key key)
         {
             if (Keys.ContainsKey(key))
@@ -39,6 +45,9 @@ namespace Cutulu
             throw new($"Cannot add key. Max keys reached.");
         }
 
+        /// <summary>
+        /// Removes key. Ignores if not contained.
+        /// </summary>
         public static void Remove(Key key)
         {
             if (key is Node n && n.IsNull()) return;
@@ -50,174 +59,57 @@ namespace Cutulu
             }
         }
 
+        /// <summary>
+        /// Clears keys.
+        /// </summary>
         public static void Clear()
         {
             Keys.Clear();
             Indecies.Clear();
         }
 
-        public static bool IsVisible(MeshInstance3D node, params Key[] keys) => IsVisibleT(node, keys);
-        public static bool IsVisible(CanvasItem node, params Key[] keys) => IsVisibleT(node, keys);
-        private static bool IsVisibleT(Node node, params Key[] keys)
-        {
-            if (node.IsNull() || keys.IsEmpty()) return false;
+        /// <summary>
+        /// Returns player idx. If idx < 1 the key is not assigned an idx.
+        /// </summary>
+        public static byte GetIdx(Key key) => key != null && Keys.TryGetValue(key, out var i) ? (byte)(i + 1) : default;
 
-            var value = node is CanvasItem ci ? ci.VisibilityLayer : node is MeshInstance3D mi ? mi.Layers : 0;
-            if (value < 1) return keys.IsEmpty();
-
-            var bitBuilder = new BitBuilder(value);
-            for (var i = 0; i < keys.Length; i++)
-            {
-                if (keys[i] == null || (keys[i] is Node n && n.IsNull())) continue;
-
-                if (Keys.TryGetValue(keys[i], out var maskIdx))
-                {
-                    if (bitBuilder[maskIdx + 1] == false) return false;
-                }
-
-                else return false;
-            }
-
-            return true;
-        }
-
-        public static void SetVision(MeshInstance3D mesh, bool value, params Key[] keys) => SetVision(new[] { mesh }, value, keys);
-        public static void SetVision(CanvasItem canvas, bool value, params Key[] keys) => SetVision(new[] { canvas }, value, keys);
-
-        public static void SetVision(MeshInstance3D[] nodes, bool value, params Key[] keys) => SetVisionT(value, nodes, keys);
-        public static void SetVision(CanvasItem[] nodes, bool value, params Key[] keys) => SetVisionT(value, nodes, keys);
-
-        private static void SetVisionT<T>(bool value, T[] nodes, params Key[] keys) where T : Node
-        {
-            if (nodes.IsEmpty()) return;
-
-            if (keys.IsEmpty())
-            {
-                ResetVision(nodes);
-                return;
-            }
-
-            for (var i = 0; i < keys.Length; i++)
-            {
-                if (keys[i] == null || (keys[i] is Node n && n.IsNull())) continue;
-
-                switch (nodes[i])
-                {
-                    case MeshInstance3D mesh:
-                        SetBit(mesh, keys[i], value);
-                        mesh.Visible = true;
-                        break;
-
-                    case CanvasItem ci:
-                        SetBit(ci, keys[i], value);
-                        ci.Visible = true;
-                        break;
-                }
-            }
-        }
-
-        public static void ResetVision<T>(T[] nodes) where T : Node
-        {
-            for (var i = 0; i < nodes.Length; i++)
-            {
-                if (nodes[i].IsNull()) continue;
-
-                switch (nodes[i])
-                {
-                    case MeshInstance3D mesh:
-                        mesh.Layers = 1;
-                        mesh.Visible = true;
-                        break;
-
-                    case CanvasItem ci:
-                        ci.VisibilityLayer = 1;
-                        ci.Visible = true;
-                        break;
-                }
-            }
-        }
-
-        public static void EnableVision(MeshInstance3D node, params Key[] keys) => SetVision(node, true, keys);
-        public static void EnableVision(CanvasItem node, params Key[] keys) => SetVision(node, true, keys);
-
-        public static void DisableVision(MeshInstance3D node, params Key[] keys) => SetVision(node, false, keys);
-        public static void DisableVision(CanvasItem node, params Key[] keys) => SetVision(node, false, keys);
-
+        /// <summary>
+        /// Applies visibility layers to camera.
+        /// </summary>
         public static void Apply(Camera3D camera, params Key[] keys)
         {
             if (camera.IsNull()) return;
 
-            var bitBuilder = new BitBuilder((uint)0)
-            {
-                [0] = true
-            };
+            camera.SetLayers(false);
+            camera.SetLayer(0, true);
 
             if (keys.NotEmpty())
             {
                 for (var i = 0; i < keys.Length; i++)
                 {
-                    if (Keys.TryGetValue(keys[i], out var maskIdx))
-                    {
-                        bitBuilder[maskIdx + 1] = true;
-                    }
+                    var idx = GetIdx(keys[i]);
+
+                    if (idx > 0) camera.SetLayer(idx, true);
                 }
             }
-
-            camera.CullMask = bitBuilder.ByteBuffer.Decode<uint>();
         }
 
-        public static void SetBit(MeshInstance3D mesh, int i, bool value)
+        /// <summary>
+        /// Sets global visibility. Overwrites locals, if globally visible.
+        /// </summary>
+        public static void SetGlobalVisibility(VisualInstance3D vis, bool value)
         {
-            mesh.Layers = new BitBuilder(mesh.Layers)
-            {
-                [i] = value
-            }.ByteBuffer.Decode<uint>();
+            vis.SetLayer(0, value);
         }
 
-        public static void SetBit(MeshInstance3D mesh, Key key, bool value)
+        /// <summary>
+        /// Sets local visibility. Is overwritten, if globally visible.
+        /// </summary>
+        public static void SetLocalVisibility(VisualInstance3D vis, Key key, bool value)
         {
-            if (key == null || Keys.TryGetValue(key, out var i) == false) return;
+            var idx = GetIdx(key);
 
-            Debug.Log($"{i}_{value}");
-
-            mesh.Layers = new BitBuilder(mesh.Layers)
-            {
-                [i + 1] = value
-            }.ByteBuffer.Decode<uint>();
-        }
-
-        public static void SetBit(CanvasItem canvas, Key key, bool value)
-        {
-            if (key == null || Keys.TryGetValue(key, out var i) == false) return;
-
-            var bit = new BitBuilder(canvas.VisibilityLayer);
-            bit[i + 1] = value;
-
-            canvas.VisibilityLayer = bit.ByteBuffer.Decode<uint>();
-        }
-
-        public static bool GetBit(MeshInstance3D mesh, Key key)
-        {
-            if (key == null || Keys.TryGetValue(key, out var i) == false) return false;
-
-            return new BitBuilder(mesh.Layers)[i + 1];
-        }
-
-        public static bool GetBit(CanvasItem canvas, Key key)
-        {
-            if (key == null || Keys.TryGetValue(key, out var i) == false) return false;
-
-            return new BitBuilder(canvas.VisibilityLayer)[i + 1];
-        }
-
-        public static void DisableBits(MeshInstance3D mesh)
-        {
-            mesh.Layers = default;
-        }
-
-        public static void EnableBits(MeshInstance3D mesh)
-        {
-            mesh.Layers = uint.MaxValue;
+            if (idx > 0) vis.SetLayer(idx, value);
         }
     }
 }
