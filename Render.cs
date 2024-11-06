@@ -173,6 +173,24 @@ namespace Cutulu
         public static void SetLayers(this VisualInstance3D vis, bool value) => vis.Layers = value ? uint.MaxValue : 0;
         public static void SetLayers(this Camera3D vis, bool value) => vis.CullMask = value ? uint.MaxValue : 0;
 
+        public static void SetLayer(this CanvasItem[] vis, int i, bool value)
+        {
+            if (vis.NotEmpty()) foreach (var v in vis) v.SetLayer(i, value);
+        }
+        public static void SetLayer(this VisualInstance3D[] vis, int i, bool value)
+        {
+            if (vis.NotEmpty()) foreach (var v in vis) v.SetLayer(i, value);
+        }
+
+        public static void SetLayers(this CanvasItem[] vis, bool value)
+        {
+            if (vis.NotEmpty()) foreach (var v in vis) v.SetLayers(value);
+        }
+        public static void SetLayers(this VisualInstance3D[] vis, bool value)
+        {
+            if (vis.NotEmpty()) foreach (var v in vis) v.SetLayers(value);
+        }
+
         #endregion
     }
 }

@@ -11,8 +11,6 @@ namespace Cutulu
         private readonly static Dictionary<object, int> Keys = new();
         private readonly static List<int> Indecies = new();
 
-        public static int MaxIndex { get; set; } = 16;
-
         /// <summary>
         /// Adds key to dictionary and assigns it an index. Ignores if already contained.
         /// </summary>
@@ -30,9 +28,7 @@ namespace Cutulu
 
             else
             {
-                MaxIndex = Mathf.Clamp(MaxIndex, 1, 31);
-
-                for (var i = 1; i < MaxIndex; i++)
+                for (var i = 1; i < 32; i++)
                 {
                     if (Indecies.Contains(i) == false)
                     {
@@ -107,6 +103,14 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Sets global visibility. Overwrites locals, if globally visible.
+        /// </summary>
+        public static void SetGlobalVisibility(this VisualInstance3D[] vis, bool value)
+        {
+            if (vis.NotEmpty()) foreach (var v in vis) v.SetGlobalVisibility(value);
+        }
+
+        /// <summary>
         /// Sets local visibility. Is overwritten, if globally visible.
         /// </summary>
         public static void SetLocalVisibility(this VisualInstance3D vis, object key, bool value, bool disableGlobalVisibility = true)
@@ -115,6 +119,15 @@ namespace Cutulu
 
             var idx = GetIdx(key);
             if (idx > 0) vis.SetLayer(idx, value);
+            else Debug.LogError($"{idx} is not a valid layer index");
+        }
+
+        /// <summary>
+        /// Sets local visibility. Is overwritten, if globally visible.
+        /// </summary>
+        public static void SetLocalVisibility(this VisualInstance3D[] vis, object key, bool value, bool disableGlobalVisibility = true)
+        {
+            if (vis.NotEmpty()) foreach (var v in vis) v.SetLocalVisibility(key, value, disableGlobalVisibility);
         }
     }
 }
