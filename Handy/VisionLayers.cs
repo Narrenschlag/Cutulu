@@ -6,9 +6,9 @@ namespace Cutulu
     /// <summary>
     /// Handles visibility based on layers, using keys with assigned idxs.
     /// </summary>
-    public static class VisionHandler<Key>
+    public static class VisionLayers
     {
-        private readonly static Dictionary<Key, int> Keys = new();
+        private readonly static Dictionary<object, int> Keys = new();
         private readonly static List<int> Indecies = new();
 
         public static int MaxIndex { get; set; } = 16;
@@ -16,7 +16,7 @@ namespace Cutulu
         /// <summary>
         /// Adds key to dictionary and assigns it an index. Ignores if already contained.
         /// </summary>
-        public static void Add(Key key)
+        public static void Add(object key)
         {
             if (Keys.ContainsKey(key))
                 return;
@@ -48,7 +48,7 @@ namespace Cutulu
         /// <summary>
         /// Removes key. Ignores if not contained.
         /// </summary>
-        public static void Remove(Key key)
+        public static void Remove(object key)
         {
             if (key is Node n && n.IsNull()) return;
 
@@ -71,17 +71,21 @@ namespace Cutulu
         /// <summary>
         /// Returns player idx. If idx < 1 the key is not assigned an idx.
         /// </summary>
-        public static byte GetIdx(Key key) => key != null && Keys.TryGetValue(key, out var i) ? (byte)(i + 1) : default;
+        public static byte GetIdx(object key) => key != null && Keys.TryGetValue(key, out var i) ? (byte)(i + 1) : default;
 
         /// <summary>
         /// Applies visibility layers to camera.
         /// </summary>
-        public static void Apply(Camera3D camera, params Key[] keys)
+        public static void Apply(Camera3D camera, params object[] keys)
         {
             if (camera.IsNull()) return;
 
+            Debug.LogR($"[color=orange]>>>>>>");
             camera.SetLayers(false);
+            Debug.Log(camera.CullMask);
             camera.SetLayer(0, true);
+            Debug.Log(camera.CullMask);
+            Debug.LogR($"[color=orange]>>>>>>");
 
             if (keys.NotEmpty())
             {
@@ -97,7 +101,7 @@ namespace Cutulu
         /// <summary>
         /// Sets global visibility. Overwrites locals, if globally visible.
         /// </summary>
-        public static void SetGlobalVisibility(VisualInstance3D vis, bool value)
+        public static void SetGlobalVisibility(this VisualInstance3D vis, bool value)
         {
             vis.SetLayer(0, value);
         }
@@ -105,10 +109,11 @@ namespace Cutulu
         /// <summary>
         /// Sets local visibility. Is overwritten, if globally visible.
         /// </summary>
-        public static void SetLocalVisibility(VisualInstance3D vis, Key key, bool value)
+        public static void SetLocalVisibility(this VisualInstance3D vis, object key, bool value, bool disableGlobalVisibility = true)
         {
-            var idx = GetIdx(key);
+            if (disableGlobalVisibility) SetGlobalVisibility(vis, false);
 
+            var idx = GetIdx(key);
             if (idx > 0) vis.SetLayer(idx, value);
         }
     }

@@ -161,20 +161,17 @@ namespace Cutulu
 
         #region Visual Layers
 
-        public static bool GetLayer(this VisualInstance3D vis, int i) => new BitBuilder(vis.Layers)[i];
-        public static bool GetLayer(this Camera3D vis, int i) => new BitBuilder(vis.CullMask)[i];
-        public static bool GetLayer(this CanvasItem vis, int i) => new BitBuilder(vis.VisibilityLayer)[i];
-        public static bool GetLayer(this Camera2D vis, int i) => new BitBuilder(vis.VisibilityLayer)[i];
+        public static bool GetLayer(this CanvasItem vis, int i) => BitBuilder.GetBit(vis.VisibilityLayer, i);
+        public static bool GetLayer(this VisualInstance3D vis, int i) => BitBuilder.GetBit(vis.Layers, i);
+        public static bool GetLayer(this Camera3D vis, int i) => BitBuilder.GetBit(vis.CullMask, i);
 
-        public static void SetLayer(this VisualInstance3D vis, int i, bool value) => vis.Layers = new BitBuilder(vis.Layers) { [i] = value, }.ByteBuffer.Decode<uint>();
-        public static void SetLayer(this Camera3D vis, int i, bool value) => vis.CullMask = new BitBuilder(vis.CullMask) { [i] = value, }.ByteBuffer.Decode<uint>();
-        public static void SetLayer(this CanvasItem vis, int i, bool value) => vis.VisibilityLayer = new BitBuilder(vis.VisibilityLayer) { [i] = value, }.ByteBuffer.Decode<uint>();
-        public static void SetLayer(this Camera2D vis, int i, bool value) => vis.VisibilityLayer = new BitBuilder(vis.VisibilityLayer) { [i] = value, }.ByteBuffer.Decode<uint>();
+        public static void SetLayer(this CanvasItem vis, int i, bool value) => vis.VisibilityLayer = BitBuilder.SetBit(vis.VisibilityLayer, i, value);
+        public static void SetLayer(this VisualInstance3D vis, int i, bool value) => vis.Layers = BitBuilder.SetBit(vis.Layers, i, value);
+        public static void SetLayer(this Camera3D vis, int i, bool value) => vis.CullMask = BitBuilder.SetBit(vis.CullMask, i, value);
 
+        public static void SetLayers(this CanvasItem vis, bool value) => vis.VisibilityLayer = value ? uint.MaxValue : 0;
         public static void SetLayers(this VisualInstance3D vis, bool value) => vis.Layers = value ? uint.MaxValue : 0;
         public static void SetLayers(this Camera3D vis, bool value) => vis.CullMask = value ? uint.MaxValue : 0;
-        public static void SetLayers(this CanvasItem vis, bool value) => vis.VisibilityLayer = value ? uint.MaxValue : 0;
-        public static void SetLayers(this Camera2D vis, bool value) => vis.VisibilityLayer = value ? uint.MaxValue : 0;
 
         #endregion
     }

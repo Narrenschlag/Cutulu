@@ -169,5 +169,92 @@ namespace Cutulu
 
             return result;
         }
+
+        /// <summary>
+        /// Sets or clears a specific bit in the given integer type.
+        /// </summary>
+        /// <typeparam name="T">The integer type (e.g., byte, int, long).</typeparam>
+        /// <param name="obj">The original value to modify.</param>
+        /// <param name="bitIndex">The bit position to set or clear (0-based).</param>
+        /// <param name="value">If true, sets the bit; if false, clears it.</param>
+        /// <returns>The modified value with the bit set or cleared as specified.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the type is not supported.</exception>
+        public static T SetBit<T>(T obj, int bitIndex, bool value) where T : unmanaged
+        {
+            switch (obj)
+            {
+                case sbyte sb:
+                    return (T)(object)(value ? (sbyte)(sb | (sbyte)(1 << bitIndex)) : (sbyte)(sb & (sbyte)~(1 << bitIndex)));
+
+                case byte b:
+                    return (T)(object)(value ? (byte)(b | (byte)(1 << bitIndex)) : (byte)(b & (byte)~(1 << bitIndex)));
+
+                case short s:
+                    return (T)(object)(value ? (short)(s | (short)(1 << bitIndex)) : (short)(s & (short)~(1 << bitIndex)));
+
+                case ushort us:
+                    return (T)(object)(value ? (ushort)(us | (ushort)(1 << bitIndex)) : (ushort)(us & (ushort)~(1 << bitIndex)));
+
+                case int i:
+                    return (T)(object)(value ? (i | (1 << bitIndex)) : (i & ~(1 << bitIndex)));
+
+                case uint ui:
+                    return (T)(object)(value ? (ui | (1u << bitIndex)) : (ui & ~(1u << bitIndex)));
+
+                case long l:
+                    return (T)(object)(value ? (l | (1L << bitIndex)) : (l & ~(1L << bitIndex)));
+
+                case ulong ul:
+                    return (T)(object)(value ? (ul | (1ul << bitIndex)) : (ul & ~(1ul << bitIndex)));
+
+                default:
+                    dynamic dynamicObj = obj;
+                    return (T)(value ? dynamicObj | (dynamic)(1 << bitIndex) : (dynamicObj & ~(dynamic)(1 << bitIndex)));
+                    //throw new NotSupportedException($"Type {typeof(T)} is not supported for bit operations.");
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the value of a specific bit in the given integer type.
+        /// </summary>
+        /// <typeparam name="T">The integer type (e.g., byte, int, long).</typeparam>
+        /// <param name="obj">The value from which to retrieve the bit.</param>
+        /// <param name="bitIndex">The bit position to check (0-based).</param>
+        /// <returns>True if the specified bit is set, false otherwise.</returns>
+        /// <exception cref="NotSupportedException">Thrown if the type is not supported.</exception>
+        public static bool GetBit<T>(T obj, int bitIndex) where T : unmanaged
+        {
+            switch (obj)
+            {
+                case sbyte sb:
+                    return (sb & (sbyte)(1 << bitIndex)) != 0;
+
+                case byte b:
+                    return (b & (byte)(1 << bitIndex)) != 0;
+
+                case short s:
+                    return (s & (short)(1 << bitIndex)) != 0;
+
+                case ushort us:
+                    return (us & (ushort)(1 << bitIndex)) != 0;
+
+                case int i:
+                    return (i & (1 << bitIndex)) != 0;
+
+                case uint ui:
+                    return (ui & (1u << bitIndex)) != 0;
+
+                case long l:
+                    return (l & (1L << bitIndex)) != 0;
+
+                case ulong ul:
+                    return (ul & (1ul << bitIndex)) != 0;
+
+                default:
+                    dynamic dynamicObj = obj;
+                    return (dynamicObj & (dynamic)(1 << bitIndex)) != 0;
+                    //throw new NotSupportedException($"Type {typeof(T)} is not supported for bit operations.");
+            }
+        }
     }
 }
