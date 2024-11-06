@@ -76,12 +76,8 @@ namespace Cutulu
         {
             if (camera.IsNull()) return;
 
-            Debug.LogR($"[color=orange]>>>>>>");
             camera.SetLayers(false);
-            Debug.Log(camera.CullMask);
             camera.SetLayer(0, true);
-            Debug.Log(camera.CullMask);
-            Debug.LogR($"[color=orange]>>>>>>");
 
             if (keys.NotEmpty())
             {
