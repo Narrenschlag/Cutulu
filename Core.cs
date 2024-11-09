@@ -183,6 +183,14 @@ namespace Cutulu
             else node.QueueFree();
         }
 
+        public static void Destroy<T>(this T[] nodes, bool forceInstant = false) where T : Node
+        {
+            if (nodes.IsEmpty()) return;
+
+            foreach (var node in nodes)
+                node.Destroy(forceInstant);
+        }
+
         public static Vector3 Forward(this Node3D node, bool global = true) => node == null ? Vector3.Forward : -(global ? node.GlobalTransform : node.Transform).Basis.Z;
         public static Vector3 Right(this Node3D node, bool global = true) => node == null ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X;
         public static Vector3 Up(this Node3D node, bool global = true) => node == null ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y;
@@ -389,6 +397,7 @@ namespace Cutulu
         }
 
         public static bool IsNull(this GodotObject node) => node == null || !GodotObject.IsInstanceValid(node);
+        public static bool HasNoParent(this Node node) => node.IsNull() || node.GetParent().IsNull();
         public static bool NotNull(this GodotObject node) => !IsNull(node);
         #endregion
 
@@ -455,6 +464,18 @@ namespace Cutulu
 
         #region Array Functions         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static ushort Size<T>(this T[] array) => array == null ? (ushort)0 : (ushort)array.Length;
+
+        public static T[] MoveElements<T>(this T[] array, int moveValue)
+        {
+            var arr = new T[array.Length];
+
+            for (var i = 0; i < array.Length; i++)
+            {
+                arr[i] = array[(i + moveValue).AbsMod(array.Length)];
+            }
+
+            return arr;
+        }
 
         public static T[] Mask<T>(this T[] array, T[] mask, bool inside = true)
         {

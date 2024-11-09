@@ -125,5 +125,18 @@ namespace Cutulu
         {
             if (vis.NotEmpty()) foreach (var v in vis) v.SetLocalVisibility(key, value, disableGlobalVisibility);
         }
+
+        public static void ResetVisibility(this VisualInstance3D vis, bool globallyVisible)
+        {
+            if (vis.IsNull()) return;
+
+            vis.SetLayers(true);
+            vis.SetGlobalVisibility(globallyVisible);
+        }
+
+        public static void ResetVisibility(this VisualInstance3D[] vis, bool globallyVisible)
+        {
+            if (vis.NotEmpty()) foreach (var v in vis) v.ResetVisibility(globallyVisible);
+        }
     }
 }

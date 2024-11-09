@@ -313,6 +313,21 @@ namespace Cutulu.Modding
             return packed.Instantiate<N>(parent);
         }
 
+        public T[] GetCollection<T>(string dir)
+        {
+            if (Directories.TryGetValue(dir, out var set) == false || set == null || set.Count < 1) return Array.Empty<T>();
+
+            var list = new List<T>();
+
+            foreach (var assetName in set)
+            {
+                if (TryGet(assetName, out T t))
+                    list.Add(t);
+            }
+
+            return list.ToArray();
+        }
+
         #endregion
     }
 }
