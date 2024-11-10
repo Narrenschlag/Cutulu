@@ -60,7 +60,24 @@ namespace Cutulu
 
         public static void Encode(BinaryWriter writer, ref object obj)
         {
-            if (obj == null) return;
+            if (obj == null)
+            {
+                if (obj.GetType().IsArray)
+                {
+                    Debug.LogError($"[color=red]Array is null. Wrote 0 as length.[/color]");
+                    writer.Write(default(ushort));
+                }
+
+                else if (obj.GetType() == typeof(string))
+                {
+                    Debug.LogError($"[color=red]String is null. Wrote 0 as length.[/color]");
+                    writer.Write(string.Empty);
+                }
+
+                else Debug.LogError($"Object is null. Cannot encode it. ({obj.GetType()})");
+
+                return;
+            }
 
             switch (obj)
             {
@@ -242,8 +259,16 @@ namespace Cutulu
             // Arrays
             if (type.IsArray)
             {
-                var length = reader.ReadUInt16();
                 type = type.GetElementType();
+
+                // Unable to read beyond end of stream
+                if (reader.RemainingByteLength() < 2)
+                {
+                    Debug.LogError($"Unable to read array. Reached end of stream. Returning null.");
+                    return Array.CreateInstance(type, 0);
+                }
+
+                var length = reader.ReadUInt16();
 
                 var array = Array.CreateInstance(type, length);
                 for (ushort i = 0; i < length; i++)
@@ -277,6 +302,11 @@ namespace Cutulu
         public static byte[] ReadRemainingBytes(this BinaryReader reader)
         {
             return reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
+        }
+
+        public static long RemainingByteLength(this BinaryReader reader)
+        {
+            return reader.BaseStream.Length - reader.BaseStream.Position;
         }
 
         /// <summary>
