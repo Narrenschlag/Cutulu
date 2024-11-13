@@ -127,9 +127,7 @@ namespace Cutulu
                 {
                     var idx = reader.ReadInt32();
 
-                    if (reader.TryDecode<T>(out var val) == false) break;
-
-                    result[idx] = val;
+                    result[idx] = reader.Decode<T>();
                 }
             }
 

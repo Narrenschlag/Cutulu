@@ -1,19 +1,22 @@
-using System.Runtime.InteropServices;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
-using System.IO;
-using System;
-
 namespace Cutulu
 {
-    public static class DeEncoding
+    using System.Collections.Generic;
+    using System.Reflection;
+    using System.Linq;
+    using System.IO;
+    using System;
+
+    /// <summary>
+    /// Static class for encoding and decoding binary data
+    /// </summary>
+    public static class Encoder
     {
-        #region Encoders [1/3]
+        #region Encoders [1/4]
+
         private static readonly Dictionary<Type, IBinaryEncoder> Encoders = new();
         public static int EncoderCount => Encoders.Count;
 
-        static DeEncoding()
+        static Encoder()
         {
             RegisterAllEncoders();
         }
@@ -43,45 +46,34 @@ namespace Cutulu
                 }
             }
         }
+
         #endregion
 
-        #region Encode
+        #region Input [2/4]
+
+        /// <summary>
+        /// Encodes an object into a byte array
+        /// </summary>
         public static byte[] Encode(this object obj)
         {
-            if (obj == null) return Array.Empty<byte>();
-
             using var memory = new MemoryStream();
             using var writer = new BinaryWriter(memory);
 
-            Encode(writer, ref obj);
+            Encode(writer, ref obj, obj is byte[]);
 
             return memory.ToArray();
         }
 
-        public static void Encode(BinaryWriter writer, ref object obj)
+        /// <summary>
+        /// Encodes an object into a byte array and writes it to the BinaryWriter
+        /// </summary>
+        public static bool Encode(BinaryWriter writer, ref object obj, bool raw = false)
         {
-            if (obj == null)
-            {
-                if (obj.GetType().IsArray)
-                {
-                    Debug.LogError($"[color=red]Array is null. Wrote 0 as length.[/color]");
-                    writer.Write(default(ushort));
-                }
-
-                else if (obj.GetType() == typeof(string))
-                {
-                    Debug.LogError($"[color=red]String is null. Wrote 0 as length.[/color]");
-                    writer.Write(string.Empty);
-                }
-
-                else Debug.LogError($"Object is null. Cannot encode it. ({obj.GetType()})");
-
-                return;
-            }
+            if (obj == null) return false;
 
             switch (obj)
             {
-                case byte[] v: writer.Write(v); break;
+                case byte[] v when raw: writer.Write(v); break;
 
                 case string v: writer.Write(v); break;
                 case bool v: writer.Write(v); break;
@@ -103,19 +95,18 @@ namespace Cutulu
                 case float v: writer.Write(v); break;
 
                 default:
-                    if (Encoders.TryGetValue(obj.GetType(), out var encoder))
-                        encoder.Encode(writer, ref obj);
-                    else
-                        writer.Write(EncodeUnknown(ref obj) ?? Array.Empty<byte>());
+                    if (Encoders.TryGetValue(obj.GetType(), out var encoder)) encoder.Encode(writer, ref obj);
+                    else if (EncodeUnknown(writer, ref obj) == false) return false;
                     break;
             }
+
+            return true;
         }
 
-        private static byte[] EncodeUnknown(ref object obj)
+        private static bool EncodeUnknown(BinaryWriter writer, ref object obj)
         {
+            if (obj == null) return false;
             var type = obj.GetType();
-            using var memory = new MemoryStream();
-            using var writer = new BinaryWriter(memory);
 
             // Arrays
             if (type.IsArray && obj is Array array)
@@ -125,7 +116,13 @@ namespace Cutulu
 
                 for (ushort i = 0; i < array.Length; i++)
                 {
-                    writer.Write(Encode(array.GetValue(i)));
+                    var value = array.GetValue(i);
+
+                    // Write null array as empty array
+                    if (value == null && type.IsArray) writer.Write(default(ushort));
+
+                    // Write array value
+                    else writer.Write(Encode(value));
                 }
             }
 
@@ -136,100 +133,44 @@ namespace Cutulu
 
                 for (ushort i = 0; i < properties.Length; i++)
                 {
-                    writer.Write(Encode(properties[i].GetValue(obj)));
+                    var value = properties[i].GetValue(obj);
+                    type = properties[i].GetType();
+
+                    // Write null array as empty array
+                    if (value == null && type.IsArray) writer.Write(default(ushort));
+
+                    // Write value
+                    else writer.Write(Encode(value));
                 }
             }
 
-            return memory.ToArray();
+            return true;
         }
+
         #endregion
 
-        #region Decode
-        public static bool TryDecode<T>(this byte[] buffer, out T value)
-        {
-            try
-            {
-                value = Decode<T>(buffer);
-            }
+        #region Output [3/4]
 
-            catch (Exception ex)
-            {
-                Debug.LogError($"Cannot decode typeof({typeof(T)}): {ex.Message}\n{ex.StackTrace}");
-                value = default;
-            }
-
-            return value != null;
-        }
-
+        /// <summary>
+        /// Decodes a byte array into an object
+        /// </summary>
         public static T Decode<T>(this byte[] buffer)
-        {
-            return Decode(buffer, typeof(T)) is T t ? t : default;
-        }
-
-        public static bool TryDecode(this byte[] buffer, Type type, out object value)
-        {
-            try
-            {
-                value = Decode(buffer, type);
-            }
-
-            catch (Exception ex)
-            {
-                Debug.LogError($"Cannot decode typeof({type}): {ex.Message}\n{ex.StackTrace}");
-                value = default;
-            }
-
-            return value != null;
-        }
-
-        public static object Decode(this byte[] buffer, Type type)
         {
             using var memory = new MemoryStream(buffer);
             using var reader = new BinaryReader(memory);
 
-            return Decode(reader, type);
+            return (T)Decode(reader, typeof(T));
         }
 
-        public static T Read<T>(this BinaryReader reader) => Decode<T>(reader);
+        /// <summary>
+        /// Decodes a byte array from the BinaryReader into an object
+        /// </summary>
         public static T Decode<T>(this BinaryReader reader)
         {
-            if (TryDecode(reader, typeof(T), out var obj) && obj is T val)
-            {
-                return val;
-            }
-
-            return default;
+            return (T)Decode(reader, typeof(T));
         }
 
-        public static bool TryDecode<T>(this BinaryReader reader, out T value)
-        {
-            if (TryDecode(reader, typeof(T), out var obj) && obj is T val)
-            {
-                value = val;
-                return true;
-            }
-
-            value = default;
-            return false;
-        }
-
-        public static bool TryDecode(this BinaryReader reader, Type type, out object value)
-        {
-            try
-            {
-                value = Decode(reader, type);
-            }
-
-            catch (Exception ex)
-            {
-                Debug.LogError($"Cannot decode typeof({type}): {ex.Message}\n{ex.StackTrace}");
-                value = default;
-            }
-
-            return value != null;
-        }
-
-        public static object Decode(this BinaryReader reader, Type type)
+        private static object Decode(this BinaryReader reader, Type type)
         {
             return type switch
             {
@@ -264,14 +205,12 @@ namespace Cutulu
                 // Unable to read beyond end of stream
                 if (reader.RemainingByteLength() < 2)
                 {
-                    Debug.LogError($"Unable to read array. Reached end of stream. Returning null.");
-                    return Array.CreateInstance(type, 0);
+                    throw new EndOfStreamException($"Unable to read array. Reached end of stream. Returning null.");
                 }
 
-                var length = reader.ReadUInt16();
+                var array = Array.CreateInstance(type, reader.ReadUInt16());
 
-                var array = Array.CreateInstance(type, length);
-                for (ushort i = 0; i < length; i++)
+                for (ushort i = 0; i < array.Length; i++)
                 {
                     array.SetValue(Decode(reader, type), i);
                 }
@@ -293,9 +232,49 @@ namespace Cutulu
                 return output;
             }
         }
+
         #endregion
 
-        #region Utility
+        #region Utility [4/4]
+
+        /// <summary>
+        /// Safely encodes an object into a byte array
+        /// </summary>
+        public static bool TryEncode<T>(this T obj, out byte[] buffer, bool enableLogging = true)
+        {
+            try
+            {
+                buffer = Encode(obj);
+                return buffer != null;
+            }
+
+            catch (Exception ex)
+            {
+                if (enableLogging) Debug.LogError($"Cannot encode typeof({typeof(T)}): {ex.Message}\n{ex.StackTrace}");
+                buffer = default;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Safely decodes a byte array into an object
+        /// </summary>
+        public static bool TryDecode<T>(this byte[] buffer, out T value, bool enableLogging = true)
+        {
+            try
+            {
+                value = Decode<T>(buffer);
+                return value != null;
+            }
+
+            catch (Exception ex)
+            {
+                if (enableLogging) Debug.LogError($"Cannot decode typeof({typeof(T)}): {ex.Message}\n{ex.StackTrace}");
+                value = default;
+                return false;
+            }
+        }
+
         /// <summary>
         /// Returns all remaining bytes in stream of BinaryReader
         /// </summary>
@@ -304,54 +283,20 @@ namespace Cutulu
             return reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
         }
 
+        /// <summary>
+        /// Returns length of remaining bytes in stream of BinaryReader
+        /// </summary>
         public static long RemainingByteLength(this BinaryReader reader)
         {
             return reader.BaseStream.Length - reader.BaseStream.Position;
         }
 
-        /// <summary>
-        /// Uses the Marshal to allocate data from binary reader and cast it into generic Type : struct
-        /// </summary>
-        public static T ReadViaMarshal<T>(this BinaryReader reader) where T : struct
-        {
-            if (reader == null)
-                throw new ArgumentNullException(nameof(reader));
-
-            var size = Marshal.SizeOf(typeof(T));
-            var bytes = reader.ReadBytes(size);
-
-            if (bytes.Length != size)
-                throw new EndOfStreamException("Could not read enough bytes for the specified type.");
-
-            var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-            try
-            {
-                var pointer = handle.AddrOfPinnedObject();
-                return (T)Marshal.PtrToStructure(pointer, typeof(T));
-            }
-
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        public static int GetExpectedSizeOf<T>(this T obj) => GetSizeOf<T>();
-        public static int GetSizeOf<T>()
-        {
-            if (typeof(T).Equals(typeof(string)))
-            {
-                Debug.LogError($"typeof(string) is not supported for GetSizeOf() as it has a generic length.");
-                return 0;
-            }
-
-            return Marshal.SizeOf(typeof(T));
-        }
         #endregion
     }
 
-    #region Encoders [2/3]
-    // Define a non-generic interface for binary encoding
+    /// <summary>
+    /// Defines a non-generic interface for binary encoding
+    /// </summary>
     public interface IBinaryEncoder
     {
         void Encode(BinaryWriter writer, ref object value);
@@ -360,7 +305,9 @@ namespace Cutulu
         bool Active();
     }
 
-    // Generic implementation of the base interface
+    /// <summary>
+    /// Defines a generic base class for binary encoding
+    /// </summary>
     public class BinaryEncoder<T> : IBinaryEncoder
     {
         public virtual void Encode(BinaryWriter writer, ref object value)
@@ -377,5 +324,4 @@ namespace Cutulu
 
         public virtual bool Active() => true;
     }
-    #endregion
 }

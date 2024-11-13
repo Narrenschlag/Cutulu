@@ -19,7 +19,7 @@ namespace Cutulu.UnitTest
                 #region Step 1
                 stepLog("MsgString");
 
-                Debug.Log($"Encoder Count: {DeEncoding.EncoderCount}");
+                Debug.Log($"Encoder Count: {Encoder.EncoderCount}");
 
                 var str0 = "Hello World!";
                 var buff = str0.Encode();
