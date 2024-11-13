@@ -54,20 +54,28 @@ namespace Cutulu
         /// <summary>
         /// Encodes an object into a byte array
         /// </summary>
-        public static byte[] Encode(this object obj)
+        public static byte[] Encode<T>(this T obj)
         {
             using var memory = new MemoryStream();
             using var writer = new BinaryWriter(memory);
 
-            Encode(writer, ref obj, obj is byte[]);
+            // Write empty array
+            if (obj == null && typeof(T).IsArray) writer.Write(default(ushort));
 
-            return memory.ToArray();
+            // Write object
+            else Encode(writer, obj, obj is byte[]);
+
+            // Return result
+            return memory.ToArray() ?? Array.Empty<byte>();
         }
 
         /// <summary>
         /// Encodes an object into a byte array and writes it to the BinaryWriter
+        /// <code>
+        /// raw = true: Writes byte[] as is without trying to encode it
+        /// </code>
         /// </summary>
-        public static bool Encode(BinaryWriter writer, ref object obj, bool raw = false)
+        public static bool Encode(BinaryWriter writer, object obj, bool raw = false)
         {
             if (obj == null) return false;
 
