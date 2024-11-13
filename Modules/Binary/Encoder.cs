@@ -213,7 +213,7 @@ namespace Cutulu
                 // Unable to read beyond end of stream
                 if (reader.RemainingByteLength() < 2)
                 {
-                    throw new EndOfStreamException($"Unable to read array. Reached end of stream. Returning null.");
+                    throw new EndOfStreamException($"Unable to read array. Reached end of stream.");
                 }
 
                 var array = Array.CreateInstance(type, reader.ReadUInt16());
@@ -269,6 +269,13 @@ namespace Cutulu
         /// </summary>
         public static bool TryDecode<T>(this byte[] buffer, out T value, bool enableLogging = true)
         {
+            // Buffer is empty
+            if (buffer.IsEmpty())
+            {
+                value = default;
+                return false;
+            }
+
             try
             {
                 value = Decode<T>(buffer);
