@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using Godot;
 
-namespace Cutulu.Modding
+namespace Cutulu
 {
     /// <summary>
     /// OE - Odin's Eye is used to find and read files that may be nested in zip files. Important for mod support.
@@ -175,7 +175,7 @@ namespace Cutulu.Modding
                             var t = typeof(T);
 
                             // Support for Models
-                            if (t == typeof(GlbModel)) result = (T)(object)GlbModel.CustomImport(buffer);
+                            if (t == typeof(Modding.GlbModel)) result = (T)(object)Modding.GlbModel.CustomImport(buffer);
 
                             // Support for OGG files
                             else if (t == typeof(AudioStream)) result = (T)(object)AudioStreamOggVorbis.LoadFromBuffer(buffer);

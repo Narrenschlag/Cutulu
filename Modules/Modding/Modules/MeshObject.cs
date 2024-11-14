@@ -1,3 +1,4 @@
+using Cutulu.Modding;
 using Godot;
 
 namespace Cutulu.Modding
@@ -13,16 +14,16 @@ namespace Cutulu.Modding
         [Export] public string BaseMaterial { get; set; }
         [Export] public string[] Materials { get; set; }
 
-        public Node3D Instantiate(Manager manager, Node parent)
+        public Node3D Instantiate(Library library, Node parent)
         {
-            if (manager.TryGet(MeshGLB, out GlbModel model) == false) return null;
+            if (library.TryGet(MeshGLB, out GlbModel model) == false) return null;
 
             var meshInstance = model.Instantiate<Node3D>(parent);
             meshInstance.RotationDegrees = Rotation;
             meshInstance.Position = Position;
             meshInstance.Scale = Scale;
 
-            var baseMaterial = manager.Get<StandardMaterial3D>(BaseMaterial);
+            var baseMaterial = library.Get<StandardMaterial3D>(BaseMaterial);
             var meshes = meshInstance.GetNodesInChildren<MeshInstance3D>();
             var m = Materials.NotEmpty() ? 0 : int.MinValue;
 
@@ -36,7 +37,7 @@ namespace Cutulu.Modding
                     {
                         if (m >= 0 && m < Materials.Length)
                         {
-                            var material = manager.Get<StandardMaterial3D>(Materials[m]);
+                            var material = library.Get<StandardMaterial3D>(Materials[m]);
 
                             meshes[i].SetSurfaceOverrideMaterial(k, material);
                         }
