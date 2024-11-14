@@ -20,6 +20,9 @@ namespace Cutulu.Modding
             // Assign parent
             Parent = parent;
 
+            // Assign default priority
+            Priority = Data.DefaultPriority;
+
             // Check if there are any local addresses
             if (Data.LocalAddresses.NotEmpty())
             {

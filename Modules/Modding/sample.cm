@@ -1,5 +1,6 @@
 {
     "Id": "internal",
+    "DefaultPriority": 0,
     "Author": "Narrenschlag",
     "Version": "0.0.0.1",
     "Name": "Internal Data",
