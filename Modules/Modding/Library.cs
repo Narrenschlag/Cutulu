@@ -155,20 +155,31 @@ namespace Cutulu.Modding
         {
             foreach (var loaded in LoadedMods.Values)
             {
-                loaded.Enable(0, false);
+                loaded.Enable(false);
             }
 
             Refresh();
         }
 
         /// <summary>
-        /// Enables mod if modId is registered
+        /// Overwrites priority if modId is registered
         /// <summar>
-        public bool TryEnable(string modId, int priority = 0, bool refresh = true)
+        public bool TryAssignPriority(string modId, int priority)
         {
             if (LoadedMods.TryGetValue(modId, out var loaded) == false) return false;
 
-            loaded.Enable(priority, refresh);
+            loaded.Priority = priority;
+            return true;
+        }
+
+        /// <summary>
+        /// Enables mod if modId is registered
+        /// <summar>
+        public bool TryEnable(string modId, bool refresh = true)
+        {
+            if (LoadedMods.TryGetValue(modId, out var loaded) == false) return false;
+
+            loaded.Enable(refresh);
             return true;
         }
 

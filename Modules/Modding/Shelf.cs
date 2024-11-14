@@ -10,7 +10,7 @@ namespace Cutulu.Modding
         public readonly Data Data;
 
         public bool Enabled { get; private set; }
-        public int Priority { get; private set; }
+        public int Priority { get; set; }
 
         public Shelf(Library parent, string filePath)
         {
@@ -46,11 +46,8 @@ namespace Cutulu.Modding
         /// <summary>
         /// Enables mod
         /// <summar>
-        public void Enable(int priority, bool refresh = true)
+        public void Enable(bool refresh = true)
         {
-            // Assign priority
-            Priority = priority;
-
             // Check for dependencies
             if (Data.Dependencies.NotEmpty())
             {
