@@ -9,9 +9,11 @@ namespace Cutulu.Modding
 
         public N Unpack<N>(Node parent, bool asClient) where N : Node
         {
-            if ((asClient ? Client : Host) is not N n)
+            var node = asClient ? Client : Host;
+
+            if (node is not N n)
             {
-                Debug.LogR($"[color=orange]Failed to unpack shared asset for [i]{(asClient ? "Client" : "Host")}[/i] as [i]{typeof(N).Name}[/i]. Check your SharedAsset scene.[/color]");
+                Debug.LogR($"[color=orange]Failed to unpack shared asset for [i]{(asClient ? "Client" : "Host")}[/i]. Check your SharedAsset scene ({Name}, {typeof(N).Name} != {(node.NotNull() ? node.GetType().Name : "<null>")}).[/color]");
                 this.Destroy();
                 return null;
             }
@@ -40,18 +42,18 @@ namespace Cutulu.Modding
             if (packed.IsNull()) return null;
 
             var node = packed.Instantiate<Node>(parent);
-            if (node is N n && n.NotNull())
-            {
-                //Debug.LogError($"Load asset typeof({n.GetType().Name}) as typeof({typeof(N)})");
-                return n;
-            }
-
-            else if (node is SharedAsset shared && shared.NotNull())
+            if (node is SharedAsset shared && shared.NotNull())
             {
                 var unpacked = shared.Unpack<N>(parent, asClient);
 
                 //Debug.LogError($"Unpacking asset as typeof({typeof(N)}): {unpacked.NotNull()}"); //@{unpacked.GetParent().Name}");
                 return unpacked;
+            }
+
+            else if (node is N n && n.NotNull())
+            {
+                //Debug.LogError($"Load asset typeof({n.GetType().Name}) as typeof({typeof(N)})");
+                return n;
             }
 
             else

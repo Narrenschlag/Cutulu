@@ -94,13 +94,10 @@ namespace Cutulu
             Vertices.Clear();
         }
 
-        public void Apply(MeshInstance3D meshInstance3D, bool useVertexColor = false)
+        public ArrayMesh Commit() => GetSurfaceTool().Commit();
+
+        public SurfaceTool GetSurfaceTool()
         {
-            if (meshInstance3D.IsNull()) return;
-
-            if (meshInstance3D.Mesh.NotNull())
-                meshInstance3D.Mesh.Dispose();
-
             var surfaceTool = new SurfaceTool();
             surfaceTool.Begin((Mesh.PrimitiveType)(int)Type);
 
@@ -123,7 +120,17 @@ namespace Cutulu
                 }
             }
 
-            meshInstance3D.Mesh = surfaceTool.Commit();
+            return surfaceTool;
+        }
+
+        public void Apply(MeshInstance3D meshInstance3D, bool useVertexColor = false)
+        {
+            if (meshInstance3D.IsNull()) return;
+
+            if (meshInstance3D.Mesh.NotNull())
+                meshInstance3D.Mesh.Dispose();
+
+            meshInstance3D.Mesh = GetSurfaceTool().Commit();
 
             if (useVertexColor)
                 meshInstance3D.MaterialOverride = useAlpha ?

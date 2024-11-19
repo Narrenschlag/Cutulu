@@ -10,17 +10,17 @@ namespace Cutulu.Audio
         /// Plays sound effect as child of given object. Node type defines the type of audio player.
         /// <br/>Overwrite can be used for GlobalPosition overwrite.
         /// </summary>
-        public static void Play(Node parent, DModule module, string bus = "Master", object overwrite = default)
+        public static Node Play(Node parent, DModule module, string bus = "Master", object overwrite = default)
         => Play(parent, module.GetInstance(), bus, overwrite);
 
         /// <summary>
         /// Plays sound effect as child of given object. Node type defines the type of audio player.
         /// <br/>Overwrite can be used for GlobalPosition overwrite.
         /// </summary>
-        public static void Play(Node parent, DModInstance instance, string bus = "Master", object overwrite = default)
+        public static Node Play(Node parent, DModInstance instance, string bus = "Master", object overwrite = default)
         {
-            if (instance.Stream.IsNull()) return;
-            if (parent.IsNull()) return;
+            if (instance.Stream.IsNull()) return null;
+            if (parent.IsNull()) return null;
 
             var loop = false;
 
@@ -89,10 +89,12 @@ namespace Cutulu.Audio
                     break;
             }
 
-            if (n.IsNull()) return;
+            if (n.IsNull()) return null;
 
             // Destroy after lifetime
             if (loop == false) n.Destroy((float)instance.Stream.GetLength());
+
+            return n;
         }
     }
 }
