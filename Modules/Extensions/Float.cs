@@ -1,9 +1,47 @@
-using Godot;
-
 namespace Cutulu
 {
-    public static class Floatf
+    using Godot;
+
+    public static class FloatExtension
     {
+        public static float abs(this float f) => Mathf.Abs(f);
+
+        public static float max(this float f0, float f1) => Mathf.Max(f0, f1);
+        public static float max(this float f0, float f1, float f2) => max(max(f0, f1), f2);
+        public static float max(this float f0, float f1, float f2, float f3) => max(max(f0, f1, f2), f3);
+
+        public static float min(this float f0, float f1) => Mathf.Min(f0, f1);
+        public static float min(this float f0, float f1, float f2) => min(min(f0, f1), f2);
+        public static float min(this float f0, float f1, float f2, float f3) => min(min(f0, f1, f2), f3);
+
+        public static float toDegrees(this float radians) => radians / Mathf.Pi * 180;
+        public static float toRadians(this float degree) => degree / 180 * Mathf.Pi;
+
+        public static float GetAngleToFront180(this float fromAngle, float toAngle, bool useRadians = false)
+        {
+            // Convert angles to radians if needed
+            if (useRadians == false)
+            {
+                fromAngle = fromAngle.toRadians();
+                toAngle = toAngle.toRadians();
+            }
+
+            // Calculate the difference between the angles
+            float delta = toAngle - fromAngle;
+
+            // Wrap the delta within the range of -Pi to Pi (or -180 to 180 degrees)
+            delta = (delta + Mathf.Pi) % (Mathf.Pi * 2);
+
+            // Ensure the result is in the range of 0 to 180 degrees and inverted
+            delta = Mathf.Abs(delta);
+            if (delta > Mathf.Pi)
+                delta = 2 * Mathf.Pi - delta;
+            delta = Mathf.Pi - delta;
+
+            // Convert delta back to degrees if needed
+            return useRadians ? delta : delta.toDegrees();
+        }
+
         public static float Min(params float[] values)
         {
             var value = values[0];

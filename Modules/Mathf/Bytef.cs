@@ -298,7 +298,7 @@ namespace Cutulu
         /// <summary>
         /// Offsets bytes.
         /// </summary>
-        public static void OffsetBytes(ref byte[] @bytes, ref int offset) => Core.OffsetElements(ref @bytes, offset);
+        public static void OffsetBytes(ref byte[] @bytes, ref int offset) => ArrayExtension.OffsetElements(ref @bytes, offset);
         #endregion
 
         #region Byte Array Combination

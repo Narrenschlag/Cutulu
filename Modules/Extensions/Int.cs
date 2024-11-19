@@ -1,9 +1,19 @@
-using Godot;
-
 namespace Cutulu
 {
-    public static class Intf
+    using Godot;
+
+    public static class IntExtension
     {
+        public static int abs(this int i) => Mathf.Abs(i);
+
+        public static int max(this int f0, int f1) => Mathf.Max(f0, f1);
+        public static int max(this int f0, int f1, int f2) => max(max(f0, f1), f2);
+        public static int max(this int f0, int f1, int f2, int f3) => max(max(f0, f1, f2), f3);
+
+        public static int min(this int f0, int f1) => Mathf.Min(f0, f1);
+        public static int min(this int f0, int f1, int f2) => min(min(f0, f1), f2);
+        public static int min(this int f0, int f1, int f2, int f3) => min(min(f0, f1, f2), f3);
+
         public static float Min(params int[] values)
         {
             var value = values[0];

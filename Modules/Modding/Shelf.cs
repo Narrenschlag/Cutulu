@@ -33,7 +33,7 @@ namespace Cutulu.Modding
                 foreach (var address in Data.LocalAddresses)
                 {
                     // Split string into key and value strings
-                    var arr = address.Split(Constants.ADDRESS_SEPERATOR, Core.StringSplit);
+                    var arr = address.Split(Constants.ADDRESS_SEPERATOR, Cutulu.Constants.StringSplit);
                     if (arr.Size() != 2) continue;
 
                     // Validate path

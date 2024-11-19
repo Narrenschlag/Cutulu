@@ -28,7 +28,7 @@ namespace Cutulu.Modding
         {
             if (scene.ResourcePath.NotEmpty())
             {
-                var split = scene.ResourcePath.Split('/', '\\', Core.StringSplit);
+                var split = scene.ResourcePath.Split('/', '\\', Cutulu.Constants.StringSplit);
 
                 if (split.Size() > 0)
                     return split[^1];

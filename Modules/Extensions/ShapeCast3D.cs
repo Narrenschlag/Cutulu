@@ -1,13 +1,13 @@
-using System.Collections.Generic;
-using Godot;
-
 namespace Cutulu
 {
-    public static class ShapeCast3Df
+    using System.Collections.Generic;
+    using Godot;
+
+    public static class ShapeCast3DExtension
     {
         public static List<T> GetColliders<T>(this ShapeCast3D shapeCast)
         {
-            var list = new System.Collections.Generic.List<T>();
+            var list = new List<T>();
 
             for (var idx = 0; idx < shapeCast.GetCollisionCount(); idx++)
             {

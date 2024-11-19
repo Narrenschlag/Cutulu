@@ -11,7 +11,7 @@ namespace Cutulu
             Vector2 side2 = c - a;
 
             // Calculate the cross product of the two sides
-            float crossProduct = Vector2f.Cross(side1, side2);
+            float crossProduct = Vector2Extension.Cross(side1, side2);
 
             // Area of the triangle is half of the magnitude of the cross product
             float area = Mathf.Abs(crossProduct) * 0.5f;

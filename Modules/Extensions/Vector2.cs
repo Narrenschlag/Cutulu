@@ -1,11 +1,53 @@
-using System.Collections.Generic;
-using System;
-using Godot;
-
 namespace Cutulu
 {
-    public static class Vector2f
+    using System.Collections.Generic;
+    using Godot;
+
+    public static class Vector2Extension
     {
+        public static Vector2 Lerp(this Vector2 a, Vector2 b, float lerp) => new(Mathf.Lerp(a.X, b.X, lerp), Mathf.Lerp(a.Y, b.Y, lerp));
+
+        public static Vector2 setX(this Vector2 v2, float value) => new(value, v2.Y);
+        public static Vector2 setY(this Vector2 v2, float value) => new(v2.X, value);
+
+
+        public static void pasteX(this float value, ref Vector2 v2) => v2.X = value;
+        public static void pasteY(this float value, ref Vector2 v2) => v2.Y = value;
+
+        public static Vector2I RoundToInt(this Vector2 v2) => new(Mathf.RoundToInt(v2.X), Mathf.RoundToInt(v2.Y));
+        public static Vector2I FloorToInt(this Vector2 v2) => new(Mathf.FloorToInt(v2.X), Mathf.FloorToInt(v2.Y));
+        public static Vector2I CeilToInt(this Vector2 v2) => new(Mathf.CeilToInt(v2.X), Mathf.CeilToInt(v2.Y));
+        public static Vector2 Abs(this Vector2 v2) => new(Mathf.Abs(v2.X), Mathf.Abs(v2.Y));
+        public static Vector2 Max(this Vector2 o, Vector2 a, Vector2 b) => o.DistanceTo(a) > o.DistanceTo(b) ? a : b;
+        public static Vector2 Min(this Vector2 o, Vector2 a, Vector2 b) => o.DistanceTo(a) < o.DistanceTo(b) ? a : b;
+        public static Vector2 NoNaN(this Vector2 v2) => new(float.IsNaN(v2.X) ? 0 : v2.X, float.IsNaN(v2.Y) ? 0 : v2.Y);
+
+        public static Vector2 toXY(this Vector3 value) => new(value.X, value.Z);
+
+        public static Vector2 RotatedD(this Vector2 v2, float degrees) => v2.Rotated(degrees.toRadians());
+
+        /// <summary>
+        /// Returns angle from Vector2.Right. In Degrees.
+        /// </summary>
+        public static float GetAngleD(this Vector2 direction) => GetAngle(direction).toDegrees();
+        public static float GetAngleD(this Vector2 direction, Vector2 from) => GetAngle(direction, from).toDegrees().AbsMod(360f);
+
+        /// <summary>
+        /// Returns angle from Vector2.Right. In Radians.
+        /// </summary>
+        public static float GetAngle(this Vector2 direction) => GetAngle(direction, Vector2.Right);
+        public static float GetAngle(this Vector2 direction, Vector2 from) => direction.Normalized().Angle() + from.Normalized().Angle();
+
+        /// <summary>
+        /// Returns direction from Vector2.Right. In Degrees.
+        /// </summary>
+        public static Vector2 GetDirectionD(this float degrees) => GetDirection(degrees.toRadians());
+
+        /// <summary>
+        /// Returns direction from Vector2.Right. In Degrees.
+        /// </summary>
+        public static Vector2 GetDirection(this float radians) => Vector2.Right.Rotated(radians).Normalized();
+
         // Cross product for Vector2 (returns a zero Vector3)
         public static float Cross(this Vector2 vectorA, Vector2 vectorB)
         {
@@ -27,7 +69,7 @@ namespace Cutulu
             intersection = default;
 
             // Check if lines are parallel (denominator is zero)
-            if (Math.Abs(denominator) < Mathf.Epsilon)
+            if (Mathf.Abs(denominator) < Mathf.Epsilon)
             {
                 return false;
             }
@@ -95,7 +137,7 @@ namespace Cutulu
         {
             if (originalPoints == null || originalPoints.Length < 2 || targetLength < 2)
             {
-                throw new ArgumentException("Invalid input data.");
+                throw new System.ArgumentException("Invalid input data.");
             }
 
             // Step 1: Calculate cumulative distances

@@ -108,7 +108,7 @@ namespace Cutulu.Modding
                     else
                     {
                         // Add dictionaries with depth for targetting specific types
-                        var directorySplits = loadedPair.Key.Split(new[] { '/', '\\' }, Core.StringSplit);
+                        var directorySplits = loadedPair.Key.Split(new[] { '/', '\\' }, Cutulu.Constants.StringSplit);
                         var strng = new System.Text.StringBuilder();
 
                         if (directorySplits.Size() > 1)

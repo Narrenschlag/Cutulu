@@ -1,10 +1,95 @@
-using System.Collections.Generic;
-using Godot;
-
 namespace Cutulu
 {
-    public static class Vector3f
+    using System.Collections.Generic;
+    using Godot;
+
+    public static class Vector3Extension
     {
+        public static void SetForward(this Node3D node, Vector3 direction, bool global = true) => node.LookAt((global ? node.GlobalPosition : node.Position) + direction);
+
+        public static Vector3 setX(this Vector3 v3, float value) => new(value, v3.Y, v3.Z);
+        public static Vector3 setY(this Vector3 v3, float value) => new(v3.X, value, v3.Z);
+        public static Vector3 setZ(this Vector3 v3, float value) => new(v3.X, v3.Y, value);
+        public static Vector3 multX(this Vector3 v3, float value) => new(v3.X * value, v3.Y, v3.Z);
+        public static Vector3 multY(this Vector3 v3, float value) => new(v3.X, v3.Y * value, v3.Z);
+        public static Vector3 multZ(this Vector3 v3, float value) => new(v3.X, v3.Y, v3.Z * value);
+
+        public static void pasteX(this float value, ref Vector3 v3) => v3.X = value;
+        public static void pasteY(this float value, ref Vector3 v3) => v3.Y = value;
+        public static void pasteZ(this float value, ref Vector3 v3) => v3.Z = value;
+
+        public static Vector3 toRight(this Vector3 forward) => toRight(forward, Vector3.Up);
+        public static Vector3 toRight(this Vector3 forward, Vector3 up) => forward.Cross(up).Normalized();
+
+        public static Vector3 toUp(this Vector3 forward) => toRight(forward, Vector3.Right);
+        public static Vector3 toUp(this Vector3 forward, Vector3 right) => -forward.Cross(right).Normalized();
+
+        public static Vector3 toXZ(this Vector2 value, float y = 0) => new(value.X, y, value.Y);
+
+        /// <summary>
+        /// Round Vector3 to given decimal spaces
+        /// </summary>
+        public static Vector3 Round(this Vector3 value, byte decimalSpaces = 0)
+        => new(value.X.Round(decimalSpaces), value.Y.Round(decimalSpaces), value.Z.Round(decimalSpaces));
+
+        /// <summary>
+        /// Round Vector3 to given decimal spaces
+        /// </summary>
+        public static Vector3 Round(this Vector3 value, float step = 1f)
+        => new(value.X.Round(step), value.Y.Round(step), value.Z.Round(step));
+
+        public static float Round(this float value, byte decimalSpaces)
+        => Mathf.RoundToInt(value * Mathf.Pow(10, decimalSpaces)) / Mathf.Pow(10, decimalSpaces);
+
+        public static float Round(this float value, float step = 1f)
+        {
+            if (step <= 0) throw new System.ArgumentException("Step must be greater than zero.");
+
+            float remainder = (value = Mathf.Ceil(value / 0.001f) * 0.001f) % step;
+            float halfStep = step / 2f;
+
+            return
+                remainder >= halfStep ? value + step - remainder :
+                remainder < -halfStep ? value - step - remainder :
+                value - remainder;
+        }
+
+        public static float GetYRotation(this Vector3 direction, bool useRadians = false)
+        {
+            // Ensure the direction is normalized
+            direction = direction.Normalized();
+
+            // Calculate the angle using the arctangent function
+            // Adjust the angle to be positive and between 0 and 360 units
+            float angle = (Mathf.Atan2(direction.X, direction.Z) + Mathf.Pi * 2) % (Mathf.Pi * 2);
+
+            // Convert the angle to degrees if needed
+            return useRadians ? angle : angle.toDegrees();
+        }
+
+        public static Vector3 GetDirectionFromYRotation(this float angle, bool useRadians = false)
+        {
+            // Convert the angle to radians if needed
+            if (useRadians)
+            {
+                angle = angle.toRadians();
+            }
+
+            // Calculate the direction using trigonometric functions
+            float x = Mathf.Cos(angle);
+            float z = Mathf.Sin(angle);
+
+            return new Vector3(x, 0, z);
+        }
+
+        public static float GetAngleToFront180(this Vector3 FromGlobalPosition, Node3D Target, bool useRadians = false)
+        {
+            return FloatExtension.GetAngleToFront180(
+                GetYRotation(FromGlobalPosition - Target.GlobalPosition, useRadians),
+                useRadians ? Target.Rotation.Y : Target.RotationDegrees.Y,
+                useRadians
+                );
+        }
         // Cross product for Vector3
         public static Vector3 Cross(this Vector3 vectorA, Vector3 vectorB)
         {
