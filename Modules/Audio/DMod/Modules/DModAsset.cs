@@ -6,8 +6,8 @@ namespace Cutulu.Audio
     public partial class DModAsset : DModule
     {
         [Export] public string StreamAsset;
-        [Export] public Vector2 Volume;
-        [Export] public Vector2 Pitch;
+        [Export] public Vector2 Volume = Vector2.Zero;
+        [Export] public Vector2 Pitch = Vector2.One;
 
         public override DModInstance GetInstance()
         {
