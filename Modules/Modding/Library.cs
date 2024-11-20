@@ -329,22 +329,6 @@ namespace Cutulu.Modding
         #region QOL Features
 
         /// <summary>
-        /// Instantiates a node from given SharedAsset
-        /// </summary>
-        public N Instantiate<N>(string asset, Godot.Node parent, bool asClient) where N : Godot.Node
-        {
-            var packed = Get<Godot.PackedScene>(asset);
-
-            if (packed.IsNull())
-            {
-                Debug.LogError($"Couldn't find asset '{asset}' of typeof({typeof(N).Name})");
-                return null;
-            }
-
-            return SharedAsset.Instantiate<N>(Get<Godot.PackedScene>(asset), parent, asClient);
-        }
-
-        /// <summary>
         /// Instantiates a node from given asset
         /// </summary>
         public N Instantiate<N>(string asset, Godot.Node parent) where N : Godot.Node
