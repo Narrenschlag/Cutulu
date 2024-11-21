@@ -41,7 +41,7 @@ namespace Cutulu.Modding
                     if (OE.Exists(path) == false) continue;
 
                     // Assign paths
-                    Addresses[arr[1]] = new[] { path, arr[0] };
+                    Addresses[arr[0]] = new[] { path, arr[1] };
                 }
             }
         }

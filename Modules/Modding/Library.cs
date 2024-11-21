@@ -74,6 +74,7 @@ namespace Cutulu.Modding
                     throw new Exception($"Mod with id '{loaded.Data.Id}' has already been added. Cannot load multiple mods with the same id.");
 
                 LoadedMods[loaded.Data.Id] = loaded;
+                Debug.LogR($"[color=seagreen]Loaded '{loaded.Data.Name}'");
             }
 
             catch (Exception exception)
@@ -98,8 +99,10 @@ namespace Cutulu.Modding
 
                 foreach (var loadedPair in loaded.Addresses)
                 {
+                    var key = loadedPair.Key;
+
                     // Handle priority
-                    if (GlobalAddresses.TryGetValue(loadedPair.Key, out var pair))
+                    if (GlobalAddresses.TryGetValue(key, out var pair))
                     {
                         if (pair.Key.Priority >= loaded.Priority) continue;
                     }
@@ -108,7 +111,7 @@ namespace Cutulu.Modding
                     else
                     {
                         // Add dictionaries with depth for targetting specific types
-                        var directorySplits = loadedPair.Key.Split(new[] { '/', '\\' }, Cutulu.Constants.StringSplit);
+                        var directorySplits = key.Split(new[] { '/', '\\' }, Cutulu.Constants.StringSplit);
                         var strng = new System.Text.StringBuilder();
 
                         if (directorySplits.Size() > 1)
@@ -137,15 +140,17 @@ namespace Cutulu.Modding
                                 }
 
                                 // Try adding key
-                                set.TryAdd(loadedPair.Key);
+                                set.TryAdd(key);
                             }
                         }
                     }
 
                     // Global address for the name
-                    GlobalAddresses[loadedPair.Key] = new(loaded, loadedPair.Value[0]);
+                    GlobalAddresses[key] = new(loaded, loadedPair.Value[0]);
                 }
             }
+
+            Debug.LogR($"[color=seagreen]Loaded {GlobalAddresses.Count} assets");
         }
 
         /// <summary>
@@ -343,6 +348,8 @@ namespace Cutulu.Modding
 
             return packed.Instantiate<N>(parent);
         }
+
+        public bool TryGetCollection<T>(string dir, out T[] collection) => (collection = GetCollection<T>(dir)).NotEmpty();
 
         public T[] GetCollection<T>(string dir)
         {
