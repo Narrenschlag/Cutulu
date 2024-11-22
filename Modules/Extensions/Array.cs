@@ -70,10 +70,7 @@ namespace Cutulu
 
         public static T ModulatedElement<T>(this T[] array, int i)
         {
-            if (array.IsEmpty()) return default;
-            var mod = i % array.Length;
-
-            return array[mod < 0 ? mod + array.Length : mod];
+            return array.NotEmpty() ? array[array.Length.AbsMod(i)] : default;
         }
 
         public static bool NotEmpty<T>(this T[] array)

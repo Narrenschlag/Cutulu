@@ -23,6 +23,14 @@ namespace Cutulu
 
         public static T RandomElement<T>(this List<T> list, T @default = default) => list.NotEmpty() ? list[Random.Range(0, list.Count)] : @default;
 
+        public static T ModulatedElement<T>(this List<T> list, int i)
+        {
+            return list.NotEmpty() ? list[list.Count.AbsMod(i)] : default;
+        }
+
+        public static T GetClampedElement<T>(this List<T> list, int index)
+        => list.IsEmpty() ? default : list[Mathf.Clamp(index, 0, list.Count - 1)];
+
         public static void Shuffle<T>(this List<T> list)
         {
             if (list.IsEmpty()) return;
