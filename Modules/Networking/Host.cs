@@ -1,18 +1,14 @@
 namespace Cutulu.Networking
 {
     using System.Collections.Generic;
-
-    using System.Net.Sockets;
-    using System.Net;
-
     using System.Threading.Tasks;
+    using System.Net.Sockets;
     using System.Threading;
-
+    using System.Net;
     using System.IO;
     using System;
 
     using Cutulu;
-    using Godot;
 
     public partial class Host
     {
@@ -39,10 +35,10 @@ namespace Cutulu.Networking
 
         public Host() { }
 
-        public virtual void Start(int tcpPort, int udpPort)
+        public virtual async Task Start(int tcpPort, int udpPort)
         {
             // Stop currently running host
-            Stop(1);
+            await Stop(1);
 
             // Assign values
             TcpPort = tcpPort;
@@ -66,31 +62,7 @@ namespace Cutulu.Networking
 
             Debug.Log($"[udp running on {udpPort}]");
 
-            udp();
-            async void udp()
-            {
-                while (Running && UdpHost != null)
-                {
-                    if (UdpHost.Available > 0)
-                    {
-                        try
-                        {
-                            AcceptUdp(await UdpHost.ReceiveAsync(CancellationToken));
-                        }
-
-                        catch (Exception ex)
-                        {
-                            Debug.LogError($"host> UDP receive error: {ex.Message}\n{ex.StackTrace}");
-                            continue;
-                        }
-                    }
-
-                    else
-                    {
-                        await Task.Delay(10);
-                    }
-                }
-            }
+            AcceptUdp();
 
             #endregion
 
@@ -104,39 +76,98 @@ namespace Cutulu.Networking
 
             Debug.Log($"[tcp running on {tcpPort}]");
 
-            tcp();
-            async void tcp()
-            {
-                while (Running)
-                {
-                    var client = await TcpListener.AcceptTcpClientAsync(CancellationToken);
-                    AcceptTcp(client);
-                }
-            }
+            WaitForTcp();
 
             #endregion
 
-            // Finish setup
-            Debug.Log($"Host setup complete.");
-
+            // Finish
             Ready = true;
             HostStarted?.Invoke();
         }
 
-        protected virtual void AcceptUdp(UdpReceiveResult udpReceiveResult)
+        public virtual async Task Stop(int exitCode = 0)
         {
-            if (UdpEndpoints.IsEmpty() || udpReceiveResult.Buffer.Length < 2) return;
+            if (Running == false) return;
 
-            if (UdpEndpoints.TryGetValue(udpReceiveResult.RemoteEndPoint, out var connection))
+            var wasReady = Ready;
+            Running = false;
+            Ready = false;
+            lastUID = 0;
+
+            foreach (var connection in Connections.Values)
             {
-                using var stream = new MemoryStream(udpReceiveResult.Buffer);
-                using var reader = new BinaryReader(stream);
+                connection?.Close();
+            }
 
-                connection.ReceiveUdp(reader.ReadInt16(), reader.ReadBytes((int)(stream.Length - stream.Position)));
+            UdpEndpoints.Clear();
+            Connections.Clear();
+
+            cancellationTokenSource.Cancel();
+            TcpListener.Stop();
+            UdpHost.Close();
+
+            await Task.Delay(1);
+
+            if (exitCode != 1)
+            {
+                Debug.Log($"Host closed with exitCode={exitCode}: {(wasReady ? $"Cancelled host setup" : $"Stopped host")}");
+
+                HostStopped?.Invoke();
             }
         }
 
-        protected virtual async void AcceptTcp(TcpClient client)
+        #region Udp
+
+        private async void AcceptUdp()
+        {
+            while (Running && UdpHost != null)
+            {
+                if (UdpHost.Available > 0)
+                {
+                    try
+                    {
+                        var udpReceiveResult = await UdpHost.ReceiveAsync(CancellationToken);
+
+                        if (UdpEndpoints.NotEmpty() && udpReceiveResult.Buffer.Length >= 2)
+                        {
+                            if (UdpEndpoints.TryGetValue(udpReceiveResult.RemoteEndPoint, out var connection))
+                            {
+                                using var stream = new MemoryStream(udpReceiveResult.Buffer);
+                                using var reader = new BinaryReader(stream);
+
+                                connection.ReceiveUdp(reader.ReadInt16(), reader.ReadBytes((int)(stream.Length - stream.Position)));
+                            }
+                        }
+                    }
+
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"HOST_UDP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                        continue;
+                    }
+                }
+
+                else
+                {
+                    await Task.Delay(10);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Tcp
+
+        private async void WaitForTcp()
+        {
+            while (Running)
+            {
+                var client = await TcpListener.AcceptTcpClientAsync(CancellationToken);
+                AcceptTcp(client);
+            }
+        }
+
+        private async void AcceptTcp(TcpClient client)
         {
             if (client == null) return;
 
@@ -214,7 +245,7 @@ namespace Cutulu.Networking
 
                         catch (Exception ex)
                         {
-                            Debug.LogError($"host> TCP receive error: {ex.Message}\n{ex.StackTrace}");
+                            Debug.LogError($"HOST_TCP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
                             break;
                         }
                     }
@@ -228,30 +259,6 @@ namespace Cutulu.Networking
             client?.Close();
         }
 
-        public virtual void Stop(int exitCode = 0)
-        {
-            if (Running == false) return;
-
-            var wasReady = Ready;
-            Running = false;
-            Ready = false;
-            lastUID = 0;
-
-            foreach (var connection in Connections.Values)
-            {
-                connection?.Close();
-            }
-
-            UdpEndpoints.Clear();
-            Connections.Clear();
-
-            cancellationTokenSource.Cancel();
-            TcpListener.Stop();
-            UdpHost.Close();
-
-            Debug.Log($"Host closed with exitCode={exitCode}: {(wasReady ? $"Cancelled host setup" : $"Stopped host")}");
-
-            if (exitCode != 1) HostStopped?.Invoke();
-        }
+        #endregion
     }
 }

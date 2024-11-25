@@ -1,11 +1,9 @@
 namespace Cutulu.Networking
 {
-    using System.Net.Sockets;
-    using System.Net;
-
     using System.Threading.Tasks;
+    using System.Net.Sockets;
     using System.Threading;
-
+    using System.Net;
     using System.IO;
     using System;
 
@@ -37,13 +35,13 @@ namespace Cutulu.Networking
 
         public Client(string host, int tcpPort, int udpPort)
         {
-            _ = ConnectAsync(host, tcpPort, udpPort);
+            _ = Connect(host, tcpPort, udpPort);
         }
 
-        public virtual async Task ConnectAsync(string host, int tcpPort, int udpPort)
+        public virtual async Task Connect(string host, int tcpPort, int udpPort)
         {
             // Stop currently running host
-            Disconnect(1);
+            await Disconnect(1);
 
             if (IPAddress.TryParse(host, out var address) == false)
                 return;
@@ -57,70 +55,50 @@ namespace Cutulu.Networking
             cancellationTokenSource = new CancellationTokenSource();
             CancellationToken = cancellationTokenSource.Token;
 
-            #region Tcp (0/1)
-
+            // Setup tcp client
             TcpClient = new TcpClient(AddressFamily.InterNetworkV6);
             TcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             TcpClient.Client.DualMode = true;
 
+            // Connect to host
             await TcpClient.ConnectAsync(host, tcpPort, CancellationToken);
 
+            // Connection failed
             if (TcpClient.Connected == false)
             {
                 Debug.LogError($"Couldn't connect host.");
-                Disconnect(2);
+                await Disconnect(2);
                 return;
             }
 
-            #endregion
-
-            #region Udp
-
+            // Setup udp client
             UdpClient = new(AddressFamily.InterNetworkV6);
             UdpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             UdpClient.Client.DualMode = true;
 
+            // Assign endpoint
             UdpEndpoint = new(address, udpPort);
 
             // Connect with the host
             UdpClient.Connect(host, UdpPort);
 
-            udp();
-            async void udp()
-            {
-                while (TcpClient.Connected && UdpClient != null)
-                {
-                    if (UdpClient.Available > 0)
-                    {
-                        try
-                        {
-                            AcceptUdp(await UdpClient.ReceiveAsync(CancellationToken));
-                        }
+            // Wait for udp packages
+            AcceptUdp();
 
-                        catch (Exception ex)
-                        {
-                            Debug.LogError($"client> UDP receive error: {ex.Message}\n{ex.StackTrace}");
-                            continue;
-                        }
-                    }
-
-                    else
-                        await Task.Delay(10);
-                }
-            }
-
-            #endregion
-
-            #region Setup + Tcp(1/1)
-
+            // Check for local udp endpoint and tcp network stream
             if (UdpClient.Client.LocalEndPoint is IPEndPoint endpoint && TcpClient.GetStream() is NetworkStream stream)
             {
+                // Assign port
                 var port = endpoint.Port;
 
+                // Write setup data into stream
                 await stream.WriteAsync(new[] { (byte)ConnectionTypeEnum.Connect });
                 await stream.WriteAsync(BitConverter.GetBytes(port));
+
+                // Send setup data to host
                 await stream.FlushAsync();
 
+                // Wait for response
                 var buffer = new byte[8];
                 var bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
                 UID = BitConverter.ToInt32(buffer);
@@ -128,76 +106,32 @@ namespace Cutulu.Networking
                 // Accept tcp from here on as we have to wait for the UID first.
                 AcceptTcp();
 
-                Debug.Log($"received-uid: {UID}({bytesRead}/{buffer.Length} bytes)");
+                //Debug.Log($"received-uid: {UID}({bytesRead}/{buffer.Length} bytes)");
+                Debug.Log($"Client connected. [UID={UID} udp={port} tcp={((IPEndPoint)TcpClient.Client.LocalEndPoint).Port}]");
 
-                Debug.Log($"Client setup complete. [UID={UID} udp={port} tcp={((IPEndPoint)TcpClient.Client.LocalEndPoint).Port}]");
+                // Finish
+                Connected = true;
+                ConnectionEstablished?.Invoke();
             }
 
+            // Local udp endpoint and/or network stream were not found or incorrectly setup
             else
             {
                 Debug.LogError($"Client udp port cannot be read.");
-                Disconnect(4);
+                await Disconnect(4);
                 return;
             }
-
-            #endregion
-
-            Connected = true;
-            ConnectionEstablished?.Invoke();
         }
 
-        protected virtual async void AcceptTcp()
-        {
-            if (TcpClient.GetStream() is not NetworkStream stream) return;
-
-            while (TcpClient.Connected)
-            {
-                try
-                {
-                    var buffer = new byte[4];
-
-                    if (await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), CancellationToken) < 2) throw new IOException("connection corrupted");
-
-                    var length = BitConverter.ToInt32(buffer);
-                    if (length < 2) continue;
-
-                    buffer = new byte[2];
-                    await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), CancellationToken);
-                    var key = BitConverter.ToInt16(buffer);
-
-                    buffer = new byte[length -= 2];
-                    await stream.ReadAsync(buffer.AsMemory(0, length), CancellationToken);
-
-                    ReceiveTcp(key, buffer);
-                }
-
-                catch (Exception ex)
-                {
-                    Debug.LogError($"client> TCP receive error: {ex.Message}\n{ex.StackTrace}");
-                    break;
-                }
-            }
-
-            Disconnect(3);
-        }
-
-        protected virtual void AcceptUdp(UdpReceiveResult udpReceiveResult)
-        {
-            if (udpReceiveResult.Buffer.Length < 2) return;
-
-            using var stream = new MemoryStream(udpReceiveResult.Buffer);
-            using var reader = new BinaryReader(stream);
-
-            ReceiveUdp(reader.ReadInt16(), reader.ReadBytes((int)(stream.Length - stream.Position)));
-        }
-
-        public virtual void Disconnect(int exitCode = 0)
+        public virtual async Task Disconnect(int exitCode = 0)
         {
             cancellationTokenSource?.Cancel();
             Connected = false;
 
             TcpClient?.Close();
             UdpClient?.Close();
+
+            await Task.Delay(1);
 
             if (exitCode != 1)
             {
@@ -208,16 +142,6 @@ namespace Cutulu.Networking
         }
 
         #region Udp
-        public virtual void ReceiveUdp(short key, byte[] buffer)
-        {
-            switch (key)
-            {
-                default:
-                    ReceivedUdp?.Invoke(key, buffer);
-                    ReceivedAny?.Invoke(key, buffer);
-                    break;
-            }
-        }
 
         public virtual async Task WriteUdpAsync(short key, byte[] buffer)
         {
@@ -242,26 +166,59 @@ namespace Cutulu.Networking
 
             UdpClient.Send(memory.ToArray());
         }
-        #endregion
 
-        #region Tcp
-        public virtual void ReceiveTcp(short key, byte[] buffer)
+        private async void AcceptUdp()
+        {
+            while (TcpClient.Connected && UdpClient != null)
+            {
+                if (UdpClient.Available > 0)
+                {
+                    try
+                    {
+                        var udpReceiveResult = await UdpClient.ReceiveAsync(CancellationToken);
+
+                        if (udpReceiveResult.Buffer.Length >= 2)
+                        {
+                            using var stream = new MemoryStream(udpReceiveResult.Buffer);
+                            using var reader = new BinaryReader(stream);
+
+                            ReceiveUdp(reader.ReadInt16(), reader.ReadBytes((int)(stream.Length - stream.Position)));
+                        }
+                    }
+
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"CLIENT_UDP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                        continue;
+                    }
+                }
+
+                else
+                    await Task.Delay(10);
+            }
+        }
+
+        private void ReceiveUdp(short key, byte[] buffer)
         {
             switch (key)
             {
                 default:
-                    ReceivedTcp?.Invoke(key, buffer);
+                    ReceivedUdp?.Invoke(key, buffer);
                     ReceivedAny?.Invoke(key, buffer);
                     break;
             }
         }
+
+        #endregion
+
+        #region Tcp
 
         public virtual async Task WriteTcpAsync(short key, byte[] buffer)
         {
             if (Connected == false || TcpClient.GetStream() is not NetworkStream stream) return;
 
             using var memory = new MemoryStream();
-            await memory.WriteAsync(BitConverter.GetBytes((buffer.Length + 2)));
+            await memory.WriteAsync(BitConverter.GetBytes(buffer.Length + 2));
             await memory.WriteAsync(BitConverter.GetBytes(key));
             await memory.WriteAsync(buffer);
 
@@ -279,6 +236,63 @@ namespace Cutulu.Networking
 
             stream.Flush();
         }
+
+        private async void AcceptTcp()
+        {
+            if (TcpClient.GetStream() is not NetworkStream stream) return;
+
+            while (TcpClient.Connected)
+            {
+                try
+                {
+                    var buffer = new byte[4];
+
+                    if (await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), CancellationToken) < 2) throw new IOException("CLIENT_LOST_CONNECTION_TO_HOST");
+
+                    var length = BitConverter.ToInt32(buffer);
+                    if (length < 2) continue;
+
+                    buffer = new byte[2];
+                    await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), CancellationToken);
+                    var key = BitConverter.ToInt16(buffer);
+
+                    buffer = new byte[length -= 2];
+                    await stream.ReadAsync(buffer.AsMemory(0, length), CancellationToken);
+
+                    ReceiveTcp(key, buffer);
+                }
+
+                catch (Exception ex)
+                {
+                    switch (ex.Message)
+                    {
+                        case "CLIENT_LOST_CONNECTION_TO_HOST":
+                            Debug.LogR($"[color=red]{ex.Message}");
+                            break;
+
+                        default:
+                            Debug.LogError($"CLIENT_TCP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                            break;
+                    }
+
+                    break;
+                }
+            }
+
+            await Disconnect(3);
+        }
+
+        private void ReceiveTcp(short key, byte[] buffer)
+        {
+            switch (key)
+            {
+                default:
+                    ReceivedTcp?.Invoke(key, buffer);
+                    ReceivedAny?.Invoke(key, buffer);
+                    break;
+            }
+        }
+
         #endregion
     }
 }
