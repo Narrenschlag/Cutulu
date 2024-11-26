@@ -1,26 +1,28 @@
-namespace Cutulu.Modding
+namespace Cutulu
 {
     using System.Collections.Generic;
+    using System.Reflection;
     using System;
+    using Godot;
 
-    public partial class Library
+    public partial class AssetLibrary
     {
-        public readonly Dictionary<string, Shelf> LoadedMods = new();
+        public readonly Dictionary<string, AssetBook> LoadedMods = new();
         public string[] RootDirectories { get; private set; }
 
-        public readonly Dictionary<string, KeyValuePair<Shelf, string>> GlobalAddresses = new();
+        public readonly Dictionary<string, KeyValuePair<AssetBook, string>> GlobalAddresses = new();
         public readonly Dictionary<string, List<string>> IdDirectories = new();
         private readonly Dictionary<string, object> LoadedData = new();
 
         /// <summary>
         /// Loads mods from given root directories and enables them
         /// <summar>
-        public Library(params string[] root) : this(true, root) { }
+        public AssetLibrary(params string[] root) : this(true, root) { }
 
         /// <summary>
         /// Loads mods from given root directories
         /// <summar>
-        public Library(bool enableAll, params string[] root)
+        public AssetLibrary(bool enableAll, params string[] root)
         {
             LoadMods(root);
 
@@ -50,11 +52,14 @@ namespace Cutulu.Modding
                 var filePaths = new List<string>();
 
                 // Find all mod data file paths
-                OE.FindFiles(directory, ref filePaths, new[] { Constants.MOD_ENDING }, new[] { ".zip" });
+                OE.FindFiles(directory, ref filePaths, new[] { AssetConstants.MOD_ENDING }); //, new[] { ".zip" }); // Disabled .zip because of dll/pck file loading
 
                 // Iterate through mod data files
                 foreach (var filePath in filePaths)
                 {
+                    // Ignore sample file
+                    if (filePath.EndsWith("/sample.cm")) continue;
+
                     // Load mod from file path
                     LoadMod(filePath);
                 }
@@ -68,13 +73,13 @@ namespace Cutulu.Modding
         {
             try
             {
-                var loaded = new Shelf(this, filePath);
+                var loaded = new AssetBook(this, filePath);
 
                 if (LoadedMods.ContainsKey(loaded.Data.Id))
                     throw new Exception($"Mod with id '{loaded.Data.Id}' has already been added. Cannot load multiple mods with the same id.");
 
                 LoadedMods[loaded.Data.Id] = loaded;
-                Debug.LogR($"[color=seagreen]Loaded '{loaded.Data.Name}'");
+                Debug.LogR($"[color=seagreen]Loaded [b]{loaded.Data.Name}[/b] by [b]{loaded.Data.Author}[/b] [i]({loaded.Data.Id}, {loaded.Data.Version}, {loaded.FilePath})[/i]");
             }
 
             catch (Exception exception)
@@ -97,6 +102,30 @@ namespace Cutulu.Modding
                 // Ignore disabled mods
                 if (loaded.Enabled == false) continue;
 
+                string fixPath(string local) => $"{loaded.RootDirectory}{local}";
+
+                // Load all dll files
+                if (loaded.Data.DllPaths.NotEmpty())
+                {
+                    foreach (var dllPath in loaded.Data.DllPaths)
+                    {
+                        var path = fixPath(dllPath);
+                        if (LoadDll(path) == false) continue;
+                        Debug.LogR($"[color={Colors.PaleVioletRed.ToHtml()}]Loaded '{path}'");
+                    }
+                }
+
+                // Load all pck files
+                if (loaded.Data.PckPaths.NotEmpty())
+                {
+                    foreach (var pckPath in loaded.Data.PckPaths)
+                    {
+                        var path = fixPath(pckPath);
+                        if (LoadPck(path) == false) continue;
+                        Debug.LogR($"[color={Colors.PaleGreen.ToHtml()}]Loaded '{path}'");
+                    }
+                }
+
                 foreach (var loadedPair in loaded.Addresses)
                 {
                     var key = loadedPair.Key;
@@ -111,7 +140,7 @@ namespace Cutulu.Modding
                     else
                     {
                         // Add dictionaries with depth for targetting specific types
-                        var directorySplits = key.Split(new[] { '/', '\\' }, Cutulu.Constants.StringSplit);
+                        var directorySplits = key.Split(AssetConstants.NAME_SEPERATOR, Cutulu.Constants.StringSplit);
                         var strng = new System.Text.StringBuilder();
 
                         if (directorySplits.Size() > 1)
@@ -214,23 +243,20 @@ namespace Cutulu.Modding
 
         #region Read Data
 
-        public T Get<T>(string identifier)
+        public T Get<T>(string identifier) where T : class
         {
             return TryGet(identifier, out T t) ? t : default;
         }
 
-        public bool TryGet<T>(string identifier, out T output)
+        public bool TryGet<T>(string identifier, out T output) where T : class
         {
-            if (typeof(T).IsSubclassOf(typeof(Godot.Resource)))
-                output = GetResource<T>(identifier);
+            if (typeof(T).IsSubclassOf(typeof(Godot.Resource))) output = GetResource<T>(identifier);
 
-            else
-                output = GetNonResource<T>(identifier);
+            else output = GetNonResource<T>(identifier);
 
             return output is not null;
         }
 
-        #region Non Godot.Resource
         /// <summary>
         /// Returns non-resource of given non-resource type. Checks for null references.
         /// </summary>
@@ -240,7 +266,7 @@ namespace Cutulu.Modding
 
             if (LoadedData.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
             {
-                if (GlobalAddresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path.Value, out var loaded, type))
+                if (GlobalAddresses.TryGetValue(assetName, out var path) && IO.TryRead(path.Value, out T loaded, type))
                 {
                     nonResource = loaded;
                 }
@@ -252,38 +278,18 @@ namespace Cutulu.Modding
         }
 
         /// <summary>
-        /// Returns array of given non-resource type. Checks for null references.
-        /// </summary>
-        public T[] GetNonResources<T>(string directory, IO.FileType type = IO.FileType.Binary)
-        {
-            var list = new List<T>();
-
-            if (IdDirectories.TryGetValue(directory, out var set))
-            {
-                foreach (var assetName in set)
-                {
-                    var nonResource = GetNonResource<T>(assetName, type);
-
-                    if (nonResource != null) list.Add(nonResource);
-                }
-            }
-
-            return list.ToArray();
-        }
-        #endregion
-
-        #region Godot.Resource
-        /// <summary>
         /// Returns resource of given resource type. Checks for null references.
         /// </summary>
-        private T GetResource<T>(string assetName)
+        public T GetResource<T>(string assetName) where T : class
         {
             if (assetName.IsEmpty()) return default;
 
             if (LoadedData.TryGetValue(assetName, out var output) == false || output is not T)
             {
-                if (GlobalAddresses.TryGetValue(assetName, out var path) && OE.TryGetData<T>(path.Value, out var loaded, IO.FileType.GDResource))
-                    output = loaded;
+                if (GlobalAddresses.TryGetValue(assetName, out var path))
+                {
+                    output = ResourceLoader.Load<T>(path.Value);
+                }
 
                 if (output is T && output is Godot.Resource _output) LoadedData[assetName] = _output;
             }
@@ -292,33 +298,13 @@ namespace Cutulu.Modding
         }
 
         /// <summary>
-        /// Returns array of given resource type. Checks for null references.
-        /// </summary>
-        private T[] GetResources<T>(string directory) where T : Godot.Resource
-        {
-            var list = new List<T>();
-
-            if (IdDirectories.TryGetValue(directory, out var set))
-            {
-                foreach (var assetName in set)
-                {
-                    var resource = GetResource<T>(assetName);
-
-                    if (resource.NotNull()) list.Add(resource);
-                }
-            }
-
-            return list.ToArray();
-        }
-        #endregion
-
-        #region Bytes
-        /// <summary>
         /// Returns bytes of given asset of given name
         /// </summary>
         public byte[] GetBytes(string assetName, out string ending)
         {
-            if (assetName.NotEmpty() && GlobalAddresses.TryGetValue(assetName, out var path) && OE.TryGetData(path.Value, out var buffer))
+            byte[] buffer = null;
+
+            if (assetName.NotEmpty() && GlobalAddresses.TryGetValue(assetName, out var path) && (buffer = IO.ReadBytes(path.Value)).NotEmpty())
             {
                 ending = path.Value[path.Value.TrimEndUntil('.').Length..];
                 return buffer;
@@ -327,7 +313,6 @@ namespace Cutulu.Modding
             ending = default;
             return default;
         }
-        #endregion
 
         #endregion
 
@@ -349,9 +334,9 @@ namespace Cutulu.Modding
             return packed.Instantiate<N>(parent);
         }
 
-        public bool TryGetCollection<T>(string dir, out T[] collection) => (collection = GetCollection<T>(dir)).NotEmpty();
+        public bool TryGetCollection<T>(string dir, out T[] collection) where T : class => (collection = GetCollection<T>(dir)).NotEmpty();
 
-        public T[] GetCollection<T>(string dir)
+        public T[] GetCollection<T>(string dir) where T : class
         {
             if (IdDirectories.TryGetValue(dir, out var set) == false || set == null || set.Count < 1) return Array.Empty<T>();
 
@@ -367,5 +352,27 @@ namespace Cutulu.Modding
         }
 
         #endregion
+
+        public static bool LoadDllPck(string dllPath, string pckPath, bool patch = true)
+        {
+            if (dllPath.NotEmpty() && LoadDll(dllPath) == false) return false;
+            if (pckPath.NotEmpty() && LoadPck(pckPath, patch) == false) return false;
+            return true;
+        }
+
+        public static bool LoadPck(string path, bool patch = true) => ProjectSettings.LoadResourcePack(path, patch);
+        public static bool LoadDll(string path)
+        {
+            try
+            {
+                Assembly.LoadFile(path);
+                return true;
+            }
+
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

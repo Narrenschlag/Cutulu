@@ -21,6 +21,6 @@ namespace Cutulu.Audio
 
         public virtual float GetVolume() => Random.Range(Mathf.Min(Volume.X, Volume.Y), Mathf.Max(Volume.X, Volume.Y));
         public virtual float GetPitch() => Mathf.Max(Random.Range(Mathf.Min(Pitch.X, Pitch.Y), Mathf.Max(Pitch.X, Pitch.Y)), 0.01f);
-        public virtual AudioStream GetStream() => DMod.AssetLibrary is Modding.Library instance && instance.TryGet(StreamAsset, out AudioStream stream) ? stream : null;
+        public virtual AudioStream GetStream() => DMod.AssetLibrary is AssetLibrary instance && instance.TryGet(StreamAsset, out AudioStream stream) ? stream : null;
     }
 }

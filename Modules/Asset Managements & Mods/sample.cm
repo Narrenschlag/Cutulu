@@ -1,12 +1,15 @@
 {
-    "Id": "internal",
+    "Id": "internal_sample",
     "DefaultPriority": 0,
     "Author": "Narrenschlag",
     "Version": "0.0.0.1",
-    "Name": "Internal Data",
+    "Name": "Internal Data Sample (not for use)",
     "Description": "Internal game data",
     "Dependencies": null,
-    "LocalAddresses": [
+    "DllPaths": null,
+    "PckPaths": null,
+    "AliasPrefix": "Assets/",
+    "AliasIndex": [
         "boot::Scenes/main_menu.tscn",
         "",
         "host ::Scenes/host.tscn",

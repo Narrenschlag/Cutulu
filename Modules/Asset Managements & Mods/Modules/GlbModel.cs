@@ -1,7 +1,7 @@
-using Godot;
-
-namespace Cutulu.Modding
+namespace Cutulu
 {
+    using Godot;
+
     /// <summary> 
     /// Used as backend for MeshObject.cs keeping track of the glb model and its data.
     /// <summary>

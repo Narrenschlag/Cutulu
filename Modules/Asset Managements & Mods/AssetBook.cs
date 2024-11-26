@@ -1,21 +1,23 @@
-namespace Cutulu.Modding
+namespace Cutulu
 {
     using System.Collections.Generic;
 
-    public partial class Shelf
+    public partial class AssetBook
     {
         public readonly Dictionary<string, string[]> Addresses = new();
-        public readonly string FilePath;
-        public readonly Library Parent;
-        public readonly Data Data;
+        public readonly string FilePath, RootDirectory;
+        public readonly AssetLibrary Parent;
+        public readonly AssetBookData Data;
 
         public bool Enabled { get; private set; }
         public int Priority { get; set; }
 
-        public Shelf(Library parent, string filePath)
+        public AssetBook(AssetLibrary parent, string filePath)
         {
             // Try find mod data from given file path
-            if (OE.TryGetData(FilePath = filePath, out Data, Constants.FILE_TYPE) == false) throw new System.IO.FileNotFoundException($"File not found.");
+            if (OE.TryGetData(FilePath = filePath, out Data, AssetConstants.FILE_TYPE) == false) throw new System.IO.FileNotFoundException($"File not found.");
+
+            RootDirectory = filePath.TrimToDirectory('/', '\\', '?');
 
             // Assign parent
             Parent = parent;
@@ -24,20 +26,17 @@ namespace Cutulu.Modding
             Priority = Data.DefaultPriority;
 
             // Check if there are any local addresses
-            if (Data.LocalAddresses.NotEmpty())
+            if (Data.AliasIndex.NotEmpty())
             {
-                // Trim file path into directory
-                var directory = filePath.TrimToDirectory('/', '\\', '?');
-
                 // Iterate through addresses
-                foreach (var address in Data.LocalAddresses)
+                foreach (var address in Data.AliasIndex)
                 {
                     // Split string into key and value strings
-                    var arr = address.Split(Constants.ADDRESS_SEPERATOR, Cutulu.Constants.StringSplit);
+                    var arr = address.Split(AssetConstants.ADDRESS_SEPERATOR, Constants.StringSplit);
                     if (arr.Size() != 2) continue;
 
                     // Validate path
-                    var path = $"{directory}{arr[1]}";
+                    var path = $"{IO.PROJECT_PATH}{Data.AliasPrefix}{arr[1]}";
                     if (OE.Exists(path) == false) continue;
 
                     // Assign paths

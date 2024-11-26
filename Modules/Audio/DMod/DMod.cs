@@ -4,7 +4,7 @@ namespace Cutulu.Audio
 
     public static partial class DMod
     {
-        public static Modding.Library AssetLibrary { get; set; }
+        public static AssetLibrary AssetLibrary { get; set; }
 
         /// <summary>
         /// Plays sound effect as child of given object. Node type defines the type of audio player.

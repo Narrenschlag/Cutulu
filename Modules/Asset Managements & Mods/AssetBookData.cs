@@ -1,6 +1,6 @@
-namespace Cutulu.Modding
+namespace Cutulu
 {
-    public partial struct Data
+    public partial struct AssetBookData
     {
         public string Id { get; set; }
         public int DefaultPriority { get; set; }
@@ -10,8 +10,12 @@ namespace Cutulu.Modding
 
         public string Name { get; set; }
         public string Description { get; set; }
-
         public string[] Dependencies { get; set; }
-        public string[] LocalAddresses { get; set; }
+
+        public string[] DllPaths { get; set; }
+        public string[] PckPaths { get; set; }
+
+        public string AliasPrefix { get; set; }
+        public string[] AliasIndex { get; set; }
     }
 }

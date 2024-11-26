@@ -1,8 +1,7 @@
-using Cutulu.Modding;
-using Godot;
-
-namespace Cutulu.Modding
+namespace Cutulu
 {
+    using Godot;
+
     [GlobalClass]
     public partial class MeshObject : Resource
     {
@@ -14,7 +13,7 @@ namespace Cutulu.Modding
         [Export] public string BaseMaterial { get; set; }
         [Export] public string[] Materials { get; set; }
 
-        public Node3D Instantiate(Library library, Node parent)
+        public Node3D Instantiate(AssetLibrary library, Node parent)
         {
             if (library.TryGet(MeshGLB, out GlbModel model) == false) return null;
 

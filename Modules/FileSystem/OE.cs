@@ -37,9 +37,12 @@ namespace Cutulu
 
                     if (added) continue;
 
-                    for (int z = 0; z < zipFileEndings.Length; z++)
+                    if (zipFileEndings.NotEmpty())
                     {
-                        CrawlZip($"{rootFolder}{files[i]}", ref filePaths, fileEndings, zipFileEndings);
+                        for (int z = 0; z < zipFileEndings.Length; z++)
+                        {
+                            CrawlZip($"{rootFolder}{files[i]}", ref filePaths, fileEndings, zipFileEndings);
+                        }
                     }
                 }
             }
@@ -175,7 +178,7 @@ namespace Cutulu
                             var t = typeof(T);
 
                             // Support for Models
-                            if (t == typeof(Modding.GlbModel)) result = (T)(object)Modding.GlbModel.CustomImport(buffer);
+                            if (t == typeof(GlbModel)) result = (T)(object)GlbModel.CustomImport(buffer);
 
                             // Support for OGG files
                             else if (t == typeof(AudioStream)) result = (T)(object)AudioStreamOggVorbis.LoadFromBuffer(buffer);
