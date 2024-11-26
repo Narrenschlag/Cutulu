@@ -264,10 +264,13 @@ namespace Cutulu.Networking
 
                 catch (Exception ex)
                 {
-                    switch (ex.Message)
+                    switch (ex)
                     {
-                        case "CLIENT_LOST_CONNECTION_TO_HOST":
+                        case IOException _ex when _ex.Message == "CLIENT_LOST_CONNECTION_TO_HOST":
                             Debug.LogR($"[color=red]{ex.Message}");
+                            break;
+
+                        case OperationCanceledException:
                             break;
 
                         default:

@@ -228,7 +228,7 @@ namespace Cutulu.Networking
                         try
                         {
                             buffer = new byte[4];
-                            if (await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), connection.CancellationToken) < 2) throw new IOException("connection corrupted");
+                            if (await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), connection.CancellationToken) < 2) throw new IOException("HOST_LOST_CONNECTION_TO_CLIENT");
 
                             var length = BitConverter.ToInt32(buffer);
                             if (length < 2) continue;
@@ -245,7 +245,20 @@ namespace Cutulu.Networking
 
                         catch (Exception ex)
                         {
-                            Debug.LogError($"HOST_TCP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                            switch (ex)
+                            {
+                                case IOException _ex when _ex.Message == "HOST_LOST_CONNECTION_TO_CLIENT":
+                                    Debug.LogR($"[color=red]{ex.Message}");
+                                    break;
+
+                                case OperationCanceledException:
+                                    break;
+
+                                default:
+                                    Debug.LogError($"HOST_TCP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                                    break;
+                            }
+
                             break;
                         }
                     }
