@@ -258,26 +258,6 @@ namespace Cutulu
         }
 
         /// <summary>
-        /// Returns non-resource of given non-resource type. Checks for null references.
-        /// </summary>
-        public T GetNonResource<T>(string assetName, IO.FileType type = IO.FileType.Binary)
-        {
-            if (assetName.IsEmpty()) return default;
-
-            if (LoadedData.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
-            {
-                if (GlobalAddresses.TryGetValue(assetName, out var path) && IO.TryRead(path.Value, out T loaded, type))
-                {
-                    nonResource = loaded;
-                }
-
-                if (nonResource is T) LoadedData[assetName] = nonResource;
-            }
-
-            return nonResource is T t ? t : default;
-        }
-
-        /// <summary>
         /// Returns resource of given resource type. Checks for null references.
         /// </summary>
         public T GetResource<T>(string assetName) where T : class
@@ -298,13 +278,31 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Returns non-resource of given non-resource type. Checks for null references.
+        /// </summary>
+        public T GetNonResource<T>(string assetName, IO.FileType type = IO.FileType.Binary)
+        {
+            if (assetName.IsEmpty()) return default;
+
+            if (LoadedData.TryGetValue(assetName, out var nonResource) == false || nonResource == null)
+            {
+                if (GlobalAddresses.TryGetValue(assetName, out var path) && OE.TryGetData(path.Value, out T loaded, type))
+                {
+                    nonResource = loaded;
+                }
+
+                if (nonResource is T) LoadedData[assetName] = nonResource;
+            }
+
+            return nonResource is T t ? t : default;
+        }
+
+        /// <summary>
         /// Returns bytes of given asset of given name
         /// </summary>
         public byte[] GetBytes(string assetName, out string ending)
         {
-            byte[] buffer = null;
-
-            if (assetName.NotEmpty() && GlobalAddresses.TryGetValue(assetName, out var path) && (buffer = IO.ReadBytes(path.Value)).NotEmpty())
+            if (assetName.NotEmpty() && GlobalAddresses.TryGetValue(assetName, out var path) && OE.TryGetData(path.Value, out byte[] buffer) && buffer.NotEmpty())
             {
                 ending = path.Value[path.Value.TrimEndUntil('.').Length..];
                 return buffer;
