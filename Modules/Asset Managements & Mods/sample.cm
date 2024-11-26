@@ -1,8 +1,9 @@
 {
     "Id": "internal_sample",
     "DefaultPriority": 0,
+    "ForceEnabled": false,
     "Author": "Narrenschlag",
-    "Version": "0.0.0.1",
+    "Version": "0.0.1",
     "Name": "Internal Data Sample (not for use)",
     "Description": "Internal game data",
     "Dependencies": null,

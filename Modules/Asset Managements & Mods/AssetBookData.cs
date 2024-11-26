@@ -4,6 +4,7 @@ namespace Cutulu
     {
         public string Id { get; set; }
         public int DefaultPriority { get; set; }
+        public bool ForceEnabled { get; set; }
 
         public string Author { get; set; }
         public string Version { get; set; }

@@ -28,6 +28,19 @@ namespace Cutulu
 
             if (enableAll)
                 EnableAll();
+
+            else
+            {
+                if (LoadedMods.NotEmpty())
+                {
+                    foreach (var loaded in LoadedMods.Values)
+                    {
+                        if (loaded.Data.ForceEnabled) loaded.Enable(false);
+                    }
+
+                    Refresh();
+                }
+            }
         }
 
         /// <summary>
@@ -97,7 +110,30 @@ namespace Cutulu
             IdDirectories.Clear();
             LoadedData.Clear();
 
+            // Order mods, lowest priority first so the higher priorities overwrite the lower ones
+            var loadedMods = new List<AssetBook>();
             foreach (var loaded in LoadedMods.Values)
+            {
+                var add = true;
+                var i = 0;
+
+                foreach (var ordered in loadedMods)
+                {
+                    if (loaded.Priority <= ordered.Priority)
+                    {
+                        loadedMods.Insert(i, loaded);
+                        add = false;
+                        break;
+                    }
+
+                    i++;
+                }
+
+                if (add) loadedMods.Add(loaded);
+            }
+
+            // Refresh assets and addresses based on order
+            foreach (var loaded in loadedMods)
             {
                 // Ignore disabled mods
                 if (loaded.Enabled == false) continue;

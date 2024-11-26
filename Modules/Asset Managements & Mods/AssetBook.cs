@@ -75,6 +75,8 @@ namespace Cutulu
         /// <summar>
         public void Disable(bool refresh = true)
         {
+            if (Enabled && Data.ForceEnabled) return;
+
             Enabled = false;
 
             if (refresh) Parent?.Refresh();
