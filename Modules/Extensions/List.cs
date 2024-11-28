@@ -25,7 +25,7 @@ namespace Cutulu
 
         public static T ModulatedElement<T>(this List<T> list, int i)
         {
-            return list.NotEmpty() ? list[list.Count.AbsMod(i)] : default;
+            return list.NotEmpty() ? list[i.AbsMod(list.Count)] : default;
         }
 
         public static T GetClampedElement<T>(this List<T> list, int index)
