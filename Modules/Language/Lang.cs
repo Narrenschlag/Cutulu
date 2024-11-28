@@ -2,7 +2,6 @@ namespace Cutulu
 {
     using System.Collections.Generic;
     using System;
-    using Cutulu;
     using Godot;
 
     [GlobalClass]
@@ -14,7 +13,7 @@ namespace Cutulu
         [Export] public Texture2D Flag { get; set; }
         [Export(PropertyHint.MultilineText)] public string Content { get; set; } = "asset_title::Inhalts-Pakete";
 
-        public static readonly Dictionary<string, string> Dictionary = new();
+        public static readonly Dictionary<string, string> Base = new(), Additional = new();
         public static Lang Current { get; private set; }
         public static Action Updated { get; set; }
 
@@ -22,13 +21,36 @@ namespace Cutulu
 
         public static void SetTo(Lang lang)
         {
-            if (Current == lang || (Current = lang).Content.IsEmpty()) return;
+            if (Current == lang) return;
 
-            var split = Current.Content.Split(new[] { "\n" }, Constants.StringSplit);
+            OverrideLang(Base, Current = lang, true);
+            Updated?.Invoke();
+        }
+
+        public static void Add(Lang lang, bool clearOld = false)
+        {
+            if (Current == lang) return;
+
+            OverrideLang(Additional, lang, clearOld);
+            Updated?.Invoke();
+        }
+
+        public static string Get(string key, string defaultValue = default)
+        {
+            if (Base.TryGetValue(key, out var value) || Additional.TryGetValue(key, out value)) return value;
+            else return defaultValue.IsEmpty() ? key : defaultValue;
+        }
+
+        private static void OverrideLang(Dictionary<string, string> dictionary, Lang lang, bool clear)
+        {
+            if (clear) dictionary.Clear();
+
+            if (lang.IsNull() || lang.Content.IsEmpty()) return;
+
+            var split = lang.Content.Split(new[] { "\n" }, Constants.StringSplit);
             var builder = new System.Text.StringBuilder();
             var key = default(string);
 
-            Dictionary.Clear();
             for (var i = 0; i < split.Length; i++)
             {
                 var arr = split[i].Split(new[] { "::" }, Constants.StringSplit);
@@ -54,17 +76,11 @@ namespace Cutulu
             {
                 if (builder.Length > 0 && key.NotEmpty())
                 {
-                    Dictionary[key] = builder.ToString();
+                    Base[key] = builder.ToString();
 
                     builder.Clear();
                 }
             }
-        }
-
-        public static string Get(string key, string defaultValue = default)
-        {
-            if (Dictionary.TryGetValue(key, out var value)) return value;
-            else return defaultValue.IsEmpty() ? key : defaultValue;
         }
     }
 }
