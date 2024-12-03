@@ -57,6 +57,12 @@ namespace Cutulu
             }
         }
 
+        public static void DestroyChildrenOf<T>(this Node parent, bool forceInstant = false) where T : Node
+        {
+            var nodes = parent.GetNodesInChildren<T>(false);
+            if (nodes.NotEmpty()) Destroy(nodes.ToArray(), forceInstant);
+        }
+
         public static void Destroy(this Node node, bool forceInstant = false)
         {
             if (node.IsNull()) return;
