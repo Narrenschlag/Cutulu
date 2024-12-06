@@ -103,8 +103,18 @@ namespace Cutulu
                 case float v: writer.Write(v); break;
 
                 default:
-                    if (Encoders.TryGetValue(obj.GetType(), out var encoder)) encoder.Encode(writer, ref obj);
-                    else if (EncodeUnknown(writer, ref obj) == false) return false;
+                    // Encode using custom encoder
+                    if (Encoders.TryGetValue(obj.GetType(), out var encoder))
+                    {
+                        encoder.Encode(writer, ref obj);
+                    }
+
+                    // Encode types without serializer
+                    else if (EncodeUnknown(writer, ref obj) == false)
+                    {
+                        return false;
+                    }
+
                     break;
             }
 
@@ -116,8 +126,14 @@ namespace Cutulu
             if (obj == null) return false;
             var type = obj.GetType();
 
+            // Encode enum
+            if (type.IsEnum)
+            {
+                writer.Write(Encode(Convert.ChangeType(obj, type.GetEnumUnderlyingType())));
+            }
+
             // Arrays
-            if (type.IsArray && obj is Array array)
+            else if (type.IsArray && obj is Array array)
             {
                 writer.Write((ushort)array.Length);
                 type = type.GetElementType();
@@ -205,6 +221,12 @@ namespace Cutulu
 
         private static object DecodeUnknown(BinaryReader reader, Type type)
         {
+            // Enums
+            if (type.IsEnum)
+            {
+                return Enum.ToObject(type, Decode(reader, type.GetEnumUnderlyingType()));
+            }
+
             // Arrays
             if (type.IsArray)
             {
