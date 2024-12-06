@@ -1,7 +1,7 @@
-using System.IO;
-
 namespace Cutulu
 {
+    using System.IO;
+
     /// <summary>
     /// Use static method Register() to see more.
     /// </summary>

@@ -1,13 +1,12 @@
-using System.Security.Cryptography;
-using System.Threading.Tasks;
-using System.Text;
-using System.IO;
-using System;
-
-using Godot;
-
 namespace Cutulu
 {
+    using System.Security.Cryptography;
+    using System.Threading.Tasks;
+    using System.Text;
+    using System.IO;
+    using System;
+    using Godot;
+
     public static class Encryption
     {
         public static string HashEncryptString(this string plaintText, string key) => plaintText.EncryptString(key).EncryptString(key.HashPassword());

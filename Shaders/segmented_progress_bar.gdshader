@@ -32,14 +32,14 @@ vec2 segmented_bar(vec2 uv) {
 	float bar_value = 0.0;
 	for (int i=0;i<count;i++) {
 		float index_value = float(i+1) / float(count);
-		
+
 		if (index_value > value) {
 			// Ceil
 			if (value < float(i) * bar_size || value <= 0.0) {
 				continue;
 			}
 		}
-		
+
 		vec2 uv4 = uv;
 		vec2 size4 = vec2(bar_size, 1.0-margin.y);
 		//size4.x = bar_size;
@@ -74,20 +74,20 @@ float map_range(float min1, float max1, float min2, float max2, float v) {
 
 void fragment() {
 	vec2 uv = UV;
-	
+
 	float angle = 1.571 + (shear_angle * PI/4.0);
 	float shear_value = (cos(angle)/sin(angle));
 	float shear = shear_value * uv.y;
 	uv.x = uv.x + shear;
 	uv.x -= shear_value/2.0;
-	
+
 	uv.x *= 1.0+abs(shear_value);
 	uv.x -= abs(shear_value)/2.0;
-	
+
 	float bar_count = float(count);
 	float bar_size = 1.0/bar_count;
 	float separation_width = margin.x * bar_size;
-	
+
 	vec2 shape = segmented_bar(uv);
 	vec4 gradient_color = vec4(0.0);
 	float gradient_x_pos = uv.x;
@@ -102,7 +102,7 @@ void fragment() {
 	else {
 		shape.x *= step(uv.x, value);
 	}
-	
+
 	float y = map_range(0.5-(1.0-margin.y)/2.0, 0.5+(1.0-margin.y)/2.0, 0.0, 1.0, uv.y);
 	if (invert) {
 		y = uv.y;
@@ -113,8 +113,8 @@ void fragment() {
 	vec4 gradient_color_y = get_gradient_color(gradient_y, y);
 	gradient_color += gradient_color_x;
 	gradient_color = mix(gradient_color_x, gradient_color_y, gradient_color_y.a);
-	
-	
-	
+
+
+
 	COLOR = vec4(gradient_color.rgb, shape.x);
 }
