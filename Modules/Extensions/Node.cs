@@ -214,7 +214,7 @@ namespace Cutulu
                 node = node.GetParent();
             }
 
-            return default(T);
+            return default;
         }
 
         public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true, byte layerDepth = 0)
@@ -238,7 +238,7 @@ namespace Cutulu
 
             void add(Node node)
             {
-                if (node is T t)
+                if (node is T t && (t is not Node n || n.NotNull()))
                     list.Add(t);
             }
         }

@@ -1,7 +1,6 @@
 namespace Cutulu
 {
     using Godot.Collections;
-    using Cutulu.Input;
     using Godot;
 
     public static class Physics
