@@ -37,6 +37,8 @@ namespace Cutulu
 
         public static string Get(string key, string defaultValue = default)
         {
+            if (key.IsEmpty()) return defaultValue.IsEmpty() ? string.Empty : defaultValue;
+
             if (Base.TryGetValue(key, out var value) || Additional.TryGetValue(key, out value)) return value;
             else return defaultValue.IsEmpty() ? key : defaultValue;
         }
