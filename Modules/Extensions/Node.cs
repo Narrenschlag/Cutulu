@@ -59,6 +59,8 @@ namespace Cutulu
 
         public static void DestroyChildrenOf<T>(this Node parent, bool forceInstant = false) where T : Node
         {
+            if (parent.IsNull()) return;
+
             var nodes = parent.GetNodesInChildren<T>(false);
             if (nodes.NotEmpty()) Destroy(nodes.ToArray(), forceInstant);
         }

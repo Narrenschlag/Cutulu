@@ -137,39 +137,43 @@ namespace Cutulu
 
             void apply(int deviceId, bool valid, InputKey key, object value)
             {
-                if (Devices.TryGetValue(deviceIdx, out InputDevice device))
+                // Device not found
+                if (Devices.TryGetValue(deviceIdx, out InputDevice device) == false || device == null)
                 {
-                    var pressed = device.IsPressed(key);
+                    Debug.LogR($"[color=red]Input Device {deviceId} is not contained in registry");
+                    return;
+                }
 
-                    if (valid)
+                var pressed = device.IsPressed(key);
+
+                if (valid)
+                {
+                    device.HandlerPressed(key, true, value);
+                    device.Pressed?.Invoke(key, pressed, value);
+
+                    if (pressed == false)
                     {
-                        device.HandlerPressed(key, true, value);
-                        device.Pressed?.Invoke(key, pressed, value);
+                        device.HandlerJustPressed(key, true, true, value);
 
-                        if (pressed == false)
-                        {
-                            device.HandlerJustPressed(key, true, true, value);
-
-                            Queue.Add((TimeStamp, deviceId, key, true));
-                        }
-
-                        if (key.Type == InputKey.Enum.MouseAxis)
-                        {
-                            if (MouseQueue.TryGetValue(deviceId, out var mouseQueue) == false)
-                            {
-                                MouseQueue[deviceId] = mouseQueue = new();
-                            }
-
-                            mouseQueue[key] = TimeStamp;
-                        }
+                        Queue.Add((TimeStamp, deviceId, key, true));
                     }
 
-                    else
+                    if (key.Type == InputKey.Enum.MouseAxis)
                     {
-                        device.HandlerPressed(key, false, null);
+                        if (MouseQueue.TryGetValue(deviceId, out var mouseQueue) == false)
+                        {
+                            MouseQueue[deviceId] = mouseQueue = new();
+                        }
 
-                        if (pressed) ReleasedKey(device, key, value);
+                        mouseQueue[key] = TimeStamp;
                     }
+                }
+
+                else
+                {
+                    device.HandlerPressed(key, false, null);
+
+                    if (pressed) ReleasedKey(device, key, value);
                 }
             }
         }
