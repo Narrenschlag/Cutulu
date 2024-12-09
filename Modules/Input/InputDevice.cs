@@ -13,6 +13,7 @@ namespace Cutulu
         public bool RemoteAssigned { get; set; } = false;
         public long RemoteId { get; set; }
 
+        public readonly Enum Type;
         public readonly int DeviceId;
         public readonly string Name;
 
@@ -23,12 +24,23 @@ namespace Cutulu
         {
             DeviceId = deviceId;
 
-            Name = Lang.Get(deviceId switch
+            switch (deviceId)
             {
-                -1 => "Keyboard",
-                -2 => "Mouse",
-                _ => Godot.Input.GetJoyName(deviceId),
-            });
+                case -1:
+                    Type = Enum.Keyboard;
+                    Name = Type.ToString();
+                    break;
+
+                case -2:
+                    Type = Enum.Mouse;
+                    Name = Type.ToString();
+                    break;
+
+                default:
+                    Type = Enum.Gamepad;
+                    Name = Input.GetJoyName(deviceId);
+                    break;
+            }
         }
 
         #region Pressed
@@ -221,6 +233,8 @@ namespace Cutulu
                 PresetData = value;
                 Indexes.Clear();
 
+                Preset.Type = Type;
+
                 var array = Preset.Array;
                 if (array.NotEmpty())
                 {
@@ -233,5 +247,15 @@ namespace Cutulu
         }
 
         #endregion
+
+        public enum Enum : byte
+        {
+            Invalid,
+
+            Keyboard,
+            Mouse,
+
+            Gamepad,
+        }
     }
 }
