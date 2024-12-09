@@ -226,7 +226,10 @@ namespace Cutulu
 
         public InputPreset Preset
         {
-            get => PresetData ??= new();
+            get => PresetData ??= new()
+            {
+                Type = Type,
+            };
 
             set
             {
