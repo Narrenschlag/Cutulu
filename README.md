@@ -1,4 +1,4 @@
-![alt text](https://github.com/Narrenschlag/Cutulu/blob/main/icon.png?raw=true)
+![cutulu_icon](https://github.com/Narrenschlag/Cutulu/blob/main/icon.png)
 
 # The Cutulu SDK
 Inherting its name from the lovecraftian being Cthulhu, this SDK serves as foundation for software projects powered by godot.
