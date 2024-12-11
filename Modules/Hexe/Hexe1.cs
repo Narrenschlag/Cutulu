@@ -4,6 +4,14 @@ namespace Cutulu
 
     public static class Hexe1
     {
+        /// <summary>
+        /// Returns distance between two points
+        /// </summary>
+        public static float GetDistance(int a, int b)
+        {
+            return Hexe2.GetDistance(Hexe2.ToAxial(a), Hexe2.ToAxial(b));
+        }
+
         #region Indexes
 
         /// <summary>
@@ -11,7 +19,7 @@ namespace Cutulu
         /// </summary>
         public static int GetRingIndex(int index)
         {
-            return Mathf.CeilToInt((Mathf.Sqrt(12 * index + 9) - 3) / Hexe2.Neighbours.Length);
+            return Mathf.CeilToInt((Mathf.Sqrt(12 * index + 9) - 3) / Hexe.Num);
         }
 
         /// <summary>
@@ -62,7 +70,7 @@ namespace Cutulu
             - Hexe3.Neighbours[i] * ring; // Starting position of the segment
 
             return GetStartIndex(ring)
-            + i * Hexe.GetCellCountInRing(ring) / Hexe3.Neighbours.Length // Get the number of cells in the ring and calculate side length
+            + i * Hexe.GetCellCountInRing(ring) / Hexe.Num // Get the number of cells in the ring and calculate side length
             + Mathf.Abs(delta.X).max(Mathf.Abs(delta.Y), Mathf.Abs(delta.Z)); // Offset within the segment
         }
 
@@ -108,7 +116,15 @@ namespace Cutulu
         #region World Space
 
         /// <summary>
-        /// Converts a world position into an index (Vector3) 
+        /// Converts an index into a world position 
+        /// </summary>
+        public static Vector3 ToWorld(int index, Orientation orientation)
+        {
+            return orientation == null ? default : Hexe2.ToWorld(Hexe2.ToAxial(index), orientation);
+        }
+
+        /// <summary>
+        /// Converts a world position into an index
         /// </summary>
         public static int ToIndex(Vector3 position, Orientation orientation)
         {
@@ -129,6 +145,14 @@ namespace Cutulu
         public static Vector3 GetVertice(int index, int cornerIndex, Orientation orientation)
         {
             return Hexe2.GetVertice(Hexe2.ToAxial(index), cornerIndex, orientation);
+        }
+
+        /// <summary>
+        /// Returns closest world position on given index to given position
+        /// </summary>
+        public static Vector3 GetClosestPoint(int index, Vector3 position, Orientation orientation)
+        {
+            return Hexe2.GetClosestPoint(Hexe2.ToAxial(index), position, orientation);
         }
 
         #endregion
@@ -158,44 +182,6 @@ namespace Cutulu
             }
 
             return path;
-        }
-
-        #endregion
-
-        #region Backend
-
-        /// <summary>
-        /// Helper function to find the position of an axial coordinate within a ring
-        /// Really wished this was simpler to find somewhere so enjoy it. It scales.
-        /// </summary>
-        private static int GetPositionInRing(Vector2I axial, int ring)
-        {
-            // Start with the first hex in the ring, offset from the center hex
-            var currentHex = Hexe2.Neighbours[4] * ring;
-            if (currentHex == axial) return 0;
-
-            var _i = 0;
-
-            var ang = Vector2.Zero.GetAngleD(axial).AbsMod(360);
-            if (ang <= 0) ang = 360;
-
-            for (byte i = 0; i < Hexe2.Neighbours.Length; i++)
-            {
-                var min = Vector2.Zero.GetAngleD(Hexe2.Neighbours.ModulatedElement(i - 2));
-
-                var max = Vector2.Zero.GetAngleD(Hexe2.Neighbours.ModulatedElement(i - 1)).AbsMod(360);
-                if (max <= 0) max = 360;
-
-                if (min >= ang || ang > max)
-                {
-                    currentHex += Hexe2.Neighbours[i] * ring;
-                    _i += ring;
-                }
-
-                else break;
-            }
-
-            return _i + Mathf.FloorToInt(Hexe2.GetDistance(currentHex, axial));
         }
 
         #endregion

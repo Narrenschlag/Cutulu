@@ -29,6 +29,9 @@ namespace Cutulu
 
         #region Conversion
 
+        /// <summary>
+        /// Convert an cubic to axial (q, r)
+        /// </summary>
         public static Vector2I ToAxial(Vector3I cubic)
         {
             // Ignore s, as it is derived from q and r
@@ -50,7 +53,7 @@ namespace Cutulu
             // Milestone
             index -= Hexe1.GetStartIndex(ring);
 
-            var sideLength = Hexe.GetCellCountInRing(ring) / Neighbours.Length; // ringLength - neighbourCount
+            var sideLength = Hexe.GetCellCountInRing(ring) / Hexe.Num; // ringLength - neighbourCount
             var sideIndex = Mathf.FloorToInt((float)index / sideLength);
 
             return Neighbours[sideIndex] * ring // start
@@ -62,13 +65,16 @@ namespace Cutulu
 
         #region World Space
 
+        /// <summary>
+        /// Converts axial to a world position 
+        /// </summary>
         public static Vector3 ToWorld(Vector2I axial, Orientation orientation)
         {
             return Hexe3.ToWorld(Hexe3.ToCubic(axial), orientation);
         }
 
         /// <summary>
-        /// Converts world position to hexagonal coordinates
+        /// Converts a world position to hexagonal coordinates
         /// </summary>
         public static Vector2I ToAxial(Vector3 position, Orientation orientation)
         {
@@ -82,17 +88,17 @@ namespace Cutulu
         {
             if (orientation == null) return Array.Empty<Vector3>();
 
-            var neighbours = new Vector3[Neighbours.Length];
-            var corners = new Vector3[Neighbours.Length];
+            var neighbours = new Vector3[Hexe.Num];
+            var corners = new Vector3[Hexe.Num];
 
             var world = ToWorld(axial, orientation);
 
-            for (int i = 0; i < Neighbours.Length; i++)
+            for (int i = 0; i < Hexe.Num; i++)
             {
                 neighbours[i] = ToWorld(axial + Neighbours[i], orientation);
             }
 
-            for (int i = 0; i < Neighbours.Length; i++)
+            for (int i = 0; i < Hexe.Num; i++)
             {
                 corners[i] = (world + neighbours[i] + neighbours.ModulatedElement(i - 1)) / 3f;
             }
@@ -113,6 +119,9 @@ namespace Cutulu
             return (world + a + z) / 3f;
         }
 
+        /// <summary>
+        /// Returns closest world position on given axial to given position
+        /// </summary>
         public static Vector3 GetClosestPoint(Vector2I axial, Vector3 position, Orientation orientation)
         {
             if (ToAxial(position, orientation).Equals(axial)) return position;
@@ -157,12 +166,12 @@ namespace Cutulu
                 return new[] { axial };
 
             var result = new Vector2I[Hexe.GetCellCountInRing(ring)];
-            var sideLength = result.Length / Neighbours.Length;
+            var sideLength = result.Length / Hexe.Num;
 
             // Start with the first hex in the ring, offset from the center hex
             var currentHex = axial + Neighbours[0] * ring;
 
-            for (byte k = 0; k < Neighbours.Length; k++)
+            for (byte k = 0; k < Hexe.Num; k++)
             {
                 var delta = Neighbours.ModulatedElement(k + 1) - Neighbours[k];
 

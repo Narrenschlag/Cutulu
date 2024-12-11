@@ -7,6 +7,10 @@ namespace Cutulu
     {
         public static void SetForward(this Node3D node, Vector3 direction, bool global = true) => node.LookAt((global ? node.GlobalPosition : node.Position) + direction);
 
+        public static Vector3I RoundToInt(this Vector3 v3) => new(Mathf.RoundToInt(v3.X), Mathf.RoundToInt(v3.Y), Mathf.RoundToInt(v3.Z));
+        public static Vector3I FloorToInt(this Vector3 v3) => new(Mathf.FloorToInt(v3.X), Mathf.FloorToInt(v3.Y), Mathf.FloorToInt(v3.Z));
+        public static Vector3I CeilToInt(this Vector3 v3) => new(Mathf.CeilToInt(v3.X), Mathf.CeilToInt(v3.Y), Mathf.CeilToInt(v3.Z));
+
         public static Vector3 setX(this Vector3 v3, float value) => new(value, v3.Y, v3.Z);
         public static Vector3 setY(this Vector3 v3, float value) => new(v3.X, value, v3.Z);
         public static Vector3 setZ(this Vector3 v3, float value) => new(v3.X, v3.Y, value);

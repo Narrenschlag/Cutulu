@@ -51,6 +51,9 @@ namespace Cutulu
 
         #region World Space
 
+        /// <summary>
+        /// Converts a cubic into a world position 
+        /// </summary>
         public static Vector3 ToWorld(Vector3I cubic, Orientation orientation)
         {
             var x = 3f / 2f * cubic.X;
@@ -59,6 +62,9 @@ namespace Cutulu
             return orientation.Right * x + orientation.Forward * y; // Y is set to 0 (ground level)
         }
 
+        /// <summary>
+        /// Converts a world position into a cubic 
+        /// </summary>
         public static Vector3I ToCubic(Vector3 position, Orientation orientation)
         {
             var position2D = new Vector2(orientation.Right.Dot(position), orientation.Forward.Dot(position));
@@ -77,17 +83,17 @@ namespace Cutulu
         {
             if (orientation == null) return Array.Empty<Vector3>();
 
-            var neighbours = new Vector3[Neighbours.Length];
-            var corners = new Vector3[Neighbours.Length];
+            var neighbours = new Vector3[Hexe.Num];
+            var corners = new Vector3[Hexe.Num];
 
             var world = ToWorld(cubic, orientation);
 
-            for (int i = 0; i < Neighbours.Length; i++)
+            for (int i = 0; i < Hexe.Num; i++)
             {
                 neighbours[i] = ToWorld(cubic + Neighbours[i], orientation);
             }
 
-            for (int i = 0; i < Neighbours.Length; i++)
+            for (int i = 0; i < Hexe.Num; i++)
             {
                 corners[i] = (world + neighbours[i] + neighbours.ModulatedElement(i - 1)) / 3f;
             }
@@ -106,6 +112,18 @@ namespace Cutulu
             var z = ToWorld(cubic + Neighbours.ModulatedElement(cornerIndex - 1), orientation);
 
             return (world + a + z) / 3f;
+        }
+
+        /// <summary>
+        /// Returns closest world position on given cubic to given position
+        /// </summary>
+        public static Vector3 GetClosestPoint(Vector3I cubic, Vector3 position, Orientation orientation)
+        {
+            if (ToCubic(position, orientation).Equals(cubic)) return position;
+
+            var vertices = GetVertices(cubic, orientation).SortByDistanceTo(position);
+
+            return position.TryIntersectFlat(ToWorld(cubic, orientation), vertices[0], vertices[1] - vertices[0], out var C) ? C : position;
         }
 
         #endregion
@@ -143,12 +161,12 @@ namespace Cutulu
                 return new[] { cubic };
 
             var result = new Vector3I[Hexe.GetCellCountInRing(ring)];
-            var sideLength = result.Length / Neighbours.Length;
+            var sideLength = result.Length / Hexe.Num;
 
             // Start with the first hex in the ring, offset from the center hex
             var currentHex = cubic + Neighbours[0] * ring;
 
-            for (byte k = 0; k < Neighbours.Length; k++)
+            for (byte k = 0; k < Hexe.Num; k++)
             {
                 var delta = Neighbours.ModulatedElement(k + 1) - Neighbours[k];
 
