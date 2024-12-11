@@ -43,44 +43,27 @@ namespace Cutulu
 
             // Determine which ring the cubic coordinate belongs to
             var ring = Hexe3.GetRingIndex(cubic);
-            var index = GetStartIndex(ring); // Get starting index for the ring
 
-            // Get the number of cells in the ring and calculate side length
-            var ringLength = Hexe.GetCellCountInRing(ring);
-            var sideLength = ringLength / Hexe3.Neighbours.Length;
-
-            // Iterate over the segments to determine the correct one
-            for (byte i = 0; i < Hexe3.Neighbours.Length; i++)
+            var i = Mathf.FloorToInt(
+                (Vector2Extension.GetAngleD(Hexe2.ToAxial(cubic)) - Hexe2.ReferenceAngle).AbsMod(360f) // Calculate angle of given cubic in axial space
+                / 45f) switch // Determine segment using switch statement on 45° segments
             {
-                // Starting position of the segment
-                var start = Hexe3.Neighbours[i] * ring;
+                0 => 0,
+                1 => 1,
+                2 => 1,
+                3 => 2,
+                4 => 3,
+                5 => 4,
+                6 => 4,
+                _ => 5,
+            };
 
-                // Ending position of the segment
-                var end = Hexe3.Neighbours[(i + 1) % Hexe3.Neighbours.Length] * ring;
+            var delta = cubic // Check if the cubic coordinate is along this segment
+            - Hexe3.Neighbours[i] * ring; // Starting position of the segment
 
-                // Check if the cubic coordinate is along this segment
-                var delta = cubic - start;
-
-                // Check bounds: delta must be non-negative and within segment length
-                if (delta.X * end.X >= 0 && delta.Y * end.Y >= 0 && delta.Z * end.Z >= 0 &&
-                    Mathf.Abs(delta.X + delta.Y + delta.Z) <= sideLength)
-                {
-                    // Offset within the segment
-                    var offset = Mathf.Abs(delta.X).max(Mathf.Abs(delta.Y), Mathf.Abs(delta.Z));
-                    return index + i * sideLength + offset;
-                }
-            }
-
-            // Fallback: Check against all cells in the ring if segment match fails
-            var cells = Hexe3.GetRing(default, ring);
-            for (int i = 0; i < ringLength; i++)
-            {
-                if (cells[i] == cubic)
-                    return index + i;
-            }
-
-            // If nothing matches, return the starting index as a fallback
-            return index;
+            return GetStartIndex(ring)
+            + i * Hexe.GetCellCountInRing(ring) / Hexe3.Neighbours.Length // Get the number of cells in the ring and calculate side length
+            + Mathf.Abs(delta.X).max(Mathf.Abs(delta.Y), Mathf.Abs(delta.Z)); // Offset within the segment
         }
 
 
