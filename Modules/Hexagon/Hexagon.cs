@@ -3,7 +3,7 @@ namespace Cutulu
     using System;
     using Godot;
 
-    public static class Hexe
+    public static class Hexagon
     {
         public const int Num = 6;
 
@@ -30,11 +30,11 @@ namespace Cutulu
         {
             return default(T) switch
             {
-                int _ => (T)(object)Hexe1.ToIndex(position, orientation),
+                int _ => (T)(object)Hexagon1.ToIndex(position, orientation),
 
-                Vector2I _ => (T)(object)Hexe2.ToAxial(position, orientation),
+                Vector2I _ => (T)(object)Hexagon2.ToAxial(position, orientation),
 
-                Vector3I _ => (T)(object)Hexe3.ToCubic(position, orientation),
+                Vector3I _ => (T)(object)Hexagon3.ToCubic(position, orientation),
 
                 _ => default,
             };
@@ -47,11 +47,11 @@ namespace Cutulu
         {
             return key switch
             {
-                int k => Hexe1.ToWorld(k, orientation),
+                int k => Hexagon1.ToWorld(k, orientation),
 
-                Vector2I k => Hexe2.ToWorld(k, orientation),
+                Vector2I k => Hexagon2.ToWorld(k, orientation),
 
-                Vector3I k => Hexe3.ToWorld(k, orientation),
+                Vector3I k => Hexagon3.ToWorld(k, orientation),
 
                 _ => default,
             };
@@ -64,12 +64,12 @@ namespace Cutulu
         {
             return key switch
             {
-                float k => Hexe1.GetVertices(Mathf.RoundToInt(k), orientation),
-                int k => Hexe1.GetVertices(k, orientation),
+                float k => Hexagon1.GetVertices(Mathf.RoundToInt(k), orientation),
+                int k => Hexagon1.GetVertices(k, orientation),
 
-                Vector2I k => Hexe2.GetVertices(k, orientation),
+                Vector2I k => Hexagon2.GetVertices(k, orientation),
 
-                Vector3I k => Hexe3.GetVertices(k, orientation),
+                Vector3I k => Hexagon3.GetVertices(k, orientation),
 
                 _ => Array.Empty<Vector3>(),
             };
@@ -82,11 +82,11 @@ namespace Cutulu
         {
             return key switch
             {
-                int k => Hexe1.GetVertice(k, index, orientation),
+                int k => Hexagon1.GetVertice(k, index, orientation),
 
-                Vector2I k => Hexe2.GetVertice(k, index, orientation),
+                Vector2I k => Hexagon2.GetVertice(k, index, orientation),
 
-                Vector3I k => Hexe3.GetVertice(k, index, orientation),
+                Vector3I k => Hexagon3.GetVertice(k, index, orientation),
 
                 _ => default,
             };
@@ -104,11 +104,11 @@ namespace Cutulu
         {
             return key switch
             {
-                int k => (T[])(object)Hexe1.GetRange(k, ringCount),
+                int k => (T[])(object)Hexagon1.GetRange(k, ringCount),
 
-                Vector2I k => (T[])(object)Hexe2.GetRange(k, ringCount),
+                Vector2I k => (T[])(object)Hexagon2.GetRange(k, ringCount),
 
-                Vector3I k => (T[])(object)Hexe3.GetRange(k, ringCount),
+                Vector3I k => (T[])(object)Hexagon3.GetRange(k, ringCount),
 
                 _ => Array.Empty<T>(),
             };
@@ -126,11 +126,11 @@ namespace Cutulu
         {
             return key switch
             {
-                int k => (T[])(object)Hexe1.GetRing(k, ring),
+                int k => (T[])(object)Hexagon1.GetRing(k, ring),
 
-                Vector2I k => (T[])(object)Hexe2.GetRing(k, ring),
+                Vector2I k => (T[])(object)Hexagon2.GetRing(k, ring),
 
-                Vector3I k => (T[])(object)Hexe3.GetRing(k, ring),
+                Vector3I k => (T[])(object)Hexagon3.GetRing(k, ring),
 
                 _ => Array.Empty<T>(),
             };

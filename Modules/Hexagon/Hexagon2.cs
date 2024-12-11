@@ -3,7 +3,7 @@ namespace Cutulu
     using System;
     using Godot;
 
-    public static class Hexe2
+    public static class Hexagon2
     {
         public static readonly Vector2I[] Neighbours = new Vector2I[]{
             new(+1, -1),
@@ -48,12 +48,12 @@ namespace Cutulu
         {
             if (index == 0) return default;
 
-            var ring = Hexe1.GetRingIndex(index);
+            var ring = Hexagon1.GetRingIndex(index);
 
             // Milestone
-            index -= Hexe1.GetStartIndex(ring);
+            index -= Hexagon1.GetStartIndex(ring);
 
-            var sideLength = Hexe.GetCellCountInRing(ring) / Hexe.Num; // ringLength - neighbourCount
+            var sideLength = Hexagon.GetCellCountInRing(ring) / Hexagon.Num; // ringLength - neighbourCount
             var sideIndex = Mathf.FloorToInt((float)index / sideLength);
 
             return Neighbours[sideIndex] * ring // start
@@ -70,7 +70,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3 ToWorld(Vector2I axial, Orientation orientation)
         {
-            return Hexe3.ToWorld(Hexe3.ToCubic(axial), orientation);
+            return Hexagon3.ToWorld(Hexagon3.ToCubic(axial), orientation);
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Cutulu
         /// </summary>
         public static Vector2I ToAxial(Vector3 position, Orientation orientation)
         {
-            return ToAxial(Hexe3.ToCubic(position, orientation));
+            return ToAxial(Hexagon3.ToCubic(position, orientation));
         }
 
         /// <summary>
@@ -88,17 +88,17 @@ namespace Cutulu
         {
             if (orientation == null) return Array.Empty<Vector3>();
 
-            var neighbours = new Vector3[Hexe.Num];
-            var corners = new Vector3[Hexe.Num];
+            var neighbours = new Vector3[Hexagon.Num];
+            var corners = new Vector3[Hexagon.Num];
 
             var world = ToWorld(axial, orientation);
 
-            for (int i = 0; i < Hexe.Num; i++)
+            for (int i = 0; i < Hexagon.Num; i++)
             {
                 neighbours[i] = ToWorld(axial + Neighbours[i], orientation);
             }
 
-            for (int i = 0; i < Hexe.Num; i++)
+            for (int i = 0; i < Hexagon.Num; i++)
             {
                 corners[i] = (world + neighbours[i] + neighbours.ModulatedElement(i - 1)) / 3f;
             }
@@ -165,13 +165,13 @@ namespace Cutulu
             if ((ring = Mathf.Abs(ring)) < 1)
                 return new[] { axial };
 
-            var result = new Vector2I[Hexe.GetCellCountInRing(ring)];
-            var sideLength = result.Length / Hexe.Num;
+            var result = new Vector2I[Hexagon.GetCellCountInRing(ring)];
+            var sideLength = result.Length / Hexagon.Num;
 
             // Start with the first hex in the ring, offset from the center hex
             var currentHex = axial + Neighbours[0] * ring;
 
-            for (byte k = 0; k < Hexe.Num; k++)
+            for (byte k = 0; k < Hexagon.Num; k++)
             {
                 var delta = Neighbours.ModulatedElement(k + 1) - Neighbours[k];
 

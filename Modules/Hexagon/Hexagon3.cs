@@ -3,7 +3,7 @@ namespace Cutulu
     using System;
     using Godot;
 
-    public static class Hexe3
+    public static class Hexagon3
     {
         public static readonly Vector3I[] Neighbours = new Vector3I[]{
             new(+1, -1, +0),
@@ -44,7 +44,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3I ToCubic(int index)
         {
-            return ToCubic(Hexe2.ToAxial(index));
+            return ToCubic(Hexagon2.ToAxial(index));
         }
 
         #endregion
@@ -83,17 +83,17 @@ namespace Cutulu
         {
             if (orientation == null) return Array.Empty<Vector3>();
 
-            var neighbours = new Vector3[Hexe.Num];
-            var corners = new Vector3[Hexe.Num];
+            var neighbours = new Vector3[Hexagon.Num];
+            var corners = new Vector3[Hexagon.Num];
 
             var world = ToWorld(cubic, orientation);
 
-            for (int i = 0; i < Hexe.Num; i++)
+            for (int i = 0; i < Hexagon.Num; i++)
             {
                 neighbours[i] = ToWorld(cubic + Neighbours[i], orientation);
             }
 
-            for (int i = 0; i < Hexe.Num; i++)
+            for (int i = 0; i < Hexagon.Num; i++)
             {
                 corners[i] = (world + neighbours[i] + neighbours.ModulatedElement(i - 1)) / 3f;
             }
@@ -160,13 +160,13 @@ namespace Cutulu
             if ((ring = Mathf.Abs(ring)) < 1)
                 return new[] { cubic };
 
-            var result = new Vector3I[Hexe.GetCellCountInRing(ring)];
-            var sideLength = result.Length / Hexe.Num;
+            var result = new Vector3I[Hexagon.GetCellCountInRing(ring)];
+            var sideLength = result.Length / Hexagon.Num;
 
             // Start with the first hex in the ring, offset from the center hex
             var currentHex = cubic + Neighbours[0] * ring;
 
-            for (byte k = 0; k < Hexe.Num; k++)
+            for (byte k = 0; k < Hexagon.Num; k++)
             {
                 var delta = Neighbours.ModulatedElement(k + 1) - Neighbours[k];
 
@@ -209,7 +209,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3I[] GetPath(IPathfindingTarget target, Vector3I start, Vector3I end)
         {
-            Pathfinding.TryFindPath(target, Hexe2.ToAxial(start), Hexe2.ToAxial(end), out var _path);
+            Pathfinding.TryFindPath(target, Hexagon2.ToAxial(start), Hexagon2.ToAxial(end), out var _path);
 
             var path = new Vector3I[_path.Length];
 

@@ -2,14 +2,14 @@ namespace Cutulu
 {
     using Godot;
 
-    public static class Hexe1
+    public static class Hexagon1
     {
         /// <summary>
         /// Returns distance between two points
         /// </summary>
         public static float GetDistance(int a, int b)
         {
-            return Hexe2.GetDistance(Hexe2.ToAxial(a), Hexe2.ToAxial(b));
+            return Hexagon2.GetDistance(Hexagon2.ToAxial(a), Hexagon2.ToAxial(b));
         }
 
         #region Indexes
@@ -19,7 +19,7 @@ namespace Cutulu
         /// </summary>
         public static int GetRingIndex(int index)
         {
-            return Mathf.CeilToInt((Mathf.Sqrt(12 * index + 9) - 3) / Hexe.Num);
+            return Mathf.CeilToInt((Mathf.Sqrt(12 * index + 9) - 3) / Hexagon.Num);
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Cutulu
         /// </summary>
         public static int GetStartIndex(int ring)
         {
-            return Hexe.GetCellCountInRange(ring - 1);
+            return Hexagon.GetCellCountInRange(ring - 1);
         }
 
         #endregion
@@ -39,7 +39,7 @@ namespace Cutulu
         /// </summary>
         public static int ToIndex(Vector2I axial)
         {
-            return ToIndex(Hexe3.ToCubic(axial));
+            return ToIndex(Hexagon3.ToCubic(axial));
         }
 
         /// <summary>
@@ -50,10 +50,10 @@ namespace Cutulu
             if (cubic == default) return 0;
 
             // Determine which ring the cubic coordinate belongs to
-            var ring = Hexe3.GetRingIndex(cubic);
+            var ring = Hexagon3.GetRingIndex(cubic);
 
             var i = Mathf.FloorToInt(
-                (Vector2Extension.GetAngleD(Hexe2.ToAxial(cubic)) - Hexe2.ReferenceAngle).AbsMod(360f) // Calculate angle of given cubic in axial space
+                (Vector2Extension.GetAngleD(Hexagon2.ToAxial(cubic)) - Hexagon2.ReferenceAngle).AbsMod(360f) // Calculate angle of given cubic in axial space
                 / 45f) switch // Determine segment using switch statement on 45° segments
             {
                 0 => 0,
@@ -67,10 +67,10 @@ namespace Cutulu
             };
 
             var delta = cubic // Check if the cubic coordinate is along this segment
-            - Hexe3.Neighbours[i] * ring; // Starting position of the segment
+            - Hexagon3.Neighbours[i] * ring; // Starting position of the segment
 
             return GetStartIndex(ring)
-            + i * Hexe.GetCellCountInRing(ring) / Hexe.Num // Get the number of cells in the ring and calculate side length
+            + i * Hexagon.GetCellCountInRing(ring) / Hexagon.Num // Get the number of cells in the ring and calculate side length
             + Mathf.Abs(delta.X).max(Mathf.Abs(delta.Y), Mathf.Abs(delta.Z)); // Offset within the segment
         }
 
@@ -84,7 +84,7 @@ namespace Cutulu
         /// </summary>
         public static int[] GetRange(int index, int ringCount)
         {
-            var range = Hexe2.GetRange(Hexe2.ToAxial(index), ringCount);
+            var range = Hexagon2.GetRange(Hexagon2.ToAxial(index), ringCount);
             var iRange = new int[range.Length];
 
             for (var i = 0; i < range.Length; i++)
@@ -100,7 +100,7 @@ namespace Cutulu
         /// </summary>
         public static int[] GetRing(int index, int ringCount)
         {
-            var ring = Hexe2.GetRing(Hexe2.ToAxial(index), ringCount);
+            var ring = Hexagon2.GetRing(Hexagon2.ToAxial(index), ringCount);
             var iRing = new int[ring.Length];
 
             for (var i = 0; i < ring.Length; i++)
@@ -120,7 +120,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3 ToWorld(int index, Orientation orientation)
         {
-            return orientation == null ? default : Hexe2.ToWorld(Hexe2.ToAxial(index), orientation);
+            return orientation == null ? default : Hexagon2.ToWorld(Hexagon2.ToAxial(index), orientation);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Cutulu
         /// </summary>
         public static int ToIndex(Vector3 position, Orientation orientation)
         {
-            return orientation == null ? default : ToIndex(Hexe2.ToAxial(position, orientation));
+            return orientation == null ? default : ToIndex(Hexagon2.ToAxial(position, orientation));
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3[] GetVertices(int index, Orientation orientation)
         {
-            return Hexe2.GetVertices(Hexe2.ToAxial(index), orientation);
+            return Hexagon2.GetVertices(Hexagon2.ToAxial(index), orientation);
         }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3 GetVertice(int index, int cornerIndex, Orientation orientation)
         {
-            return Hexe2.GetVertice(Hexe2.ToAxial(index), cornerIndex, orientation);
+            return Hexagon2.GetVertice(Hexagon2.ToAxial(index), cornerIndex, orientation);
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3 GetClosestPoint(int index, Vector3 position, Orientation orientation)
         {
-            return Hexe2.GetClosestPoint(Hexe2.ToAxial(index), position, orientation);
+            return Hexagon2.GetClosestPoint(Hexagon2.ToAxial(index), position, orientation);
         }
 
         #endregion
@@ -172,7 +172,7 @@ namespace Cutulu
         /// </summary>
         public static int[] GetPath(IPathfindingTarget target, int start, int end)
         {
-            Pathfinding.TryFindPath(target, Hexe2.ToAxial(start), Hexe2.ToAxial(end), out var _path);
+            Pathfinding.TryFindPath(target, Hexagon2.ToAxial(start), Hexagon2.ToAxial(end), out var _path);
 
             var path = new int[_path.Length];
 
