@@ -23,6 +23,9 @@ namespace Cutulu
             return ringCount < 1 ? 1 : Num * ringCount;
         }
 
+        /// <summary>
+        /// Converts world position to key
+        /// </summary>
         public static T ToKey<T>(this Vector3 position, Orientation orientation)
         {
             return default(T) switch
@@ -37,6 +40,9 @@ namespace Cutulu
             };
         }
 
+        /// <summary>
+        /// Converts key to world position
+        /// </summary>
         public static Vector3 ToPosition<T>(this T key, Orientation orientation)
         {
             return key switch
@@ -51,6 +57,9 @@ namespace Cutulu
             };
         }
 
+        /// <summary>
+        /// Returns vertices of given key
+        /// </summary>
         public static Vector3[] GetVertices<T>(this T key, Orientation orientation)
         {
             return key switch
@@ -66,6 +75,9 @@ namespace Cutulu
             };
         }
 
+        /// <summary>
+        /// Returns vertice of given key
+        /// </summary>
         public static Vector3 GetVertice<T>(this T key, int index, Orientation orientation)
         {
             return key switch
@@ -80,7 +92,14 @@ namespace Cutulu
             };
         }
 
+        /// <summary>
+        /// Returns range around center
+        /// </summary>
         public static T[] GetRange<T>(int ringCount) => GetRange(default(T), ringCount);
+
+        /// <summary>
+        /// Returns range around given key
+        /// </summary>
         public static T[] GetRange<T>(this T key, int ringCount)
         {
             return key switch
@@ -95,7 +114,14 @@ namespace Cutulu
             };
         }
 
+        /// <summary>
+        /// Returns ring around center
+        /// </summary>
         public static T[] GetRing<T>(int ring) => GetRing(default(T), ring);
+
+        /// <summary>
+        /// Returns ring around given key
+        /// </summary>
         public static T[] GetRing<T>(this T key, int ring)
         {
             return key switch
