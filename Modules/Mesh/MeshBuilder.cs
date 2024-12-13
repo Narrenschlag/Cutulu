@@ -23,7 +23,7 @@ namespace Cutulu
         // Points
         private readonly Dictionary<Vector3, Color> Points = new();
 
-        public Color BaseColor { get; set; }
+        public Color DefaultColor { get; set; }
         public Vector3 Offset { get; set; }
 
         public bool UseVertexColor { get; set; }
@@ -43,7 +43,7 @@ namespace Cutulu
                 default: throw new($"MeshType({type}) is not supported.");
             }
 
-            BaseColor = baseColor;
+            DefaultColor = baseColor;
             Type = type;
         }
 
@@ -75,7 +75,7 @@ namespace Cutulu
                 case MeshType.Lines:
                     foreach (var line in Lines.Values)
                     {
-                        var color = line.Color == default ? BaseColor : line.Color;
+                        var color = line.Color == default ? DefaultColor : line.Color;
                         if (UseAlpha == false) UseAlpha = color.A < 1f;
 
                         Surface.SetColor(color);
@@ -88,7 +88,7 @@ namespace Cutulu
                 case MeshType.Points:
                     foreach (var point in Points)
                     {
-                        var color = point.Value == default ? BaseColor : point.Value;
+                        var color = point.Value == default ? DefaultColor : point.Value;
                         if (UseAlpha == false) UseAlpha = color.A < 1f;
 
                         Surface.SetColor(color);
@@ -121,7 +121,7 @@ namespace Cutulu
                 default: break;
             }
 
-            if (UseAlpha == false) UseAlpha = BaseColor.A < 1f;
+            if (UseAlpha == false) UseAlpha = DefaultColor.A < 1f;
             return Surface;
         }
 
@@ -461,7 +461,7 @@ namespace Cutulu
             public readonly void SetUV2(Vector2 uv2) => UVs[1] = uv2;
             public readonly Vector2 GetUV2() => UVs[1];
 
-            public readonly Color GetColor(MeshBuilder source) => Colors.NotEmpty() ? Colors[0] : source.BaseColor;
+            public readonly Color GetColor(MeshBuilder source) => Colors.NotEmpty() ? Colors[0] : source.DefaultColor;
         }
 
         #endregion
