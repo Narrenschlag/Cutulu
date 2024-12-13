@@ -1,214 +1,340 @@
 namespace Cutulu
 {
     using System.Collections.Generic;
-    using System.Linq;
     using Godot;
 
     /// <summary>
     /// Highly GPU optimized mesh generation tool for fast and easy use. Allows for fast polygon and wall meshes to be added.
     /// </summary>
-    public class MeshBuilder
+    public partial class MeshBuilder
     {
-        #region Core
-
+        // Mesh Type
         public readonly MeshType Type;
+
+        // Triangles
+        private readonly Dictionary<Vector3, Dictionary<Vector3, int>> VerticeMap = new();
+        private readonly Dictionary<int, Vector3I> Triangles = new();
+        private readonly Dictionary<int, Vertex> Vertices = new();
+
+        // Lines
+        private readonly Dictionary<Vector3, HashSet<int>> LineMap = new();
+        private readonly Dictionary<int, (Vector3 Start, Vector3 End, Color Color)> Lines = new();
+
+        // Points
+        private readonly Dictionary<Vector3, Color> Points = new();
 
         public Color BaseColor { get; set; }
         public Vector3 Offset { get; set; }
 
-        private readonly Dictionary<Vector3, Dictionary<Vector3, int>> PositionNormals = new();
-        private readonly List<Triangle> Triangles = new();
-        private readonly List<Vertex> Vertices = new();
+        public bool UseVertexColor { get; set; }
 
-        private bool useAlpha;
+        private SurfaceTool Surface { get; set; }
+        private bool UseAlpha { get; set; }
 
         public MeshBuilder(MeshType type) : this(type, Colors.White) { }
         public MeshBuilder(MeshType type, Color baseColor)
         {
+            switch (type)
+            {
+                case MeshType.Triangles: break;
+                case MeshType.Lines: break;
+                case MeshType.Points: break;
+
+                default: throw new($"MeshType({type}) is not supported.");
+            }
+
             BaseColor = baseColor;
             Type = type;
-
-            Clear();
-        }
-
-        public Vertex GetVertex(Vector3 position, Vector3 normal) => GetVertex(GetVertexIdx(position, normal));
-        public Vertex GetVertex(int idx) => Vertices[idx];
-
-        public int GetVertexIdx(Vertex vertex) => GetVertexIdx(vertex.Position, vertex.Normal);
-        public int GetVertexIdx(Vector3 position, Vector3 normal)
-        {
-            if (PositionNormals.TryGetValue(position, out var normals))
-            {
-                if (normals.TryGetValue(normal, out var vertex))
-                {
-                    return vertex;
-                }
-
-                normals[normal] = Vertices.Count;
-                Vertices.Add(new() { Position = position, Normal = normal });
-
-                return Vertices.Count - 1;
-            }
-
-            else
-            {
-                PositionNormals[position] = new() { { normal, Vertices.Count } };
-                Vertices.Add(new() { Position = position, Normal = normal });
-
-                return Vertices.Count - 1;
-            }
-        }
-
-        public int AddTriangle(int a, int b, int c, bool clockwise = true)
-        {
-            return AddTriangle(GetVertex(a), GetVertex(b), GetVertex(c), clockwise);
-        }
-
-        public int AddTriangle(Vertex a, Vertex b, Vertex c, bool clockwise = true)
-        {
-            var idx = Triangles.Count;
-
-            var triangle = new Triangle()
-            {
-                A = GetVertexIdx(a),
-                B = GetVertexIdx(b),
-                C = GetVertexIdx(c),
-                Clockwise = clockwise,
-            };
-
-            Triangles.Add(triangle);
-            a.Triangles.Add(idx);
-            b.Triangles.Add(idx);
-            c.Triangles.Add(idx);
-
-            return idx;
         }
 
         public void Clear()
         {
-            useAlpha = false;
             Offset = default;
 
-            PositionNormals.Clear();
+            VerticeMap.Clear();
             Triangles.Clear();
             Vertices.Clear();
+
+            LineMap.Clear();
+            Lines.Clear();
+
+            Points.Clear();
         }
 
         public ArrayMesh Commit() => GetSurfaceTool().Commit();
 
         public SurfaceTool GetSurfaceTool()
         {
-            var surfaceTool = new SurfaceTool();
-            surfaceTool.Begin((Mesh.PrimitiveType)(int)Type);
+            if (Surface.NotNull()) return Surface;
 
-            foreach (var vertex in Vertices)
+            (Surface = new()).Begin((Mesh.PrimitiveType)(byte)Type);
+            UseAlpha = false;
+
+            switch (Type)
             {
-                surfaceTool.SetNormal(vertex.Normal);
-                surfaceTool.SetColor(vertex.Color);
-                surfaceTool.SetUV(vertex.UV);
+                case MeshType.Lines:
+                    foreach (var line in Lines.Values)
+                    {
+                        var color = line.Color == default ? BaseColor : line.Color;
+                        if (UseAlpha == false) UseAlpha = color.A < 1f;
 
-                surfaceTool.AddVertex(vertex.Position + Offset);
+                        Surface.SetColor(color);
+
+                        Surface.AddVertex(line.Start);
+                        Surface.AddVertex(line.End);
+                    }
+                    break;
+
+                case MeshType.Points:
+                    foreach (var point in Points)
+                    {
+                        var color = point.Value == default ? BaseColor : point.Value;
+                        if (UseAlpha == false) UseAlpha = color.A < 1f;
+
+                        Surface.SetColor(color);
+
+                        Surface.AddVertex(point.Key);
+                    }
+                    break;
+
+                case MeshType.Triangles:
+                    foreach (var vertex in Vertices.Values)
+                    {
+                        var color = vertex.GetColor(this);
+                        if (UseAlpha == false) UseAlpha = color.A < 1f;
+
+                        Surface.SetUV(vertex.GetUV());
+                        Surface.SetNormal(vertex.Normal);
+                        Surface.SetColor(color);
+
+                        Surface.AddVertex(vertex.Position + Offset);
+                    }
+
+                    foreach (var triangle in Triangles.Values)
+                    {
+                        Surface.AddIndex(triangle.X);
+                        Surface.AddIndex(triangle.Y);
+                        Surface.AddIndex(triangle.Z);
+                    }
+                    break;
+
+                default: break;
             }
 
-            if (Type == MeshType.Triangles)
-            {
-                foreach (var triangle in Triangles)
-                {
-                    surfaceTool.AddIndex(triangle.A);
-                    surfaceTool.AddIndex(triangle.B);
-                    surfaceTool.AddIndex(triangle.C);
-                }
-            }
-
-            return surfaceTool;
+            if (UseAlpha == false) UseAlpha = BaseColor.A < 1f;
+            return Surface;
         }
 
-        public void Apply(MeshInstance3D meshInstance3D, bool useVertexColor = false)
+        public void Apply(MeshInstance3D meshInstance3D)
         {
             if (meshInstance3D.IsNull()) return;
 
-            if (meshInstance3D.Mesh.NotNull())
-                meshInstance3D.Mesh.Dispose();
+            meshInstance3D.Mesh.Destroy();
 
             meshInstance3D.Mesh = GetSurfaceTool().Commit();
 
-            if (useVertexColor)
-                meshInstance3D.MaterialOverride = useAlpha ?
-                Renderf.VertexMaterialAlpha : Renderf.VertexMaterial;
+            if (UseVertexColor)
+            {
+                meshInstance3D.MaterialOverride = UseAlpha
+                ? Renderf.VertexMaterialAlpha
+                : Renderf.VertexMaterial;
+            }
+        }
+
+        public void Apply(Node parent)
+        {
+            var meshInstance = new MeshInstance3D();
+            parent.AddChild(meshInstance);
+
+            Apply(meshInstance);
+        }
+
+        public void AddCounterClockwise(params Vector3[] vertices) => AddCounterClockwise(default, vertices);
+        public void AddCounterClockwise(Color color, params Vector3[] vertices)
+        {
+            if (vertices.IsEmpty()) return;
+
+            Surface.Destroy();
+            Surface = null;
+
+            switch (Type)
+            {
+                case MeshType.Triangles:
+                    if (vertices.Length < 3) break;
+
+                    var count = Mathf.FloorToInt(vertices.Length / 2f);
+
+                    // Reverse vertices
+                    for (int i = 0, k = vertices.Length - 1; i < count; i++, k--)
+                    {
+                        (vertices[i], vertices[k]) = (vertices[k], vertices[i]);
+                    }
+
+                    AddClockwise(color, vertices);
+                    break;
+
+                default:
+                    AddClockwise(color, vertices);
+                    break;
+            }
+        }
+
+        public void AddClockwise(params Vector3[] vertices) => AddClockwise(default, vertices);
+        public void AddClockwise(Color color, params Vector3[] vertices)
+        {
+            if (vertices.IsEmpty()) return;
+
+            Surface.Destroy();
+            Surface = null;
+
+            switch (Type)
+            {
+                case MeshType.Points:
+                    foreach (var point in vertices)
+                        Points[point] = color;
+                    break;
+
+                case MeshType.Lines:
+                    for (int i = 1; i < vertices.Length; i++)
+                    {
+                        var start = vertices[i - 1];
+                        var end = vertices[i];
+
+                        if (LineMap.TryGetValue(start, out var lines1) == false)
+                            LineMap[start] = lines1 = new();
+
+                        if (LineMap.TryGetValue(end, out var lines2) == false)
+                            LineMap[end] = lines2 = new();
+
+                        var alreadyRegistered = false;
+
+                        foreach (var line in lines1)
+                        {
+                            var s = Lines[line].Start;
+                            var e = Lines[line].End;
+
+                            if (s != start && s != end) continue;
+                            if (e != start && e != end) continue;
+
+                            alreadyRegistered = true;
+                            break;
+                        }
+
+                        if (alreadyRegistered == false)
+                        {
+                            var index = Lines.Count;
+                            Lines.Add(index, new(start, end, color));
+
+                            lines1.Add(index);
+                            lines2.Add(index);
+                        }
+                    }
+                    break;
+
+                case MeshType.Triangles:
+                    if (vertices.Length < 3) break;
+
+                    switch (vertices.Length)
+                    {
+                        case 3:
+                            var n = GetFacingDirection(vertices[0], vertices[1], vertices[2]);
+
+                            var a = AddVertex(vertices[0], n, color);
+                            var b = AddVertex(vertices[1], n, color);
+                            var c = AddVertex(vertices[2], n, color);
+
+                            AddTriangleIndex(a, b, c);
+                            break;
+
+                        case 4:
+                            n = GetFacingDirection(vertices[0], vertices[1], vertices[2]);
+
+                            a = AddVertex(vertices[0], n, color);
+                            b = AddVertex(vertices[1], n, color);
+                            c = AddVertex(vertices[2], n, color);
+
+                            AddTriangleIndex(a, b, c);
+                            AddTriangleIndex(c, AddVertex(vertices[3], n, color), a);
+                            break;
+
+                        default:
+                            for (int i = 2; i < vertices.Length; i += 3)
+                            {
+                                n = GetFacingDirection(vertices[i - 2], vertices[i - 1], vertices[i]);
+
+                                a = AddVertex(vertices[i - 2], n, color);
+                                b = AddVertex(vertices[i - 1], n, color);
+                                c = AddVertex(vertices[i], n, color);
+
+                                AddTriangleIndex(a, b, c);
+                            }
+                            break;
+                    }
+                    break;
+
+                default: break;
+            }
+        }
+
+        #region Backend
+
+        public Vertex AddVertex(Vector3 position, Vector3 normal, Color color) => GetVertex(AddVertexIndex(position, normal, color));
+        public Vertex GetVertex(int index) => Vertices[index];
+
+        public bool TryGetVertexIndex(Vector3 position, Vector3 normal, out int index)
+        {
+            if (VerticeMap.TryGetValue(position, out var normals) && normals.TryGetValue(normal, out index))
+                return true;
+
+            index = default;
+            return false;
+        }
+
+        public int AddVertexIndex(Vector3 position, Vector3 normal, Color color = default)
+        {
+            if (TryGetVertexIndex(position, normal, out var index)) return index;
+
+            if (VerticeMap.TryGetValue(position, out var normals) == false)
+                VerticeMap[position] = normals = new();
+
+            var vertex = new Vertex(Vertices.Count, position, normal, color);
+            normals[normal] = vertex.Index;
+            Vertices.Add(vertex.Index, vertex);
+
+            return vertex.Index;
+        }
+
+        public int AddTriangleIndex(Vertex a, Vertex b, Vertex c)
+        {
+            var triangle = new Vector3I(a.Index, b.Index, c.Index);
+            var index = Triangles.Count;
+
+            Triangles.Add(index, triangle);
+            a.Triangles.Add(index);
+            b.Triangles.Add(index);
+            c.Triangles.Add(index);
+
+            return index;
         }
 
         #endregion
 
-        #region Extra
+        #region Utility
 
-        public void AddQuad(params Vector3[] vertices) => AddQuad(false, vertices);
-        public void AddQuad(bool flip, params Vector3[] vertices) => AddQuad(BaseColor, flip, vertices);
-        public void AddQuad(Color color, bool flip, params Vector3[] vertices)
+        public void AddQuadDir(Vector3 direction, Color color, Vector3 a, Vector3 b)
         {
-            if (vertices.Size() < 4) return;
+            var c = b + direction;
 
-            var normal = GetFacingDirection(vertices);
-
-            var a = GetVertex(vertices[0], normal);
-            var b = GetVertex(vertices[flip ? 3 : 1], normal);
-            var c = GetVertex(vertices[2], normal);
-            var d = GetVertex(vertices[flip ? 1 : 3], normal);
-
-            a.Color = b.Color = c.Color = d.Color = color;
-
-            AddTriangle(a, b, c);
-            AddTriangle(c, d, a);
+            AddCounterClockwise(color, a, a + direction, c);
+            AddCounterClockwise(color, c, b, a);
         }
 
-        public void AddQuadDir(Vector3 direction, params Vector3[] vertices) => AddQuadDir(direction, false, vertices);
-        public void AddQuadDir(Vector3 direction, bool flip, params Vector3[] vertices) => AddQuadDir(direction, BaseColor, flip, vertices);
-        public void AddQuadDir(Vector3 direction, Color color, bool flip, params Vector3[] vertices)
-        {
-            if (vertices.Size() < 2) return;
-
-            var a = vertices[0];
-            var b = vertices[1];
-
-            vertices = flip ?
-                new[] { a, a + direction, b + direction, b } :
-                new[] { a, b, b + direction, a + direction };
-
-            AddQuad(color, false, vertices);
-        }
-
-        public void AddPolygon(params Vector3[] vertices) => AddPolygon(false, vertices);
-        public void AddPolygon(bool flip, params Vector3[] vertices) => AddPolygon(BaseColor, flip, vertices);
-        public void AddPolygon(Color color, bool flip, params Vector3[] vertices)
-        {
-            var indicies = vertices.Triangulate().ToArray();
-            var normal = GetFacingDirection(vertices);
-            var buffer = new List<int>();
-
-            for (var i = 0; i < indicies.Length; i++)
-            {
-                var idx = GetVertexIdx(vertices[indicies[i]], normal);
-
-                var vertex = GetVertex(idx);
-                vertex.Color = color;
-
-                buffer.Add(idx);
-
-                if (buffer.Count >= 3)
-                {
-                    AddTriangle(buffer[0], buffer[1], buffer[2], !flip);
-                    buffer.Clear();
-                }
-            }
-        }
-
-        public void AddWalls(Vector3 direction, params Vector3[] vertices) => AddWalls(direction, BaseColor, vertices);
+        public void AddWalls(Vector3 direction, params Vector3[] vertices) => AddWalls(direction, default, vertices);
         public void AddWalls(Vector3 direction, Color color, params Vector3[] vertices)
         {
-            for (var i = 0; i < vertices.Length; i++)
+            for (var i = 1; i < vertices.Length; i++)
             {
-                var k = (i + 1) % vertices.Length;
-
-                AddQuadDir(direction, color, false, vertices[i], vertices[k]);
+                AddQuadDir(direction, color, vertices[i - 1], vertices[i]);
             }
         }
 
@@ -258,10 +384,6 @@ namespace Cutulu
             }
         }
 
-        #endregion
-
-        #region UV Mapping
-
         public void RecalculateUVsByXZ(bool relative = true, Vector2 multiplier = default)
         {
             if (multiplier == default) multiplier = Vector2.One;
@@ -283,7 +405,7 @@ namespace Cutulu
                 {
                     var vertex = Vertices[i];
 
-                    vertex.UV = (vertex.Position.toXY() - min) / (max - min) * multiplier;
+                    vertex.SetUV((vertex.Position.toXY() - min) / (max - min) * multiplier);
                 }
             }
 
@@ -291,36 +413,85 @@ namespace Cutulu
             {
                 for (var i = 0; i < Vertices.Count; i++)
                 {
-                    Vertices[i].UV = Vertices[i].Position.toXY() * multiplier;
+                    Vertices[i].SetUV(Vertices[i].Position.toXY() * multiplier);
                 }
             }
         }
 
         #endregion
 
-        public class Vertex
+        #region Structs
+
+        public struct Vertex
         {
-            public readonly List<int> Triangles = new();
+            public List<int> Triangles { get; set; }
+            public Vector2[] UVs { get; set; }
+            public int Index { get; set; }
 
-            public Vector3 Position;
-            public Vector3 Normal;
-            public Vector2 UV2;
-            public Vector2 UV;
+            public Vector3 Position { get; set; }
+            public Vector3 Normal { get; set; }
 
-            public Color Color;
+            public Color[] Colors { get; set; }
+
+            public Vertex(int index, Vector3 position, Vector3 normal, Color color = default, Vector2 uv = default, Vector2 uv2 = default) : this()
+            {
+                Position = position;
+                Normal = normal;
+                Index = index;
+
+                UVs[0] = uv;
+                UVs[1] = uv2;
+
+                if (color != default) Colors = new[] { color };
+            }
+
+            public Vertex()
+            {
+                UVs = new Vector2[2];
+                Triangles = new();
+                Index = default;
+
+                Position = Normal = default;
+                Colors = null;
+            }
+
+            public readonly void SetUV(Vector2 uv) => UVs[0] = uv;
+            public readonly Vector2 GetUV() => UVs[0];
+
+            public readonly void SetUV2(Vector2 uv2) => UVs[1] = uv2;
+            public readonly Vector2 GetUV2() => UVs[1];
+
+            public readonly Color GetColor(MeshBuilder source) => Colors.NotEmpty() ? Colors[0] : source.BaseColor;
         }
 
-        public class Triangle
-        {
-            public bool Clockwise = true;
-            public int A, B, C;
-        }
+        #endregion
     }
 
-    public enum MeshType
+    public enum MeshType : byte
     {
-        Points,
-        Lines, LineFan,
-        Triangles, TriangleFan,
+        //
+        // Summary:
+        //     Render array as points (one vertex equals one point).
+        Points = 0,
+
+        //
+        // Summary:
+        //     Render array as lines (every two vertices a line is created).
+        Lines = 1,
+
+        //
+        // Summary:
+        //     Render array as line strip.
+        LineStrip = 2,
+
+        //
+        // Summary:
+        //     Render array as triangles (every three vertices a triangle is created).
+        Triangles = 3,
+
+        //
+        // Summary:
+        //     Render array as triangle strips.
+        TriangleStrip = 4
     }
 }

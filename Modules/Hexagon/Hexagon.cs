@@ -60,11 +60,27 @@ namespace Cutulu
         /// <summary>
         /// Returns vertices of given key
         /// </summary>
+        public static Vector3[] GetVertices<T>(Orientation orientation)
+        {
+            return default(T) switch
+            {
+                int _ => Hexagon1.GetVertices(orientation),
+
+                Vector2I _ => Hexagon2.GetVertices(orientation),
+
+                Vector3I _ => Hexagon3.GetVertices(orientation),
+
+                _ => Array.Empty<Vector3>(),
+            };
+        }
+
+        /// <summary>
+        /// Returns vertices of given key
+        /// </summary>
         public static Vector3[] GetVertices<T>(this T key, Orientation orientation)
         {
             return key switch
             {
-                float k => Hexagon1.GetVertices(Mathf.RoundToInt(k), orientation),
                 int k => Hexagon1.GetVertices(k, orientation),
 
                 Vector2I k => Hexagon2.GetVertices(k, orientation),

@@ -134,6 +134,14 @@ namespace Cutulu
         /// <summary>
         /// Returns the six corner points of the hexagon centered at hex coordinates
         /// </summary>
+        public static Vector3[] GetVertices(Orientation orientation)
+        {
+            return GetVertices(default, orientation);
+        }
+
+        /// <summary>
+        /// Returns the six corner points of the hexagon centered at hex coordinates
+        /// </summary>
         public static Vector3[] GetVertices(int index, Orientation orientation)
         {
             return Hexagon2.GetVertices(Hexagon2.ToAxial(index), orientation);
