@@ -58,6 +58,23 @@ namespace Cutulu
         }
 
         /// <summary>
+        /// Returns neighbour of given key
+        /// </summary>
+        public static T GetNeighbour<T>(this T key, int neighbourIndex)
+        {
+            return key switch
+            {
+                int k => (T)(object)Hexagon1.GetNeighbour(k, neighbourIndex),
+
+                Vector2I k => (T)(object)Hexagon2.GetNeighbour(k, neighbourIndex),
+
+                Vector3I k => (T)(object)Hexagon3.GetNeighbour(k, neighbourIndex),
+
+                _ => default,
+            };
+        }
+
+        /// <summary>
         /// Returns vertices of given key
         /// </summary>
         public static Vector3[] GetVertices<T>(Orientation orientation)

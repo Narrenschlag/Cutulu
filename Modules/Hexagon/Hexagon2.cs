@@ -27,6 +27,15 @@ namespace Cutulu
             + Mathf.Abs(a.Y - b.Y)) / 2;
         }
 
+        #region Neighbours
+
+        public static Vector2I GetNeighbour(this Vector2I axial, int neighbourIndex)
+        {
+            return axial + Neighbours.ModulatedElement(neighbourIndex);
+        }
+
+        #endregion
+
         #region Conversion
 
         /// <summary>

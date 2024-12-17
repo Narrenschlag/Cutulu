@@ -13,12 +13,15 @@ namespace Cutulu
 
         // Triangles
         private readonly Dictionary<Vector3, Dictionary<Vector3, int>> VerticeMap = new();
-        private readonly Dictionary<int, Vector3I> Triangles = new();
+        private readonly Dictionary<int, Surface> Surfaces = new();
         private readonly Dictionary<int, Vertex> Vertices = new();
 
         // Lines
         private readonly Dictionary<Vector3, HashSet<int>> LineMap = new();
         private readonly Dictionary<int, (Vector3 Start, Vector3 End, Color Color)> Lines = new();
+
+        // LineStrip
+        private readonly Dictionary<Vector3, Color> LineStrips = new();
 
         // Points
         private readonly Dictionary<Vector3, Color> Points = new();
@@ -28,7 +31,7 @@ namespace Cutulu
 
         public bool UseVertexColor { get; set; }
 
-        private SurfaceTool Surface { get; set; }
+        private ArrayMesh Mesh { get; set; }
         private bool UseAlpha { get; set; }
 
         public MeshBuilder(MeshType type) : this(type, Colors.White) { }
@@ -39,6 +42,7 @@ namespace Cutulu
                 case MeshType.Triangles: break;
                 case MeshType.Lines: break;
                 case MeshType.Points: break;
+                case MeshType.LineStrip: break;
 
                 default: throw new($"MeshType({type}) is not supported.");
             }
@@ -52,77 +56,110 @@ namespace Cutulu
             Offset = default;
 
             VerticeMap.Clear();
-            Triangles.Clear();
+            Surfaces.Clear();
             Vertices.Clear();
 
+            LineStrips.Clear();
             LineMap.Clear();
             Lines.Clear();
 
             Points.Clear();
         }
 
-        public ArrayMesh Commit() => GetSurfaceTool().Commit();
-
-        public SurfaceTool GetSurfaceTool()
+        public ArrayMesh GetMesh()
         {
-            if (Surface.NotNull()) return Surface;
+            if (Mesh.NotNull()) return Mesh;
 
-            (Surface = new()).Begin((Mesh.PrimitiveType)(byte)Type);
+            Mesh = new();
+
+            var surfaceTool = new SurfaceTool();
             UseAlpha = false;
 
             switch (Type)
             {
                 case MeshType.Lines:
+                    surfaceTool.Begin((Mesh.PrimitiveType)(byte)Type);
+
                     foreach (var line in Lines.Values)
                     {
-                        var color = line.Color == default ? DefaultColor : line.Color;
-                        if (UseAlpha == false) UseAlpha = color.A < 1f;
+                        if (UseVertexColor) surfaceTool.SetColor(Color(line.Color));
 
-                        Surface.SetColor(color);
-
-                        Surface.AddVertex(line.Start);
-                        Surface.AddVertex(line.End);
+                        surfaceTool.AddVertex(line.Start);
+                        surfaceTool.AddVertex(line.End);
                     }
+
+                    surfaceTool.Commit(Mesh);
+                    break;
+
+                case MeshType.LineStrip:
+                    surfaceTool.Begin((Mesh.PrimitiveType)(byte)Type);
+
+                    foreach (var line in LineStrips)
+                    {
+                        if (UseVertexColor) surfaceTool.SetColor(Color(line.Value));
+
+                        surfaceTool.AddVertex(line.Key);
+                    }
+
+                    surfaceTool.Commit(Mesh);
                     break;
 
                 case MeshType.Points:
+                    surfaceTool.Begin((Mesh.PrimitiveType)(byte)Type);
+
                     foreach (var point in Points)
                     {
-                        var color = point.Value == default ? DefaultColor : point.Value;
-                        if (UseAlpha == false) UseAlpha = color.A < 1f;
+                        if (UseVertexColor) surfaceTool.SetColor(Color(point.Value));
 
-                        Surface.SetColor(color);
-
-                        Surface.AddVertex(point.Key);
+                        surfaceTool.AddVertex(point.Key);
                     }
+
+                    surfaceTool.Commit(Mesh);
                     break;
 
                 case MeshType.Triangles:
-                    foreach (var vertex in Vertices.Values)
+                    var useAlpha = false;
+
+                    foreach (var triangles in Surfaces.Values)
                     {
-                        var color = vertex.GetColor(this);
-                        if (UseAlpha == false) UseAlpha = color.A < 1f;
-
-                        Surface.SetUV(vertex.GetUV());
-                        Surface.SetNormal(vertex.Normal);
-                        Surface.SetColor(color);
-
-                        Surface.AddVertex(vertex.Position + Offset);
+                        foreach (var surface in Surfaces.Values)
+                        {
+                            surface.Commit(surfaceTool, this, Mesh, ref useAlpha);
+                        }
                     }
 
-                    foreach (var triangle in Triangles.Values)
-                    {
-                        Surface.AddIndex(triangle.X);
-                        Surface.AddIndex(triangle.Y);
-                        Surface.AddIndex(triangle.Z);
-                    }
+                    UseAlpha = useAlpha;
                     break;
 
                 default: break;
             }
 
+            Color Color(Color color)
+            {
+                switch (Type)
+                {
+                    case MeshType.LineStrip: break;
+                    case MeshType.Lines: break;
+
+                    case MeshType.Triangles:
+                        if (UseAlpha == false) UseAlpha = color.A < 1f;
+
+                        return color;
+
+                    default:
+                        color = color == default ? DefaultColor : color;
+
+                        if (UseAlpha == false) UseAlpha = color.A < 1f;
+
+                        return color;
+                }
+
+                return default;
+            }
+
             if (UseAlpha == false) UseAlpha = DefaultColor.A < 1f;
-            return Surface;
+
+            return Mesh;
         }
 
         public void Apply(MeshInstance3D meshInstance3D)
@@ -131,7 +168,7 @@ namespace Cutulu
 
             meshInstance3D.Mesh.Destroy();
 
-            meshInstance3D.Mesh = GetSurfaceTool().Commit();
+            meshInstance3D.Mesh = GetMesh();
 
             if (UseVertexColor)
             {
@@ -141,21 +178,24 @@ namespace Cutulu
             }
         }
 
-        public void Apply(Node parent)
+        public MeshInstance3D Apply(Node parent)
         {
             var meshInstance = new MeshInstance3D();
             parent.AddChild(meshInstance);
 
             Apply(meshInstance);
+            return meshInstance;
         }
 
-        public void AddCounterClockwise(params Vector3[] vertices) => AddCounterClockwise(default, vertices);
-        public void AddCounterClockwise(Color color, params Vector3[] vertices)
+        public void AddCounterClockwise(int surfaceIndex, params Vector3[] vertices) => AddCounterClockwise(default, surfaceIndex, vertices);
+        public void AddCounterClockwise(Color color, params Vector3[] vertices) => AddCounterClockwise(color, 0, vertices);
+        public void AddCounterClockwise(params Vector3[] vertices) => AddCounterClockwise(default, 0, vertices);
+        public void AddCounterClockwise(Color color, int surfaceIndex, params Vector3[] vertices)
         {
             if (vertices.IsEmpty()) return;
 
-            Surface.Destroy();
-            Surface = null;
+            Mesh.Destroy();
+            Mesh = null;
 
             switch (Type)
             {
@@ -170,22 +210,24 @@ namespace Cutulu
                         (vertices[i], vertices[k]) = (vertices[k], vertices[i]);
                     }
 
-                    AddClockwise(color, vertices);
+                    AddClockwise(color, surfaceIndex, vertices);
                     break;
 
                 default:
-                    AddClockwise(color, vertices);
+                    AddClockwise(color, surfaceIndex, vertices);
                     break;
             }
         }
 
-        public void AddClockwise(params Vector3[] vertices) => AddClockwise(default, vertices);
-        public void AddClockwise(Color color, params Vector3[] vertices)
+        public void AddClockwise(int surfaceIndex, params Vector3[] vertices) => AddClockwise(default, surfaceIndex, vertices);
+        public void AddClockwise(Color color, params Vector3[] vertices) => AddClockwise(color, 0, vertices);
+        public void AddClockwise(params Vector3[] vertices) => AddClockwise(default, 0, vertices);
+        public void AddClockwise(Color color, int surfaceIndex, params Vector3[] vertices)
         {
             if (vertices.IsEmpty()) return;
 
-            Surface.Destroy();
-            Surface = null;
+            Mesh.Destroy();
+            Mesh = null;
 
             switch (Type)
             {
@@ -231,6 +273,11 @@ namespace Cutulu
                     }
                     break;
 
+                case MeshType.LineStrip:
+                    foreach (var lineVertex in vertices)
+                        LineStrips[lineVertex] = color;
+                    break;
+
                 case MeshType.Triangles:
                     if (vertices.Length < 3) break;
 
@@ -243,30 +290,21 @@ namespace Cutulu
                             var b = AddVertex(vertices[1], n, color);
                             var c = AddVertex(vertices[2], n, color);
 
-                            AddTriangleIndex(a, b, c);
+                            if (Surfaces.TryGetValue(surfaceIndex, out var surface) == false)
+                                Surfaces[surfaceIndex] = surface = new();
+
+                            surface.Add(a.Index, b.Index, c.Index);
                             break;
 
                         case 4:
-                            n = GetFacingDirection(vertices[0], vertices[1], vertices[2]);
-
-                            a = AddVertex(vertices[0], n, color);
-                            b = AddVertex(vertices[1], n, color);
-                            c = AddVertex(vertices[2], n, color);
-
-                            AddTriangleIndex(a, b, c);
-                            AddTriangleIndex(c, AddVertex(vertices[3], n, color), a);
+                            AddClockwise(color, surfaceIndex, vertices[0], vertices[1], vertices[2]);
+                            AddClockwise(color, surfaceIndex, vertices[2], vertices[3], vertices[0]);
                             break;
 
                         default:
                             for (int i = 2; i < vertices.Length; i += 3)
                             {
-                                n = GetFacingDirection(vertices[i - 2], vertices[i - 1], vertices[i]);
-
-                                a = AddVertex(vertices[i - 2], n, color);
-                                b = AddVertex(vertices[i - 1], n, color);
-                                c = AddVertex(vertices[i], n, color);
-
-                                AddTriangleIndex(a, b, c);
+                                AddClockwise(color, surfaceIndex, vertices[i - 2], vertices[i - 1], vertices[i]);
                             }
                             break;
                     }
@@ -302,19 +340,6 @@ namespace Cutulu
             Vertices.Add(vertex.Index, vertex);
 
             return vertex.Index;
-        }
-
-        public int AddTriangleIndex(Vertex a, Vertex b, Vertex c)
-        {
-            var triangle = new Vector3I(a.Index, b.Index, c.Index);
-            var index = Triangles.Count;
-
-            Triangles.Add(index, triangle);
-            a.Triangles.Add(index);
-            b.Triangles.Add(index);
-            c.Triangles.Add(index);
-
-            return index;
         }
 
         #endregion
@@ -422,9 +447,74 @@ namespace Cutulu
 
         #region Structs
 
+        public struct Surface
+        {
+            public readonly Dictionary<int, Vector3I> Triangles;
+
+            public Surface()
+            {
+                Triangles = new();
+            }
+
+            public int Add(int a, int b, int c)
+            {
+                var value = new Vector3I(a, b, c);
+                var index = Triangles.Count;
+
+                Triangles[index] = value;
+
+                return index;
+            }
+
+            public void Commit(SurfaceTool surfaceTool, MeshBuilder builder, ArrayMesh mesh, ref bool useAlpha)
+            {
+                surfaceTool.Begin((Mesh.PrimitiveType)(byte)builder.Type);
+
+                var indexes = new Dictionary<int, int>();
+
+                foreach (var triangle in Triangles.Values)
+                {
+                    addVertex(builder.Vertices[triangle.X], ref useAlpha);
+                    addVertex(builder.Vertices[triangle.Y], ref useAlpha);
+                    addVertex(builder.Vertices[triangle.Z], ref useAlpha);
+
+                    void addVertex(Vertex vertex, ref bool useAlpha)
+                    {
+                        if (indexes.ContainsKey(vertex.Index)) return;
+
+                        indexes[vertex.Index] = indexes.Count;
+
+                        if (builder.UseVertexColor)
+                        {
+                            var color = vertex.GetColor(builder);
+                            surfaceTool.SetColor(color);
+
+                            if (useAlpha == false) useAlpha = color.A < 1f;
+                        }
+
+                        else
+                        {
+                            surfaceTool.SetNormal(vertex.Normal);
+                            surfaceTool.SetUV(vertex.GetUV());
+                        }
+
+                        surfaceTool.AddVertex(vertex.Position + builder.Offset);
+                    }
+                }
+
+                foreach (var triangle in Triangles.Values)
+                {
+                    surfaceTool.AddIndex(indexes[triangle.X]);
+                    surfaceTool.AddIndex(indexes[triangle.Y]);
+                    surfaceTool.AddIndex(indexes[triangle.Z]);
+                }
+
+                surfaceTool.Commit(mesh);
+            }
+        }
+
         public struct Vertex
         {
-            public List<int> Triangles { get; set; }
             public Vector2[] UVs { get; set; }
             public int Index { get; set; }
 
@@ -448,7 +538,6 @@ namespace Cutulu
             public Vertex()
             {
                 UVs = new Vector2[2];
-                Triangles = new();
                 Index = default;
 
                 Position = Normal = default;

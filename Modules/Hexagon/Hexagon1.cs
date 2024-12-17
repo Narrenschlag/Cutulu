@@ -12,6 +12,15 @@ namespace Cutulu
             return Hexagon2.GetDistance(Hexagon2.ToAxial(a), Hexagon2.ToAxial(b));
         }
 
+        #region Neighbours
+
+        public static int GetNeighbour(this int index, int neighbourIndex)
+        {
+            return ToIndex(Hexagon2.GetNeighbour(Hexagon2.ToAxial(index), neighbourIndex));
+        }
+
+        #endregion
+
         #region Indexes
 
         /// <summary>

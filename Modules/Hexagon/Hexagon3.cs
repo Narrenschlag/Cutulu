@@ -25,6 +25,15 @@ namespace Cutulu
             + Mathf.Abs(a.Z - b.Z)) / 2;
         }
 
+        #region Neighbours
+
+        public static Vector3I GetNeighbour(this Vector3I cubic, int neighbourIndex)
+        {
+            return cubic + Neighbours.ModulatedElement(neighbourIndex);
+        }
+
+        #endregion
+
         #region Conversion
 
         /// <summary>
@@ -67,10 +76,11 @@ namespace Cutulu
         /// </summary>
         public static Vector3I ToCubic(Vector3 position, Orientation orientation)
         {
-            var position2D = new Vector2(orientation.Right.Dot(position), orientation.Forward.Dot(position));
+            var position2D = new Vector2(orientation.Right.Normalized().Dot(position), orientation.Forward.Normalized().Dot(position));
 
-            var q = 2f / 3f * position2D.X;
+            var q = 2f / 3f * position2D.X / orientation.Right.Length();
             var r = -1f / 3f * position2D.X + Mathf.Sqrt(3) / 3f * position2D.Y;
+            r /= orientation.Forward.Length();
             var s = -q - r;
 
             return CubicRound(new Vector3(q, s, r));
