@@ -31,5 +31,9 @@ namespace Cutulu
 		///	Random value: [0 max]
         /// </summary>
         public static int RangeIncluded(int maxIncluded) => Range(0, maxIncluded + 1);
+
+        public static byte RandomByte() => (byte)RangeIncluded(0, byte.MaxValue);
+        public static short RandomShort() => (short)RangeIncluded(short.MinValue, short.MaxValue);
+        public static int RandomInt() => RangeIncluded(int.MinValue, int.MaxValue);
     }
 }
