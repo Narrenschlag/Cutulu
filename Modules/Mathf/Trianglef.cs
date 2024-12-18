@@ -93,5 +93,60 @@ namespace Cutulu
             // Solve for p.Y: p.Y = (-normal.X * p.X - normal.Z * p.Z - D) / normal.Y
             return (-normal.X * p.X - normal.Z * p.Z - D) / normal.Y;
         }
+
+        /// <summary>
+        /// Maps a position to the triangle defined by vertices A, B, and C.
+        /// </summary>
+        public static Vector3 MapPointToTriangle(this Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+        {
+            // Helper to project a point onto a line segment
+            static Vector3 ClosestPointOnSegment(Vector3 point, Vector3 segmentStart, Vector3 segmentEnd)
+            {
+                var ab = segmentEnd - segmentStart;
+                var t = (point - segmentStart).Dot(ab) / ab.LengthSquared();
+                t = Mathf.Clamp(t, 0, 1);
+                return segmentStart + t * ab;
+            }
+
+            // Barycentric technique to test if the point is inside the triangle
+            static bool IsPointInTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+            {
+                var ab = b - a;
+                var ac = c - a;
+                var ap = p - a;
+
+                var d1 = ab.Dot(ap);
+                var d2 = ac.Dot(ap);
+
+                if (d1 < 0 || d2 < 0) return false;
+
+                var bb = ab.Dot(ab);
+                var bc = ac.Dot(ac);
+                var det = bb * bc - d1 * d2;
+
+                return det >= 0;
+            }
+
+            // Check if the point is inside the triangle
+            if (IsPointInTriangle(p, a, b, c))
+                return p; // The point is inside the triangle, so it's the closest point.
+
+            // Otherwise, check edges of the triangle
+            var closestOnAB = ClosestPointOnSegment(p, a, b);
+            var closestOnBC = ClosestPointOnSegment(p, b, c);
+            var closestOnCA = ClosestPointOnSegment(p, c, a);
+
+            // Return the closest among the edge points
+            var distAB = closestOnAB.DistanceSquaredTo(p);
+            var distBC = closestOnBC.DistanceSquaredTo(p);
+            var distCA = closestOnCA.DistanceSquaredTo(p);
+
+            if (distAB < distBC && distAB < distCA)
+                return closestOnAB;
+            if (distBC < distCA)
+                return closestOnBC;
+
+            return closestOnCA;
+        }
     }
 }

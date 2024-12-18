@@ -61,19 +61,8 @@ namespace Cutulu
             // Determine which ring the cubic coordinate belongs to
             var ring = Hexagon3.GetRingIndex(cubic);
 
-            var i = Mathf.FloorToInt(
-                (Vector2Extension.GetAngleD(Hexagon2.ToAxial(cubic)) - Hexagon2.ReferenceAngle).AbsMod(360f) // Calculate angle of given cubic in axial space
-                / 45f) switch // Determine segment using switch statement on 45° segments
-            {
-                0 => 0,
-                1 => 1,
-                2 => 1,
-                3 => 2,
-                4 => 3,
-                5 => 4,
-                6 => 4,
-                _ => 5,
-            };
+            // Get segment
+            var i = Hexagon2.GetSegment(Hexagon2.ToAxial(cubic));
 
             var delta = cubic // Check if the cubic coordinate is along this segment
             - Hexagon3.Neighbours[i] * ring; // Starting position of the segment
@@ -82,7 +71,6 @@ namespace Cutulu
             + i * Hexagon.GetCellCountInRing(ring) / Hexagon.Num // Get the number of cells in the ring and calculate side length
             + Mathf.Abs(delta.X).max(Mathf.Abs(delta.Y), Mathf.Abs(delta.Z)); // Offset within the segment
         }
-
 
         #endregion
 

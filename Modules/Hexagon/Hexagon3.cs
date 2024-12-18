@@ -1,6 +1,5 @@
 namespace Cutulu
 {
-    using System;
     using Godot;
 
     public static class Hexagon3
@@ -21,8 +20,9 @@ namespace Cutulu
         public static float GetDistance(Vector3I a, Vector3I b)
         {
             return (Mathf.Abs(a.X - b.X)
-            + Mathf.Abs(a.Y - b.Y)
-            + Mathf.Abs(a.Z - b.Z)) / 2;
+                + Mathf.Abs(a.Y - b.Y)
+                + Mathf.Abs(a.Z - b.Z)
+            ) / 2f;
         }
 
         #region Neighbours
@@ -61,26 +61,25 @@ namespace Cutulu
         #region World Space
 
         /// <summary>
-        /// Converts a cubic into a world position 
+        /// Converts cubic coordinates into a world position.
         /// </summary>
         public static Vector3 ToWorld(Vector3I cubic, Orientation orientation)
         {
-            var x = 3f / 2f * cubic.X;
-            var y = Mathf.Sqrt(3) * (cubic.Z + cubic.X / 2f);
+            var x = orientation.Scale * (3f / 2f * cubic.X);
+            var y = orientation.Scale * (Mathf.Sqrt(3) * (cubic.Z + cubic.X / 2f));
 
-            return orientation.Right * x + orientation.Forward * y; // Y is set to 0 (ground level)
+            return orientation.NormalizedRight * x + orientation.NormalizedForward * y; // Y is set to 0 (ground level)
         }
 
         /// <summary>
-        /// Converts a world position into a cubic 
+        /// Converts a world position into cubic coordinates.
         /// </summary>
         public static Vector3I ToCubic(Vector3 position, Orientation orientation)
         {
-            var position2D = new Vector2(orientation.Right.Normalized().Dot(position), orientation.Forward.Normalized().Dot(position));
+            var position2D = new Vector2(orientation.NormalizedRight.Dot(position), orientation.NormalizedForward.Dot(position));
 
-            var q = 2f / 3f * position2D.X / orientation.Right.Length();
-            var r = -1f / 3f * position2D.X + Mathf.Sqrt(3) / 3f * position2D.Y;
-            r /= orientation.Forward.Length();
+            var q = 2f / 3f * position2D.X / orientation.Scale;
+            var r = (-1f / 3f * position2D.X + Mathf.Sqrt(3) / 3f * position2D.Y) / orientation.Scale;
             var s = -q - r;
 
             return CubicRound(new Vector3(q, s, r));
@@ -99,24 +98,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3[] GetVertices(Vector3I cubic, Orientation orientation)
         {
-            if (orientation == null) return Array.Empty<Vector3>();
-
-            var neighbours = new Vector3[Hexagon.Num];
-            var corners = new Vector3[Hexagon.Num];
-
-            var world = ToWorld(cubic, orientation);
-
-            for (int i = 0; i < Hexagon.Num; i++)
-            {
-                neighbours[i] = ToWorld(cubic + Neighbours[i], orientation);
-            }
-
-            for (int i = 0; i < Hexagon.Num; i++)
-            {
-                corners[i] = (world + neighbours[i] + neighbours.ModulatedElement(i - 1)) / 3f;
-            }
-
-            return corners;
+            return Hexagon2.GetVertices(Hexagon2.ToAxial(cubic), orientation);
         }
 
         /// <summary>
@@ -124,12 +106,7 @@ namespace Cutulu
         /// </summary>
         public static Vector3 GetVertice(Vector3I cubic, int cornerIndex, Orientation orientation)
         {
-            var world = ToWorld(cubic, orientation);
-
-            var a = ToWorld(cubic + Neighbours.ModulatedElement(cornerIndex), orientation);
-            var z = ToWorld(cubic + Neighbours.ModulatedElement(cornerIndex - 1), orientation);
-
-            return (world + a + z) / 3f;
+            return Hexagon2.GetVertice(Hexagon2.ToAxial(cubic), cornerIndex, orientation);
         }
 
         /// <summary>
@@ -139,9 +116,7 @@ namespace Cutulu
         {
             if (ToCubic(position, orientation).Equals(cubic)) return position;
 
-            var vertices = GetVertices(cubic, orientation).SortByDistanceTo(position);
-
-            return position.TryIntersectFlat(ToWorld(cubic, orientation), vertices[0], vertices[1] - vertices[0], out var C) ? C : position;
+            return ToCubic(Hexagon2.GetClosestPoint(Hexagon2.ToAxial(cubic), position, orientation), orientation);
         }
 
         #endregion
@@ -248,30 +223,29 @@ namespace Cutulu
         /// </summary>
         private static Vector3I CubicRound(Vector3 cubic)
         {
-            var rx = Mathf.RoundToInt(cubic.X);
-            var ry = Mathf.RoundToInt(cubic.Y);
-            var rz = Mathf.RoundToInt(cubic.Z);
+            var q = Mathf.Round(cubic.X);
+            var r = Mathf.Round(cubic.Z);
+            var s = Mathf.Round(cubic.Y);
 
-            var x_diff = Mathf.Abs(rx - cubic.X);
-            var y_diff = Mathf.Abs(ry - cubic.Y);
-            var z_diff = Mathf.Abs(rz - cubic.Z);
+            var qDiff = Mathf.Abs(q - cubic.X);
+            var rDiff = Mathf.Abs(r - cubic.Z);
+            var sDiff = Mathf.Abs(s - cubic.Y);
 
-            if (x_diff > y_diff && x_diff > z_diff)
+            // Adjust the largest difference to maintain q + r + s = 0
+            if (qDiff > rDiff && qDiff > sDiff)
             {
-                rx = -ry - rz;
+                q = -r - s;
             }
-
-            else if (y_diff > z_diff)
+            else if (rDiff > sDiff)
             {
-                ry = -rx - rz;
+                r = -q - s;
             }
-
             else
             {
-                rz = -rx - ry;
+                s = -q - r;
             }
 
-            return new(rx, ry, rz);
+            return new Vector3I((int)q, (int)s, (int)r);
         }
 
         #endregion

@@ -141,11 +141,26 @@ namespace Cutulu
         /// </summary>
         public static Vector3 GetClosestPoint(Vector2I axial, Vector3 position, Orientation orientation)
         {
+            position.Y = 0f;
+
             if (ToAxial(position, orientation).Equals(axial)) return position;
 
-            var vertices = GetVertices(axial, orientation).SortByDistanceTo(position);
+            var axial2 = ToAxial(position, orientation);
+            var world = ToWorld(axial, orientation);
+            var i = GetSegment(axial2 - axial);
 
-            return position.TryIntersectFlat(ToWorld(axial, orientation), vertices[0], vertices[1] - vertices[0], out var C) ? C : position;
+            for (byte k = 0; k < 2; k++)
+            {
+                var a = GetVertice(axial, i + k, orientation);
+                var b = GetVertice(axial, i + k + 1, orientation);
+
+                if (a.TryIntersectFlat(b - a, world, position - world, out var c, false))
+                {
+                    return c;
+                }
+            }
+
+            return position;
         }
 
         #endregion
@@ -236,6 +251,27 @@ namespace Cutulu
             Pathfinding.TryFindPath(target, start, end, out var path);
 
             return path;
+        }
+
+        #endregion
+
+        #region Backend
+
+        public static byte GetSegment(Vector2I axial)
+        {
+            return Mathf.FloorToInt(
+                (Vector2Extension.GetAngleD(axial) - ReferenceAngle).AbsMod(360f) // Calculate angle of given cubic in axial space
+                / 45f) switch // Determine segment using switch statement on 45° segments
+            {
+                0 => 0,
+                1 => 1,
+                2 => 1,
+                3 => 2,
+                4 => 3,
+                5 => 4,
+                6 => 4,
+                _ => 5,
+            };
         }
 
         #endregion

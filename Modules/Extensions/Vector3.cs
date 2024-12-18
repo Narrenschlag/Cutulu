@@ -201,11 +201,18 @@ namespace Cutulu
             return points;
         }
 
-        public static bool TryIntersectFlat(this Vector3 A, Vector3 a, Vector3 B, Vector3 b, out Vector3 C)
+        public static bool TryIntersectFlat(this Vector3 A, Vector3 a, Vector3 B, Vector3 b, out Vector3 C, bool allowInfiniteDistance = true)
         {
             var result = A.toXY().TryIntersect(a.toXY(), B.toXY(), b.toXY(), out var c);
 
             C = c.toXZ();
+
+            if (result && allowInfiniteDistance == false)
+            {
+                if (C.DistanceTo(A) > a.Length() || C.DistanceTo(B) > b.Length())
+                    result = false;
+            }
+
             return result;
         }
 
