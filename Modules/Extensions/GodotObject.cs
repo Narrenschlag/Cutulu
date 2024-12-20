@@ -4,7 +4,7 @@ namespace Cutulu
 
     public static class GodotObjectExtension
     {
-        public static bool IsNull(this GodotObject obj) => obj == null || !GodotObject.IsInstanceValid(obj);
+        public static bool IsNull(this GodotObject obj) => obj == null || GodotObject.IsInstanceValid(obj) == false;
         public static bool NotNull(this GodotObject obj) => !IsNull(obj);
 
         public static bool Destroy(this GodotObject obj)
