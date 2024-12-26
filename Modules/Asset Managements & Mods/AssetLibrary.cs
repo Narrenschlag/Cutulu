@@ -65,7 +65,7 @@ namespace Cutulu
                 var filePaths = new List<string>();
 
                 // Find all mod data file paths
-                OE.FindFiles(directory, ref filePaths, new[] { AssetConstants.MOD_ENDING }); //, new[] { ".zip" }); // Disabled .zip because of dll/pck file loading
+                OE.FindFiles(directory, ref filePaths, new[] { AssetConstants.FILE_ENDING }); //, new[] { ".zip" }); // Disabled .zip because of dll/pck file loading
 
                 // Iterate through mod data files
                 foreach (var filePath in filePaths)

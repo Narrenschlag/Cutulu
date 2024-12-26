@@ -11,6 +11,8 @@ namespace Cutulu
         /// </summary>
         public static void OpenFileDialogue(this string directory, Node parent, Action<string[]> action, bool singleFile, params string[] fileEndings)
         {
+            FixFilters(fileEndings);
+
             // Create a new FileDialog instance
             FileDialog fileDialog = new()
             {
@@ -36,6 +38,8 @@ namespace Cutulu
         /// </summary>
         public static void SaveFileDialogue(this string directory, Node parent, Action<string> action, params string[] fileEndings)
         {
+            FixFilters(fileEndings);
+
             // Create a new FileDialog instance
             FileDialog fileDialog = new()
             {
@@ -52,6 +56,19 @@ namespace Cutulu
 
             // Show the file dialog
             fileDialog.PopupCentered();
+        }
+
+        private static void FixFilters(string[] filters)
+        {
+            if (filters.IsEmpty()) return;
+
+            for (int i = 0; i < filters.Length; i++)
+            {
+                filters[i] = filters[i].Trim();
+
+                if (filters[i][0] == '.') filters[i] = $"*{filters[i]}";
+                else if (filters[i].StartsWith("*.") == false) filters[i] = $"*.{filters[i]}";
+            }
         }
     }
 }

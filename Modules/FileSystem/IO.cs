@@ -134,6 +134,7 @@ namespace Cutulu
             FA file = FA.Open(path, FA.ModeFlags.Write);
             file.StoreString(content);
             file.Flush();
+            file.Close();
         }
 
         /// <summary>

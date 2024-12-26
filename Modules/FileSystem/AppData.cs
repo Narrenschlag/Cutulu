@@ -33,7 +33,7 @@ namespace Cutulu
 
             else
             {
-                TrySetAppData(key, obj);
+                IO.Write(obj, GetPath(key), IO.FileType.Binary);
             }
         }
 

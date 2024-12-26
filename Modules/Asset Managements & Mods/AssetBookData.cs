@@ -16,7 +16,6 @@ namespace Cutulu
         public string[] DllPaths { get; set; }
         public string[] PckPaths { get; set; }
 
-        public string AliasPrefix { get; set; }
         public string[] AliasIndex { get; set; }
     }
 }

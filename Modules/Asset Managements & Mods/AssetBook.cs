@@ -36,7 +36,7 @@ namespace Cutulu
                     if (arr.Size() != 2) continue;
 
                     // Validate path
-                    var path = $"{IO.PROJECT_PATH}{Data.AliasPrefix}{arr[1]}";
+                    var path = $"{IO.PROJECT_PATH}{arr[1]}";
                     if (OE.Exists(path) == false) continue;
 
                     // Assign paths
