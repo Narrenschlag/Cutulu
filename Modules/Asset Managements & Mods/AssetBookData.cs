@@ -8,7 +8,7 @@ namespace Cutulu
         public bool ForceEnabled { get; set; }
 
         public string Author { get; set; }
-        public string Version { get; set; }
+        public int Version { get; set; }
 
         public string Name { get; set; }
         public string Description { get; set; }
