@@ -72,54 +72,57 @@ namespace Cutulu.Networking
             }
 
             // Setup udp client
-            UdpClient = new(AddressFamily.InterNetworkV6);
-            UdpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            UdpClient.Client.DualMode = true;
-
-            // Assign endpoint
-            UdpEndpoint = new(address, udpPort);
-
-            // Connect with the host
-            UdpClient.Connect(host, UdpPort);
-
-            // Wait for udp packages
-            AcceptUdp();
-
-            // Check for local udp endpoint and tcp network stream
-            if (UdpClient.Client.LocalEndPoint is IPEndPoint endpoint && TcpClient.GetStream() is NetworkStream stream)
+            if (udpPort >= 0)
             {
-                // Assign port
-                var port = endpoint.Port;
+                UdpClient = new(AddressFamily.InterNetworkV6);
+                UdpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                UdpClient.Client.DualMode = true;
 
-                // Write setup data into stream
-                await stream.WriteAsync(new[] { (byte)ConnectionTypeEnum.Connect });
-                await stream.WriteAsync(BitConverter.GetBytes(port));
+                // Assign endpoint
+                UdpEndpoint = new(address, udpPort);
 
-                // Send setup data to host
-                await stream.FlushAsync();
+                // Connect with the host
+                UdpClient.Connect(host, UdpPort);
 
-                // Wait for response
-                var buffer = new byte[8];
-                var bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
-                UID = BitConverter.ToInt32(buffer);
+                // Wait for udp packages
+                AcceptUdp();
 
-                // Accept tcp from here on as we have to wait for the UID first.
-                AcceptTcp();
+                // Check for local udp endpoint and tcp network stream
+                if (UdpClient.Client.LocalEndPoint is IPEndPoint endpoint && TcpClient.GetStream() is NetworkStream stream)
+                {
+                    // Assign port
+                    var port = endpoint.Port;
 
-                //Debug.Log($"received-uid: {UID}({bytesRead}/{buffer.Length} bytes)");
-                Debug.Log($"Client connected. [UID={UID} udp={port} tcp={((IPEndPoint)TcpClient.Client.LocalEndPoint).Port}]");
+                    // Write setup data into stream
+                    await stream.WriteAsync(new[] { (byte)ConnectionTypeEnum.Connect });
+                    await stream.WriteAsync(BitConverter.GetBytes(port));
 
-                // Finish
-                Connected = true;
-                ConnectionEstablished?.Invoke();
-            }
+                    // Send setup data to host
+                    await stream.FlushAsync();
 
-            // Local udp endpoint and/or network stream were not found or incorrectly setup
-            else
-            {
-                Debug.LogError($"Client udp port cannot be read.");
-                await Disconnect(4);
-                return;
+                    // Wait for response
+                    var buffer = new byte[8];
+                    var bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+                    UID = BitConverter.ToInt32(buffer);
+
+                    // Accept tcp from here on as we have to wait for the UID first.
+                    AcceptTcp();
+
+                    //Debug.Log($"received-uid: {UID}({bytesRead}/{buffer.Length} bytes)");
+                    Debug.Log($"Client connected. [UID={UID} udp={port} tcp={((IPEndPoint)TcpClient.Client.LocalEndPoint).Port}]");
+
+                    // Finish
+                    Connected = true;
+                    ConnectionEstablished?.Invoke();
+                }
+
+                // Local udp endpoint and/or network stream were not found or incorrectly setup
+                else
+                {
+                    Debug.LogError($"Client udp port cannot be read.");
+                    await Disconnect(4);
+                    return;
+                }
             }
         }
 
