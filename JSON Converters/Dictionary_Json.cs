@@ -6,7 +6,7 @@ using writer = System.Text.Json.Utf8JsonWriter;
 using reader = System.Text.Json.Utf8JsonReader;
 using System.Collections.Generic;
 
-namespace Cutulu.JsonConverter
+namespace Cutulu.Core.JsonConverter
 {
 	public class Dictionary_Json<A, B> : JsonConverter<Dictionary<A, B>>
 	{

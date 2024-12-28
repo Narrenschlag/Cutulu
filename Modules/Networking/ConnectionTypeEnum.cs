@@ -1,4 +1,4 @@
-namespace Cutulu.Networking
+namespace Cutulu.Core.Networking
 {
     public enum ConnectionTypeEnum : byte
     {

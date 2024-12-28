@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
     public partial class SafeDictionary<K, V> : Resource
     {

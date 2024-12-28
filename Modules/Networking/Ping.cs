@@ -1,4 +1,4 @@
-namespace Cutulu.Networking
+namespace Cutulu.Core.Networking
 {
     using System.Net.Sockets;
     using System.Net;
@@ -7,7 +7,7 @@ namespace Cutulu.Networking
     using System.Threading;
 
     using System;
-    using Cutulu;
+    using Cutulu.Core;
 
     /// <summary>
     /// Ping class for sending and receiving pings to servers.

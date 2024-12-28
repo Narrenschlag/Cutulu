@@ -5,7 +5,7 @@ using System.Net;
 using System.Linq;
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
     public static class NetworkIO
     {

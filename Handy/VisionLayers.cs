@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
     /// <summary>
     /// Handles visibility based on layers, using keys with assigned idxs.

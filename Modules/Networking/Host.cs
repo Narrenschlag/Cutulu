@@ -1,4 +1,4 @@
-namespace Cutulu.Networking
+namespace Cutulu.Core.Networking
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -8,7 +8,7 @@ namespace Cutulu.Networking
     using System.IO;
     using System;
 
-    using Cutulu;
+    using Cutulu.Core;
 
     public partial class Host
     {

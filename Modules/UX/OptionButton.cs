@@ -1,4 +1,4 @@
-namespace Cutulu.UX
+namespace Cutulu.Core.UX
 {
     using Godot;
 

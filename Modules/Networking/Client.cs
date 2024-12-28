@@ -1,4 +1,4 @@
-namespace Cutulu.Networking
+namespace Cutulu.Core.Networking
 {
     using System.Threading.Tasks;
     using System.Net.Sockets;
@@ -7,7 +7,7 @@ namespace Cutulu.Networking
     using System.IO;
     using System;
 
-    using Cutulu;
+    using Cutulu.Core;
 
     /// <summary>
     /// Client class for sending and receiving packages from and to servers.

@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace Cutulu.UX
+namespace Cutulu.Core.UX
 {
     [GlobalClass]
     public partial class GenericOptionMenu : PolyControl

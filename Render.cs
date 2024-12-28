@@ -1,4 +1,4 @@
-namespace Cutulu
+namespace Cutulu.Core
 {
     using Godot;
 

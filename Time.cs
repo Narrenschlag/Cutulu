@@ -1,4 +1,4 @@
-namespace Cutulu
+namespace Cutulu.Core
 {
     using System.Threading.Tasks;
     using System;

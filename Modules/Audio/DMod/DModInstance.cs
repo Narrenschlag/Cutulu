@@ -1,4 +1,4 @@
-namespace Cutulu.Audio
+namespace Cutulu.Core.Audio
 {
     public partial struct DModInstance
     {

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
     public partial class GridGizmo : MeshInstance3D
     {

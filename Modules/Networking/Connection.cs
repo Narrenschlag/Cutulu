@@ -1,4 +1,4 @@
-namespace Cutulu.Networking
+namespace Cutulu.Core.Networking
 {
     using System.Net.Sockets;
     using System.Net;
@@ -9,7 +9,7 @@ namespace Cutulu.Networking
     using System.IO;
     using System;
 
-    using Cutulu;
+    using Cutulu.Core;
 
     public partial class Connection
     {

@@ -5,7 +5,7 @@ using options = System.Text.Json.JsonSerializerOptions;
 using writer = System.Text.Json.Utf8JsonWriter;
 using reader = System.Text.Json.Utf8JsonReader;
 
-namespace Cutulu.JsonConverter
+namespace Cutulu.Core.JsonConverter
 {
 	public class CPair_Json<A, B> : JsonConverter<CPair<A, B>>
 	{

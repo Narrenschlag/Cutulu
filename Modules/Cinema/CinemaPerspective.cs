@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
     [GlobalClass]
     public partial class CinemaPerspective : Resource

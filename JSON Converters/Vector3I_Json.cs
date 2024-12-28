@@ -6,7 +6,7 @@ using writer = System.Text.Json.Utf8JsonWriter;
 using reader = System.Text.Json.Utf8JsonReader;
 using i3 = Godot.Vector3I;
 
-namespace Cutulu.JsonConverter
+namespace Cutulu.Core.JsonConverter
 {
 	public class Vector3I_Json : JsonConverter<i3>
 	{

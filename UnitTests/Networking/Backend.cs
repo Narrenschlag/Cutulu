@@ -5,8 +5,8 @@ namespace Colloseum.Test
     using System;
     using Godot;
 
-    using Cutulu.Networking;
-    using Cutulu;
+    using Cutulu.Core.Networking;
+    using Cutulu.Core;
 
     public partial class Backend : Node
     {

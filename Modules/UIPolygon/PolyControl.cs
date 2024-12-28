@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
     public partial class PolyControl : Control
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
     public class UValueIndex<Value>
     {
