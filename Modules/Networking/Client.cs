@@ -27,8 +27,8 @@ namespace Cutulu.Networking
         public event Action<short, byte[]> ReceivedTcp, ReceivedUdp, ReceivedAny;
         public event Action ConnectionEstablished, ConnectionClosed;
 
-        private CancellationTokenSource cancellationTokenSource;
-        private CancellationToken CancellationToken;
+        protected CancellationTokenSource cancellationTokenSource;
+        protected CancellationToken CancellationToken;
         public long UID { get; private set; }
 
         public Client() { }
@@ -240,7 +240,7 @@ namespace Cutulu.Networking
             stream.Flush();
         }
 
-        private async void AcceptTcp()
+        protected virtual async void AcceptTcp()
         {
             if (TcpClient.GetStream() is not NetworkStream stream) return;
 
@@ -288,7 +288,7 @@ namespace Cutulu.Networking
             await Disconnect(3);
         }
 
-        private void ReceiveTcp(short key, byte[] buffer)
+        protected void ReceiveTcp(short key, byte[] buffer)
         {
             switch (key)
             {
