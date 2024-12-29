@@ -6,7 +6,7 @@ namespace Cutulu.Core
     /// <summary>
     /// Use static method Register() to see more.
     /// </summary>
-    public static class GodotByteFormatters
+    public static class GodotEncoders
     {
         #region Vector3         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         class Vector3IEncoder : BinaryEncoder<Vector3I>

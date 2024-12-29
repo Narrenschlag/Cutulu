@@ -5,7 +5,7 @@ namespace Cutulu.Core
     /// <summary>
     /// Use static method Register() to see more.
     /// </summary>
-    public static class CutuluByteFormatters
+    public static class CustomEncoders
     {
         class hyteFormatter : BinaryEncoder<Int4>
         {

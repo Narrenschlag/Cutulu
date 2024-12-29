@@ -157,6 +157,10 @@ namespace Cutulu.Core
 
                 for (ushort i = 0; i < properties.Length; i++)
                 {
+                    // Skip properties that have [DontEncode] attribute
+                    if (((DontEncode[])properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
+                        continue;
+
                     var value = properties[i].GetValue(obj);
                     type = properties[i].GetType();
 
@@ -256,6 +260,10 @@ namespace Cutulu.Core
 
                 for (ushort i = 0; i < properties.Length; i++)
                 {
+                    // Skip properties that have [DontEncode] attribute
+                    if (((DontEncode[])properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
+                        continue;
+
                     properties[i].SetValue(output, Decode(reader, properties[i].PropertyType));
                 }
 
