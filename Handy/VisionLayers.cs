@@ -1,8 +1,11 @@
-using System.Collections.Generic;
-using Godot;
-
-namespace Cutulu.Core
+namespace Cutulu
 {
+    using System.Collections.Generic;
+    using Godot;
+
+    using Mesh;
+    using Core;
+
     /// <summary>
     /// Handles visibility based on layers, using keys with assigned idxs.
     /// </summary>

@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using Godot;
 
-    public static class IntExtension
+    public static class Intf
     {
         public static int abs(this int i) => Mathf.Abs(i);
 

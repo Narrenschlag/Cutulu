@@ -5,7 +5,7 @@ namespace Cutulu.Core
     using System.Linq;
     using System;
 
-    public static class StringExtension
+    public static class Stringf
     {
         public static string RemoveForbiddenDbChars(this string source) => RemoveChar(source, ' ', '#', '\'', '`', '\'', '@', '/', '\\');
 
@@ -39,7 +39,7 @@ namespace Cutulu.Core
         {
             if (ids.IsEmpty()) return str;
 
-            var splits = str.Split(ids, Constants.StringSplit);
+            var splits = str.Split(ids, Constant.StringSplit);
             if (splits.Size() < 2) return str;
             return str[..^splits[^1].Length];
         }
@@ -125,7 +125,7 @@ namespace Cutulu.Core
         /// </summary>
         public static string[] SplitAnd(this string source, char seperator, Func<string, string> actionPerLine, bool ignoreEmptyEntries = false)
         {
-            string[] splits = source.Split(seperator, Constants.StringSplit);
+            string[] splits = source.Split(seperator, Constant.StringSplit);
             List<string> lines = new();
 
             for (int i = 0; i < splits.Length; i++)
@@ -221,7 +221,7 @@ namespace Cutulu.Core
         {
             if (source.IsEmpty()) return source;
 
-            string[] lines = source.Split('\n', Constants.StringSplit);
+            string[] lines = source.Split('\n', Constant.StringSplit);
             StringBuilder stringBuilder = new();
 
             stringBuilder.Append(lines[0]);
@@ -237,7 +237,7 @@ namespace Cutulu.Core
         {
             if (identifier.IsEmpty() || source.IsEmpty() || source.Contains(identifier[0]) == false || source.Contains(identifier) == false) return source;
 
-            return source.Split(identifier, Constants.StringSplit)[0];
+            return source.Split(identifier, Constant.StringSplit)[0];
         }
 
         public static string TrimToDirectory(this string path) => TrimToDirectory(path, new[] { '\\', '/' });

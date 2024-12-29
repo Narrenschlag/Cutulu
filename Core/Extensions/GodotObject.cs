@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using Godot;
 
-    public static class GodotObjectExtension
+    public static class GodotObjectf
     {
         public static bool IsNull(this GodotObject obj) => obj == null || GodotObject.IsInstanceValid(obj) == false;
         public static bool NotNull(this GodotObject obj) => !IsNull(obj);

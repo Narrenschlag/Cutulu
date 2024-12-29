@@ -4,7 +4,7 @@ namespace Cutulu.Core
     using System.Threading.Tasks;
     using Godot;
 
-    public static class NodeExtension
+    public static class Nodef
     {
         public static bool HasNoParent(this Node node) => node.IsNull() || node.GetParent().IsNull();
 
@@ -285,5 +285,16 @@ namespace Cutulu.Core
             result = null;
             return false;
         }
+
+        public static Node GetRoot(this Node node) => node.GetTree().CurrentScene;
+
+        private static Node3D _main3d;
+        public static Node3D Main3D { get { _main3d ??= (Engine.GetMainLoop() as SceneTree).CurrentScene.GetNodeInChildren<Node3D>(); return _main3d; } }
+
+        private static Node2D _main2d;
+        public static Node2D Main2D { get { _main2d ??= (Engine.GetMainLoop() as SceneTree).CurrentScene.GetNodeInChildren<Node2D>(); return _main2d; } }
+
+        private static Node _main;
+        public static Node Main { get { _main ??= (Engine.GetMainLoop() as SceneTree).CurrentScene; return _main; } }
     }
 }

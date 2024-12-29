@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using Godot;
 
-    public static class ColorExtension
+    public static class Colorf
     {
         private readonly static Vector3[] LerpMatrix = new Vector3[] {
             new (1, 0, 0),

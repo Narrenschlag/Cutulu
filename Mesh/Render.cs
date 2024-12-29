@@ -1,9 +1,11 @@
-namespace Cutulu.Core
+namespace Cutulu.Mesh
 {
     using Godot;
     using Mesh;
 
-    public static class Renderf
+    using Core;
+
+    public static class Render
     {
         private static OrmMaterial3D vertexMaterial;
         public static OrmMaterial3D VertexMaterial
@@ -119,7 +121,7 @@ namespace Cutulu.Core
 
         #region Curve Functions		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static MeshInstance3D DrawCurve(Vector3 origin, Vector3 direction, Color color, float gravity, float resolution, float length)
-            => DrawCurve(Core.Main3D, origin, direction, color, gravity, resolution, length);
+            => DrawCurve(Nodef.Main, origin, direction, color, gravity, resolution, length);
 
         public static MeshInstance3D DrawCurve(this Node3D node, Color color, float gravity, float resolution, float length)
             => DrawCurve(node, node.GlobalPosition, node.Forward(), color, gravity, resolution, length);

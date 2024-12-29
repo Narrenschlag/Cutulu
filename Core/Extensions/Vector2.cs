@@ -3,7 +3,7 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using Godot;
 
-    public static class Vector2Extension
+    public static class Vector2f
     {
         public static Vector2 Lerp(this Vector2 a, Vector2 b, float lerp) => new(Mathf.Lerp(a.X, b.X, lerp), Mathf.Lerp(a.Y, b.Y, lerp));
 

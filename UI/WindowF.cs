@@ -13,7 +13,7 @@
         public static bool ClampToViewport(this Window window, Node hostWindow, int titleMargin = 35, int PixelMargin = 0)
         {
             // Try to use main window if no host window defined
-            if (hostWindow.IsNull()) hostWindow = Core.Main;
+            if (hostWindow.IsNull()) hostWindow = Nodef.Main;
 
             // No host window to clamp to
             if (hostWindow.IsNull()) return false;

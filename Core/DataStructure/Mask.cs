@@ -27,14 +27,11 @@ namespace Cutulu.Core
         public Mask(int integer, int bitCount) : this(bitCount)
         {
             for (int i = 0; i < bitCount; i++)
-                Bits[i] = integer.GetBitAt(i);
+                Bits[i] = BitBuilder.GetBit(integer, i);
         }
 
+        public readonly void Set(int bit, bool newValue) => Bits[bit] = newValue;
         public bool Get(int bit) => Bits[bit];
-        public void Set(int bit, bool newValue)
-        {
-            Bits[bit] = newValue;
-        }
 
         public int Integer
         {
@@ -43,7 +40,7 @@ namespace Cutulu.Core
                 int x = 0;
 
                 for (int i = 0; i < Bits.Length; i++)
-                    Core.SetBitAt(ref x, i, Get(i));
+                    x = BitBuilder.SetBit(x, i, Get(i));
 
                 return x;
             }

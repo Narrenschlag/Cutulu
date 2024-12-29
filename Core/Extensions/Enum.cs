@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using System;
 
-    public static class EnumExtension
+    public static class Enumf
     {
         public static Array Array(this Enum Enum) => Enum.GetValues(Enum.GetType());
         public static int Length(this Enum Enum) => Array(Enum).Length;

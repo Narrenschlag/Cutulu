@@ -7,7 +7,7 @@ namespace Cutulu.Core
         #region Bind 8 bools to 1 Byte
         public static byte BindToByte(this bool bool0, params bool[] boolN)
         {
-            byte @byte = ((byte)0).SetBitAt(0, bool0);
+            byte @byte = BitBuilder.SetBit((byte)0, 0, bool0);
 
             if (boolN != null && boolN.Length > 0)
             {
@@ -15,7 +15,7 @@ namespace Cutulu.Core
 
                 for (byte n = 0; n < length; n++)
                 {
-                    @byte = @byte.SetBitAt(n + 1, boolN[n]);
+                    @byte = BitBuilder.SetBit(@byte, n + 1, boolN[n]);
                 }
             }
 
@@ -28,7 +28,7 @@ namespace Cutulu.Core
 
             for (byte n = 0; n < 8; n++)
             {
-                result[n] = @byte.GetBitAt(n);
+                result[n] = BitBuilder.GetBit(@byte, n);
             }
 
             return result;

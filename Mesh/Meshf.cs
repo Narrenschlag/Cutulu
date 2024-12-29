@@ -50,8 +50,8 @@ namespace Cutulu.Mesh
 
         public static void AddTriangle(this SurfaceTool surfaceTool, Vector3 a, Vector3 b, Vector3 c, Vector3 normal, Color color, bool clockwise, ref int vertexOffset)
         {
-            var min = Vector3Extension.Min(a, b, c);
-            var max = Vector3Extension.Max(a, b, c);
+            var min = Vector3f.Min(a, b, c);
+            var max = Vector3f.Max(a, b, c);
 
             Vector2 getUv(ref Vector3 input) => (input - min).toXY() / max.toXY();
             var uvs = new Vector2[3] { getUv(ref a), getUv(ref b), getUv(ref c) };

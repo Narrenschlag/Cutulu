@@ -176,7 +176,7 @@ namespace Cutulu.Core
                     else
                     {
                         // Add dictionaries with depth for targetting specific types
-                        var directorySplits = key.Split(AssetConstants.NAME_SEPERATOR, Cutulu.Core.Constants.StringSplit);
+                        var directorySplits = key.Split(AssetConstants.NAME_SEPERATOR, Cutulu.Core.Constant.StringSplit);
                         var strng = new System.Text.StringBuilder();
 
                         if (directorySplits.Size() > 1)

@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using Godot;
 
-    public static class FloatExtension
+    public static class Floatf
     {
         public static float abs(this float f) => Mathf.Abs(f);
 

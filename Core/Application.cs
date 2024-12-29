@@ -7,7 +7,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Close the application.
         /// </summary>
-        public static void Quit() => Core.Main.GetTree().Quit();
+        public static void Quit() => Nodef.Main.GetTree().Quit();
 
         /// <summary>
         /// Open url in web browser.

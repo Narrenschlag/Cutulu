@@ -15,7 +15,7 @@ namespace Cutulu.Core
             new(+0, -1),
         };
 
-        public static readonly float ReferenceAngle = Vector2Extension.GetAngleD(Neighbours[0]).AbsMod(360f);
+        public static readonly float ReferenceAngle = Vector2f.GetAngleD(Neighbours[0]).AbsMod(360f);
 
         /// <summary>
         /// Returns distance between two points
@@ -260,7 +260,7 @@ namespace Cutulu.Core
         public static byte GetSegment(Vector2I axial)
         {
             return Mathf.FloorToInt(
-                (Vector2Extension.GetAngleD(axial) - ReferenceAngle).AbsMod(360f) // Calculate angle of given cubic in axial space
+                (Vector2f.GetAngleD(axial) - ReferenceAngle).AbsMod(360f) // Calculate angle of given cubic in axial space
                 / 45f) switch // Determine segment using switch statement on 45° segments
             {
                 0 => 0,

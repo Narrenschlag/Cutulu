@@ -49,13 +49,13 @@ namespace Cutulu.Core
 
             if (lang.IsNull() || lang.Content.IsEmpty()) return;
 
-            var split = lang.Content.Split(new[] { "\n" }, Constants.StringSplit);
+            var split = lang.Content.Split(new[] { "\n" }, Constant.StringSplit);
             var builder = new System.Text.StringBuilder();
             var key = default(string);
 
             for (var i = 0; i < split.Length; i++)
             {
-                var arr = split[i].Split(new[] { "::" }, Constants.StringSplit);
+                var arr = split[i].Split(new[] { "::" }, Constant.StringSplit);
 
                 if (arr.Length != 2)
                 {

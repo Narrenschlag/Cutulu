@@ -3,6 +3,8 @@ using System.Text;
 
 namespace Cutulu.Core
 {
+    using Reflection;
+
     public class NestedString
     {
         public List<NestedString> Children { get; set; }

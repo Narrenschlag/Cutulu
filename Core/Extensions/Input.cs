@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using Godot;
 
-    public static class InputExtension
+    public static class Inputf
     {
         public static bool GetKey(this string name, float threshhold = .5f) => GetValue(name) >= threshhold;
         public static float GetValue(this string name) => Godot.Input.GetActionRawStrength(name);

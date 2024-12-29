@@ -32,7 +32,7 @@ namespace Cutulu.Core
                 foreach (var address in Data.AliasIndex)
                 {
                     // Split string into key and value strings
-                    var arr = address.Split(AssetConstants.ADDRESS_SEPERATOR, Constants.StringSplit);
+                    var arr = address.Split(AssetConstants.ADDRESS_SEPERATOR, Constant.StringSplit);
                     if (arr.Size() != 2) continue;
 
                     // Validate path

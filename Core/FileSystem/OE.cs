@@ -239,7 +239,7 @@ namespace Cutulu.Core
 
             if (path.IsEmpty()) return false;
 
-            var paths = path.Split('?', Constants.StringSplit);
+            var paths = path.Split('?', Constant.StringSplit);
 
             if (paths.IsEmpty() || paths[0].Exists() == false) return false;
 

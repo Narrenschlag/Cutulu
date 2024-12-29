@@ -175,8 +175,8 @@ namespace Cutulu.Mesh
             if (UseVertexColor)
             {
                 meshInstance3D.MaterialOverride = UseAlpha
-                ? Renderf.VertexMaterialAlpha
-                : Renderf.VertexMaterial;
+                ? Render.VertexMaterialAlpha
+                : Render.VertexMaterial;
             }
         }
 

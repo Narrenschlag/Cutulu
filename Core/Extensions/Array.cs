@@ -3,7 +3,7 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using Godot;
 
-    public static class ArrayExtension
+    public static class Arrayf
     {
         public static T[] MoveElements<T>(this T[] array, int moveValue)
         {

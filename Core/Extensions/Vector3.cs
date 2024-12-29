@@ -3,7 +3,7 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using Godot;
 
-    public static class Vector3Extension
+    public static class Vector3f
     {
         public static void SetForward(this Node3D node, Vector3 direction, bool global = true) => node.LookAt((global ? node.GlobalPosition : node.Position) + direction);
 
@@ -88,7 +88,7 @@ namespace Cutulu.Core
 
         public static float GetAngleToFront180(this Vector3 FromGlobalPosition, Node3D Target, bool useRadians = false)
         {
-            return FloatExtension.GetAngleToFront180(
+            return Floatf.GetAngleToFront180(
                 GetYRotation(FromGlobalPosition - Target.GlobalPosition, useRadians),
                 useRadians ? Target.Rotation.Y : Target.RotationDegrees.Y,
                 useRadians

@@ -32,7 +32,7 @@ namespace Cutulu.Core
         }
 
         public static float CenterDistance(this Vector2 position, params Vector2[] corners)
-        => position.DistanceTo(Vector2Extension.Average(corners));
+        => position.DistanceTo(Vector2f.Average(corners));
 
         public static float EdgeDistance(this Vector2 position, params Vector2[] corners) => EdgeDistance(position, out _, corners);
         public static float EdgeDistance(this Vector2 position, Vector2 a, Vector2 b)

@@ -70,7 +70,7 @@ namespace Cutulu.Core
 
         #region Curved Raycast Functions    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         public static bool RaycastCurve(Vector3 origin, Vector3 direction, out RaycastHit hit, Color color, float gravity, float resolution, float length)
-            => Core.Main3D.RaycastCurve(origin, direction, out hit, color, gravity, resolution, length);
+            => Nodef.Main3D.RaycastCurve(origin, direction, out hit, color, gravity, resolution, length);
 
         public static bool RaycastCurve(this Node3D node, out RaycastHit hit, Color color, float gravity, float resolution, float length)
             => RaycastCurve(node, node.GlobalPosition, node.Forward(), out hit, color, gravity, resolution, length);

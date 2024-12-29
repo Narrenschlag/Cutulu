@@ -1,10 +1,12 @@
-using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
-using System;
-
-namespace Cutulu.Core
+namespace Cutulu.Reflection
 {
+    using System.Collections.Generic;
+    using System.Reflection;
+    using System.Linq;
+    using System;
+
+    using Core;
+
     public static class Mirror
     {
         #region Types        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

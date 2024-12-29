@@ -92,7 +92,7 @@ namespace Cutulu.Mesh
 
             if (useVertexColor)
                 meshInstance3D.MaterialOverride = useAlpha ?
-                Renderf.VertexMaterialAlpha : Renderf.VertexMaterial;
+                Render.VertexMaterialAlpha : Render.VertexMaterial;
         }
 
         public void Clear()
