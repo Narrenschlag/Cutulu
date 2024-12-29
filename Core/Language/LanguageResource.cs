@@ -5,7 +5,7 @@ namespace Cutulu.Core
     using Godot;
 
     [GlobalClass]
-    public partial class Lang : Resource
+    public partial class LanguageResource : Resource
     {
         [Export] public string LanguageCode { get; set; } = "de";
         [Export] public string EnglishName { get; set; } = "German";
@@ -14,12 +14,12 @@ namespace Cutulu.Core
         [Export(PropertyHint.MultilineText)] public string Content { get; set; } = "asset_title::Inhalts-Pakete";
 
         public static readonly Dictionary<string, string> Base = new(), Additional = new();
-        public static Lang Current { get; private set; }
+        public static LanguageResource Current { get; private set; }
         public static Action Updated { get; set; }
 
         public static string CurrentLanguageCode => Current.NotNull() ? Current.LanguageCode : default;
 
-        public static void SetTo(Lang lang)
+        public static void SetTo(LanguageResource lang)
         {
             if (Current == lang) return;
 
@@ -27,7 +27,7 @@ namespace Cutulu.Core
             Updated?.Invoke();
         }
 
-        public static void Add(Lang lang, bool clearOld = false)
+        public static void Add(LanguageResource lang, bool clearOld = false)
         {
             if (Current == lang) return;
 
@@ -43,7 +43,7 @@ namespace Cutulu.Core
             else return defaultValue.IsEmpty() ? key : defaultValue;
         }
 
-        private static void OverrideLang(Dictionary<string, string> dictionary, Lang lang, bool clear)
+        private static void OverrideLang(Dictionary<string, string> dictionary, LanguageResource lang, bool clear)
         {
             if (clear) dictionary.Clear();
 

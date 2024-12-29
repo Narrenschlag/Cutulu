@@ -9,6 +9,7 @@ namespace Cutulu.Mesh
     /// <summary>
     /// Highly GPU optimized mesh generation tool for fast and easy use. Allows for fast polygon and wall meshes to be added.
     /// </summary>
+    [System.Obsolete("Use MeshBuilder.cs instead")]
     public class MeshBuilder2
     {
         #region Core
