@@ -1,4 +1,4 @@
-namespace Cutulu.Core.Networking
+namespace Cutulu.Network
 {
     using System.Net.Sockets;
     using System.Net;

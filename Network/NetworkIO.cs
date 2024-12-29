@@ -1,13 +1,18 @@
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Net;
-
-using System.Linq;
-using Godot;
-
-namespace Cutulu.Core
+namespace Cutulu.Network
 {
-    public static class NetworkIO
+    using System.Net.NetworkInformation;
+    using System.Net.Sockets;
+    using System.Net;
+
+    using System.Linq;
+    using Godot;
+
+    using Core;
+    using Web;
+
+    using HttpRequest = Web.HttpRequest;
+
+    public static class IO
     {
         public const string LocalhostIPv4 = "127.0.0.1";
         public const string LocalhostIPv6 = "::1";
@@ -94,17 +99,17 @@ namespace Cutulu.Core
         /// <summary>
         /// Opens a web request. If connected to the internet it will return your global IPAddress
         /// </summary>
-        public static void GetGlobalIPv4(Node node, WebRequest.Result result)
+        public static void GetGlobalIPv4(Node node, HttpRequest.Result result)
         {
-            _ = new WebRequest(node, "https://ipinfo.io/ip", result);
+            _ = new HttpRequest(node, "https://ipinfo.io/ip", result);
         }
 
         /// <summary>
         /// Opens a web request. If connected to the internet it will return your global IPAddress
         /// </summary>
-        public static void GetGlobalIPv6(Node node, WebRequest.Result result)
+        public static void GetGlobalIPv6(Node node, HttpRequest.Result result)
         {
-            _ = new WebRequest(node, "https://api6.ipify.org/", result);
+            _ = new HttpRequest(node, "https://api6.ipify.org/", result);
         }
     }
 }

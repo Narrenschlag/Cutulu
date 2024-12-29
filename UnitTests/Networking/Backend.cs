@@ -5,7 +5,7 @@ namespace Colloseum.Test
     using System;
     using Godot;
 
-    using Cutulu.Core.Networking;
+    using Cutulu.Network;
     using Cutulu.Core;
 
     public partial class Backend : Node
@@ -41,7 +41,7 @@ namespace Colloseum.Test
                 var received_client_udp = 0;
                 Client.ReceivedTcp += (short key, byte[] buffer) => Debug.Log($"client-tcp ({++received_client_tcp}): {key}({buffer.Length} bytes)");
                 Client.ReceivedUdp += (short key, byte[] buffer) => Debug.Log($"client-udp ({++received_client_udp}): {key}({buffer.Length} bytes)");
-                await Client.Connect(IO.LocalHost, 5000, 5001);
+                await Client.Connect(Cutulu.Network.IO.LocalhostIPv4, 5000, 5001);
 
                 await Task.Delay(100);
 
@@ -81,7 +81,7 @@ namespace Colloseum.Test
 
                 await Task.Delay(100);
                 Debug.LogError($"[test 5/6]");
-                await Client.Connect(IO.LocalHost, 5000, 5001);
+                await Client.Connect(Cutulu.Network.IO.LocalhostIPv6, 5000, 5001);
 
                 await Task.Delay(100);
                 Debug.LogError($"[test 6/6]");
