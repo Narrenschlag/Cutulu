@@ -1,7 +1,9 @@
-namespace Cutulu.Core
+namespace Cutulu.Mesh
 {
     using System.Collections.Generic;
     using Godot;
+
+    using Core;
 
     /// <summary>
     /// Highly GPU optimized mesh generation tool for fast and easy use. Allows for fast polygon and wall meshes to be added.

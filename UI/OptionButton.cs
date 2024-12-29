@@ -1,6 +1,8 @@
-namespace Cutulu.Core.UX
+namespace Cutulu.UI
 {
     using Godot;
+
+    using Core;
 
     [GlobalClass]
     public partial class OptionButton : RichTextLabel

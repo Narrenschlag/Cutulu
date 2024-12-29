@@ -1,7 +1,9 @@
-using Godot;
-
-namespace Cutulu.Core
+namespace Cutulu.Mesh
 {
+    using Godot;
+
+    using Core;
+
     public static class Meshf
     {
         public static Mesh Create(this Mesh.PrimitiveType type, params (Vector3, Color)[] vertices) => Open(type, vertices).Commit();

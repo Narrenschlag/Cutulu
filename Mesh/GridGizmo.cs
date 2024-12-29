@@ -1,8 +1,10 @@
-using System.Threading.Tasks;
-using Godot;
-
-namespace Cutulu.Core
+namespace Cutulu.Mesh
 {
+    using System.Threading.Tasks;
+    using Godot;
+
+    using Core;
+
     public partial class GridGizmo : MeshInstance3D
     {
         public GridGizmo(Node parent, string name, Material material = null) : base()

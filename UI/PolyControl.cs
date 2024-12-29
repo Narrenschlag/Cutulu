@@ -1,8 +1,10 @@
-using System;
-using Godot;
-
-namespace Cutulu.Core
+namespace Cutulu.UI
 {
+    using System;
+    using Godot;
+
+    using Core;
+
     public partial class PolyControl : Control
     {
         // Points of the triangle relative to the control's size

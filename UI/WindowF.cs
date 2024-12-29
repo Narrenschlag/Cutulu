@@ -1,7 +1,9 @@
-﻿using Godot;
-
-namespace Cutulu.Core
+﻿namespace Cutulu.UI
 {
+    using Godot;
+
+    using Core;
+
     static class WindowF
     {
         /// <summary>
