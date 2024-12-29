@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using System.Collections.Generic;
 
-    public static class DictionaryExtension
+    public static class Dictionaryf
     {
         public static bool NotEmpty<T, U>(this Dictionary<T, U> dic) => dic != null && dic.Count > 0;
         public static bool IsEmpty<T, U>(this Dictionary<T, U> dic) => !NotEmpty(dic);

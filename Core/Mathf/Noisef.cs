@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using Godot;
 
-    public static class NoiseF
+    public static class Noisef
     {
         public static NoiseGenerator GenerateNoise(this int seed, Vector3 offset, float frequency = .01f, FastNoiseLite.NoiseTypeEnum type = FastNoiseLite.NoiseTypeEnum.Perlin)
         {

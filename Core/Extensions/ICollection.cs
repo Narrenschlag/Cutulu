@@ -3,7 +3,7 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using System.Collections;
 
-    public static class CollectionExtension
+    public static class Collectionf
     {
         public static bool NotEmpty<T>(this ICollection<T> collection) => collection != null && collection.Count > 0;
         public static bool IsEmpty<T>(this ICollection<T> collection) => !NotEmpty(collection);

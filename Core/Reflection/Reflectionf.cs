@@ -1,13 +1,11 @@
-namespace Cutulu.Reflection
+namespace Cutulu.Core
 {
     using System.Collections.Generic;
     using System.Reflection;
     using System.Linq;
     using System;
 
-    using Core;
-
-    public static class Mirror
+    public static class Reflectionf
     {
         #region Types        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

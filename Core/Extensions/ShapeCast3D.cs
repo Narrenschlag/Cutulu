@@ -3,7 +3,7 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using Godot;
 
-    public static class ShapeCast3DExtension
+    public static class ShapeCast3Df
     {
         public static List<T> GetColliders<T>(this ShapeCast3D shapeCast)
         {

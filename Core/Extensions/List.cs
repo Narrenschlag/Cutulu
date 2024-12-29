@@ -3,7 +3,7 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using Godot;
 
-    public static class ListExtension
+    public static class Listf
     {
         public static bool TryAdd<T>(this List<T> list, T value)
         {
