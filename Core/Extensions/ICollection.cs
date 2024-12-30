@@ -2,27 +2,39 @@ namespace Cutulu.Core
 {
     using System.Collections.Generic;
     using System.Collections;
+    using System;
 
     public static class Collectionf
     {
         public static bool NotEmpty<T>(this ICollection<T> collection) => collection != null && collection.Count > 0;
         public static bool IsEmpty<T>(this ICollection<T> collection) => !NotEmpty(collection);
 
-        public static int Size<T>(this ICollection<T> collection) => collection.NotEmpty() ? collection.Count : 0;
+        public static int Size<T>(this ICollection<T> collection) => collection != null ? collection.Count : 0;
 
-        public static T[] ToArray<T>(this ICollection<T> collection) => ToList(collection).ToArray();
-        public static List<T> ToList<T>(this ICollection<T> collection) => new(collection);
+        public static T[] ToArray<T>(this ICollection<T> collection)
+        {
+            if (collection.NotEmpty())
+            {
+                var array = new T[collection.Count];
+
+                collection.CopyTo(array, 0);
+                return array;
+            }
+
+            return Array.Empty<T>();
+        }
 
         public static T[] ToArray<T>(this ICollection collection)
         {
-            var list = new List<T>();
-
-            foreach (var item in collection)
+            if (collection != null && collection.Count > 0)
             {
-                if (item is T t) list.Add(t);
+                var array = new T[collection.Count];
+
+                collection.CopyTo(array, 0);
+                return array;
             }
 
-            return list.ToArray();
+            return Array.Empty<T>();
         }
     }
 }
