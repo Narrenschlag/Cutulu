@@ -60,7 +60,7 @@ namespace Cutulu.Core
         }
 
         public static readonly char[] Start = new[]{
-            'm', 'b', 'd', 't', 'n', 'w', 's', 'k',
+            'n', 'g', 'b', 's', 'l', 'd', 'r', 'w',
         };
 
         public static readonly char[] Center = new[]{
