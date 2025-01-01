@@ -1,17 +1,17 @@
 namespace Cutulu.Network
 {
     using System.Threading.Tasks;
-    using Godot;
-    using Core;
     using System.Net.Sockets;
     using System.Net;
     using System;
+
+    using Core;
 
     public partial class IntegrationTest : Core.IntegrationTest
     {
         protected override int StepCount => 5;
 
-        private BaseTcpClient BaseTcp;
+        private Sockets.TcpSocket BaseTcp;
 
         protected override async Task<bool> _Process()
         {
@@ -77,7 +77,12 @@ namespace Cutulu.Network
 
             Print("Listening to incomming connections...");
 
-            var client = await tcpListener.AcceptTcpClientAsync();
+            TcpClient client = null;
+            while (tcpListener.Pending())
+            {
+                client = await tcpListener.AcceptTcpClientAsync();
+                Print($"Found new connection. IsConnected={client.Connected}");
+            }
 
             if (client == null)
             {
@@ -96,14 +101,37 @@ namespace Cutulu.Network
                 return false;
             }
 
-            BaseTcp.ReceivedBuffer = Receive;
-            void Receive(BaseTcpClient client, byte[] buffer, int length)
+            Print("Client sends...");
+            var writeBuffer = "I hate this damn socket system.".Encode();
+            await BaseTcp.SendAsync(writeBuffer);
+
+            Print("Reading client data...");
+            var readBuffer = new byte[writeBuffer.Length];
+            await stream.ReadAsync(readBuffer);
+
+            if (readBuffer.Compare(writeBuffer) == false)
             {
-                Debug.LogR($"[color=magenta]Received {length} bytes");
+                PrintErr($"{writeBuffer.Decode<string>()} != {readBuffer.Decode<string>()}.");
+                return false;
             }
 
-            await stream.WriteAsync(new byte[67]);
+            else Print($"Success. '{readBuffer.Decode<string>()}'");
+
+            Print("Sending packages...");
+            await stream.WriteAsync(900090909.Encode());
             await stream.FlushAsync();
+
+            Print("Receiving packages...");
+            var receive = await BaseTcp.Receive(4);
+
+            if (receive.Success == false)
+            {
+                PrintErr("Unable to receive package data");
+                return false;
+            }
+
+            Print($"Received all packages ({receive.Buffer.Length})");
+            NextStep();
 
             return true;
         }

@@ -1,16 +1,15 @@
-namespace Cutulu.Network
+namespace Cutulu.Network.Sockets
 {
     using System.Threading.Tasks;
     using System.Net.Sockets;
     using System.Threading;
-    using Cutulu.Core;
-    using System;
     using System.IO;
+    using System;
 
-    public partial class BaseTcpClient
+    using Core;
+
+    public partial class TcpSocket
     {
-        public const int BufferSize = 2048; // Read incomming data in 2kb chunks
-
         public readonly TcpClient Client;
 
         public bool IsConnected => Client.Connected;
@@ -22,16 +21,14 @@ namespace Cutulu.Network
         public string Address { get; private set; }
         public int Port { get; private set; }
 
-        private bool EnableMultiThreading { get; set; }
-        private Thread Thread { get; set; }
+        private bool Receiving { get; set; }
 
-        public Action<BaseTcpClient, byte[], int> ReceivedBuffer;
-        public Action<BaseTcpClient> Connected, Disconnected;
+        public Action<TcpSocket> Connected, Disconnected;
 
         /// <summary>
         /// Constructs simple tcp client capable of IPv4 and IPv6.
         /// </summary>
-        public BaseTcpClient()
+        public TcpSocket()
         {
             Client = new TcpClient(AddressFamily.InterNetworkV6);
 
@@ -42,7 +39,7 @@ namespace Cutulu.Network
         /// <summary>
         /// Constructs simple tcp client capable of IPv4 and IPv6 using existing socket.
         /// </summary>
-        public BaseTcpClient(TcpClient client)
+        public TcpSocket(TcpClient client)
         {
             Client = client;
         }
@@ -67,16 +64,16 @@ namespace Cutulu.Network
                 return false;
             }
 
-            Address = address;
-            Port = port;
+            lock (this)
+            {
+                Receiving = false;
+                Address = address;
+                Port = port;
 
-            if (EnableMultiThreading = enableMultiThreading)
-                Thread = new(new ThreadStart(Process));
-            else Process();
+                Connected?.Invoke(this);
 
-            Connected?.Invoke(this);
-
-            return true;
+                return true;
+            }
         }
 
         /// <summary>
@@ -99,8 +96,6 @@ namespace Cutulu.Network
         public virtual void Disconnect(byte exitCode = 0)
         {
             TokenSource?.Cancel();
-            Thread?.Interrupt();
-            Thread?.Join();
 
             Token = CancellationToken.None;
             TokenSource = null;
@@ -164,61 +159,50 @@ namespace Cutulu.Network
         }
 
         /// <summary>
-        /// Receives data, writes bytes to memory, polls .
+        /// Receives data, writes bytes to memory and polls.
         /// </summary>
-        protected virtual async void Process()
+        public virtual async Task<(bool Success, byte[] Buffer)> Receive(int length)
         {
-            byte[] buffer = null;
-            var token = Token;
-            var length = 0;
-
-            try
+            if (IsConnected && Receiving == false && Client.GetStream() is NetworkStream stream)
             {
-                // TODO: Doesn't work yet.
-                if (Client.GetStream() is NetworkStream stream && stream.DataAvailable)
-                    (buffer, length) = await HandleTraffic(stream);
+                Receiving = true;
 
-                else await Task.Delay(1);
-            }
+                var buffer = new byte[length];
 
-            catch (Exception ex)
-            {
-                switch (ex)
+                try
                 {
-                    case IOException _ex when _ex.Message == "CLIENT_LOST_CONNECTION_TO_HOST":
-                        Debug.LogR($"[color=red]{ex.Message}");
-                        break;
+                    Debug.Log($"Waiting for {length} bytes...");
 
-                    case OperationCanceledException:
-                        break;
+                    if (await stream.ReadAsync(buffer, Token) < length)
+                        throw new IOException("CLIENT_LOST_CONNECTION_TO_HOST");
 
-                    default:
-                        Debug.LogError($"CLIENT_TCP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
-                        break;
+                    Debug.LogR($"[color=green]Received {length} bytes.");
+
+                    Receiving = false;
+                    return (true, buffer);
                 }
 
-                Disconnect(255);
-            }
-
-            if (EnableMultiThreading == false && token.IsCancellationRequested) return;
-
-            if (length > 0 && buffer != null)
-            {
-                lock (this)
+                catch (Exception ex)
                 {
-                    ReceivedBuffer?.Invoke(this, buffer, length);
+                    switch (ex)
+                    {
+                        case IOException _ex when _ex.Message == "CLIENT_LOST_CONNECTION_TO_HOST":
+                            Debug.LogR($"[color=red]{ex.Message}");
+                            break;
+
+                        case OperationCanceledException:
+                            break;
+
+                        default:
+                            Debug.LogError($"CLIENT_TCP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                            break;
+                    }
+
+                    Disconnect(255);
                 }
             }
 
-            Process();
-        }
-
-        protected virtual async Task<(byte[] Buffer, int Length)> HandleTraffic(NetworkStream stream)
-        {
-            Debug.LogError($"Data available!");
-            var buffer = new byte[BufferSize];
-
-            return (buffer, await stream.ReadAsync(buffer, Token));
+            return (false, Array.Empty<byte>());
         }
     }
 }
