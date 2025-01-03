@@ -234,7 +234,7 @@ namespace Cutulu.Network
             var host = new HostManager(TcpPort, UdpPort);
             var client = new ClientManager(IO.LocalhostIPv6, TcpPort, UdpPort);
 
-            host.Start();
+            await host.Start();
 
             await Task.Delay(500);
 
@@ -337,13 +337,11 @@ namespace Cutulu.Network
 
             Print($"Starting random stress test...");
 
-            host.Stop();
+            await host.Start();
+            await host.Start();
+            await host.Start();
 
             await Task.Delay(100);
-
-            host.Start();
-
-            await Task.Delay(1000);
 
             Print($"Host is running: [color=green]{host.TcpHost.IsListening}");
 
@@ -363,7 +361,7 @@ namespace Cutulu.Network
 
             for (int i = 0; i < 10; i++)
             {
-                if (i % 2 == 0) client.Stop();
+                if (i % 2 == 0) await client.Stop();
                 else await client.Start();
 
                 await Task.Delay(50);
@@ -377,7 +375,7 @@ namespace Cutulu.Network
                 return false;
             }
 
-            client.Stop();
+            await client.Stop();
 
             await Task.Delay(500);
 
