@@ -49,7 +49,7 @@ namespace Cutulu.Core
         public virtual void Print(string message) => Print(Colors.DimGray, message);
         public virtual void Print(Color color, string message)
         {
-            Debug.LogR($"[color={color.ToHtml()}][{Name}]{message}[/color]");
+            Debug.LogR($"[color={color.ToHtml()}][{Name}] {message}[/color]");
         }
 
         protected virtual async Task<bool> _Process()

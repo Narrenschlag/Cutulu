@@ -10,48 +10,86 @@ namespace Cutulu.Network.Sockets
 
     public partial class TcpSocket
     {
-        public readonly TcpClient Client;
+        public TcpClient Client { get; private set; }
 
-        public bool IsConnected => Client.Connected;
-        public Socket Socket => Client.Client;
+        public bool IsConnected => Socket != null && Socket.Connected;
+        public Socket Socket => Client?.Client;
 
         private CancellationTokenSource TokenSource { get; set; }
         private CancellationToken Token { get; set; }
 
+        public bool Poll() => IsConnected && Socket.Poll(-1, SelectMode.SelectError) == false;
+
         public string Address { get; private set; }
         public int Port { get; private set; }
+        public long UID { get; set; }
 
         private bool Receiving { get; set; }
+        private TcpHost Host { get; set; }
 
         public Action<TcpSocket> Connected, Disconnected;
 
         /// <summary>
         /// Constructs simple tcp client capable of IPv4 and IPv6.
         /// </summary>
-        public TcpSocket()
-        {
-            Client = new TcpClient(AddressFamily.InterNetworkV6);
-
-            Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            Socket.DualMode = true;
-        }
+        public TcpSocket() { }
 
         /// <summary>
         /// Constructs simple tcp client capable of IPv4 and IPv6 using existing socket.
         /// </summary>
-        public TcpSocket(TcpClient client)
+        public TcpSocket(TcpClient client, TcpHost host)
         {
             Client = client;
+            Host = host;
         }
 
         /// <summary>
         /// Connect to host async.
         /// </summary>
-        public virtual async Task<bool> Connect(string address, int port, int timeout = 5000, bool enableMultiThreading = false)
+        public virtual async Task<bool> Connect(string address, int port, int timeout = 5000)
         {
             Disconnect(1);
 
-            _ = Client.ConnectAsync(address, port, Token = (TokenSource = new()).Token);
+            // Wait until disconnected
+            while (IsConnected) await Task.Delay(1);
+
+            Token = (TokenSource = new()).Token;
+
+            if (Client == null)
+            {
+                Client = new(AddressFamily.InterNetworkV6);
+
+                Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                Socket.DualMode = true;
+            }
+
+            async();
+            async void async()
+            {
+                try
+                {
+                    await Client.ConnectAsync(address, port, Token);
+                }
+
+                catch (Exception ex)
+                {
+                    switch (ex)
+                    {
+                        case SocketException socketex when socketex.ErrorCode == 10056:
+                            Debug.LogR($"[color=indianred]{GetType().Name.ToUpper()}_CONNECT_ERROR(ALREADY_CONNECTED)");
+                            break;
+
+                        case OperationCanceledException:
+                            break;
+
+                        default:
+                            if (ex.StackTrace.Contains("CancellationToken")) break;
+
+                            Debug.LogError($"{GetType().Name.ToUpper()}_CONNECT_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                            break;
+                    }
+                }
+            }
 
             while (timeout-- > 0 && IsConnected == false)
             {
@@ -80,11 +118,11 @@ namespace Cutulu.Network.Sockets
         /// Connect to host async.
         /// Tries again for given amount of runs, adding timeoutStep to the timeout each time.
         /// </summary>
-        public virtual async Task<bool> Connect(string address, int port, int timeoutStep, int timeoutRuns, bool enableMultiThreading = false)
+        public virtual async Task<bool> Connect(string address, int port, int timeoutStep, int timeoutRuns)
         {
             for (int i = 0; i < timeoutRuns && IsConnected == false; i++)
             {
-                await Connect(address, port, timeoutStep * (i + 1), enableMultiThreading);
+                await Connect(address, port, timeoutStep * (i + 1));
             }
 
             return IsConnected;
@@ -102,7 +140,12 @@ namespace Cutulu.Network.Sockets
 
             if (IsConnected)
             {
-                Socket.Disconnect(true);
+                // Dispose client
+                Client.Close();
+                Client = null;
+
+                // Remove from hub if assigned
+                Host?.SocketLeave(this);
 
                 Disconnected?.Invoke(this);
             }
@@ -110,13 +153,10 @@ namespace Cutulu.Network.Sockets
 
         /// <summary>
         /// Disposes this client. Disconnects from host and terminates all processes.
-        /// Careful: This may render this client unusable. If you just want to disconnect, use Disconnect(). 
         /// </summary>
         public virtual void Close()
         {
             Disconnect(3);
-
-            Client?.Close();
         }
 
         /// <summary>
@@ -171,12 +211,8 @@ namespace Cutulu.Network.Sockets
 
                 try
                 {
-                    Debug.Log($"Waiting for {length} bytes...");
-
-                    if (await stream.ReadAsync(buffer, Token) < length)
-                        throw new IOException("CLIENT_LOST_CONNECTION_TO_HOST");
-
-                    Debug.LogR($"[color=green]Received {length} bytes.");
+                    var read = await stream.ReadAsync(buffer, Token);
+                    if (read < length) throw new IOException($"LOST_CONNECTION");
 
                     Receiving = false;
                     return (true, buffer);
@@ -184,18 +220,28 @@ namespace Cutulu.Network.Sockets
 
                 catch (Exception ex)
                 {
+                    var prefix = Host != null ? "HOST" : "CLIENT";
+                    prefix = $"{prefix}_{GetType().Name.ToUpper()}";
+
                     switch (ex)
                     {
-                        case IOException _ex when _ex.Message == "CLIENT_LOST_CONNECTION_TO_HOST":
-                            Debug.LogR($"[color=red]{ex.Message}");
+                        case IOException iox when iox.Message.StartsWith("LOST_CONNECTION"):
+                            Debug.LogR($"[color=indianred]{prefix}_{ex.Message}");
+                            break;
+
+                        case IOException iox when iox.Message.ToLower().Contains("unable"):
+                            Debug.LogR($"[color=indianred]{prefix}_CONNECTION_CLOSED");
                             break;
 
                         case OperationCanceledException:
                             break;
 
                         default:
-                            Debug.LogError($"CLIENT_TCP_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                            if (ex.StackTrace.Contains("CancellationToken")) break;
+
+                            Debug.LogError($"{prefix}_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
                             break;
+
                     }
 
                     Disconnect(255);

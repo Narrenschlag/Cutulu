@@ -1,52 +1,39 @@
 namespace Cutulu.Network
 {
     using System.Threading.Tasks;
-    using System.Net.Sockets;
+    using System.Linq;
     using System.Net;
-    using System;
 
+    using Sockets;
     using Core;
 
     public partial class IntegrationTest : Core.IntegrationTest
     {
-        protected override int StepCount => 5;
-
-        private Sockets.TcpSocket BaseTcp;
+        protected override int StepCount => 14;
 
         protected override async Task<bool> _Process()
         {
-            BaseTcp?.Close();
+            const int TcpPort = 9977;
 
-            const int TcpHost = 9977;
-
-            #region Establish tcp debug host
+            #region Establish tcp host
 
             // Establish basic listener for debugging
-            var tcpListener = new TcpListener(IPAddress.IPv6Any, TcpHost);
-            try
-            {
-                tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                tcpListener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-                tcpListener.Start();
-            }
+            var HOST = new Sockets.TcpHost();
+            HOST.Start(TcpPort);
 
-            catch (Exception ex)
-            {
-                PrintErr(ex.Message);
-                return false;
-            }
-
-            Print($"Established debug host (port={TcpHost})");
+            Print($"Established debug host (port={TcpPort})");
             NextStep();
 
             #endregion
 
-            #region Connect tcp Client
+            #region Connect tcp socket
 
             Print($"Starting connection process via tcp.");
 
+            var CLIENT = new TcpSocket();
+
             // Connect client to debug host
-            if (await (BaseTcp = new()).Connect(IO.LocalhostIPv6, TcpHost, 1000, true) == false)
+            if (await CLIENT.Connect(IO.LocalhostIPv6, TcpPort, 1000) == false)
             {
                 PrintErr($"Timed out on connecting to debug host");
                 return false;
@@ -57,12 +44,12 @@ namespace Cutulu.Network
 
             #endregion
 
-            #region Reconnect tcp Client
+            #region Reconnect tcp socket
 
             Print($"Starting reconnection process via tcp.");
 
             // Connect client to debug host
-            if (await (BaseTcp = new()).Connect(IO.LocalhostIPv6, TcpHost, 1000) == false)
+            if (await CLIENT.Connect(IO.LocalhostIPv6, TcpPort, 1000) == false)
             {
                 PrintErr($"Timed out on connecting to debug host");
                 return false;
@@ -73,20 +60,18 @@ namespace Cutulu.Network
 
             #endregion
 
-            #region Accept tcp client on debug host
+            #region Accept tcp client on tcp host
 
-            Print("Listening to incomming connections...");
+            // Very important to take latency into account
+            await Task.Delay(10);
 
-            TcpClient client = null;
-            while (tcpListener.Pending())
+            Print($"Listening to incomming connections... ({HOST.Sockets.Count})");
+
+            var socket = HOST.Sockets.Values.ToList()[^1];
+
+            if (socket == null)
             {
-                client = await tcpListener.AcceptTcpClientAsync();
-                Print($"Found new connection. IsConnected={client.Connected}");
-            }
-
-            if (client == null)
-            {
-                PrintErr($"No client has been found.");
+                PrintErr($"No socket has been found.");
                 return false;
             }
 
@@ -95,19 +80,19 @@ namespace Cutulu.Network
 
             #endregion
 
-            if (client.GetStream() is not NetworkStream stream)
-            {
-                PrintErr($"No network streeam found.");
-                return false;
-            }
+            #region Send and Receive data between host and socket
 
             Print("Client sends...");
             var writeBuffer = "I hate this damn socket system.".Encode();
-            await BaseTcp.SendAsync(writeBuffer);
+
+            if (await CLIENT.SendAsync(writeBuffer) == false)
+            {
+                PrintErr($"Unable to send data. (client -> host)");
+                return false;
+            }
 
             Print("Reading client data...");
-            var readBuffer = new byte[writeBuffer.Length];
-            await stream.ReadAsync(readBuffer);
+            var readBuffer = (await socket.Receive(writeBuffer.Length)).Buffer;
 
             if (readBuffer.Compare(writeBuffer) == false)
             {
@@ -118,21 +103,296 @@ namespace Cutulu.Network
             else Print($"Success. '{readBuffer.Decode<string>()}'");
 
             Print("Sending packages...");
-            await stream.WriteAsync(900090909.Encode());
-            await stream.FlushAsync();
+            await socket.SendAsync(900090909.Encode());
 
             Print("Receiving packages...");
-            var receive = await BaseTcp.Receive(4);
+            var receive = await CLIENT.Receive(4);
 
-            if (receive.Success == false)
+            if (receive.Success == false || receive.Buffer.Decode<int>() != 900090909)
             {
                 PrintErr("Unable to receive package data");
                 return false;
             }
 
-            Print($"Received all packages ({receive.Buffer.Length})");
+            Print($"Received all packages ({receive.Buffer.Length}, {receive.Buffer.Decode<int>()})");
             NextStep();
 
+            #endregion
+
+            const int UdpPort = 9979;
+
+            #region Establish udp host
+
+            Print($"Establishing udp host (port={UdpPort})");
+
+            var UDP_HOST = new UdpHost();
+            UDP_HOST.Start(UdpPort);
+
+            if (UDP_HOST.IsListening == false)
+            {
+                PrintErr($"Timed out on establishing host");
+                return false;
+            }
+
+            Print($"Established udp host (port={UdpPort})");
+            NextStep();
+
+            #endregion
+
+            #region Connect udp socket
+
+            Print($"Starting connection process via udp.");
+
+            var UDP = new UdpSocket(UDP_HOST);
+            await UDP.Connect(IO.LocalhostIPv6, UdpPort);
+
+            if (UDP.IsConnected == false)
+            {
+                PrintErr($"Timed out on connecting to host");
+                return false;
+            }
+
+            Print("Connected udp client to host.");
+            NextStep();
+
+            #endregion
+
+            #region Send and Receive data between host and socket
+
+            IPEndPoint lastIp = default;
+            var hostReceived = 0;
+
+            UDP_HOST.Received = (IPEndPoint ip, byte[] buffer) =>
+            {
+                hostReceived++;
+                lastIp = ip;
+            };
+
+            Print("Sending udp packages...");
+
+            UDP.Send(1000.Encode());
+            await UDP.SendAsync(1000.Encode());
+
+            Print("Receiving udp packages...");
+
+            await Task.Delay(500);
+
+            if (hostReceived < 2)
+            {
+                PrintErr($"Host did not receive packages. {hostReceived}/2");
+                return false;
+            }
+
+            Print($"Host received {hostReceived} packages.");
+            NextStep();
+
+            var clientReceived = 0;
+
+            UDP_HOST.Listener.Send(new[] { lastIp }, 1000.Encode());
+            Print($"sent={await UDP_HOST.Listener.SendAsync(new[] { lastIp }, 1000.Encode())}");
+
+            await Task.Delay(500);
+
+            for (int i = 0; i < 2; i++)
+            {
+                if ((await UDP.Receive()).Success)
+                {
+                    clientReceived++;
+                }
+            }
+
+            if (clientReceived < 2)
+            {
+                PrintErr($"Client did not receive packages. {clientReceived}/2");
+                return false;
+            }
+
+            Print($"Received all packets. host -> client ({clientReceived})");
+            NextStep();
+
+            #endregion
+
+            Debug.LogR($"[color=gold][b] --- Socket Test Completed --- ");
+
+            #region Close all
+
+            UDP.Disconnect();
+            UDP_HOST.Stop();
+
+            CLIENT.Disconnect();
+            HOST.Stop();
+
+            await Task.Delay(5);
+
+            Print($"Closed all clients and hosts.");
+            NextStep();
+
+            #endregion
+
+            #region Establish managers 
+
+            var host = new HostManager(TcpPort, UdpPort);
+            var client = new ClientManager(IO.LocalhostIPv6, TcpPort, UdpPort);
+
+            host.Start();
+
+            await Task.Delay(500);
+
+            await client.Start();
+
+            Print($"Established and started managers.");
+
+            await Task.Delay(500);
+
+            if (host.Connections.Count < 1)
+            {
+                PrintErr($"Host did not establish any connections.");
+                return false;
+            }
+
+            Print("Client connected to host.");
+            NextStep();
+
+            #endregion
+
+            #region Send and Receive tcp data between host and socket
+
+            Print($"Sending tcp packets");
+
+            var clientReference = $"Hello sir, are you the client?";
+            var lastReceivedClient = "";
+
+            var hostReference = $"Hello sir, are you the server?";
+            var lastReceivedHost = "";
+
+            host.Received = (connection, key, buffer) => lastReceivedHost = buffer.Decode<string>();
+            client.Received = (key, buffer) => lastReceivedClient = buffer.Decode<string>();
+
+            client.SendTcp(0, hostReference);
+            host.SendTcp(host.Connections.Values.ToArray()[^1], 0, clientReference);
+
+            await Task.Delay(100);
+
+            if (lastReceivedClient != clientReference)
+            {
+                PrintErr($"Client did not receive correct packet.");
+                return false;
+            }
+
+            Print($"Client Received: {lastReceivedClient}");
+
+            if (lastReceivedHost != hostReference)
+            {
+                PrintErr($"Host did not receive correct packet.");
+                return false;
+            }
+
+            Print($"Host Received: {lastReceivedHost}");
+
+            NextStep();
+
+            #endregion
+
+            #region Send and Receive udp data between host and socket
+
+            Print($"Sending udp packets");
+
+            clientReference = $"Hello sir, are you the client? Udp is my name.";
+            lastReceivedClient = "";
+
+            hostReference = $"Hello sir, are you the server? Udp is my name.";
+            lastReceivedHost = "";
+
+            host.Received = (connection, key, buffer) => lastReceivedHost = buffer.Decode<string>();
+            client.Received = (key, buffer) => lastReceivedClient = buffer.Decode<string>();
+
+            client.SendUdp(0, hostReference);
+            host.SendUdp(host.Connections.Values.ToArray()[^1], 0, clientReference);
+
+            await Task.Delay(100);
+
+            if (lastReceivedClient != clientReference)
+            {
+                PrintErr($"Client did not receive correct packet.");
+                return false;
+            }
+
+            Print($"Client Received: {lastReceivedClient}");
+
+            if (lastReceivedHost != hostReference)
+            {
+                PrintErr($"Host did not receive correct packet.");
+                return false;
+            }
+
+            Print($"Host Received: {lastReceivedHost}");
+
+            NextStep();
+
+            #endregion
+
+            Debug.LogR($"[color=gold][b] --- Layer Test Completed --- ");
+
+            #region Stress test
+
+            Print($"Starting random stress test...");
+
+            host.Stop();
+
+            await Task.Delay(100);
+
+            host.Start();
+
+            await Task.Delay(1000);
+
+            Print($"Host is running: [color=green]{host.TcpHost.IsListening}");
+
+            await client.Start();
+
+            await Task.Delay(100);
+
+            if (host.Connections.Count != 1)
+            {
+                PrintErr($"Failed random test. Host connections {host.Connections.Count} != 1");
+                return false;
+            }
+
+            Print($"Random test completed. {host.Connections.Count} connections.");
+
+            Print($"Starting reconnect test...");
+
+            for (int i = 0; i < 10; i++)
+            {
+                if (i % 2 == 0) client.Stop();
+                else await client.Start();
+
+                await Task.Delay(50);
+            }
+
+            await Task.Delay(500);
+
+            if (host.Connections.Count != 1)
+            {
+                PrintErr($"Failed reconnect test (1/2). Host connections {host.Connections.Count} != 1");
+                return false;
+            }
+
+            client.Stop();
+
+            await Task.Delay(500);
+
+            if (host.Connections.Count != 0)
+            {
+                PrintErr($"Failed reconnect test (2/2). Host connections {host.Connections.Count} != 0");
+                return false;
+            }
+
+            Print($"Stress test completed. {host.Connections.Count} connections.");
+            NextStep();
+
+            #endregion
+
+            Application.Quit();
             return true;
         }
     }
