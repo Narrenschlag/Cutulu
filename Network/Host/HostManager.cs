@@ -82,10 +82,7 @@ namespace Cutulu.Network
         {
             if (ConnectionsByUdp.TryGetValue(ip, out var connection) == false) return;
 
-            if (PacketProtocol.Unpack(buffer, out var key, out var unpackedBuffer) == false) return;
-
-            Receive(connection, key, unpackedBuffer);
-            Received?.Invoke(connection, key, unpackedBuffer);
+            connection.Receive(buffer);
         }
 
         private async void Join(TcpSocket socket)
@@ -112,7 +109,7 @@ namespace Cutulu.Network
 
             await socket.SendAsync(true.Encode());
 
-            var connection = new HostConnection(socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
+            var connection = new HostConnection(this, socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
 
             // Remove already connected connections with same address
             if (ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))
@@ -135,14 +132,7 @@ namespace Cutulu.Network
                 packet = await connection.Socket.Receive(packet.Buffer.Decode<int>());
                 if (active() == false) continue;
 
-                if (packet.Success && PacketProtocol.Unpack(packet.Buffer, out var key, out var buffer))
-                {
-                    lock (this)
-                    {
-                        Receive(connection, key, buffer);
-                        Received?.Invoke(connection, key, buffer);
-                    }
-                }
+                if (packet.Success) connection.Receive(packet.Buffer);
             }
 
             bool active() => connection != null && connection.Socket != null && connection.Socket.IsConnected;
