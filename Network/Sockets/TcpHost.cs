@@ -5,7 +5,8 @@ namespace Cutulu.Network.Sockets
     using System.Threading;
     using System.Net;
     using System;
-    using Cutulu.Core;
+
+    using Core;
 
     public partial class TcpHost
     {
@@ -21,7 +22,7 @@ namespace Cutulu.Network.Sockets
         private CancellationToken Token { get; set; }
 
         public Action<TcpHost> Started, Stopped;
-        public Action<TcpSocket> Joined, Left;
+        public Action<TcpSocket> Connected, Disconnected;
 
         private long lastUID;
 
@@ -29,6 +30,8 @@ namespace Cutulu.Network.Sockets
         /// Constructs simple tcp listener capable of IPv4 and IPv6.
         /// </summary>
         public TcpHost() { }
+
+        #region Callable Functions
 
         public virtual void Start(int port)
         {
@@ -74,6 +77,13 @@ namespace Cutulu.Network.Sockets
             }
         }
 
+        #endregion
+
+        #region Event Handlers
+
+        /// <summary>
+        /// Accepts incoming clients.
+        /// </summary>
         private async void AcceptClients()
         {
             var token = Token;
@@ -104,30 +114,44 @@ namespace Cutulu.Network.Sockets
                     break;
                 }
 
-                SocketJoined(client);
+                SocketConnectEvent(client);
             }
         }
 
-        public virtual void SocketJoined(TcpClient client)
+        /// <summary>
+        /// Called when a client is connected.
+        /// </summary>
+        public virtual void SocketConnectEvent(TcpClient client)
         {
             if (client == null) return;
 
-            var uid = lastUID++;
-
-            var socket = new TcpSocket(client, this) { UID = uid };
-            Sockets[uid] = socket;
-
-            Joined?.Invoke(socket);
-        }
-
-        public virtual void SocketLeave(TcpSocket socket)
-        {
-            if (socket != null && Sockets.ContainsKey(socket.UID))
+            lock (this)
             {
-                Sockets.Remove(socket.UID);
+                var uid = lastUID++;
 
-                Left?.Invoke(socket);
+                var socket = new TcpSocket(client, this) { UID = uid };
+                Sockets[uid] = socket;
+
+                Connected?.Invoke(socket);
             }
         }
+
+        /// <summary>
+        /// Called when a client disconnects.
+        /// </summary>
+        public virtual void SocketDisconnectEvent(TcpSocket socket)
+        {
+            lock (this)
+            {
+                if (socket != null && Sockets.ContainsKey(socket.UID))
+                {
+                    Sockets.Remove(socket.UID);
+
+                    Disconnected?.Invoke(socket);
+                }
+            }
+        }
+
+        #endregion
     }
 }

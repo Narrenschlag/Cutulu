@@ -1,50 +1,55 @@
 namespace Cutulu.Network
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using System.Net;
     using System;
 
-    using Protocols;
     using Sockets;
     using Core;
-    using System.Net.Sockets;
-    using System.Threading.Tasks;
 
-    public partial class HostManager
+    public partial class Host
     {
-        public readonly Dictionary<IPEndPoint, HostConnection> ConnectionsByUdp = new();
-        public readonly Dictionary<TcpSocket, HostConnection> Connections = new();
+        public readonly Dictionary<IPEndPoint, Connection> ConnectionsByUdp = new();
+        public readonly Dictionary<TcpSocket, Connection> Connections = new();
 
         public readonly Sockets.TcpHost TcpHost;
         public readonly Sockets.UdpHost UdpHost;
 
+        public byte[] PingBuffer { get; set; }
+
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
 
-        public Action<HostConnection, short, byte[]> Received;
-        public Action<HostConnection> Joined, Left;
+        public Action<Connection, short, byte[]> Received;
+        public Action<Connection> Connected, Disconnected;
         public Action Started, Stopped;
 
-        public HostManager(int tcpPort, int udpPort)
+        public Host(int tcpPort, int udpPort)
         {
             TcpPort = tcpPort;
             UdpPort = udpPort;
 
             TcpHost = new()
             {
-                Started = StartedEvent,
+                Started = StartEvent,
                 Stopped = StoppedEvent,
 
-                Joined = Join,
-                Left = Leave,
+                Connected = ConnectEvent,
+                Disconnected = DisconnectEvent,
             };
 
             UdpHost = new()
             {
-                Received = ReceivedUdp,
+                Received = UdpReceiveEvent,
             };
         }
 
+        #region Callable Functions
+
+        /// <summary>
+        /// Starts host.
+        /// </summary>
         public virtual async Task Start()
         {
             await Stop();
@@ -56,6 +61,9 @@ namespace Cutulu.Network
             UdpHost.Start(UdpPort);
         }
 
+        /// <summary>
+        /// Stops host.
+        /// </summary>
         public virtual async Task Stop()
         {
             TcpHost.Stop();
@@ -68,7 +76,48 @@ namespace Cutulu.Network
             await Task.Delay(1);
         }
 
-        private void StartedEvent(TcpHost host)
+        /// <summary>
+        /// Sends data to connections.
+        /// </summary>
+        public virtual void Send(short key, object obj, bool reliable = true, params Connection[] connections)
+        {
+            if (connections.IsEmpty())
+            {
+                connections = Connections.Values.ToArray();
+            }
+
+            for (int i = 0; i < connections.Length; i++)
+            {
+                connections[i]?.Send(key, obj, reliable);
+            }
+        }
+
+        /// <summary>
+        /// Sends data to connections async.
+        /// </summary>
+        public virtual async Task SendAsync(short key, object obj, bool reliable = true, params Connection[] connections)
+        {
+            if (connections.IsEmpty())
+            {
+                connections = Connections.Values.ToArray();
+            }
+
+            for (int i = 0; i < connections.Length; i++)
+            {
+                await connections[i]?.SendAsync(key, obj, reliable);
+            }
+        }
+
+        /// <summary>
+        /// Receive event, called by connections.
+        /// </summary>
+        public virtual void Receive(Connection connection, short key, byte[] buffer) { }
+
+        #endregion
+
+        #region Event Handlers
+
+        private void StartEvent(TcpHost host)
         {
             lock (this) Started?.Invoke();
         }
@@ -78,14 +127,7 @@ namespace Cutulu.Network
             lock (this) Stopped?.Invoke();
         }
 
-        private void ReceivedUdp(IPEndPoint ip, byte[] buffer)
-        {
-            if (ConnectionsByUdp.TryGetValue(ip, out var connection) == false) return;
-
-            connection.Receive(buffer);
-        }
-
-        private async void Join(TcpSocket socket)
+        private async void ConnectEvent(TcpSocket socket)
         {
             var packet = await socket.Receive(1);
 
@@ -93,7 +135,8 @@ namespace Cutulu.Network
 
             switch ((ConnectionTypeEnum)packet.Buffer[0])
             {
-                case ConnectionTypeEnum.Ping when socket.Socket.Available == 0:
+                case ConnectionTypeEnum.Ping when PingBuffer.NotEmpty():
+                    await socket.SendAsync(PingBuffer.Length.Encode(), PingBuffer);
                     return;
 
                 // To connect, write a byte, containing the ConnectionType value and four bytes containing the port number as Int32.
@@ -109,19 +152,18 @@ namespace Cutulu.Network
 
             await socket.SendAsync(true.Encode());
 
-            var connection = new HostConnection(this, socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
+            var connection = new Connection(this, socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
 
             // Remove already connected connections with same address
             if (ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))
-                Leave(existingConnection.Socket);
+                DisconnectEvent(existingConnection.Socket);
 
-            Debug.LogR($"new connection: {connection.EndPoint}");
             ConnectionsByUdp[connection.EndPoint] = connection;
             Connections[socket] = connection;
 
             var clear = await socket.Receive(socket.Socket.Available);
 
-            lock (this) Joined?.Invoke(connection);
+            lock (this) Connected?.Invoke(connection);
 
             while (active())
             {
@@ -142,7 +184,7 @@ namespace Cutulu.Network
                 socket?.Close();
         }
 
-        private void Leave(TcpSocket socket)
+        private void DisconnectEvent(TcpSocket socket)
         {
             if (Connections.TryGetValue(socket, out var connection))
             {
@@ -151,28 +193,17 @@ namespace Cutulu.Network
 
                 socket.Close();
 
-                lock (this) Left?.Invoke(connection);
+                lock (this) Disconnected?.Invoke(connection);
             }
         }
 
-        public virtual void Receive(HostConnection connection, short key, byte[] buffer) { }
-
-        public virtual void SendTcp(HostConnection connection, short key, object obj)
+        private void UdpReceiveEvent(IPEndPoint ip, byte[] buffer)
         {
-            if (connection.Socket.IsConnected == false) return;
+            if (ConnectionsByUdp.TryGetValue(ip, out var connection) == false) return;
 
-            var packet = PacketProtocol.Pack(key, obj, out var length);
-
-            connection.Socket.Send(length.Encode(), packet);
+            connection.Receive(buffer);
         }
 
-        public virtual void SendUdp(HostConnection connection, short key, object obj)
-        {
-            if (connection.Socket.IsConnected == false) return;
-
-            var packet = PacketProtocol.Pack(key, obj, out var length);
-
-            UdpHost.Send(new[] { connection.EndPoint }, packet);
-        }
+        #endregion
     }
 }

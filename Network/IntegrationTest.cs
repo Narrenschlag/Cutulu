@@ -9,7 +9,7 @@ namespace Cutulu.Network
 
     public partial class IntegrationTest : Core.IntegrationTest
     {
-        protected override int StepCount => 14;
+        protected override int StepCount => 15;
 
         protected override async Task<bool> _Process()
         {
@@ -231,8 +231,8 @@ namespace Cutulu.Network
 
             #region Establish managers 
 
-            var host = new HostManager(TcpPort, UdpPort);
-            var client = new ClientManager(IO.LocalhostIPv6, TcpPort, UdpPort);
+            var host = new Host(TcpPort, UdpPort);
+            var client = new Client(IO.LocalhostIPv6, TcpPort, UdpPort);
 
             await host.Start();
 
@@ -268,8 +268,8 @@ namespace Cutulu.Network
             host.Received = (connection, key, buffer) => lastReceivedHost = buffer.Decode<string>();
             client.Received = (key, buffer) => lastReceivedClient = buffer.Decode<string>();
 
-            client.SendTcp(0, hostReference);
-            host.SendTcp(host.Connections.Values.ToArray()[^1], 0, clientReference);
+            client.Send(0, hostReference);
+            await host.SendAsync(0, clientReference);
 
             await Task.Delay(100);
 
@@ -306,8 +306,8 @@ namespace Cutulu.Network
             host.Received = (connection, key, buffer) => lastReceivedHost = buffer.Decode<string>();
             client.Received = (key, buffer) => lastReceivedClient = buffer.Decode<string>();
 
-            client.SendUdp(0, hostReference);
-            host.SendUdp(host.Connections.Values.ToArray()[^1], 0, clientReference);
+            await client.SendAsync(0, hostReference, false);
+            host.Send(0, clientReference, false, host.Connections.Values.ToArray()[^1]);
 
             await Task.Delay(100);
 
@@ -386,6 +386,25 @@ namespace Cutulu.Network
             }
 
             Print($"Stress test completed. {host.Connections.Count} connections.");
+            NextStep();
+
+            #endregion
+
+            #region Ping test
+
+            Print($"Starting ping test...");
+
+            host.PingBuffer = $"Ping Information is over estimated mate. Just let me... smoke another... Damn Ok. I stop it. Just ping again.".Encode();
+
+            var ping = await PingManager.Ping(IO.LocalhostIPv6, host.TcpPort);
+
+            if (ping.Success == false)
+            {
+                PrintErr($"Ping failed.");
+                return false;
+            }
+
+            Print($"Ping succeeded. {ping.Buffer.Decode<string>()}");
             NextStep();
 
             #endregion

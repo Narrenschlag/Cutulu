@@ -6,6 +6,9 @@ namespace Cutulu.Network.Protocols
 
     public static class PacketProtocol
     {
+        /// <summary>
+        /// Unpacks data from a byte array.
+        /// </summary>
         public static bool Unpack(byte[] buffer, out short Key, out byte[] Buffer)
         {
             if (buffer.Size() < 2)
@@ -25,6 +28,9 @@ namespace Cutulu.Network.Protocols
             return true;
         }
 
+        /// <summary>
+        /// Packs data into a byte array.
+        /// </summary>
         public static byte[] Pack(short key, object obj, out int length)
         {
             using var memory = new MemoryStream();

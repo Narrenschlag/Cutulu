@@ -43,6 +43,8 @@ namespace Cutulu.Network.Sockets
             Host = host;
         }
 
+        #region Callable Functions
+
         /// <summary>
         /// Connect to host async.
         /// </summary>
@@ -63,6 +65,7 @@ namespace Cutulu.Network.Sockets
                 Socket.DualMode = true;
             }
 
+            // Try connecting the client async so we can run the timeout
             async();
             async void async()
             {
@@ -91,17 +94,20 @@ namespace Cutulu.Network.Sockets
                 }
             }
 
+            // Wait until timed out or connection established
             while (timeout-- > 0 && IsConnected == false)
             {
                 await Task.Delay(1);
             }
 
+            // Was unable to connect
             if (IsConnected == false)
             {
                 Disconnect(2);
                 return false;
             }
 
+            // Connected successfully
             lock (this)
             {
                 Receiving = false;
@@ -120,6 +126,7 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         public virtual async Task<bool> Connect(string address, int port, int timeoutStep, int timeoutRuns)
         {
+            // Runs connect until connected or timed out
             for (int i = 0; i < timeoutRuns && IsConnected == false; i++)
             {
                 await Connect(address, port, timeoutStep * (i + 1));
@@ -145,9 +152,9 @@ namespace Cutulu.Network.Sockets
                 Client = null;
 
                 // Remove from hub if assigned
-                Host?.SocketLeave(this);
+                Host?.SocketDisconnectEvent(this);
 
-                Disconnected?.Invoke(this);
+                lock (this) Disconnected?.Invoke(this);
             }
         }
 
@@ -199,7 +206,7 @@ namespace Cutulu.Network.Sockets
         }
 
         /// <summary>
-        /// Receives data, writes bytes to memory and polls.
+        /// Receives data, writes bytes to memory.
         /// </summary>
         public virtual async Task<(bool Success, byte[] Buffer)> Receive(int length)
         {
@@ -250,5 +257,7 @@ namespace Cutulu.Network.Sockets
 
             return (false, Array.Empty<byte>());
         }
+
+        #endregion
     }
 }

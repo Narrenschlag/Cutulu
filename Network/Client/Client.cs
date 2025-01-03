@@ -1,13 +1,13 @@
 namespace Cutulu.Network
 {
+    using System.Threading.Tasks;
     using System;
 
     using Protocols;
     using Sockets;
     using Core;
-    using System.Threading.Tasks;
 
-    public partial class ClientManager
+    public partial class Client
     {
         public readonly TcpSocket TcpClient;
         public readonly UdpSocket UdpClient;
@@ -18,10 +18,12 @@ namespace Cutulu.Network
 
         private byte ThreadIdx { get; set; }
 
+        public bool IsConnected => TcpClient != null && TcpClient.IsConnected;
+
         public Action<short, byte[]> Received;
         public Action Connected, Disconnected;
 
-        public ClientManager(string address, int tcpPort, int udpPort)
+        public Client(string address, int tcpPort, int udpPort)
         {
             Address = address;
             TcpPort = tcpPort;
@@ -29,27 +31,32 @@ namespace Cutulu.Network
 
             TcpClient = new()
             {
-                Connected = ConnectedEvent,
-                Disconnected = DisconnectedEvent,
+                Connected = ConnectEvent,
+                Disconnected = DisconnectEvent,
             };
 
             UdpClient = new();
         }
 
+        #region Callable Functions
+
+        /// <summary>
+        /// Starts client.
+        /// </summary>
         public virtual async Task Start()
         {
             await Stop();
 
-            Debug.Log($"Starting client manager...");
             ThreadIdx++;
 
             await UdpClient.Connect(Address, UdpPort);
-            Debug.Log($"Started udp client...");
 
             await TcpClient.Connect(Address, TcpPort);
-            Debug.Log($"Started tcp client...");
         }
 
+        /// <summary>
+        /// Stops client.
+        /// </summary>
         public virtual async Task Stop()
         {
             TcpClient.Disconnect();
@@ -59,9 +66,42 @@ namespace Cutulu.Network
             await Task.Delay(1);
         }
 
-        private async void ConnectedEvent(TcpSocket socket)
+        /// <summary>
+        /// Sends data to host.
+        /// </summary>
+        public virtual void Send(short key, object obj, bool reliable = true)
         {
-            Debug.LogR($"[color=red]Connected to host. udp: {UdpClient.GetLocalEndpoint().Port}");
+            if (IsConnected)
+            {
+                var packet = PacketProtocol.Pack(key, obj, out var length);
+
+                if (reliable) TcpClient.Send(length.Encode(), packet);
+                else UdpClient.Send(packet);
+            }
+        }
+
+        /// <summary>
+        /// Sends data to host async.
+        /// </summary>
+        public virtual async Task SendAsync(short key, object obj, bool reliable = true)
+        {
+            if (IsConnected)
+            {
+                var packet = PacketProtocol.Pack(key, obj, out var length);
+
+                if (reliable) await TcpClient.SendAsync(length.Encode(), packet);
+                else await UdpClient.SendAsync(packet);
+            }
+        }
+
+        public virtual void Receive(short key, byte[] buffer) { }
+
+        #endregion
+
+        #region Event Handlers
+
+        private async void ConnectEvent(TcpSocket socket)
+        {
             await socket.SendAsync(new[] { (byte)ConnectionTypeEnum.Connect }, UdpClient.GetLocalEndpoint().Port.Encode());
 
             var (Success, Buffer) = await socket.Receive(1);
@@ -77,11 +117,14 @@ namespace Cutulu.Network
             ReceiveData();
         }
 
-        private void DisconnectedEvent(TcpSocket socket)
+        private void DisconnectEvent(TcpSocket socket)
         {
             lock (this) Disconnected?.Invoke();
         }
 
+        /// <summary>
+        /// Defines the logic to receive data from host.
+        /// </summary>
         protected virtual async void ReceiveData()
         {
             if (TcpClient.IsConnected == false) return;
@@ -128,24 +171,6 @@ namespace Cutulu.Network
             await Stop();
         }
 
-        public virtual void SendTcp(short key, object obj)
-        {
-            if (TcpClient.IsConnected == false) return;
-
-            var packet = PacketProtocol.Pack(key, obj, out var length);
-
-            TcpClient.Send(length.Encode(), packet);
-        }
-
-        public virtual void SendUdp(short key, object obj)
-        {
-            if (UdpClient.IsConnected == false) return;
-
-            var packet = PacketProtocol.Pack(key, obj, out _);
-
-            UdpClient.Send(packet);
-        }
-
-        public virtual void Receive(short key, byte[] buffer) { }
+        #endregion
     }
 }

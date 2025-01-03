@@ -25,6 +25,11 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         public UdpHost() { }
 
+        #region Callable Functions
+
+        /// <summary>
+        /// Starts udp listener.
+        /// </summary>
         public virtual void Start(int port)
         {
             // Stop currently running host
@@ -57,6 +62,11 @@ namespace Cutulu.Network.Sockets
             }
         }
 
+        #endregion
+
+        /// <summary>
+        /// Accepts incoming packets.
+        /// </summary>
         private async void AcceptPackets()
         {
             (bool Success, byte[] Buffer, IPEndPoint RemoteEndPoint) packet;
@@ -71,16 +81,6 @@ namespace Cutulu.Network.Sockets
 
                 else await Task.Delay(10);
             }
-        }
-
-        public virtual void Send(IPEndPoint[] endpoints, params byte[][] buffers)
-        {
-            Listener.Send(endpoints, buffers);
-        }
-
-        public virtual async Task SendAsync(IPEndPoint[] endpoints, params byte[][] buffers)
-        {
-            await Listener.SendAsync(endpoints, buffers);
         }
     }
 }

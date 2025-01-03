@@ -1,27 +1,23 @@
 namespace Cutulu.Network
 {
-    using System.Collections.Generic;
     using System.Threading.Tasks;
-    using System.Net.Sockets;
-    using System.Threading;
     using System.Net;
-    using System.IO;
     using System;
 
-    using Cutulu.Core;
-    using Cutulu.Network.Protocols;
+    using Protocols;
+    using Core;
 
-    public partial class HostConnection
+    public partial class Connection
     {
         public Sockets.TcpSocket Socket { get; private set; }
         public IPEndPoint EndPoint { get; private set; }
-        public HostManager Host { get; private set; }
+        public Host Host { get; private set; }
 
         public bool IsConnected => Socket != null && Socket.IsConnected;
 
         public Action<short, byte[]> Received;
 
-        public HostConnection(HostManager host, Sockets.TcpSocket socket, IPEndPoint endpoint)
+        public Connection(Host host, Sockets.TcpSocket socket, IPEndPoint endpoint)
         {
             EndPoint = endpoint;
             Socket = socket;
@@ -29,6 +25,9 @@ namespace Cutulu.Network
             Host = host;
         }
 
+        /// <summary>
+        /// Kicks/Cancels connection from host side.
+        /// </summary>
         public virtual bool Kick()
         {
             try
@@ -44,28 +43,37 @@ namespace Cutulu.Network
             }
         }
 
+        /// <summary>
+        /// Sends data to client.
+        /// </summary>
         public virtual void Send(short key, object obj, bool reliable = true)
         {
             if (IsConnected)
             {
                 var packet = PacketProtocol.Pack(key, obj, out var length);
 
-                if (reliable) Socket.Send(length.Encode(), packet);
-                else Host.UdpHost.Send(new[] { EndPoint }, packet);
+                if (reliable) Socket?.Send(length.Encode(), packet);
+                else Host.UdpHost.Listener?.Send(new[] { EndPoint }, packet);
             }
         }
 
+        /// <summary>
+        /// Sends data to client async.
+        /// </summary>
         public virtual async Task SendAsync(short key, object obj, bool reliable = true)
         {
             if (IsConnected)
             {
                 var packet = PacketProtocol.Pack(key, obj, out var length);
 
-                if (reliable) await Socket.SendAsync(length.Encode(), packet);
-                else await Host.UdpHost.SendAsync(new[] { EndPoint }, packet);
+                if (reliable) await Socket?.SendAsync(length.Encode(), packet);
+                else await Host.UdpHost.Listener?.SendAsync(new[] { EndPoint }, packet);
             }
         }
 
+        /// <summary>
+        /// Receive event, called by client.
+        /// </summary>
         public virtual void Receive(byte[] buffer)
         {
             if (PacketProtocol.Unpack(buffer, out var key, out var unpackedBuffer))

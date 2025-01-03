@@ -41,6 +41,11 @@ namespace Cutulu.Network.Sockets
             Host = host;
         }
 
+        #region Callable Functions
+
+        /// <summary>
+        /// Starts udp client for host purpose.
+        /// </summary>
         public virtual void Start(int port)
         {
             Disconnect(1);
@@ -55,6 +60,9 @@ namespace Cutulu.Network.Sockets
             Socket.Bind(new IPEndPoint(IPAddress.IPv6Any, Port = port));
         }
 
+        /// <summary>
+        /// Connects to host.
+        /// </summary>
         public virtual async Task Connect(string address, int port)
         {
             Disconnect(1);
@@ -83,6 +91,9 @@ namespace Cutulu.Network.Sockets
             Client.Connect(address, port);
         }
 
+        /// <summary>
+        /// Disconnects from host and terminates all running processes.
+        /// </summary>
         public virtual void Disconnect(int exitCode = 0)
         {
             TokenSource?.Cancel();
@@ -109,6 +120,71 @@ namespace Cutulu.Network.Sockets
             Disconnect(3);
         }
 
+        /// <summary>
+        /// Sends data to host.
+        /// </summary>
+        public virtual void Send(params byte[][] buffers)
+        {
+            if (IsConnected == false || Endpoint == null || buffers.IsEmpty()) return;
+
+            using var memory = new MemoryStream();
+
+            for (int i = 0; i < buffers.Length; i++)
+            {
+                if (buffers[i].NotEmpty())
+                    memory.Write(buffers[i]);
+            }
+
+            Client.Send(memory.ToArray());
+        }
+
+        /// <summary>
+        /// Sends data to host.
+        /// </summary>
+        public virtual void Send(IPEndPoint[] endpoints, params byte[][] buffers)
+        {
+            if (IsConnected == false || endpoints.IsEmpty() || buffers.IsEmpty()) return;
+
+            using var memory = new MemoryStream();
+            var token = Token;
+
+            for (int i = 0; i < buffers.Length; i++)
+            {
+                if (buffers[i].NotEmpty())
+                    memory.Write(buffers[i]);
+            }
+
+            for (int i = 0; i < endpoints.Length; i++)
+            {
+                Client.Send(memory.ToArray(), endpoints[i]);
+            }
+        }
+
+        /// <summary>
+        /// Sends data to host async.
+        /// </summary>
+        public virtual async Task<bool> SendAsync(params byte[][] buffers)
+        {
+            if (IsConnected == false || Endpoint == null || buffers.IsEmpty()) return false;
+
+            using var memory = new MemoryStream();
+            var token = Token;
+
+            for (int i = 0; i < buffers.Length && token.IsCancellationRequested == false; i++)
+            {
+                if (buffers[i].NotEmpty())
+                    await memory.WriteAsync(buffers[i], token);
+            }
+
+            if (token.IsCancellationRequested == false)
+                await Client.SendAsync(memory.ToArray(), token);
+
+            return token.IsCancellationRequested == false;
+        }
+
+        /// <summary>
+        /// Sends data to host async.
+        /// </summary>
         public virtual async Task<bool> SendAsync(IPEndPoint[] endpoints, params byte[][] buffers)
         {
             if (IsConnected == false || endpoints.IsEmpty() || buffers.IsEmpty()) return false;
@@ -130,59 +206,9 @@ namespace Cutulu.Network.Sockets
             return token.IsCancellationRequested == false;
         }
 
-        public virtual async Task<bool> SendAsync(params byte[][] buffers)
-        {
-            if (IsConnected == false || Endpoint == null || buffers.IsEmpty()) return false;
-
-            using var memory = new MemoryStream();
-            var token = Token;
-
-            for (int i = 0; i < buffers.Length && token.IsCancellationRequested == false; i++)
-            {
-                if (buffers[i].NotEmpty())
-                    await memory.WriteAsync(buffers[i], token);
-            }
-
-            if (token.IsCancellationRequested == false)
-                await Client.SendAsync(memory.ToArray(), token);
-
-            return token.IsCancellationRequested == false;
-        }
-
-        public virtual void Send(IPEndPoint[] endpoints, params byte[][] buffers)
-        {
-            if (IsConnected == false || endpoints.IsEmpty() || buffers.IsEmpty()) return;
-
-            using var memory = new MemoryStream();
-            var token = Token;
-
-            for (int i = 0; i < buffers.Length; i++)
-            {
-                if (buffers[i].NotEmpty())
-                    memory.Write(buffers[i]);
-            }
-
-            for (int i = 0; i < endpoints.Length; i++)
-            {
-                Client.Send(memory.ToArray(), endpoints[i]);
-            }
-        }
-
-        public virtual void Send(params byte[][] buffers)
-        {
-            if (IsConnected == false || Endpoint == null || buffers.IsEmpty()) return;
-
-            using var memory = new MemoryStream();
-
-            for (int i = 0; i < buffers.Length; i++)
-            {
-                if (buffers[i].NotEmpty())
-                    memory.Write(buffers[i]);
-            }
-
-            Client.Send(memory.ToArray());
-        }
-
+        /// <summary>
+        /// Receive udp package if available.
+        /// </summary>
         public async Task<(bool Success, byte[] Buffer, IPEndPoint RemoteEndPoint)> Receive()
         {
             var token = Token;
@@ -228,5 +254,7 @@ namespace Cutulu.Network.Sockets
 
             return (false, Array.Empty<byte>(), default);
         }
+
+        #endregion
     }
 }
