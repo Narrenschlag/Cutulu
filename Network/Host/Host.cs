@@ -13,13 +13,16 @@ namespace Cutulu.Network
         public readonly Dictionary<IPEndPoint, Connection> ConnectionsByUdp = new();
         public readonly Dictionary<TcpSocket, Connection> Connections = new();
 
-        public readonly Sockets.TcpHost TcpHost;
-        public readonly Sockets.UdpHost UdpHost;
+        public readonly TcpHost TcpHost;
+        public readonly UdpHost UdpHost;
 
         public byte[] PingBuffer { get; set; }
+        private long LastUID { get; set; }
 
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
+
+        public bool IsListening => TcpHost?.IsListening ?? false;
 
         public Action<Connection, short, byte[]> Received;
         public Action<Connection> Connected, Disconnected;
@@ -71,6 +74,8 @@ namespace Cutulu.Network
 
             ConnectionsByUdp.Clear();
             Connections.Clear();
+
+            LastUID = 0;
 
             while (TcpHost.IsListening || UdpHost.IsListening) await Task.Delay(1);
             await Task.Delay(1);
@@ -152,7 +157,8 @@ namespace Cutulu.Network
 
             await socket.SendAsync(true.Encode());
 
-            var connection = new Connection(this, socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
+            var connection = new Connection(LastUID++, this, socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
+            await socket.SendAsync(connection.UID.Encode());
 
             // Remove already connected connections with same address
             if (ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))

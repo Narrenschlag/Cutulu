@@ -13,16 +13,19 @@ namespace Cutulu.Network
         public IPEndPoint EndPoint { get; private set; }
         public Host Host { get; private set; }
 
+        public long UID { get; private set; }
+
         public bool IsConnected => Socket != null && Socket.IsConnected;
 
         public Action<short, byte[]> Received;
 
-        public Connection(Host host, Sockets.TcpSocket socket, IPEndPoint endpoint)
+        public Connection(long uid, Host host, Sockets.TcpSocket socket, IPEndPoint endpoint)
         {
             EndPoint = endpoint;
             Socket = socket;
 
             Host = host;
+            UID = uid;
         }
 
         /// <summary>

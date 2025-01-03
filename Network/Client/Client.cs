@@ -16,6 +16,8 @@ namespace Cutulu.Network
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
 
+        public long UID { get; private set; }
+
         private byte ThreadIdx { get; set; }
 
         public bool IsConnected => TcpClient != null && TcpClient.IsConnected;
@@ -112,6 +114,17 @@ namespace Cutulu.Network
                 await Stop();
                 return;
             }
+
+            (Success, Buffer) = await socket.Receive(8);
+            if (Success == false)
+            {
+                Debug.LogR($"[color=indianred][{GetType().Name}] Failed to read UID.");
+
+                await Stop();
+                return;
+            }
+
+            UID = Buffer.Decode<long>();
 
             lock (this) Connected?.Invoke();
             ReceiveData();
