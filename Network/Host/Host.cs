@@ -84,7 +84,12 @@ namespace Cutulu.Network
         /// <summary>
         /// Sends data to connections.
         /// </summary>
-        public virtual void Send(short key, object obj, bool reliable = true, params Connection[] connections)
+        public virtual void Send(short key, object obj, params Connection[] connections) => Send(key, obj, true, connections);
+
+        /// <summary>
+        /// Sends data to connections.
+        /// </summary>
+        public virtual void Send(short key, object obj, bool reliable, params Connection[] connections)
         {
             if (connections.IsEmpty())
             {
@@ -100,7 +105,12 @@ namespace Cutulu.Network
         /// <summary>
         /// Sends data to connections async.
         /// </summary>
-        public virtual async Task SendAsync(short key, object obj, bool reliable = true, params Connection[] connections)
+        public virtual async Task SendAsync(short key, object obj, params Connection[] connections) => await SendAsync(key, obj, true, connections);
+
+        /// <summary>
+        /// Sends data to connections async.
+        /// </summary>
+        public virtual async Task SendAsync(short key, object obj, bool reliable, params Connection[] connections)
         {
             if (connections.IsEmpty())
             {
