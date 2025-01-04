@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Godot;
 
-namespace Cutulu.UnitTest
+namespace Cutulu.Core.UnitTest
 {
     public partial class DeEncodingTest : Node
     {

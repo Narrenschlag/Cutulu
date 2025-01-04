@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
 	public partial class MaterialOverrider : Node3D
 	{

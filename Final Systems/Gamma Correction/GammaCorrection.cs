@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Cutulu
+namespace Cutulu.Core
 {
     public partial class GammaCorrection : ColorRect
     {
