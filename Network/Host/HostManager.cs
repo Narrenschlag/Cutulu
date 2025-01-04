@@ -8,7 +8,7 @@ namespace Cutulu.Network
     using Sockets;
     using Core;
 
-    public partial class Host
+    public partial class HostManager
     {
         public readonly Dictionary<IPEndPoint, Connection> ConnectionsByUdp = new();
         public readonly Dictionary<TcpSocket, Connection> Connections = new();
@@ -28,11 +28,8 @@ namespace Cutulu.Network
         public Action<Connection> Connected, Disconnected;
         public Action Started, Stopped;
 
-        public Host(int tcpPort, int udpPort)
+        public HostManager()
         {
-            TcpPort = tcpPort;
-            UdpPort = udpPort;
-
             TcpHost = new()
             {
                 Started = StartEvent,
@@ -46,6 +43,12 @@ namespace Cutulu.Network
             {
                 Received = UdpReceiveEvent,
             };
+        }
+
+        public HostManager(int tcpPort, int udpPort) : this()
+        {
+            TcpPort = tcpPort;
+            UdpPort = udpPort;
         }
 
         #region Callable Functions
@@ -177,7 +180,7 @@ namespace Cutulu.Network
             ConnectionsByUdp[connection.EndPoint] = connection;
             Connections[socket] = connection;
 
-            var clear = await socket.Receive(socket.Socket.Available);
+            await socket.ClearBuffer();
 
             lock (this) Connected?.Invoke(connection);
 

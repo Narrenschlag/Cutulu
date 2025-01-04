@@ -231,8 +231,8 @@ namespace Cutulu.Network
 
             #region Establish managers 
 
-            var host = new Host(TcpPort, UdpPort);
-            var client = new Client(IO.LocalhostIPv6, TcpPort, UdpPort);
+            var host = new HostManager(TcpPort, UdpPort);
+            var client = new ClientManager(IO.LocalhostIPv6, TcpPort, UdpPort);
 
             await host.Start();
 

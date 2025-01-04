@@ -20,6 +20,8 @@ namespace Cutulu.Network.Sockets
 
         public bool Poll() => IsConnected && Socket.Poll(-1, SelectMode.SelectError) == false;
 
+        public async Task ClearBuffer() => await Receive(Socket.Available);
+
         public string Address { get; private set; }
         public int Port { get; private set; }
         public long UID { get; set; }

@@ -7,7 +7,7 @@ namespace Cutulu.Network
     using Sockets;
     using Core;
 
-    public partial class Client
+    public partial class ClientManager
     {
         public readonly TcpSocket TcpClient;
         public readonly UdpSocket UdpClient;
@@ -20,17 +20,14 @@ namespace Cutulu.Network
 
         private byte ThreadIdx { get; set; }
 
-        public bool IsConnected => TcpClient != null && TcpClient.IsConnected;
+        public bool IsConnected => TcpClient != null && TcpClient.IsConnected && IsValidated;
+        public bool IsValidated { get; private set; } = true;
 
         public Action<short, byte[]> Received;
         public Action Connected, Disconnected;
 
-        public Client(string address, int tcpPort, int udpPort)
+        public ClientManager()
         {
-            Address = address;
-            TcpPort = tcpPort;
-            UdpPort = udpPort;
-
             TcpClient = new()
             {
                 Connected = ConnectEvent,
@@ -40,20 +37,43 @@ namespace Cutulu.Network
             UdpClient = new();
         }
 
+        public ClientManager(string address, int tcpPort, int udpPort) : this()
+        {
+            Address = address;
+            TcpPort = tcpPort;
+            UdpPort = udpPort;
+        }
+
         #region Callable Functions
 
         /// <summary>
         /// Starts client.
         /// </summary>
-        public virtual async Task Start()
+        public virtual async Task<bool> Start()
         {
             await Stop();
 
             ThreadIdx++;
 
             await UdpClient.Connect(Address, UdpPort);
-
             await TcpClient.Connect(Address, TcpPort);
+
+            // Handle timeout
+            var threadIdx = ThreadIdx;
+            var timeout = 5000;
+
+            while (threadIdx == ThreadIdx && timeout-- > 0 && IsValidated == false)
+            {
+                await Task.Delay(1);
+            }
+
+            if (IsConnected == false)
+            {
+                await Stop();
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -61,6 +81,8 @@ namespace Cutulu.Network
         /// </summary>
         public virtual async Task Stop()
         {
+            IsValidated = false;
+
             TcpClient.Disconnect();
             UdpClient.Disconnect();
 
@@ -125,6 +147,7 @@ namespace Cutulu.Network
             }
 
             UID = Buffer.Decode<long>();
+            IsValidated = true;
 
             lock (this) Connected?.Invoke();
             ReceiveData();

@@ -11,7 +11,7 @@ namespace Cutulu.Network
     {
         public Sockets.TcpSocket Socket { get; private set; }
         public IPEndPoint EndPoint { get; private set; }
-        public Host Host { get; private set; }
+        public HostManager Host { get; private set; }
 
         public long UID { get; private set; }
 
@@ -19,7 +19,7 @@ namespace Cutulu.Network
 
         public Action<short, byte[]> Received;
 
-        public Connection(long uid, Host host, Sockets.TcpSocket socket, IPEndPoint endpoint)
+        public Connection(long uid, HostManager host, Sockets.TcpSocket socket, IPEndPoint endpoint)
         {
             EndPoint = endpoint;
             Socket = socket;
@@ -83,7 +83,7 @@ namespace Cutulu.Network
             {
                 lock (Host) Host.Receive(this, key, unpackedBuffer);
 
-                lock (this) Received?.Invoke(key, buffer);
+                lock (this) Received?.Invoke(key, unpackedBuffer);
                 lock (Host) Host.Received?.Invoke(this, key, unpackedBuffer);
             }
         }
