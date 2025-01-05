@@ -16,7 +16,7 @@ namespace Cutulu.Network
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
 
-        public long UID { get; private set; }
+        public long UserID { get; private set; }
 
         private byte ThreadIdx { get; set; }
 
@@ -146,7 +146,7 @@ namespace Cutulu.Network
                 return;
             }
 
-            UID = Buffer.Decode<long>();
+            UserID = Buffer.Decode<long>();
             IsValidated = true;
 
             lock (this) Connected?.Invoke();

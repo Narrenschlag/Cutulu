@@ -171,7 +171,7 @@ namespace Cutulu.Network
             await socket.SendAsync(true.Encode());
 
             var connection = new Connection(LastUID++, this, socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
-            await socket.SendAsync(connection.UID.Encode());
+            await socket.SendAsync(connection.UserID.Encode());
 
             // Remove already connected connections with same address
             if (ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))

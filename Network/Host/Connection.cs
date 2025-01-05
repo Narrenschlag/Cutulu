@@ -13,7 +13,7 @@ namespace Cutulu.Network
         public IPEndPoint EndPoint { get; private set; }
         public HostManager Host { get; private set; }
 
-        public long UID { get; private set; }
+        public long UserID { get; private set; }
 
         public bool IsConnected => Socket != null && Socket.IsConnected;
 
@@ -25,7 +25,7 @@ namespace Cutulu.Network
             Socket = socket;
 
             Host = host;
-            UID = uid;
+            UserID = uid;
         }
 
         /// <summary>
