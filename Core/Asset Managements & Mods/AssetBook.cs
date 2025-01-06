@@ -45,6 +45,26 @@ namespace Cutulu.Core
             }
         }
 
+        public static string ToAlias(string name, string path)
+        {
+            return $"{name}{AssetConstants.ADDRESS_SEPERATOR}{path}";
+        }
+
+        public static bool FromAlias(string alias, out string name, out string path)
+        {
+            name = default;
+            path = default;
+
+            var split = alias.Split(AssetConstants.ADDRESS_SEPERATOR, Constant.StringSplit);
+
+            if (split.Size() != 2) return false;
+
+            name = split[0];
+            path = split[1];
+
+            return true;
+        }
+
         /// <summary>
         /// Enables mod
         /// <summar>
