@@ -7,10 +7,10 @@ namespace Cutulu.Core
 
     public partial class AssetLibrary
     {
-        public readonly Dictionary<string, AssetBook> LoadedMods = new();
+        public readonly Dictionary<string, AssetCollection> LoadedMods = new();
         public string[] RootDirectories { get; private set; }
 
-        public readonly Dictionary<string, KeyValuePair<AssetBook, string>> GlobalAddresses = new();
+        public readonly Dictionary<string, KeyValuePair<AssetCollection, string>> GlobalAddresses = new();
         public readonly Dictionary<string, List<string>> IdDirectories = new();
         private readonly Dictionary<string, object> LoadedData = new();
 
@@ -86,7 +86,7 @@ namespace Cutulu.Core
         {
             try
             {
-                var loaded = new AssetBook(this, filePath);
+                var loaded = new AssetCollection(this, filePath);
 
                 if (LoadedMods.ContainsKey(loaded.Data.Id))
                     throw new Exception($"Mod with id '{loaded.Data.Id}' has already been added. Cannot load multiple mods with the same id.");
@@ -111,7 +111,7 @@ namespace Cutulu.Core
             LoadedData.Clear();
 
             // Order mods, lowest priority first so the higher priorities overwrite the lower ones
-            var loadedMods = new List<AssetBook>();
+            var loadedMods = new List<AssetCollection>();
             foreach (var loaded in LoadedMods.Values)
             {
                 var add = true;

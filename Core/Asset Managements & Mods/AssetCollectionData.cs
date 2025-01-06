@@ -1,6 +1,6 @@
 namespace Cutulu.Core
 {
-    public partial class AssetBookData
+    public partial class AssetCollectionData
     {
         public string Id { get; set; }
         public int DefaultPriority { get; set; }
