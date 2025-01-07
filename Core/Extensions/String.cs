@@ -39,6 +39,13 @@ namespace Cutulu.Core
         {
             if (ids.IsEmpty()) return str;
 
+            str = str.Trim();
+
+            for (int i = 0; i < ids.Length; i++)
+            {
+                if (str[^1] == ids[i]) return str.Trim();
+            }
+
             var splits = str.Split(ids, Constant.StringSplit);
             if (splits.Size() < 2) return str;
             return str[..^splits[^1].Length];

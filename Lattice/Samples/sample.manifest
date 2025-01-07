@@ -1,0 +1,5 @@
+name: res://resource_path      // Used for files loaded in via .pck files
+name: path                     // Equivalent to res://path
+name: ./path                   // Relative to this manifest file
+name: ../path                  // Relative to the parent folder of this manifest file
+name: .../path                 // Relative to the parent folder of the parent folder of this manifest file
