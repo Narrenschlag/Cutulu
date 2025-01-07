@@ -2,17 +2,17 @@ namespace Cutulu.Core
 {
     using System.Collections.Generic;
 
-    public partial class AssetBook
+    public partial class AssetCollection
     {
         public readonly Dictionary<string, string[]> Addresses = new();
         public readonly string FilePath, RootDirectory;
         public readonly AssetLibrary Parent;
-        public readonly AssetBookData Data;
+        public readonly AssetCollectionData Data;
 
         public bool Enabled { get; private set; }
         public int Priority { get; set; }
 
-        public AssetBook(AssetLibrary parent, string filePath)
+        public AssetCollection(AssetLibrary parent, string filePath)
         {
             // Try find mod data from given file path
             if (OE.TryGetData(FilePath = filePath, out Data, AssetConstants.FILE_TYPE) == false) throw new System.IO.FileNotFoundException($"File not found.");
