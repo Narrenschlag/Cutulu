@@ -1,6 +1,5 @@
 namespace Cutulu.Lattice
 {
-    using Godot;
     using Core;
 
     public static class CoreBridge
@@ -14,12 +13,5 @@ namespace Cutulu.Lattice
         {
             Debug.LogError($"[CoreBridge]: {message}");
         }
-
-        public static Node GetNode(string path)
-        {
-            return GD.Load<Node>(path);
-        }
-
-        // Add access to custom systems here (e.g., game state, assets, or utilities).
     }
 }

@@ -20,6 +20,7 @@ namespace Cutulu.Lattice.Tests
                 CoreBridge.Log($"{manifest[i].Name}: {manifest[i].Path}");
             }
 
+            await Task.Delay(1);
             Application.Quit();
             return true;
         }

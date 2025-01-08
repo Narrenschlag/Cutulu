@@ -16,12 +16,14 @@ namespace Cutulu.Lattice
                 {
                     var path = FormatPath(filePaths[i], rootDirectory);
 
-                    if (path.NotEmpty())
+                    if (path.NotEmpty() && IO.Exists(path))
                     {
                         var manifest = IO.ReadString(path);
 
                         if (manifest.NotEmpty()) entries.AddRange(ParseManifest(manifest, path));
                     }
+
+                    else CoreBridge.LogError($"Manifest at path '{path}' does not exist. (root: {rootDirectory})");
                 }
             }
 
@@ -60,32 +62,35 @@ namespace Cutulu.Lattice
 
         public static string FormatPath(string filePath, string rootDirectory)
         {
-            if ((filePath = filePath.Trim()).StartsWith("res://") || filePath.StartsWith('.') == false) return filePath;
+            if ((filePath = filePath.Trim()).StartsWith("res://")) return filePath;
 
-            var parentDirectory = rootDirectory.TrimToDirectory();
-            byte layers = 0;
-
-            for (var i = 0; i < filePath.Length; i++)
+            if (filePath.StartsWith('.'))
             {
-                if (filePath[i] == '.') layers++;
-                else break;
-            }
+                var parentDirectory = rootDirectory.TrimToDirectory();
+                byte layers = 0;
 
-            if (layers > 0) filePath = filePath[(layers + 1)..];
-
-            if (parentDirectory.NotEmpty())
-            {
-                var args = parentDirectory.Trim().Split(new[] { '/', '\\' }, Constant.StringSplit);
-
-                if (args.Size() > layers)
+                for (var i = 0; i < filePath.Length; i++)
                 {
-                    if (args[0] == "res:") args[0] = "res:/";
-                    parentDirectory = "";
+                    if (filePath[i] == '.') layers++;
+                    else break;
+                }
 
-                    for (var i = 0; i < args.Length - layers + 1; i++)
-                        parentDirectory += $"{args[i]}/";
+                filePath = filePath[(layers + 1)..];
 
-                    return $"{parentDirectory}{filePath}";
+                if (parentDirectory.NotEmpty())
+                {
+                    var args = parentDirectory.Trim().Split(new[] { '/', '\\' }, Constant.StringSplit);
+
+                    if (args.Size() > layers)
+                    {
+                        if (args[0] == "res:") args[0] = "res:/";
+                        parentDirectory = "";
+
+                        for (var i = 0; i < args.Length - layers + 1; i++)
+                            parentDirectory += $"{args[i]}/";
+
+                        return $"{parentDirectory}{filePath}";
+                    }
                 }
             }
 

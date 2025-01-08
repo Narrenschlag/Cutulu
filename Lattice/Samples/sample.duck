@@ -1,0 +1,18 @@
+{
+   "ID":"external_id",
+   "Name":"ExternalMod",
+   "Author":"Narrenschlag",
+   "Version":"1.0.0",
+   "Description":"A basic example mod.",
+   "Dependencies":null,
+   "AssetManifestPaths":[
+      "./assets.manifest"
+   ],
+   "AssemblyManifestPaths":[
+      "./assemblies.manifest"
+   ],
+   "GodotPackageManifestPaths":[
+      "./packages.manifest"
+   ],
+   "FilePath":null
+}

@@ -8,6 +8,7 @@ namespace Cutulu.Lattice
     [GlobalClass]
     public partial class InternalMod : Resource, IMod
     {
+        [Export] public string ID { get; set; } = "internal_id";
         [Export] public string Name { get; set; } = "InternalMod";
         [Export] public string Author { get; set; } = "Narrenschlag";
         [Export] public string Version { get; set; } = "1.0.0";
@@ -22,7 +23,7 @@ namespace Cutulu.Lattice
             $"\nname{IMod.Seperator} ../resource_path         // Relative to the parent folder of this resource" +
             $"\nname{IMod.Seperator} .../resource_path        // Relative to the parent folder of the parent folder of this resource";
 
-        public virtual void Initialize()
+        public virtual void Load()
         {
             CoreBridge.Log($"{Name} initialized!");
         }

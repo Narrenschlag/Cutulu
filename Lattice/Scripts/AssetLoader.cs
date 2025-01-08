@@ -6,24 +6,28 @@ namespace Cutulu.Lattice
 
     public static class AssetLoader
     {
+        public static readonly Dictionary<string, AssetInstance> References = new();
         public static readonly Dictionary<string, List<string>> Collections = new();
-        public static readonly Dictionary<string, string> Direct = new();
 
+        public static readonly Dictionary<IMod, AssetInstance> Instances = new();
         public static readonly Dictionary<string, object> Cache = new();
 
-        public static void Register(IMod mod)
+        /// <summary>
+        /// Register assets
+        /// </summary>
+        public static void Load(params IMod[] mods)
         {
-            var entries = mod.ReadAssetEntries();
+            if (mods.IsEmpty()) return;
 
-            if (entries.IsEmpty()) return;
-
-            for (int i = 0; i < entries.Length; i++)
+            foreach (var mod in mods)
             {
-                if (IO.Exists(entries[i].Path) == false) CoreBridge.LogError($"Asset at path '{entries[i].Path}' does not exist.");
-                else
+                if (Instances.TryGetValue(mod, out var instance) || instance == null)
+                    Instances[mod] = instance = new(mod);
+
+                foreach (var name in instance.References.Keys)
                 {
                     // Find all collections
-                    var args = entries[i].Name.TrimEndUntil('/', '\\').Split(new[] { '/', '\\' }, Constant.StringSplit);
+                    var args = name.TrimEndUntil('/', '\\').Split(new[] { '/', '\\' }, Constant.StringSplit);
 
                     // Register collections
                     if (args.Size() >= 2)
@@ -36,24 +40,30 @@ namespace Cutulu.Lattice
                                 Collections[args[j]] = set = new();
 
                             if (j > 0) dir += '/';
-                            set.Add(dir += args[j + 1]);
+                            set.TryAdd(dir += args[j + 1]);
                         }
                     }
 
-                    // Register direct address
-                    Direct[entries[i].Name] = entries[i].Path;
+                    References[name] = instance;
                 }
             }
         }
 
-        public static void Clear()
+        /// <summary>
+        /// Clear entries
+        /// </summary>
+        public static void Unload()
         {
             Collections.Clear();
-            Direct.Clear();
+            References.Clear();
 
+            Instances.Clear();
             Cache.Clear();
         }
 
+        /// <summary>
+        /// Returns collection of assets
+        /// </summary>
         public static bool TryGet<T>(string collection, out T[] values) where T : class
         {
             var list = new List<T>();
@@ -80,6 +90,9 @@ namespace Cutulu.Lattice
             return values.NotEmpty();
         }
 
+        /// <summary>
+        /// Returns asset
+        /// </summary>
         public static bool TryGet<T>(string name, out T value) where T : class
         {
             if (Cache.TryGetValue(name, out var val) && val is T t)
@@ -88,21 +101,12 @@ namespace Cutulu.Lattice
                 return true;
             }
 
-            switch (value = default)
+            if (References.TryGetValue(name, out var instance))
             {
-                case string _:
-                    Cache[name] = value = (T)(object)IO.ReadString(Direct[name]);
-                    return true;
-
-                case byte[] _:
-                    Cache[name] = value = (T)(object)IO.ReadBytes(Direct[name]);
-                    return true;
-
-                case Resource _:
-                    Cache[name] = value = (T)(object)ResourceLoader.Load(Direct[name], typeof(T).Name);
-                    return true;
+                return instance.TryGet(name, out value);
             }
 
+            value = default;
             return false;
         }
     }

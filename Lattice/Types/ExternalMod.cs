@@ -1,23 +1,23 @@
 namespace Cutulu.Lattice
 {
-    using System.Collections.Generic;
     using Cutulu.Core;
 
     public partial class ExternalMod : IMod
     {
+        public string ID { get; set; } = "external_id";
         public string Name { get; set; } = "ExternalMod";
         public string Author { get; set; } = "Narrenschlag";
         public string Version { get; set; } = "1.0.0";
         public string Description { get; set; } = "A basic example mod.";
         public string[] Dependencies { get; set; }
 
-        public string[] AssetManifestPaths { get; set; } = new[] { "assets.manifest" };
-        public string[] AssemblyManifestPaths { get; set; } = new[] { "assemblies.manifest" };
-        public string[] GodotPackageManifestPaths { get; set; } = new[] { "packages.manifest" };
+        public string[] AssetManifestPaths { get; set; } = new[] { "./assets.manifest" };
+        public string[] AssemblyManifestPaths { get; set; } = new[] { "./assemblies.manifest" };
+        public string[] GodotPackageManifestPaths { get; set; } = new[] { "./packages.manifest" };
 
         [DontEncode] public string FilePath { get; set; }
 
-        public virtual void Initialize()
+        public virtual void Load()
         {
             CoreBridge.Log($"{Name} initialized!");
         }
