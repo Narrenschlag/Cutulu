@@ -150,7 +150,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Returns data from path as given file type if existing and parsable.
         /// </summary>
-        public static bool TryGetData<T>(string path, out T result, IO.FileType type = IO.FileType.Binary)
+        public static bool TryGetData<T>(string path, out T result, IO.FileType type = IO.FileType.Binary) where T : class
         {
             if (TryGetData(path, out var buffer) && buffer.NotEmpty())
             {
@@ -177,11 +177,8 @@ namespace Cutulu.Core
                         {
                             var t = typeof(T);
 
-                            // Support for Models
-                            if (t == typeof(GlbModel)) result = (T)(object)GlbModel.CustomImport(buffer);
-
                             // Support for OGG files
-                            else if (t == typeof(AudioStream)) result = (T)(object)AudioStreamOggVorbis.LoadFromBuffer(buffer);
+                            if (t == typeof(AudioStream)) result = (T)(object)AudioStreamOggVorbis.LoadFromBuffer(buffer);
 
                             else
                             {

@@ -96,5 +96,22 @@ namespace Cutulu.Lattice
 
             return $"res://{filePath}";
         }
+
+        public static string ParseManifest(Dictionary<string, string> dictionary)
+        {
+            if (dictionary.NotEmpty())
+            {
+                var stringBuilder = new System.Text.StringBuilder();
+
+                foreach (var entry in dictionary)
+                {
+                    stringBuilder.AppendLine($"{entry.Key}{IMod.Seperator}{entry.Value}");
+                }
+
+                return stringBuilder.ToString();
+            }
+
+            return string.Empty;
+        }
     }
 }

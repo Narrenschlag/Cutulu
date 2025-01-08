@@ -5,8 +5,6 @@ namespace Cutulu.Audio
 
     public static partial class Audiof
     {
-        public static AssetLibrary AssetLibrary { get; set; }
-
         /// <summary>
         /// Plays sound effect as child of given object. Node type defines the type of audio player.
         /// <br/>Overwrite can be used for GlobalPosition overwrite.

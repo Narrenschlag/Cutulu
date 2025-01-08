@@ -25,22 +25,5 @@ namespace Cutulu.Lattice
         public abstract (string Name, string Path)[] ReadAssetEntries();
         public abstract (string Name, string Path)[] ReadPackageEntries();
         public abstract (string Name, string Path)[] ReadAssemblyEntries();
-
-        public static string WriteManifest(Dictionary<string, string> dictionary)
-        {
-            if (dictionary.NotEmpty())
-            {
-                var stringBuilder = new System.Text.StringBuilder();
-
-                foreach (var entry in dictionary)
-                {
-                    stringBuilder.AppendLine($"{entry.Key}{Seperator}{entry.Value}");
-                }
-
-                return stringBuilder.ToString();
-            }
-
-            return string.Empty;
-        }
     }
 }
