@@ -7,7 +7,6 @@ namespace Cutulu.Lattice.Tests
 
     public partial class ModTest : IntegrationTest
     {
-        [Export] private int ExpectedAssetCount { get; set; } = 1;
         [Export] private int ExternalModCount { get; set; } = 0;
         [Export] private InternalMod[] Mods { get; set; }
 
@@ -29,14 +28,18 @@ namespace Cutulu.Lattice.Tests
             Print($"Activating mods... ({ModLoader.Instances.Count} mods)");
             ModLoader.Activate();
 
-            if (AssetLoader.References.Count != ExpectedAssetCount)
+            if (AssetLoader.References.Count != 3)
             {
-                PrintErr($"Expected {ExpectedAssetCount} asset entries, but got {AssetLoader.References.Count}");
+                PrintErr($"Expected 3 asset entries, but got {AssetLoader.References.Count}");
                 return false;
             }
 
             Print($"Loaded {AssetLoader.References.Count} asset entries");
             NextStep();
+
+            Print($"manifest-name: {(AssetLoader.TryGet("manifest", out string manifest) ? manifest : "<null>")}");
+            Print($"icon-name: {(AssetLoader.TryGet("icon", out Texture2D icon) ? $"{icon.GetWidth()}x{icon.GetHeight()}px" : "<null>")}");
+            Print($"box-name: {(AssetLoader.TryGet("box", out BoxShape3D box) ? box.Size : "<null>")}");
 
             await Task.Delay(1);
             Application.Quit();

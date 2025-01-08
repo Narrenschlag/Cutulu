@@ -109,5 +109,13 @@ namespace Cutulu.Lattice
             value = default;
             return false;
         }
+
+        /// <summary>
+        /// Returns asset, if not exstant returns default value
+        /// </summary>
+        public static T Get<T>(string name, T defaultValue = default) where T : class
+        {
+            return TryGet(name, out T value) ? value : defaultValue;
+        }
     }
 }

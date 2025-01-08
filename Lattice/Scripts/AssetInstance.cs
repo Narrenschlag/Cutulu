@@ -1,6 +1,7 @@
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
+    using System;
 
     using Godot;
     using Core;
@@ -35,21 +36,39 @@ namespace Cutulu.Lattice
 
         public bool TryGet<T>(string name, out T value) where T : class
         {
-            switch (value = default)
+            object obj = null;
+
+            try
             {
-                case string _:
-                    value = (T)(object)IO.ReadString(References[name]);
-                    return true;
+                switch (typeof(T))
+                {
+                    case Type i when i == typeof(string):
+                        obj = IO.ReadString(References[name]);
+                        break;
 
-                case byte[] _:
-                    value = (T)(object)IO.ReadBytes(References[name]);
-                    return true;
+                    case Type i when i == typeof(byte[]):
+                        obj = IO.ReadBytes(References[name]);
+                        break;
 
-                case Resource _:
-                    value = (T)(object)ResourceLoader.Load(References[name], typeof(T).Name);
-                    return true;
+                    case Type i when i.IsSubclassOf(typeof(Resource)):
+                        obj = ResourceLoader.Load(References[name], typeof(T).Name);
+                        break;
+
+                    default:
+                        Debug.LogError($"Cannot read typeof({typeof(T).Name})");
+                        break;
+                }
+            }
+            catch { }
+
+            if (obj is T t && t != null && (t is not Node n || n.NotNull()))
+            {
+                value = t;
+                return true;
             }
 
+            Debug.LogError($"Cant read typeof({typeof(T).Name}) from {name} @'{References[name]}' {obj != null}");
+            value = default;
             return false;
         }
     }
