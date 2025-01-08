@@ -22,10 +22,11 @@ namespace Cutulu.Lattice
             $"\nname{IMod.Seperator} ./resource_path          // Relative to this resource" +
             $"\nname{IMod.Seperator} ../resource_path         // Relative to the parent folder of this resource" +
             $"\nname{IMod.Seperator} .../resource_path        // Relative to the parent folder of the parent folder of this resource";
+        [Export] public string[] AdditionalAssetManifests { get; set; }
 
         public virtual void Load()
         {
-            CoreBridge.Log($"{Name} initialized!");
+            CoreBridge.Log($"{Name} loaded!");
         }
 
         public virtual void Activate()
@@ -45,7 +46,17 @@ namespace Cutulu.Lattice
 
         public string GetPath(string filePath) => Parser.FormatPath(filePath, ResourcePath);
 
-        public (string Name, string Path)[] ReadAssetEntries() => Parser.ParseManifest(AssetManifest, ResourcePath);
+        public (string Name, string Path)[] ReadAssetEntries()
+        {
+            var hashset = new HashSet<(string Name, string Path)>(
+                Parser.ParseManifest(AssetManifest, ResourcePath)
+            );
+
+            hashset.UnionWith(Parser.ParseManifestFiles(AdditionalAssetManifests, ResourcePath));
+
+            return hashset.ToArray();
+        }
+
         public (string Name, string Path)[] ReadPackageEntries() => Array.Empty<(string, string)>();
         public (string Name, string Path)[] ReadAssemblyEntries() => Array.Empty<(string, string)>();
     }
