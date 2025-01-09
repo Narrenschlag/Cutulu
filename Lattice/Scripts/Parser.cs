@@ -79,6 +79,23 @@ namespace Cutulu.Lattice
             return string.Empty;
         }
 
+        public static string ParseManifest((string Key, string Value)[] array)
+        {
+            if (array.NotEmpty())
+            {
+                var stringBuilder = new System.Text.StringBuilder();
+
+                foreach (var entry in array)
+                {
+                    stringBuilder.AppendLine($"{entry.Key}{IMod.Seperator} {entry.Value}");
+                }
+
+                return stringBuilder.ToString();
+            }
+
+            return string.Empty;
+        }
+
         public static string FormatPath(string filePath, string rootDirectory)
         {
             if ((filePath = filePath.Trim()).StartsWith("res://")) return filePath;

@@ -6,12 +6,12 @@ namespace Cutulu.Lattice
     {
         public static void Log(string message)
         {
-            Debug.Log($"[CoreBridge]: {message}");
+            Debug.Log($"[Cutulu.Lattice]: {message}");
         }
 
         public static void LogError(string message)
         {
-            Debug.LogError($"[CoreBridge]: {message}");
+            Debug.LogError($"[Cutulu.Lattice]: {message}");
         }
     }
 }
