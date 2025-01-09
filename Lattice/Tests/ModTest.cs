@@ -10,7 +10,7 @@ namespace Cutulu.Lattice.Tests
         [Export] private int ExternalModCount { get; set; } = 0;
         [Export] private InternalMod[] Mods { get; set; }
 
-        protected override int StepCount => 2;
+        protected override int StepCount => 3;
 
         protected override async Task<bool> _Process()
         {
@@ -40,6 +40,7 @@ namespace Cutulu.Lattice.Tests
             Print($"manifest-name: {(AssetLoader.TryGet("manifest", out string manifest) ? manifest : "<null>")}");
             Print($"icon-name: {(AssetLoader.TryGet("icon", out Texture2D icon) ? $"{icon.GetWidth()}x{icon.GetHeight()}px" : "<null>")}");
             Print($"box-name: {(AssetLoader.TryGet("box", out BoxShape3D box) ? box.Size : "<null>")} {(AssetLoader.TryGetSource("box", out var source) ? source.Name : "<null>")}");
+            NextStep();
 
             await Task.Delay(1);
             Application.Quit();
