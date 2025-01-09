@@ -8,6 +8,7 @@ namespace Cutulu.Lattice.Tests
     public partial class PathTest : IntegrationTest
     {
         [Export] private InternalMod Mod { get; set; }
+        [Export] private string[] Paths { get; set; }
 
         protected override int StepCount => 1;
 
@@ -18,6 +19,12 @@ namespace Cutulu.Lattice.Tests
             for (var i = 0; i < manifest.Length; i++)
             {
                 CoreBridge.Log($"{manifest[i].Name}: {manifest[i].Path}");
+            }
+
+            foreach (var path in Paths)
+            {
+                var relative = Parser.MakePathRelative(path, Mod.ResourcePath);
+                CoreBridge.Log($"{path} -> {relative}");
             }
 
             await Task.Delay(1);

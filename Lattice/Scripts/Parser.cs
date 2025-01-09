@@ -1,8 +1,10 @@
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
-    using Cutulu.Core;
     using System;
+
+    using Godot;
+    using Core;
 
     public static class Parser
     {
@@ -60,6 +62,23 @@ namespace Cutulu.Lattice
             return Array.Empty<(string, string)>();
         }
 
+        public static string ParseManifest(Dictionary<string, string> dictionary)
+        {
+            if (dictionary.NotEmpty())
+            {
+                var stringBuilder = new System.Text.StringBuilder();
+
+                foreach (var entry in dictionary)
+                {
+                    stringBuilder.AppendLine($"{entry.Key}{IMod.Seperator}{entry.Value}");
+                }
+
+                return stringBuilder.ToString();
+            }
+
+            return string.Empty;
+        }
+
         public static string FormatPath(string filePath, string rootDirectory)
         {
             if ((filePath = filePath.Trim()).StartsWith("res://")) return filePath;
@@ -97,21 +116,41 @@ namespace Cutulu.Lattice
             return $"res://{filePath}";
         }
 
-        public static string ParseManifest(Dictionary<string, string> dictionary)
+        public static string MakePathRelative(string filePath, string rootDirectory)
         {
-            if (dictionary.NotEmpty())
-            {
-                var stringBuilder = new System.Text.StringBuilder();
+            rootDirectory = ProjectSettings.GlobalizePath(rootDirectory.TrimToDirectory());
+            var fileDirectory = ProjectSettings.GlobalizePath(filePath.TrimToDirectory());
 
-                foreach (var entry in dictionary)
+            var fileName = ProjectSettings.GlobalizePath(filePath)[fileDirectory.Length..];
+
+            if (rootDirectory == fileDirectory) return $"./{fileName}";
+
+            if (fileDirectory.StartsWith(rootDirectory)) return $"./{fileDirectory[rootDirectory.Length..]}{fileName}";
+
+            var argsFile = fileDirectory.Split(new[] { '/', '\\' }, Constant.StringSplit);
+            var argsRoot = rootDirectory.Split(new[] { '/', '\\' }, Constant.StringSplit);
+            int steps = 1, offset = 0;
+
+            for (int i = argsRoot.Length - 1; i >= 0; i--)
+            {
+                var found = false;
+
+                for (int k = argsFile.Length - 1; k >= 0; k--)
                 {
-                    stringBuilder.AppendLine($"{entry.Key}{IMod.Seperator}{entry.Value}");
+                    // Found same
+                    if (argsFile[k] == argsRoot[i])
+                    {
+                        found = true;
+                        offset = k;
+                        break;
+                    }
                 }
 
-                return stringBuilder.ToString();
+                if (found) break;
+                else steps++;
             }
 
-            return string.Empty;
+            return $"{"".Fill(steps, '.')}/{argsFile[(offset + 1)..].Join("/")}{(offset < argsFile.Length - 1 ? '/' : "")}{fileName}";
         }
     }
 }
