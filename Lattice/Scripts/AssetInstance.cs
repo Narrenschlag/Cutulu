@@ -10,7 +10,7 @@ namespace Cutulu.Lattice
     {
         public readonly Dictionary<string, string> References = new();
 
-        private readonly IMod Source;
+        public readonly IMod Source;
 
         public AssetInstance(IMod source)
         {

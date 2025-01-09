@@ -1,16 +1,18 @@
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
-    using Cutulu.Core;
+    using System;
+
     using Godot;
+    using Core;
 
     public static class AssetLoader
     {
         public static readonly Dictionary<string, AssetInstance> References = new();
         public static readonly Dictionary<string, List<string>> Collections = new();
 
+        public static readonly Dictionary<string, Dictionary<Type, object>> Cache = new();
         public static readonly Dictionary<IMod, AssetInstance> Instances = new();
-        public static readonly Dictionary<string, object> Cache = new();
 
         /// <summary>
         /// Register assets
@@ -68,24 +70,35 @@ namespace Cutulu.Lattice
         {
             var list = new List<T>();
 
-            if (Collections.TryGetValue(collection, out var set))
+            if (Collections.TryGetValue(collection, out var references))
             {
-                if (Cache.TryGetValue(collection, out var val) && val is T[] t)
+                // Try get from cache
+                if (Cache.TryGetValue(collection, out var dictionary) && dictionary.TryGetValue(typeof(T), out var val) && val is T[] t)
                 {
                     values = t;
                     return true;
                 }
 
-                foreach (var name in set)
+                // Get references
+                foreach (var name in references)
                 {
                     if (TryGet(name, out T _t))
                         list.Add(_t);
                 }
 
-                Cache[collection] = values = list.ToArray();
+                values = list.ToArray();
+
+                // Assign to cache
+                if (values.NotEmpty())
+                {
+                    if (Cache.TryGetValue(collection, out dictionary) == false)
+                        Cache[collection] = dictionary = new();
+
+                    dictionary[typeof(T)] = values;
+                }
             }
 
-            else values = System.Array.Empty<T>();
+            else values = Array.Empty<T>();
 
             return values.NotEmpty();
         }
@@ -95,15 +108,24 @@ namespace Cutulu.Lattice
         /// </summary>
         public static bool TryGet<T>(string name, out T value) where T : class
         {
-            if (Cache.TryGetValue(name, out var val) && val is T t)
+            // Try get from cache
+            if (Cache.TryGetValue(name, out var dictionary))
             {
-                value = t;
-                return true;
+                if (dictionary.TryGetValue(typeof(T), out var val) && val is T t)
+                {
+                    value = t;
+                    return true;
+                }
             }
 
-            if (References.TryGetValue(name, out var instance))
+            // Assign to cache
+            if (References.TryGetValue(name, out var instance) && instance.TryGet(name, out value))
             {
-                return instance.TryGet(name, out value);
+                if (Cache.TryGetValue(name, out dictionary) == false)
+                    Cache[name] = dictionary = new();
+
+                dictionary[typeof(T)] = value;
+                return true;
             }
 
             value = default;
@@ -116,6 +138,21 @@ namespace Cutulu.Lattice
         public static T Get<T>(string name, T defaultValue = default) where T : class
         {
             return TryGet(name, out T value) ? value : defaultValue;
+        }
+
+        /// <summary>
+        /// Returns source of asset if exists
+        /// </summary>
+        public static bool TryGetSource(string name, out IMod source)
+        {
+            if (References.TryGetValue(name, out var instance))
+            {
+                source = instance.Source;
+                return true;
+            }
+
+            source = null;
+            return false;
         }
     }
 }

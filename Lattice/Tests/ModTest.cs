@@ -39,7 +39,7 @@ namespace Cutulu.Lattice.Tests
 
             Print($"manifest-name: {(AssetLoader.TryGet("manifest", out string manifest) ? manifest : "<null>")}");
             Print($"icon-name: {(AssetLoader.TryGet("icon", out Texture2D icon) ? $"{icon.GetWidth()}x{icon.GetHeight()}px" : "<null>")}");
-            Print($"box-name: {(AssetLoader.TryGet("box", out BoxShape3D box) ? box.Size : "<null>")}");
+            Print($"box-name: {(AssetLoader.TryGet("box", out BoxShape3D box) ? box.Size : "<null>")} {(AssetLoader.TryGetSource("box", out var source) ? source.Name : "<null>")}");
 
             await Task.Delay(1);
             Application.Quit();
