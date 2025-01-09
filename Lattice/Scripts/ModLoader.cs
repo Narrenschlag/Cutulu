@@ -1,9 +1,10 @@
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
+    using System.Linq;
 
-    using Core;
     using Godot;
+    using Core;
 
     public static class ModLoader
     {
@@ -118,8 +119,11 @@ namespace Cutulu.Lattice
 
             if (Instances.IsEmpty()) return;
 
+            // Order instances by load order
+            var sortedInstances = Instances.Values.OrderBy(x => x.LoadOrder).ToArray();
+
             var list = new List<IMod>();
-            foreach (var instance in Instances.Values)
+            foreach (var instance in sortedInstances)
             {
                 if (instance.Enabled)
                 {
@@ -149,6 +153,7 @@ namespace Cutulu.Lattice
             }
 
             var mods = list.ToArray();
+
             CoreBridge.Log($"Activating {mods.Size()}/{Instances.Count} mods");
 
             AssemblyLoader.Load(mods);

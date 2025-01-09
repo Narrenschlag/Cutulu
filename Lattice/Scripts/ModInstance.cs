@@ -5,7 +5,7 @@ namespace Cutulu.Lattice
         public readonly IMod Source;
 
         public bool Enabled { get; set; } // Set true by interface
-        public int Priority { get; set; } // Set priority by interface
+        public int LoadOrder { get; set; } // Set priority by interface
 
         public bool Active { get; private set; } // Set active when activated
 
@@ -15,7 +15,7 @@ namespace Cutulu.Lattice
         public ModInstance(IMod source)
         {
             Enabled = false;
-            Priority = 0;
+            LoadOrder = 0;
 
             (Source = source)?.Load();
         }
