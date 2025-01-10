@@ -44,11 +44,11 @@ namespace Cutulu.Lattice
 
                     for (var i = 0; i < lines.Length; i++)
                     {
-                        var args = lines[i].Split(' ', Constant.StringSplit);
+                        var args = lines[i].Split(new[] { ' ', '\t' }, Constant.StringSplit);
 
                         if (args.Size() >= 2)
                         {
-                            var pathArgs = args[1].Split(' ', Constant.StringSplit);
+                            var pathArgs = args[1].Split(new[] { ' ', '\t' }, Constant.StringSplit);
 
                             if (pathArgs.NotEmpty())
                                 entries.Add((args[0].RemoveChar(IMod.Seperator), FormatPath(pathArgs[0], rootDirectory)));

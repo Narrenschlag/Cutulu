@@ -1,7 +1,7 @@
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
-    
+
     using Core;
 
     public static class LangParser
@@ -22,7 +22,7 @@ namespace Cutulu.Lattice
                 {
                     if (line.StartsWith(KeyChar))
                     {
-                        var args = line.Split(' ', 2, Cutulu.Core.Constant.StringSplit);
+                        var args = line.Split(new[] { ' ', '\t' }, 2, Constant.StringSplit);
 
                         // Assign value to dictionary
                         if (key.NotEmpty() && value.NotEmpty())
@@ -32,13 +32,13 @@ namespace Cutulu.Lattice
 
                         if (args.Length > 1)
                         {
-                            key = args[0].Substring(1);
+                            key = args[0][1..];
                             value = args[1];
                         }
 
                         else
                         {
-                            key = line.Substring(1);
+                            key = line[1..];
                             value = "";
                         }
                     }
