@@ -56,14 +56,17 @@ namespace Cutulu.Lattice
                 {
                     foreach (var file in files)
                     {
-                        if (file.ToLower().EndsWith(IMod.FileEnding) && IO.TryRead(directory + file, out ExternalMod mod, IO.FileType.Json))
+                        if (file.ToLower().EndsWith(IMod.FileEnding))
                         {
-                            mod.FilePath = directory + file;
+                            if (IO.TryRead(directory + file, out ExternalMod mod, IO.FileType.Json))
+                            {
+                                mod.FilePath = directory + file;
 
-                            load(mod).Enabled = enabledByDefault;
+                                load(mod).Enabled = enabledByDefault;
+                            }
+
+                            else CoreBridge.LogError($"Cannot load mod file at {directory + file}");
                         }
-
-                        else CoreBridge.LogError($"Cannot load mod file at {directory + file}");
                     }
                 }
 
