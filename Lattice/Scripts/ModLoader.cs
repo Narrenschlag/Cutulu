@@ -162,11 +162,11 @@ namespace Cutulu.Lattice
             AssemblyLoader.Load(mods);
             CoreBridge.Log($"Loaded assemblies");
 
-            AssetLoader.Load(mods);
-            CoreBridge.Log($"Loaded assets");
-
             GodotPackageLoader.Load(mods);
             CoreBridge.Log($"Loaded godot packages");
+
+            AssetLoader.Load(mods);
+            CoreBridge.Log($"Loaded assets");
 
             foreach (var mod in mods)
             {
