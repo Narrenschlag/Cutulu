@@ -10,7 +10,7 @@ namespace Cutulu.Settings
 
         public static System.Action Updated { get; set; }
 
-        public static void Apply()
+        public static void LoadValues()
         {
             SetFullscreen(GetValue(nameof(Fullscreen), true), false);
             SetVSync(GetValue(nameof(VSync), true), false);
