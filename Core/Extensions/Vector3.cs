@@ -295,5 +295,19 @@ namespace Cutulu.Core
 
             return sum;
         }
+
+        // <summary>
+        /// Converts a forward Vector3 direction into a Y-axis rotation in degrees.
+        /// </summary>
+        /// <param name="forward">The forward vector.</param>
+        /// <returns>The Y-axis rotation (yaw) in degrees.</returns>
+        public static float ForwardToYRotation(this Vector3 forward)
+        {
+            // Normalize the forward vector to avoid errors with non-unit vectors
+            forward = forward.Normalized();
+
+            // Calculate the yaw in radians
+            return Mathf.Atan2(forward.X, forward.Z);
+        }
     }
 }
