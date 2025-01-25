@@ -21,7 +21,7 @@ namespace Cutulu.Core
         {
             if (RaycastFromCamera(camera, out RaycastHit hit, mask))
             {
-                globalPosition = hit.point;
+                globalPosition = hit.Point;
                 return true;
             }
 

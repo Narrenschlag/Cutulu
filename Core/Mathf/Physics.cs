@@ -99,7 +99,7 @@ namespace Cutulu.Core
 
                 if (check())
                 {
-                    hit = new RaycastHit(origin, _hit.point, _hit.collider, _hit.result, distance + _v.DistanceTo(_hit.point));
+                    hit = new RaycastHit(origin, _hit.Point, _hit.Collider, _hit.Result, distance + _v.DistanceTo(_hit.Point));
                     return true;
                 }
 
@@ -113,7 +113,7 @@ namespace Cutulu.Core
 
                 if (check(rest / resolution))
                 {
-                    hit = new RaycastHit(origin, _hit.point, _hit.collider, _hit.result, distance + _v.DistanceTo(_hit.point));
+                    hit = new RaycastHit(origin, _hit.Point, _hit.Collider, _hit.Result, distance + _v.DistanceTo(_hit.Point));
                     return true;
                 }
             }
@@ -137,28 +137,28 @@ namespace Cutulu.Core
     #region RaycastHit                      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public struct RaycastHit
     {
-        public GodotObject collider;
-        public float distance;
-        public Vector3 point;
+        public GodotObject Collider;
+        public float Distance;
+        public Vector3 Point;
 
-        public Dictionary result;
+        public Dictionary Result;
 
         public RaycastHit(Vector3 origin, Vector3 point, GodotObject collider, Dictionary result)
         {
-            this.collider = collider;
-            this.point = point;
+            this.Collider = collider;
+            this.Point = point;
 
-            distance = origin.DistanceTo(point);
-            this.result = result;
+            Distance = origin.DistanceTo(point);
+            this.Result = result;
         }
 
         public RaycastHit(Vector3 origin, Vector3 point, GodotObject collider, Dictionary result, float distance)
         {
-            this.collider = collider;
-            this.distance = distance;
-            this.point = point;
+            this.Collider = collider;
+            this.Distance = distance;
+            this.Point = point;
 
-            this.result = result;
+            this.Result = result;
         }
     }
 
