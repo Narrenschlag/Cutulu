@@ -46,7 +46,7 @@ namespace Cutulu.Mesh
                 case MeshType.Points: break;
                 case MeshType.LineStrip: break;
 
-                default: throw new($"MeshType({type}) is not supported.");
+                default: throw new($"[{nameof(MeshBuilder)}] MeshType({type}) is not supported.");
             }
 
             DefaultColor = baseColor;
@@ -304,9 +304,27 @@ namespace Cutulu.Mesh
                             break;
 
                         default:
-                            for (int i = 2; i < vertices.Length; i += 3)
+                            var ydic = new Dictionary<Vector2, float>();
+                            var points = new Vector2[vertices.Length];
+
+                            for (int i = 0; i < vertices.Length; i++)
                             {
-                                AddClockwise(color, surfaceIndex, vertices[i - 2], vertices[i - 1], vertices[i]);
+                                ydic[
+                                    points[i] = vertices[i].toXY()
+                                ] = vertices[i].Y;
+                            }
+
+                            var tris = TriangulateConcaveShape(
+                                SortToPath(points)
+                            );
+
+                            foreach (var tri in tris)
+                            {
+                                AddClockwise(color, surfaceIndex,
+                                    tri[0].toXZ(ydic[tri[0]]),
+                                    tri[1].toXZ(ydic[tri[1]]),
+                                    tri[2].toXZ(ydic[tri[2]])
+                                );
                             }
                             break;
                     }
@@ -512,6 +530,179 @@ namespace Cutulu.Mesh
                 }
 
                 surfaceTool.Commit(mesh);
+            }
+        }
+
+        private static Vector2 GetAreaWeightedCentroid(Vector2[] vertices)
+        {
+            if (vertices == null || vertices.Length < 3)
+                throw new System.ArgumentException($"[{nameof(MeshBuilder)}] A polygon must have at least 3 vertices. ({vertices?.Length ?? 0})");
+
+            var signedArea = 0f;
+            var centroidX = 0f;
+            var centroidY = 0f;
+
+            var count = vertices.Length;
+            for (var i = 0; i < count; i++)
+            {
+                var p0 = vertices[i];
+                var p1 = vertices[(i + 1) % count]; // Wrap around for last edge
+
+                var cross = p0.X * p1.Y - p1.X * p0.Y; // Shoelace formula
+                signedArea += cross;
+
+                centroidX += (p0.X + p1.X) * cross;
+                centroidY += (p0.Y + p1.Y) * cross;
+            }
+
+            signedArea *= 0.5f;
+            if (Mathf.Abs(signedArea) < Mathf.Epsilon) // Prevent division by zero
+                return vertices[0]; // Fallback to first vertex
+
+            centroidX /= 6f * signedArea;
+            centroidY /= 6f * signedArea;
+
+            return new Vector2(centroidX, centroidY);
+        }
+
+        private static Vector2[] SortToPath(params Vector2[] points)
+        {
+            return SortToPath(
+                // Find the centroid of all points weighted on area
+                GetAreaWeightedCentroid(points),
+                points
+            );
+        }
+
+        private static Vector2[] SortToPath(Vector2 centroid, params Vector2[] points)
+        {
+            if (points == null || points.Length < 3)
+            {
+                //Debug.LogError("At least 3 points are required to form a loop.");
+                return points;
+            }
+
+            // Sort points by angle around the centroid
+            var sortedPoints = new System.Collections.Generic.List<Vector2>(points);
+            sortedPoints.Sort((a, b) =>
+            {
+                // Compute angles relative to the centroid
+                var angleA = Mathf.Atan2(a.Y - centroid.Y, a.X - centroid.X);
+                var angleB = Mathf.Atan2(b.Y - centroid.Y, b.X - centroid.X);
+
+                return angleA.CompareTo(angleB);
+            });
+
+            // Return the sorted points as a loop
+            return sortedPoints.ToArray();
+        }
+
+        private static List<Vector2[]> TriangulateConcaveShape(Vector2[] sortedPoints)
+        {
+            if (sortedPoints == null || sortedPoints.Length < 3)
+            {
+                Debug.LogError($"[{nameof(MeshBuilder)}] At least 3 points are required to form a shape.");
+                return null;
+            }
+
+            // List to hold the resulting triangles
+            var triangles = new List<Vector2[]>();
+
+            // Create a working list of indices
+            var indices = new List<int>();
+            for (var i = 0; i < sortedPoints.Length; i++)
+            {
+                indices.Add(i);
+            }
+
+            // Ear clipping loop
+            while (indices.Count > 3)
+            {
+                var earFound = false;
+
+                // Check each triplet of points to find an ear
+                for (var i = 0; i < indices.Count; i++)
+                {
+                    var prevIndex = indices[(i - 1 + indices.Count) % indices.Count];
+                    var currIndex = indices[i];
+                    var nextIndex = indices[(i + 1) % indices.Count];
+
+                    var prev = sortedPoints[prevIndex];
+                    var curr = sortedPoints[currIndex];
+                    var next = sortedPoints[nextIndex];
+
+                    // Check if the triangle (prev, curr, next) is an ear
+                    if (IsEar(prev, curr, next, sortedPoints, indices))
+                    {
+                        // Add the triangle to the result
+                        triangles.Add(new Vector2[] { prev, curr, next });
+
+                        // Remove the ear vertex
+                        indices.RemoveAt(i);
+                        earFound = true;
+                        break;
+                    }
+                }
+
+                // If no ear was found, the shape might be malformed
+                if (!earFound)
+                {
+                    Debug.LogError($"[{nameof(MeshBuilder)}] Failed to find an ear. The shape might be malformed or degenerate.");
+                    return null;
+                }
+            }
+
+            // Add the final triangle
+            if (indices.Count == 3)
+            {
+                triangles.Add(new Vector2[] {
+                    sortedPoints[indices[0]], sortedPoints[indices[1]], sortedPoints[indices[2]]
+                });
+            }
+
+            return triangles;
+
+            static bool IsEar(Vector2 prev, Vector2 curr, Vector2 next, Vector2[] points, List<int> indices)
+            {
+                // Check if the triangle is counter-clockwise
+                if (!IsCounterClockwise(prev, curr, next))
+                    return false;
+
+                // Check if any other point is inside the triangle
+                for (var i = 0; i < points.Length; i++)
+                {
+                    // Ignore points that are part of the triangle
+                    if (!indices.Contains(i)) continue;
+
+                    var point = points[i];
+
+                    if (point != prev && point != curr && point != next && IsPointInTriangle(point, prev, curr, next))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+
+                // Barycentric method to check if the point is inside the triangle
+                static bool IsPointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
+                {
+                    return Mathf.IsEqualApprox(
+                        TriangleArea(a, b, c),
+                        TriangleArea(p, b, c) + TriangleArea(p, c, a) + TriangleArea(p, a, b)
+                    );
+                }
+
+                // Cross product > 0 means counter-clockwise
+                static bool IsCounterClockwise(Vector2 a, Vector2 b, Vector2 c)
+                {
+                    return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X) > 0;
+                }
+
+                static float TriangleArea(Vector2 a, Vector2 b, Vector2 c)
+                {
+                    return Mathf.Abs((a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y)) / 2f);
+                }
             }
         }
 
