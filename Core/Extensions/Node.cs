@@ -296,5 +296,13 @@ namespace Cutulu.Core
 
         private static Node _main;
         public static Node Main { get { _main ??= (Engine.GetMainLoop() as SceneTree).CurrentScene; return _main; } }
+
+        public static void Log(this Node node, string message, bool rich = false)
+        {
+            var log = $"[{node.Name}] {message}";
+
+            if (rich) Debug.LogR(log);
+            else Debug.Log(log);
+        }
     }
 }

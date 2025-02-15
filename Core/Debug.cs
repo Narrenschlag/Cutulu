@@ -23,11 +23,6 @@ namespace Cutulu.Core
         /// <summary>
         /// Logs a default console message.
         /// </summary>
-        public static void Log(this object obj) => Log(obj.ToString());
-
-        /// <summary>
-        /// Logs a default console message.
-        /// </summary>
         public static void Log(this string message) => GD.Print(message);
 
         /// <summary>
