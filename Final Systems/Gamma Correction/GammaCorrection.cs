@@ -1,36 +1,38 @@
-using Godot;
-
 namespace Cutulu.Core
 {
+    using Godot;
+
     public partial class GammaCorrection : ColorRect
     {
-        private static GammaCorrection _instance;
-        private static float _value;
+        private const string GammaPath = "app/gamma";
+        private const float DefaultValue = 1f;
+
+        private static GammaCorrection Instance;
 
         public static float Value
         {
-            get => _value;
+            get => AppData.GetAppData(GammaPath, DefaultValue);
 
             set
             {
-                _value = value;
+                AppData.SetAppData(GammaPath, value);
 
-                if (_instance.NotNull())
-                    _instance.Update();
+                if (Instance.NotNull())
+                    Instance.Update(value);
             }
         }
 
         public override void _EnterTree()
         {
-            _instance = this;
+            Instance = this;
 
-            Update();
+            Update(Value);
         }
 
-        private void Update()
+        private void Update(float val)
         {
             if (Material is ShaderMaterial shader)
-                shader.SetShaderParameter("gamma", _value);
+                shader.SetShaderParameter("gamma", val);
         }
     }
 }
