@@ -81,9 +81,9 @@ namespace Cutulu.Core
                 node.Destroy(forceInstant);
         }
 
-        public static Vector3 Forward(this Node3D node, bool global = true) => node.NotNull() ? Vector3.Forward : -(global ? node.GlobalTransform : node.Transform).Basis.Z;
-        public static Vector3 Right(this Node3D node, bool global = true) => node.NotNull() ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X;
-        public static Vector3 Up(this Node3D node, bool global = true) => node.NotNull() ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y;
+        public static Vector3 Forward(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Forward : -(global ? node.GlobalTransform : node.Transform).Basis.Z;
+        public static Vector3 Right(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X;
+        public static Vector3 Up(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y;
 
         public static bool TryInstantiate<T>(this PackedScene prefab, Node parent, out T instance, int waitMilliseconds = 0) where T : Node
         => (instance = Instantiate<T>(prefab, parent, waitMilliseconds)).NotNull();
