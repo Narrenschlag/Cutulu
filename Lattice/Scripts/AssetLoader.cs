@@ -26,27 +26,35 @@ namespace Cutulu.Lattice
                 if (Instances.TryGetValue(mod, out var instance) || instance == null)
                     Instances[mod] = instance = new(mod);
 
-                foreach (var name in instance.References.Keys)
+                foreach (var pair in instance.References)
                 {
-                    // Find all collections
-                    var args = name.TrimEndUntil('/', '\\').Split(new[] { '/', '\\' }, Constant.StringSplit);
-
-                    // Register collections
-                    if (args.Size() >= 2)
+                    // Check if it is a collection
+                    if (pair.Key.Contains('/') || pair.Key.Contains('\\'))
                     {
-                        var dir = "";
+                        // Find all collections
+                        var args = pair.Key.TrimEndUntil('/', '\\').Split(new[] { '/', '\\' }, Constant.StringSplit);
 
-                        for (int j = 0; j < args.Length - 1; j++)
+                        // Register collections
+                        if (args.Size() > 0)
                         {
-                            if (Collections.TryGetValue(args[j], out var set) == false)
-                                Collections[args[j]] = set = new();
+                            var dir = "";
 
-                            if (j > 0) dir += '/';
-                            set.TryAdd(dir += args[j + 1]);
+                            for (int j = 0; j < args.Length; j++)
+                            {
+                                if (j > 0) dir += '/';
+                                dir += args[j];
+
+                                if (Collections.TryGetValue(dir, out var references) == false)
+                                {
+                                    Collections[dir] = references = new();
+                                }
+
+                                references.TryAdd(pair.Key);
+                            }
                         }
                     }
 
-                    References[name] = instance;
+                    References[pair.Key] = instance;
                 }
             }
         }
