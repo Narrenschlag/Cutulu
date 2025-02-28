@@ -314,7 +314,20 @@ namespace Cutulu.Core
 
             catch (Exception ex)
             {
-                if (enableLogging) Debug.LogError($"Cannot decode typeof({typeof(T)}): {ex.Message}\n{ex.StackTrace}");
+                if (enableLogging)
+                {
+                    switch (ex)
+                    {
+                        case EndOfStreamException _:
+                            Debug.LogError($"Cannot decode as typeof({typeof(T)}): Unable to read beyond the end of the stream. Buffer may belong to another data type.");
+                            break;
+
+                        default:
+                            Debug.LogError($"Cannot decode typeof({typeof(T)}, {ex.GetType().Name}): {ex.Message}\n{ex.StackTrace}");
+                            break;
+                    }
+                }
+
                 value = default;
                 return false;
             }
