@@ -34,6 +34,14 @@ namespace Cutulu.Core
             return axial + Neighbours.ModulatedElement(neighbourIndex);
         }
 
+        /// <summary>
+        /// Check if axial1 is a hexagonal neighbour of axial2
+        /// </summary>
+        public static bool IsNeighbourOf(this Vector2I axial1, Vector2I other2)
+        {
+            return Neighbours.Contains(axial1 - other2);
+        }
+
         #endregion
 
         #region Conversion

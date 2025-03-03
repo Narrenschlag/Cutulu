@@ -1,6 +1,8 @@
 namespace Cutulu.Core
 {
     using System.Collections.Generic;
+    using System;
+
     using Godot;
 
     public static class Arrayf
@@ -30,7 +32,7 @@ namespace Cutulu.Core
             return list.ToArray();
         }
 
-        public static bool SequenceEquals<T>(this T[] array, T[] b)
+        public static bool SequenceEquals<T>(this T[] array, T[] b, bool ignoreOrder = false)
         {
             if (array.Size() != b.Size()) return false;
             if (array == b) return true;
@@ -39,7 +41,10 @@ namespace Cutulu.Core
             {
                 for (var i = 0; i < array.Length; i++)
                 {
-                    if (b.Contains(array[i]) == false)
+                    if (ignoreOrder == false && array[i].Equals(b[i]) == false)
+                        return false;
+
+                    else if (ignoreOrder && b.Contains(array[i]) == false)
                         return false;
                 }
             }
