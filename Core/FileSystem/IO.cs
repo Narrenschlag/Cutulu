@@ -155,6 +155,13 @@ namespace Cutulu.Core
 
             // Create/Open file
             FA file = FA.Open(path, FA.ModeFlags.Write);
+
+            if (file.IsNull())
+            {
+                Debug.LogError($"Failed to create/open file at <{path}>");
+                return;
+            }
+
             file.StoreBuffer(bytes);
             file.Flush();
             file.Close();
