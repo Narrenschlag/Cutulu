@@ -115,7 +115,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Creates directory if not existing already.
         /// </summary>
-        public static Error MkDir(this string path) => DirAccess.MakeDirAbsolute(path.TrimToDirectory());
+        public static Error MkDir(this string path) => DA.MakeDirAbsolute(path.TrimToDirectory());
 
         /// <summary>
         /// Writes text down in a file opened/created on the run.

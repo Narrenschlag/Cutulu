@@ -247,7 +247,7 @@ namespace Cutulu.Core
             return source.Split(identifier, Constant.StringSplit)[0];
         }
 
-        public static string TrimToDirectory(this string path) => TrimToDirectory(path, new[] { '\\', '/' });
+        public static string TrimToDirectory(this string path) => TrimToDirectory(path, '\\', '/');
         public static string TrimToDirectory(this string path, params char[] chars)
         {
             if (path.IsEmpty() || chars.IsEmpty()) return path;

@@ -13,8 +13,11 @@ namespace Cutulu.Core
     {
         #region Encoders [1/4]
 
-        private static readonly Dictionary<Type, IBinaryEncoder> Encoders = new();
+        private static readonly Dictionary<Type, IBinaryEncoder> Encoders = [];
         public static int EncoderCount => Encoders.Count;
+
+        public static string LastPropertyName { get; private set; }
+        public static Type LastPropertyType { get; private set; }
 
         static Encoder()
         {
@@ -66,7 +69,7 @@ namespace Cutulu.Core
             else Encode(writer, obj, obj is byte[]);
 
             // Return result
-            return memory.ToArray() ?? Array.Empty<byte>();
+            return memory.ToArray() ?? [];
         }
 
         /// <summary>
@@ -164,11 +167,12 @@ namespace Cutulu.Core
                     var value = properties[i].GetValue(obj);
                     type = properties[i].GetType();
 
-                    // Write null array as empty array
-                    if (value == null && type.IsArray) writer.Write(default(ushort));
-
                     // Write value
-                    else writer.Write(Encode(value));
+                    writer.Write(value == null ?
+                            type.IsArray ? new byte[2] : // Write null array as empty array
+                            new byte[1] : // Write null string as empty byte
+                        Encode(value) // Encode value as usual
+                    );
                 }
             }
 
@@ -200,6 +204,8 @@ namespace Cutulu.Core
 
         private static object Decode(this BinaryReader reader, Type type)
         {
+            LastPropertyType = type;
+
             return type switch
             {
                 var t when t == typeof(byte[]) => reader.ReadRemainingBytes(),
@@ -264,6 +270,8 @@ namespace Cutulu.Core
                     if (((DontEncode[])properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
                         continue;
 
+                    LastPropertyName = properties[i].Name;
+
                     properties[i].SetValue(output, Decode(reader, properties[i].PropertyType));
                 }
 
@@ -319,7 +327,8 @@ namespace Cutulu.Core
                     switch (ex)
                     {
                         case EndOfStreamException _:
-                            Debug.LogError($"Cannot decode as typeof({typeof(T)}): Unable to read beyond the end of the stream. Buffer may belong to another data type.");
+                            Debug.LogError($"Cannot decode as typeof({typeof(T)}): Unable to read beyond the end of the stream. Buffer may belong to another data type. [{LastPropertyType.FullName}, {LastPropertyName}?]");
+                            Debug.LogWarning($"Error Message: {ex.Message}");
                             break;
 
                         default:
