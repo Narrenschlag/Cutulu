@@ -17,6 +17,9 @@ namespace Cutulu.Network.Sockets
         private CancellationTokenSource TokenSource { get; set; }
         private CancellationToken Token { get; set; }
 
+        public bool UseRouterPortForwarding { get; set; }
+        private RouterPortForwarding RouterPortForwarder { get; set; }
+
         public Action<IPEndPoint, byte[]> Received;
         public Action<UdpHost> Started, Stopped;
 
@@ -35,6 +38,12 @@ namespace Cutulu.Network.Sockets
             // Stop currently running host
             Stop(1);
 
+            // Forward port to router to enable connecting to your local device remotely
+            if (UseRouterPortForwarding)
+            {
+                RouterPortForwarder = RouterPortForwarding.OpenPortThread(Port, RouterPortForwarding.PROTOCOL.UDP, "godot-cutulu-udp");
+            }
+
             // Establish cancellation token
             Token = (TokenSource = new()).Token;
 
@@ -48,6 +57,7 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         public virtual void Stop(byte exitCode = 0)
         {
+            RouterPortForwarder?.Terminate();
             TokenSource?.Cancel();
 
             Token = CancellationToken.None;

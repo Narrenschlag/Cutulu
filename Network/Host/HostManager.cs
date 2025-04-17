@@ -10,8 +10,8 @@ namespace Cutulu.Network
 
     public partial class HostManager
     {
-        public readonly Dictionary<IPEndPoint, Connection> ConnectionsByUdp = new();
-        public readonly Dictionary<TcpSocket, Connection> Connections = new();
+        public readonly Dictionary<IPEndPoint, Connection> ConnectionsByUdp = [];
+        public readonly Dictionary<TcpSocket, Connection> Connections = [];
 
         public readonly TcpHost TcpHost;
         public readonly UdpHost UdpHost;
@@ -19,6 +19,7 @@ namespace Cutulu.Network
         public byte[] PingBuffer { get; set; }
         private long LastUID { get; set; }
 
+        public bool UseRouterPortForwarding { get; set; } = false;
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
 
@@ -54,7 +55,7 @@ namespace Cutulu.Network
         #region Callable Functions
 
         /// <summary>
-        /// Starts host.
+        /// Starts host
         /// </summary>
         public virtual async Task Start()
         {
@@ -63,12 +64,15 @@ namespace Cutulu.Network
             ConnectionsByUdp.Clear();
             Connections.Clear();
 
+            TcpHost.UseRouterPortForwarding = UseRouterPortForwarding;
             TcpHost.Start(TcpPort);
+
+            UdpHost.UseRouterPortForwarding = UseRouterPortForwarding;
             UdpHost.Start(UdpPort);
         }
 
         /// <summary>
-        /// Stops host.
+        /// Stops host
         /// </summary>
         public virtual async Task Stop()
         {
@@ -85,12 +89,12 @@ namespace Cutulu.Network
         }
 
         /// <summary>
-        /// Sends data to connections.
+        /// Sends data to connections
         /// </summary>
         public virtual void Send(short key, object obj, params Connection[] connections) => Send(key, obj, true, connections);
 
         /// <summary>
-        /// Sends data to connections.
+        /// Sends data to connections
         /// </summary>
         public virtual void Send(short key, object obj, bool reliable, params Connection[] connections)
         {
@@ -106,7 +110,7 @@ namespace Cutulu.Network
         }
 
         /// <summary>
-        /// Sends data to connections async.
+        /// Sends data to connections async
         /// </summary>
         public virtual async Task SendAsync(short key, object obj, params Connection[] connections) => await SendAsync(key, obj, true, connections);
 
