@@ -99,6 +99,14 @@ namespace Cutulu.Network
             return _rpf;
         }
 
+        /// <summary>
+        /// Returns true if any port can be opened
+        /// </summary>
+        public static bool CanOpenPort(out Error _error)
+        {
+            return (_error = new RouterPortForwarding(0, PROTOCOL.TCP).Discover()) == Error.Ok;
+        }
+
         // Returns the name of the application
         private static string GetDefaultDescription()
         {
