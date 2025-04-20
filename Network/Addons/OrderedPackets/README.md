@@ -10,11 +10,11 @@ When done you can pack and unpack packets using the `PacketOrganizer.Pack` and `
 // Create a new instance of the PacketOrganizer
 var _packet_organizer = new PacketOrganizer();
 
-// Pack a packet
+// Pack a packet -> byte[] with timestamp
 var _packet = _packet_organizer.Pack(0, "Hello sir.");
 
-// Unpack a packet
-var _message = _packet_organizer.Unpack(0, _packet);
+// Unpack a packet 
+var _message = _packet_organizer.Unpack(0, _packet, string.Empty);
 ```
 
 Note that the _key is used for the timestamping only and does not affect the actual packet data.

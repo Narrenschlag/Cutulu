@@ -1,19 +1,25 @@
-using Cutulu.Core;
-
 namespace Cutulu.Network.Addons
 {
-    public partial class PacketOrganizer : Core.TimeStamper<short>
+    using Cutulu.Core;
+
+    /// <summary>
+    /// PacketOrganizer is a utility class that helps you to organize packets
+    /// <para>Espescially useful for ordered UDP packets</para>
+    /// </summary>
+    public partial class PacketOrganizer : TimeStamper<short>
     {
-        public PacketOrganizer() : base()
-        {
-
-        }
-
+        /// <summary>
+        /// Packs data into a time stamped byte array
+        /// </summary>
         public byte[] Pack(short _key, object _obj)
         {
             return new OrderedPacket(Next(_key), _obj).Encode();
         }
 
+        /// <summary>
+        /// Unpacks data from a byte array and checks if a timestamp can be found aswell as if it is valid
+        /// <para>Else tries to unpack the data as a normal packet</para>
+        /// </summary>
         public bool TryUnpack<T>(short _key, byte[] _buffer, out T _decoded)
         {
             // Is an ordered packet
@@ -28,6 +34,11 @@ namespace Cutulu.Network.Addons
             return _buffer.TryDecode(out _decoded);
         }
 
+        /// <summary>
+        /// Unpacks data from a byte array and checks if a timestamp can be found aswell as if it is valid
+        /// <para>Else tries to unpack the data as a normal packet</para>
+        /// <para>If the data is not valid it returns the default value</para>
+        /// </summary>
         public T Unpack<T>(short _key, byte[] _buffer, T _default = default)
         {
             return TryUnpack(_key, _buffer, out T _decoded) ? _decoded : _default;

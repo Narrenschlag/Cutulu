@@ -414,24 +414,21 @@ namespace Cutulu.Network
             Print($"Starting ordered packet test...");
 
             var _packet_key = (short)999;
-
-            var _timestamper_a = new TimeStamper<int>();
             var _timestamper_message = "Hello sir. I am ordered.";
-            var _ordered_a = new OrderedPacket<int>(_timestamper_a, _packet_key, _timestamper_message);
-            var _ordered_a_buffer = _ordered_a.Pack();
 
-            var _timestamper_b = new TimeStamper<int>();
-            var _ordered_b = _ordered_a_buffer.Decode<OrderedPacket<int>>();
-            var _valid = _timestamper_b.IsValid(_packet_key, _ordered_b);
-            var _timestamper_message_b = _ordered_b.Unpack("");
+            var _organizer_a = new Addons.PacketOrganizer();
+            var _ordered_a = _organizer_a.Pack(_packet_key, _timestamper_message);
 
-            if (_valid == false || _timestamper_message_b != _timestamper_message)
+            var _organizer_b = new Addons.PacketOrganizer();
+            var _valid = _organizer_b.TryUnpack(_packet_key, _ordered_a, out string _ordered_b);
+
+            if (_valid == false || _ordered_b != _timestamper_message)
             {
                 PrintErr($"Failed to unpack ordered packet.");
                 return false;
             }
 
-            Print($"Unpacked ordered packet. {_timestamper_message_b} [{_timestamper_a.Current(_packet_key)} == {_timestamper_b.Current(_packet_key)}]");
+            Print($"Unpacked ordered packet. {_ordered_b} [{_organizer_a.Current(_packet_key)} == {_organizer_b.Current(_packet_key)}]");
 
             NextStep();
 
