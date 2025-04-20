@@ -100,7 +100,7 @@ namespace Cutulu.Network
         {
             if (connections.IsEmpty())
             {
-                connections = Connections.Values.ToArray();
+                connections = [.. Connections.Values];
             }
 
             for (int i = 0; i < connections.Length; i++)
@@ -121,7 +121,7 @@ namespace Cutulu.Network
         {
             if (connections.IsEmpty())
             {
-                connections = Connections.Values.ToArray();
+                connections = [.. Connections.Values];
             }
 
             for (int i = 0; i < connections.Length; i++)

@@ -7,26 +7,17 @@ namespace Cutulu.Network
     using Protocols;
     using Core;
 
-    public partial class Connection
+    public partial class Connection(long uid, HostManager host, Sockets.TcpSocket socket, IPEndPoint endpoint)
     {
-        public Sockets.TcpSocket Socket { get; private set; }
-        public IPEndPoint EndPoint { get; private set; }
-        public HostManager Host { get; private set; }
+        public Sockets.TcpSocket Socket { get; private set; } = socket;
+        public IPEndPoint EndPoint { get; private set; } = endpoint;
+        public HostManager Host { get; private set; } = host;
 
-        public long UserID { get; private set; }
+        public long UserID { get; private set; } = uid;
 
         public bool IsConnected => Socket != null && Socket.IsConnected;
 
         public Action<short, byte[]> Received;
-
-        public Connection(long uid, HostManager host, Sockets.TcpSocket socket, IPEndPoint endpoint)
-        {
-            EndPoint = endpoint;
-            Socket = socket;
-
-            Host = host;
-            UserID = uid;
-        }
 
         /// <summary>
         /// Kicks/Cancels connection from host side.

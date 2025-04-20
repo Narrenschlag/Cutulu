@@ -126,7 +126,7 @@ namespace Cutulu.Network
 
         private async void ConnectEvent(TcpSocket socket)
         {
-            await socket.SendAsync(new[] { (byte)ConnectionTypeEnum.Connect }, UdpClient.GetLocalEndpoint().Port.Encode());
+            await socket.SendAsync([(byte)ConnectionTypeEnum.Connect], UdpClient.GetLocalEndpoint().Port.Encode());
 
             var (Success, Buffer) = await socket.Receive(1);
             if (Success == false || Buffer[0] != 1)
