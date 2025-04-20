@@ -8,8 +8,6 @@ namespace Cutulu.Json
     using reader = System.Text.Json.Utf8JsonReader;
     using i3 = Godot.Vector3I;
 
-    using Core;
-
     public class Vector3I_Json : JsonConverter<i3>
     {
         public override i3 Read(ref reader reader, Type typeToConvert, options options)

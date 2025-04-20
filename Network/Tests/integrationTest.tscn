@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b6xudgiblx81i"]
 
-[ext_resource type="Script" path="res://Cutulu/Network/IntegrationTest.cs" id="1_ac7wc"]
+[ext_resource type="Script" uid="uid://du6x5y7sy7v67" path="res://Cutulu/Network/Tests/IntegrationTest.cs" id="1_ac7wc"]
 
 [node name="IntegrationTest" type="Node"]
 script = ExtResource("1_ac7wc")
