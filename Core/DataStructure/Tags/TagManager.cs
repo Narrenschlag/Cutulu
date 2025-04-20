@@ -8,8 +8,8 @@ namespace Cutulu.Core
     /// </summary>
     public partial class TagManager<Tagable> where Tagable : Core.Tagable
     {
-        private Dictionary<object, HashSet<Tagable>> TagablesByTag = new();
-        private Dictionary<long, TagReference> TagablesByUID = new();
+        private readonly Dictionary<object, HashSet<Tagable>> TagablesByTag = [];
+        private readonly Dictionary<long, TagReference> TagablesByUID = [];
 
         /// <summary>
         /// Event called when a tagable is tagged
@@ -45,7 +45,7 @@ namespace Cutulu.Core
         /// </summary>
         public HashSet<Tagable> Get(string _tag)
         {
-            return TagablesByTag.TryGetValue(_tag, out var _tagables) ? _tagables : new();
+            return TagablesByTag.TryGetValue(_tag, out var _tagables) ? _tagables : [];
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Cutulu.Core
         /// </summary>
         public HashSet<object> GetTagsOf(Tagable _tagable)
         {
-            return _tagable != null && TagablesByUID.TryGetValue(_tagable.GetUniqueTagID(), out var _data) && _data.Tags != null ? _data.Tags : new();
+            return _tagable != null && TagablesByUID.TryGetValue(_tagable.GetUniqueTagID(), out var _data) && _data.Tags != null ? _data.Tags : [];
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace Cutulu.Core
 
                     // Get tag tagables
                     if (TagablesByTag.TryGetValue(_tag, out var _tagables) == false)
-                        TagablesByTag[_tag] = _tagables = new();
+                        TagablesByTag[_tag] = _tagables = [];
 
                     // Add to tag tagables
                     if (_tagables.Contains(_tagable) == false)
@@ -152,7 +152,7 @@ namespace Cutulu.Core
         private struct TagReference(Tagable _tagable)
         {
             public readonly Tagable Tagable = _tagable;
-            public HashSet<object> Tags = new();
+            public HashSet<object> Tags = [];
         }
     }
 }
