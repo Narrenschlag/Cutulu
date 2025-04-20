@@ -1,4 +1,4 @@
-namespace Cutulu.Network
+namespace Cutulu.Core
 {
     using System.Collections.Generic;
     using System.Numerics;
@@ -10,14 +10,6 @@ namespace Cutulu.Network
     {
         private readonly static STAMP HalfDiv = STAMP.CreateChecked(2);
         private readonly Dictionary<object, STAMP> Timestamps = [];
-
-        /// <summary>
-        /// Checks if a timestamp is valid and updates the timestamp if it is
-        /// </summary>
-        public bool IsValid(object _key, OrderedPacket<STAMP> _packet)
-        {
-            return IsValid(_key, _packet.Timestamp);
-        }
 
         /// <summary>
         /// Checks if a timestamp is valid and updates the timestamp if it is
@@ -58,6 +50,20 @@ namespace Cutulu.Network
         public void Clear()
         {
             Timestamps.Clear();
+        }
+
+        /// <summary>
+        /// Clears given timestamp keys
+        /// </summary>
+        public void Clear(params object[] _keys)
+        {
+            if (_keys.IsEmpty()) return;
+
+            foreach (var _key in _keys)
+            {
+                if (_key != null && Timestamps.ContainsKey(_key))
+                    Timestamps.Remove(_key);
+            }
         }
     }
 }
