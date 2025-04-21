@@ -77,6 +77,9 @@ namespace Cutulu.Network
         /// </summary>
         public virtual async Task Stop()
         {
+            // Kick all connections before stopping the server
+            foreach (var _connection in Connections.Values) _connection?.Kick();
+
             TcpHost.Stop();
             UdpHost.Stop();
 
