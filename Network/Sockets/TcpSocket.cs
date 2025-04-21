@@ -142,7 +142,6 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         public virtual void Disconnect(byte exitCode = 0)
         {
-            if (Host == null) Debug.LogError($">>Disconnect {exitCode}");
             TokenSource?.Cancel();
 
             Token = CancellationToken.None;
@@ -225,7 +224,6 @@ namespace Cutulu.Network.Sockets
                     var read = await stream.ReadAsync(buffer, _token);
                     if (read < length) throw new IOException($"LOST_CONNECTION");
 
-                    Receiving = false;
                     return (true, buffer);
                 }
 
@@ -256,6 +254,11 @@ namespace Cutulu.Network.Sockets
                     }
 
                     Disconnect(255);
+                }
+
+                finally
+                {
+                    Receiving = false;
                 }
             }
 
