@@ -85,18 +85,24 @@ namespace Cutulu.Core
         public static Vector3 Right(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X;
         public static Vector3 Up(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y;
 
-        public static bool TryInstantiate<T>(this PackedScene prefab, Node parent, out T instance, int waitMilliseconds = 0) where T : Node
-        => (instance = Instantiate<T>(prefab, parent, waitMilliseconds)).NotNull();
+        public static bool TryInstantiate<T>(this PackedScene prefab, Node parent, out T instance, int waitMilliseconds = 0)
+        => (instance = Instantiate<T>(prefab, parent, waitMilliseconds)) != null;
 
-        public static T Instantiate<T>(this PackedScene prefab, Node parent, int waitMilliseconds = 0) where T : Node
+        public static T Instantiate<T>(this PackedScene prefab, Node parent, int waitMilliseconds = 0)
         {
-            if (prefab == null) return null;
+            if (prefab == null) return default;
 
-            T t = (T)prefab.Instantiate();
+            var instance = prefab.Instantiate();
+            if (instance.IsNull() || instance is not T t)
+            {
+                instance.QueueFree();
+                return default;
+            }
+
             if (parent.NotNull())
             {
-                if (waitMilliseconds > 0) parent.SetChild(t, waitMilliseconds);
-                else parent.AddChild(t);
+                if (waitMilliseconds > 0) parent.SetChild(instance, waitMilliseconds);
+                else parent.AddChild(instance);
             }
 
             return t;
