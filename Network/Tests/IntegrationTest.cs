@@ -246,7 +246,7 @@ namespace Cutulu.Network
 
             if (host.Connections.Count < 1)
             {
-                PrintErr($"Host did not establish any connections.");
+                PrintErr($"Host did not establish any connections.\nHost Running: {host.IsListening}\nClient Connected: {client.IsConnected}");
                 return false;
             }
 

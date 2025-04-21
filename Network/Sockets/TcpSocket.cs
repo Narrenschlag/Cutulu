@@ -16,7 +16,7 @@ namespace Cutulu.Network.Sockets
         public Socket Socket => Client?.Client;
 
         private CancellationTokenSource TokenSource { get; set; }
-        private CancellationToken Token { get; set; }
+        public CancellationToken Token { get; private set; }
 
         public bool Poll() => IsConnected && Socket.Poll(-1, SelectMode.SelectError) == false;
 
@@ -142,6 +142,7 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         public virtual void Disconnect(byte exitCode = 0)
         {
+            if (Host == null) Debug.LogError($">>Disconnect {exitCode}");
             TokenSource?.Cancel();
 
             Token = CancellationToken.None;

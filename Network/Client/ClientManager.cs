@@ -16,6 +16,7 @@ namespace Cutulu.Network
         public readonly UdpSocket UdpClient;
 
         public int ConnectionTimeout { get; set; } = 5000;
+        public int ValidationTimeout { get; set; } = 5000;
         public string Address { get; set; }
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
@@ -55,12 +56,25 @@ namespace Cutulu.Network
         /// </summary>
         public virtual async Task<bool> Start()
         {
-            await Stop();
+            await Stop(11);
 
             ThreadIdx++;
 
             await UdpClient.Connect(Address, UdpPort);
             await TcpClient.Connect(Address, TcpPort, ConnectionTimeout);
+
+            // Validation timeout
+            if (TcpClient.IsConnected)
+            {
+                var _token = TcpClient.Token;
+                var _timeout = ValidationTimeout;
+
+                // Wait until timed out or connection established
+                while (_timeout-- > 0 && IsConnected == false && _token.IsCancellationRequested == false)
+                {
+                    await Task.Delay(1);
+                }
+            }
 
             if (IsConnected == false)
             {
