@@ -20,6 +20,7 @@ namespace Cutulu.Network
         private long LastUID { get; set; }
 
         public bool UseRouterPortForwarding { get; set; } = false;
+        public int MaxClients { get; set; } = 0;
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
 
@@ -185,6 +186,9 @@ namespace Cutulu.Network
             // Remove already connected connections with same address
             if (ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))
                 DisconnectEvent(existingConnection.Socket);
+
+            // Stop connection if max client limit has been reached
+            if (MaxClients > 0 && Connections.Count >= MaxClients) return;
 
             ConnectionsByUdp[connection.EndPoint] = connection;
             Connections[socket] = connection;
