@@ -1,5 +1,6 @@
 namespace Cutulu.Network
 {
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using System;
 
@@ -9,6 +10,8 @@ namespace Cutulu.Network
 
     public partial class ClientManager
     {
+        public readonly HashSet<Listener> Listeners = [];
+
         public readonly TcpSocket TcpClient;
         public readonly UdpSocket UdpClient;
 
@@ -118,7 +121,29 @@ namespace Cutulu.Network
             }
         }
 
-        public virtual void Receive(short key, byte[] buffer) { }
+        /// <summary>
+        /// Receive event, called by ReceiveBuffer.
+        /// </summary>
+        public virtual bool ReadPacket(short key, byte[] buffer) => false;
+
+        /// <summary>
+        /// Receive event, called by client.
+        /// </summary>
+        protected virtual void ReceiveBuffer(byte[] _packet_buffer)
+        {
+            if (PacketProtocol.Unpack(_packet_buffer, out var _key, out var _buffer))
+            {
+                // First let the client read the packet
+                if (ReadPacket(_key, _buffer)) return;
+
+                // Host didn't consume the packet, let the listeners read it
+                foreach (var _listener in Listeners)
+                    if (_listener.ReadPacket(_key, _buffer)) return;
+
+                // No one consumed the packet, let the events read it
+                Received?.Invoke(_key, _buffer);
+            }
+        }
 
         #endregion
 
@@ -172,10 +197,12 @@ namespace Cutulu.Network
                 var packet = await UdpClient.Receive();
                 if (active() == false) return;
 
-                if (packet.Success && PacketProtocol.Unpack(packet.Buffer, out var key, out var buffer))
+                if (packet.Success)
                 {
-                    Receive(key, buffer);
-                    Received?.Invoke(key, buffer);
+                    lock (this)
+                    {
+                        ReceiveBuffer(packet.Buffer);
+                    }
                 }
 
                 udp();
@@ -191,12 +218,11 @@ namespace Cutulu.Network
                 packet = await TcpClient.Receive(packet.Buffer.Decode<int>());
                 if (active() == false) continue;
 
-                if (packet.Success && PacketProtocol.Unpack(packet.Buffer, out var key, out var buffer))
+                if (packet.Success)
                 {
                     lock (this)
                     {
-                        Receive(key, buffer);
-                        Received?.Invoke(key, buffer);
+                        ReceiveBuffer(packet.Buffer);
                     }
                 }
             }

@@ -36,7 +36,7 @@ namespace Cutulu.Network
                 Started = StartEvent,
                 Stopped = StoppedEvent,
 
-                Connected = ConnectEvent,
+                Connected = HandleNewClient,
                 Disconnected = DisconnectEvent,
             };
 
@@ -133,23 +133,28 @@ namespace Cutulu.Network
         /// <summary>
         /// Receive event, called by connections.
         /// </summary>
-        public virtual void Receive(Connection connection, short key, byte[] buffer) { }
+        public virtual bool ReadPacket(Connection connection, short key, byte[] buffer) => false;
 
         #endregion
 
         #region Event Handlers
 
-        private void StartEvent(TcpHost host)
+        protected virtual void StartEvent(TcpHost host)
         {
             lock (this) Started?.Invoke();
         }
 
-        private void StoppedEvent(TcpHost host)
+        protected virtual void StoppedEvent(TcpHost host)
         {
             lock (this) Stopped?.Invoke();
         }
 
-        private async void ConnectEvent(TcpSocket socket)
+        protected virtual void ConnectedEvent(Connection _connection)
+        {
+            lock (this) Connected?.Invoke(_connection);
+        }
+
+        private async void HandleNewClient(TcpSocket socket)
         {
             var packet = await socket.Receive(1);
 
@@ -186,7 +191,7 @@ namespace Cutulu.Network
 
             await socket.ClearBuffer();
 
-            lock (this) Connected?.Invoke(connection);
+            ConnectedEvent(connection);
 
             while (active())
             {
@@ -197,7 +202,7 @@ namespace Cutulu.Network
                 packet = await connection.Socket.Receive(packet.Buffer.Decode<int>());
                 if (active() == false) continue;
 
-                if (packet.Success) connection.Receive(packet.Buffer);
+                if (packet.Success) connection.ReceiveBuffer(packet.Buffer);
             }
 
             bool active() => connection != null && connection.Socket != null && connection.Socket.IsConnected;
@@ -224,7 +229,7 @@ namespace Cutulu.Network
         {
             if (ConnectionsByUdp.TryGetValue(ip, out var connection) == false) return;
 
-            connection.Receive(buffer);
+            connection.ReceiveBuffer(buffer);
         }
 
         #endregion

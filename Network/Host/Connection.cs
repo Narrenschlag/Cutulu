@@ -1,5 +1,6 @@
 namespace Cutulu.Network
 {
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using System.Net;
     using System;
@@ -13,12 +14,13 @@ namespace Cutulu.Network
         public IPEndPoint EndPoint { get; private set; } = endpoint;
         public HostManager Host { get; private set; } = host;
 
+        public readonly HashSet<Listener> Listeners = [];
         public long UserID { get; private set; } = uid;
 
         public bool IsConnected => Socket != null && Socket.IsConnected;
         long Tagable.GetUniqueTagID() => UserID;
 
-        public Action<short, byte[]> Received;
+        public event Action<short, byte[]> Received;
 
         /// <summary>
         /// Kicks/Cancels connection from host side.
@@ -69,12 +71,19 @@ namespace Cutulu.Network
         /// <summary>
         /// Receive event, called by client.
         /// </summary>
-        public virtual void Receive(byte[] buffer)
+        protected virtual void ReceiveBuffer(byte[] buffer)
         {
             if (PacketProtocol.Unpack(buffer, out var key, out var unpackedBuffer))
             {
-                lock (Host) Host.Receive(this, key, unpackedBuffer);
+                // First let the host read the packet
+                lock (Host) if (Host.ReadPacket(this, key, unpackedBuffer)) return;
 
+                // Host didn't consume the packet, let the listeners read it
+                lock (Listeners)
+                    foreach (var _listener in Listeners)
+                        if (_listener.ReadPacket(key, unpackedBuffer)) return;
+
+                // No one consumed the packet, let the events read it
                 lock (this) Received?.Invoke(key, unpackedBuffer);
                 lock (Host) Host.Received?.Invoke(this, key, unpackedBuffer);
             }
