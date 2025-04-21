@@ -10,6 +10,6 @@ namespace Cutulu.Network
         /// Called when a packet is received
         /// <para>Returns true if the packet should be blocked</para>
         /// </summary>
-        public bool ReadPacket(short _key, byte[] _buffer);
+        public bool _Receive(short _key, byte[] _buffer);
     }
 }

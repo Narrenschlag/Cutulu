@@ -159,7 +159,7 @@ namespace Cutulu.Network
 
                 // Host didn't consume the packet, let the listeners read it
                 foreach (var _listener in Listeners)
-                    if (_listener.ReadPacket(_key, _buffer)) return;
+                    if (_listener._Receive(_key, _buffer)) return;
 
                 // No one consumed the packet, let the events read it
                 Received?.Invoke(_key, _buffer);

@@ -81,7 +81,7 @@ namespace Cutulu.Network
                 // Host didn't consume the packet, let the listeners read it
                 lock (Listeners)
                     foreach (var _listener in Listeners)
-                        if ((bool)(_listener?.ReadPacket(key, unpackedBuffer))) return;
+                        if ((bool)(_listener?._Receive(key, unpackedBuffer))) return;
 
                 // No one consumed the packet, let the events read it
                 lock (this) Received?.Invoke(key, unpackedBuffer);
