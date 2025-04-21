@@ -15,6 +15,7 @@ namespace Cutulu.Network
         public readonly TcpSocket TcpClient;
         public readonly UdpSocket UdpClient;
 
+        public int ConnectionTimeout { get; set; } = 5000;
         public string Address { get; set; }
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
@@ -63,7 +64,7 @@ namespace Cutulu.Network
 
             // Handle timeout
             var threadIdx = ThreadIdx;
-            var timeout = 5000;
+            var timeout = ConnectionTimeout;
 
             while (threadIdx == ThreadIdx && timeout-- > 0 && IsValidated == false)
             {
