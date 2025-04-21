@@ -181,14 +181,28 @@ namespace Cutulu.Network
             await socket.SendAsync(true.Encode());
 
             var connection = new Connection(LastUID++, this, socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
-            await socket.SendAsync(connection.UserID.Encode());
+
+            // Check if the client is still connected
+            try
+            {
+                await socket.SendAsync(connection.UserID.Encode());
+            }
+            catch
+            {
+                Debug.LogError($"Socket closed session remotely. Aboarting onboarding process.");
+                return;
+            }
 
             // Remove already connected connections with same address
             if (ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))
                 DisconnectEvent(existingConnection.Socket);
 
             // Stop connection if max client limit has been reached
-            if (MaxClients > 0 && Connections.Count >= MaxClients) return;
+            if (MaxClients > 0 && Connections.Count >= MaxClients)
+            {
+                Debug.LogError($"Maximum client capacity has been reached. Cancelling connection.");
+                return;
+            }
 
             ConnectionsByUdp[connection.EndPoint] = connection;
             Connections[socket] = connection;
