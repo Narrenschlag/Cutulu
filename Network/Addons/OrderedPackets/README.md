@@ -1,5 +1,5 @@
 # Ordered Packets
-When you use the UDP protocol you might miss the ordered stream of packets know from TCP. This addon helps you to achieve exactly that.
+When you use the UDP protocol you might miss the ordered stream of packets known from TCP. This addon helps you to achieve exactly that.
 
 # Usage
 To utilize the [OrderedPacket](./OrderedPacket.cs) class you need to create a new instance of the [PacketOrganizer](./PacketOrganizer.cs) class.
