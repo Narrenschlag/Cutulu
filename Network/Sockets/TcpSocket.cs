@@ -57,7 +57,7 @@ namespace Cutulu.Network.Sockets
             // Wait until disconnected
             while (IsConnected) await Task.Delay(1);
 
-            Token = (TokenSource = new()).Token;
+            var _token = Token = (TokenSource = new()).Token;
 
             if (Client == null)
             {
@@ -73,7 +73,7 @@ namespace Cutulu.Network.Sockets
             {
                 try
                 {
-                    await Client.ConnectAsync(address, port, Token);
+                    await Client.ConnectAsync(address, port, _token);
                 }
 
                 catch (Exception ex)
@@ -97,13 +97,13 @@ namespace Cutulu.Network.Sockets
             }
 
             // Wait until timed out or connection established
-            while (timeout-- > 0 && IsConnected == false)
+            while (timeout-- > 0 && IsConnected == false && _token.IsCancellationRequested == false)
             {
                 await Task.Delay(1);
             }
 
             // Was unable to connect
-            if (IsConnected == false)
+            if (_token.IsCancellationRequested || IsConnected == false)
             {
                 Disconnect(2);
                 return false;
@@ -175,18 +175,18 @@ namespace Cutulu.Network.Sockets
         {
             if (IsConnected == false || buffers.IsEmpty() || Client.GetStream() is not NetworkStream stream) return false;
 
-            var token = Token;
+            var _token = Token;
 
-            for (int i = 0; i < buffers.Length && token.IsCancellationRequested == false; i++)
+            for (int i = 0; i < buffers.Length && _token.IsCancellationRequested == false; i++)
             {
                 if (buffers[i].NotEmpty())
-                    await stream.WriteAsync(buffers[i], token);
+                    await stream.WriteAsync(buffers[i], _token);
             }
 
-            if (token.IsCancellationRequested == false)
-                await stream.FlushAsync(token);
+            if (_token.IsCancellationRequested == false)
+                await stream.FlushAsync(_token);
 
-            return token.IsCancellationRequested == false;
+            return _token.IsCancellationRequested == false;
         }
 
         /// <summary>
@@ -217,10 +217,11 @@ namespace Cutulu.Network.Sockets
                 Receiving = true;
 
                 var buffer = new byte[length];
+                var _token = Token;
 
                 try
                 {
-                    var read = await stream.ReadAsync(buffer, Token);
+                    var read = await stream.ReadAsync(buffer, _token);
                     if (read < length) throw new IOException($"LOST_CONNECTION");
 
                     Receiving = false;

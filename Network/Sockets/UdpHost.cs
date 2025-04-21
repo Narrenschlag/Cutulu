@@ -80,11 +80,11 @@ namespace Cutulu.Network.Sockets
         private async void AcceptPackets()
         {
             (bool Success, byte[] Buffer, IPEndPoint RemoteEndPoint) packet;
-            var token = Token;
+            var _token = Token;
 
             while (IsListening)
             {
-                if ((packet = await Listener.Receive()).Success && token.IsCancellationRequested == false)
+                if ((packet = await Listener.Receive()).Success && _token.IsCancellationRequested == false)
                 {
                     Received?.Invoke(packet.RemoteEndPoint, packet.Buffer);
                 }

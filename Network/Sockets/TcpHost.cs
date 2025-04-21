@@ -96,15 +96,15 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         private async void AcceptClients()
         {
-            var token = Token;
+            var _token = Token;
 
-            while (IsListening && token.IsCancellationRequested == false)
+            while (IsListening && _token.IsCancellationRequested == false)
             {
                 TcpClient client;
 
                 try
                 {
-                    client = await Listener.AcceptTcpClientAsync(token);
+                    client = await Listener.AcceptTcpClientAsync(_token);
                 }
 
                 catch (Exception ex)

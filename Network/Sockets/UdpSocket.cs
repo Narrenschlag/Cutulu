@@ -146,7 +146,6 @@ namespace Cutulu.Network.Sockets
             if (IsConnected == false || endpoints.IsEmpty() || buffers.IsEmpty()) return;
 
             using var memory = new MemoryStream();
-            var token = Token;
 
             for (int i = 0; i < buffers.Length; i++)
             {
@@ -168,18 +167,18 @@ namespace Cutulu.Network.Sockets
             if (IsConnected == false || Endpoint == null || buffers.IsEmpty()) return false;
 
             using var memory = new MemoryStream();
-            var token = Token;
+            var _token = Token;
 
-            for (int i = 0; i < buffers.Length && token.IsCancellationRequested == false; i++)
+            for (int i = 0; i < buffers.Length && _token.IsCancellationRequested == false; i++)
             {
                 if (buffers[i].NotEmpty())
-                    await memory.WriteAsync(buffers[i], token);
+                    await memory.WriteAsync(buffers[i], _token);
             }
 
-            if (token.IsCancellationRequested == false)
-                await Client.SendAsync(memory.ToArray(), token);
+            if (_token.IsCancellationRequested == false)
+                await Client.SendAsync(memory.ToArray(), _token);
 
-            return token.IsCancellationRequested == false;
+            return _token.IsCancellationRequested == false;
         }
 
         /// <summary>
@@ -190,20 +189,20 @@ namespace Cutulu.Network.Sockets
             if (IsConnected == false || endpoints.IsEmpty() || buffers.IsEmpty()) return false;
 
             using var memory = new MemoryStream();
-            var token = Token;
+            var _token = Token;
 
-            for (int i = 0; i < buffers.Length && token.IsCancellationRequested == false; i++)
+            for (int i = 0; i < buffers.Length && _token.IsCancellationRequested == false; i++)
             {
                 if (buffers[i].NotEmpty())
-                    await memory.WriteAsync(buffers[i], token);
+                    await memory.WriteAsync(buffers[i], _token);
             }
 
-            for (int i = 0; i < endpoints.Length && token.IsCancellationRequested == false; i++)
+            for (int i = 0; i < endpoints.Length && _token.IsCancellationRequested == false; i++)
             {
-                await Client.SendAsync(memory.ToArray(), endpoints[i], token);
+                await Client.SendAsync(memory.ToArray(), endpoints[i], _token);
             }
 
-            return token.IsCancellationRequested == false;
+            return _token.IsCancellationRequested == false;
         }
 
         /// <summary>
@@ -211,7 +210,7 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         public async Task<(bool Success, byte[] Buffer, IPEndPoint RemoteEndPoint)> Receive()
         {
-            var token = Token;
+            var _token = Token;
 
             if (IsConnected && Receiving == false)
             {
@@ -219,9 +218,9 @@ namespace Cutulu.Network.Sockets
 
                 try
                 {
-                    var udpReceiveResult = await Client.ReceiveAsync(token);
+                    var udpReceiveResult = await Client.ReceiveAsync(_token);
 
-                    if (token.IsCancellationRequested == false && udpReceiveResult.Buffer.Length > 1)
+                    if (_token.IsCancellationRequested == false && udpReceiveResult.Buffer.Length > 1)
                     {
                         Receiving = false;
                         return (true, udpReceiveResult.Buffer, udpReceiveResult.RemoteEndPoint);

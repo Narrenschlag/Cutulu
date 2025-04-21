@@ -60,16 +60,7 @@ namespace Cutulu.Network
             ThreadIdx++;
 
             await UdpClient.Connect(Address, UdpPort);
-            await TcpClient.Connect(Address, TcpPort);
-
-            // Handle timeout
-            var threadIdx = ThreadIdx;
-            var timeout = ConnectionTimeout;
-
-            while (threadIdx == ThreadIdx && timeout-- > 0 && IsValidated == false)
-            {
-                await Task.Delay(1);
-            }
+            await TcpClient.Connect(Address, TcpPort, ConnectionTimeout);
 
             if (IsConnected == false)
             {
