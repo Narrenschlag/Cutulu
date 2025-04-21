@@ -78,7 +78,7 @@ namespace Cutulu.Network
 
             if (IsConnected == false)
             {
-                await Stop();
+                await Stop(12);
                 return false;
             }
 
@@ -88,12 +88,12 @@ namespace Cutulu.Network
         /// <summary>
         /// Stops client.
         /// </summary>
-        public virtual async Task Stop()
+        public virtual async Task Stop(byte exitCode = 0)
         {
             IsValidated = false;
 
-            TcpClient.Disconnect();
-            UdpClient.Disconnect();
+            TcpClient.Disconnect(exitCode);
+            UdpClient.Disconnect(exitCode);
 
             while (TcpClient.IsConnected || UdpClient.IsConnected) await Task.Delay(1);
             await Task.Delay(1);
@@ -164,7 +164,7 @@ namespace Cutulu.Network
             {
                 Debug.LogR($"[color=indianred][{GetType().Name}] Failed to connect to host.");
 
-                await Stop();
+                await Stop(13);
                 return;
             }
 
@@ -173,7 +173,7 @@ namespace Cutulu.Network
             {
                 Debug.LogR($"[color=indianred][{GetType().Name}] Failed to read UID.");
 
-                await Stop();
+                await Stop(14);
                 return;
             }
 
@@ -236,7 +236,7 @@ namespace Cutulu.Network
             bool active() => TcpClient.IsConnected && UdpClient.IsConnected && ThreadIdx == threadIdx;
 
             // Stop if disconnected
-            await Stop();
+            await Stop(15);
         }
 
         #endregion
