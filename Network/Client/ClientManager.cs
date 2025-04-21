@@ -16,7 +16,7 @@ namespace Cutulu.Network
         public readonly UdpSocket UdpClient;
 
         public int ConnectionTimeout { get; set; } = 5000;
-        public int ValidationTimeout { get; set; } = 5000;
+        public int ValidationTimeout { get; set; } = 0;
         public string Address { get; set; }
         public int TcpPort { get; set; }
         public int UdpPort { get; set; }
@@ -25,8 +25,8 @@ namespace Cutulu.Network
 
         private byte ThreadIdx { get; set; }
 
-        public bool IsConnected => TcpClient != null && TcpClient.IsConnected && IsValidated;
-        public bool IsValidated { get; private set; } = true;
+        public bool IsConnected => TcpClient != null && TcpClient.IsConnected && Validation == VALIDATION.COMPLETE;
+        public VALIDATION Validation { get; private set; } = VALIDATION.INVALID;
 
         public Action<short, byte[]> Received;
         public Action Connected, Disconnected;
@@ -58,21 +58,36 @@ namespace Cutulu.Network
         {
             await Stop(11);
 
+            Validation = VALIDATION.INVALID;
             ThreadIdx++;
 
             await UdpClient.Connect(Address, UdpPort);
             await TcpClient.Connect(Address, TcpPort, ConnectionTimeout);
 
             // Validation timeout
-            if (TcpClient.IsConnected)
+            if (TcpClient.IsConnected && Validation == VALIDATION.IN_PROGRESS)
             {
                 var _token = TcpClient.Token;
-                var _timeout = ValidationTimeout;
 
-                // Wait until timed out or connection established
-                while (_timeout-- > 0 && IsConnected == false && _token.IsCancellationRequested == false)
+                // Wait until validated or timeout
+                if (ValidationTimeout > 0)
                 {
-                    await Task.Delay(1);
+                    var _timeout = ValidationTimeout;
+
+                    // Wait until timed out or validation is not in progress
+                    while (_timeout-- > 0 && Validation == VALIDATION.IN_PROGRESS && _token.IsCancellationRequested == false)
+                    {
+                        await Task.Delay(1);
+                    }
+                }
+
+                // Wait until validation is not in progress
+                else
+                {
+                    while (Validation == VALIDATION.IN_PROGRESS && _token.IsCancellationRequested == false)
+                    {
+                        await Task.Delay(1);
+                    }
                 }
             }
 
@@ -90,7 +105,7 @@ namespace Cutulu.Network
         /// </summary>
         public virtual async Task Stop(byte exitCode = 0)
         {
-            IsValidated = false;
+            Validation = VALIDATION.INVALID;
 
             TcpClient.Disconnect(exitCode);
             UdpClient.Disconnect(exitCode);
@@ -158,6 +173,7 @@ namespace Cutulu.Network
         private async void ConnectEvent(TcpSocket socket)
         {
             await socket.SendAsync([(byte)ConnectionTypeEnum.Connect], UdpClient.GetLocalEndpoint().Port.Encode());
+            Validation = VALIDATION.IN_PROGRESS;
 
             var (Success, Buffer) = await socket.Receive(1);
             if (Success == false || Buffer[0] != 1)
@@ -178,7 +194,7 @@ namespace Cutulu.Network
             }
 
             UserID = Buffer.Decode<long>();
-            IsValidated = true;
+            Validation = VALIDATION.COMPLETE;
 
             lock (this) Connected?.Invoke();
             ReceiveData();
@@ -240,5 +256,12 @@ namespace Cutulu.Network
         }
 
         #endregion
+
+        public enum VALIDATION : byte
+        {
+            INVALID,
+            IN_PROGRESS,
+            COMPLETE,
+        }
     }
 }
