@@ -71,7 +71,7 @@ namespace Cutulu.Network
         /// <summary>
         /// Receive event, called by client.
         /// </summary>
-        protected virtual void ReceiveBuffer(byte[] buffer)
+        public virtual void ReceiveBuffer(byte[] buffer)
         {
             if (PacketProtocol.Unpack(buffer, out var key, out var unpackedBuffer))
             {
