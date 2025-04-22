@@ -9,24 +9,24 @@ namespace Cutulu.Network
         public Node Client { get; set; }
         public Node Host { get; set; }
 
-        public N Unpack<N>(Node parent, bool asClient) where N : Node
+        public N Unpack<N>(Node parent, bool asClient)
         {
-            if (this is not Node godot || godot.IsNull()) return null;
+            if (this is not Node godot || godot.IsNull()) return default;
 
-            var node = asClient ? Client : Host;
+            var _node = asClient ? Client : Host;
 
             // IMPORTANT NOTE
             // If this won't work even though it should
             // It may be that your overwrite the host/client children with different scripts
 
-            if (node is not N n || n.IsNull())
+            if (_node is not N n || _node.IsNull())
             {
-                Debug.LogR($"[color=orange]Failed to unpack shared asset for [i]{(asClient ? "Client" : "Host")}[/i]. Check your SharedAsset scene ({godot.Name}, {typeof(N).Name} != {(node.NotNull() ? node.GetType().Name : "<null>")}).[/color]");
+                Debug.LogR($"[color=orange]Failed to unpack shared asset for [i]{(asClient ? "Client" : "Host")}[/i]. Check your SharedAsset scene ({godot.Name}, {typeof(N).Name} != {(_node.NotNull() ? _node.GetType().Name : "<null>")}).[/color]");
                 godot.Destroy();
-                return null;
+                return default;
             }
 
-            parent.SetChild(n);
+            parent.SetChild(_node);
 
             var children = godot.GetNodesInChildren<IShared>(false, 1);
             if (children.NotEmpty())
@@ -35,7 +35,7 @@ namespace Cutulu.Network
                 {
                     if (child != Client && child != Host)
                     {
-                        var unpacked = child.Unpack<Node>(n, asClient);
+                        child.Unpack<Node>(_node, asClient);
                     }
                 }
             }
@@ -45,13 +45,13 @@ namespace Cutulu.Network
             return n;
         }
 
-        public static N Unpack<N>(PackedScene packed, Node parent, bool asClient) where N : Node
+        public static N Unpack<N>(PackedScene packed, Node parent, bool asClient)
         {
-            if (packed.IsNull()) return null;
+            if (packed.IsNull()) return default;
 
-            var node = packed.Instantiate<Node>(parent);
+            var _node = packed.Instantiate<Node>(parent);
 
-            if (node is IShared shared && node.NotNull())
+            if (_node is IShared shared && _node.NotNull())
             {
                 var unpacked = ((IShared)shared).Unpack<N>(parent, asClient);
 
@@ -59,7 +59,7 @@ namespace Cutulu.Network
                 return unpacked;
             }
 
-            else if (node is N n && n.NotNull())
+            else if (_node is N n && _node.NotNull())
             {
                 //Debug.LogError($"Load asset typeof({n.GetType().Name}) as typeof({typeof(N)})");
                 return n;
@@ -67,9 +67,9 @@ namespace Cutulu.Network
 
             else
             {
-                Debug.LogError($"scene {packed.ResourcePath} couldn't be instantiated as typeof({typeof(N).Name}) as it is typeof({node.GetType().Name})");
-                node.Destroy();
-                return null;
+                Debug.LogError($"scene {packed.ResourcePath} couldn't be instantiated as typeof({typeof(N).Name}) as it is typeof({_node.GetType().Name})");
+                _node.Destroy();
+                return default;
             }
         }
 
