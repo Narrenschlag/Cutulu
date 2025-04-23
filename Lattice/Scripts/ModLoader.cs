@@ -50,7 +50,7 @@ namespace Cutulu.Lattice
             {
                 if (directory.IsEmpty()) return;
 
-                var files = IO.GetFiles(directory);
+                var files = IO.GetFileNames(directory);
 
                 if (files.NotEmpty())
                 {
@@ -70,7 +70,7 @@ namespace Cutulu.Lattice
                     }
                 }
 
-                var directories = IO.GetDirectories(directory);
+                var directories = IO.GetDirectoryNames(directory);
 
                 if (directories.NotEmpty())
                 {

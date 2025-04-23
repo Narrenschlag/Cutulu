@@ -59,7 +59,7 @@ namespace Cutulu.Core
 
         public static KeyValuePair<string, Passkey>[] ReadAtDirectory(string path, string fileEnding = ".remote")
         {
-            var paths = IO.GetFiles(path);
+            var paths = IO.GetFileNames(path);
 
             var array = new KeyValuePair<string, Passkey>[paths.Size()];
             for (ushort i = 0; i < array.Length; i++)

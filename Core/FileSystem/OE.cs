@@ -18,7 +18,7 @@ namespace Cutulu.Core
         {
             if (rootFolder.EndsWith('/') == false) rootFolder += '/';
 
-            var files = IO.GetFiles(rootFolder);
+            var files = IO.GetFileNames(rootFolder);
             if (files.NotEmpty())
             {
                 for (int i = 0; i < files.Length; i++)
@@ -47,7 +47,7 @@ namespace Cutulu.Core
                 }
             }
 
-            var directories = IO.GetDirectories(rootFolder);
+            var directories = IO.GetDirectoryNames(rootFolder);
             if (directories.NotEmpty())
             {
                 for (int i = 0; i < directories.Length; i++)

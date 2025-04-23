@@ -234,16 +234,16 @@ namespace Cutulu.Core
         }
 
         /// <summary>
-        /// Returns files at given path
+        /// Returns file names at given directory
         /// </summary>
-        public static string[] GetFiles(this string path)
-        => DA.DirExistsAbsolute(path.EndsWith('/') || path.EndsWith('\\') ? path : path += '/') ? DA.GetFilesAt(path) : null;
+        public static string[] GetFileNames(this string path)
+        => DA.DirExistsAbsolute(path.AsDirectory()) ? DA.GetFilesAt(path) : [];
 
         /// <summary>
-        /// Returns directories at given path
+        /// Returns directory names at given directory
         /// </summary>
-        public static string[] GetDirectories(this string path)
-        => DA.DirExistsAbsolute(path.EndsWith('/') || path.EndsWith('\\') ? path : path += '/') ? DA.GetDirectoriesAt(path) : null;
+        public static string[] GetDirectoryNames(this string path)
+        => DA.DirExistsAbsolute(path.AsDirectory()) ? DA.GetDirectoriesAt(path) : [];
 
         /// <summary>
         /// Defines the type serialization used for the file
