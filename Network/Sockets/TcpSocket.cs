@@ -212,7 +212,7 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         public virtual async Task<(bool Success, byte[] Buffer)> Receive(int length)
         {
-            if (IsConnected && Receiving == false && Client.GetStream() is NetworkStream stream)
+            if (length > 0 && IsConnected && Receiving == false && Client.GetStream() is NetworkStream stream)
             {
                 Receiving = true;
 

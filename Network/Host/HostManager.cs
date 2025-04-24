@@ -211,7 +211,6 @@ namespace Cutulu.Network
             Connections[socket] = connection;
 
             await socket.ClearBuffer();
-
             ConnectedEvent(connection);
 
             while (active())
