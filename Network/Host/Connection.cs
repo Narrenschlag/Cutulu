@@ -15,10 +15,10 @@ namespace Cutulu.Network
         public HostManager Host { get; private set; } = host;
 
         public readonly HashSet<Listener> Listeners = [];
-        public long UserID { get; private set; } = uid;
+        public long UserId { get; private set; } = uid;
 
         public bool IsConnected => Socket != null && Socket.IsConnected;
-        long Tagable.GetUniqueTagID() => UserID;
+        long Tagable.GetUniqueTagID() => UserId;
 
         public event Action<short, byte[]> Received;
 

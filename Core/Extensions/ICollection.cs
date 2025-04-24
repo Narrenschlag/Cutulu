@@ -21,7 +21,7 @@ namespace Cutulu.Core
                 return array;
             }
 
-            return Array.Empty<T>();
+            return [];
         }
 
         public static T[] ToArray<T>(this ICollection collection)
@@ -34,7 +34,7 @@ namespace Cutulu.Core
                 return array;
             }
 
-            return Array.Empty<T>();
+            return [];
         }
     }
 }

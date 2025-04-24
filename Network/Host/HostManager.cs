@@ -188,7 +188,7 @@ namespace Cutulu.Network
             // Check if the client is still connected
             try
             {
-                await socket.SendAsync(connection.UserID.Encode());
+                await socket.SendAsync(connection.UserId.Encode());
             }
             catch
             {
