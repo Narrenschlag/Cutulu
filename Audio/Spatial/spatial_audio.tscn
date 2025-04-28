@@ -1,10 +1,58 @@
-[gd_scene load_steps=2 format=3 uid="uid://cwba4lgwsdsry"]
+[gd_scene load_steps=4 format=3 uid="uid://cwba4lgwsdsry"]
 
-[ext_resource type="Script" uid="uid://b6i36x4bcye1g" path="res://Cutulu/Audio/Spatial/SpatialCast.cs" id="1_t2h4h"]
+[ext_resource type="Script" uid="uid://cgvnh54ywtpkt" path="res://Cutulu/Audio/Spatial/SpatialCast.cs" id="1_t2h4h"]
+[ext_resource type="Script" uid="uid://bh1eidf26khck" path="res://Cutulu/Handy/AutoRotate.cs" id="2_nidrv"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_t2h4h"]
+size = Vector3(2, 0.2, 2)
 
 [node name="Node3D" type="Node3D"]
 
-[node name="Camera3D" type="Camera3D" parent="."]
-
-[node name="SpatialCast" type="Node3D" parent="."]
+[node name="SpatialCast" type="Node3D" parent="." node_paths=PackedStringArray("DirectionalTarget")]
+transform = Transform3D(0.984808, 0.0301537, 0.17101, 0, 0.984808, -0.173648, -0.173648, 0.17101, 0.969846, 0, 0.664141, 0)
 script = ExtResource("1_t2h4h")
+DirectionalTarget = NodePath("Node3D")
+
+[node name="Node3D" type="Node3D" parent="SpatialCast"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+
+[node name="Ankle" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ankle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1, 0)
+shape = SubResource("BoxShape3D_t2h4h")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="Ankle"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 1.1)
+shape = SubResource("BoxShape3D_t2h4h")
+
+[node name="Ankle2" type="StaticBody3D" parent="."]
+transform = Transform3D(1.91069e-15, -1, -4.37114e-08, -4.37114e-08, -4.37114e-08, 1, -1, 0, -4.37114e-08, 0, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ankle2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1, 0)
+shape = SubResource("BoxShape3D_t2h4h")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="Ankle2"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 1.1)
+shape = SubResource("BoxShape3D_t2h4h")
+
+[node name="Ankle3" type="StaticBody3D" parent="."]
+transform = Transform3D(8.74228e-08, 8.74228e-08, -1, -1, 1.91069e-15, -8.74228e-08, -5.73206e-15, 1, 8.74228e-08, 0, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ankle3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.1, 0)
+shape = SubResource("BoxShape3D_t2h4h")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="Ankle3"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 1.1)
+shape = SubResource("BoxShape3D_t2h4h")
+
+[node name="CameraPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("2_nidrv")
+Speed = Vector3(0, 10, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)

@@ -1,31 +1,59 @@
 namespace Cutulu.Audio.Spatial
 {
+    using System.Threading.Tasks;
     using Cutulu.Core;
     using Godot;
 
     public partial class SpatialCast : Node3D
     {
-        [Export] private Color Color = Colors.Purple;
+        public static float GetSoundTravelDuration(float _distance_in_m, float _temperature_in_c = 20.0f)
+        {
+            var _speed_mtps = 343.0f + 0.6f * (_temperature_in_c - 20.0f);
+            return _distance_in_m / _speed_mtps;
+        }
 
-        public override void _Ready()
+        [Export] private Node3D DirectionalTarget { get; set; }
+        [Export] private Color Color { get; set; } = Colors.Purple;
+
+        public override async void _Ready()
         {
             base._Ready();
 
+            var _reflection_value = 0.75f;
 
+            var _db = 20.0f;
+            var _origin = GlobalPosition;
+            var _direction = DirectionalTarget.GlobalPosition - GlobalPosition;
+
+            while (Soundcast(_origin, _direction, _db, out var _spatial))
+            {
+                var _duration = GetSoundTravelDuration(_spatial.Distance);
+
+                await Task.Delay(Mathf.RoundToInt(_duration * 1000.0f));
+
+                Debug.Log($"Play @{_spatial.Db:n2} db");
+                Cutulu.Mesh.Render.DrawLine(this, Color, _origin, _spatial.Position);
+
+                _db = _spatial.Db * _reflection_value;
+                _origin = _spatial.Position;
+
+                _direction = CalculateReflection(_direction, _spatial.Normal);
+            }
         }
 
-        public bool Soundcast(Vector3 _origin, Vector3 _direction, out SpatialResult _result)
+        public bool Soundcast(Vector3 _origin, Vector3 _direction, float _db, out SpatialResult _result)
         {
             if (Physics.Raycast(this, _origin, _direction, out RaycastHit _hit, 100))
             {
                 var _distance = _hit.Distance;
-                var _hitDb = CalculateDbAfterDistance(0.0f, _distance, 1.0f, 440f);
+                var _hitDb = CalculateDbAfterDistance(_db, _distance, 1.0f, 440f);
 
-                if (_hitDb > 10.0f)
+                if (_hitDb > 0.1f)
                 {
                     _result = new SpatialResult()
                     {
                         Db = _hitDb,
+                        Distance = _hit.Distance,
                         Position = _hit.Point,
                         Normal = _hit.Normal,
                     };
@@ -39,9 +67,26 @@ namespace Cutulu.Audio.Spatial
 
         public struct SpatialResult
         {
+            public float Distance { get; set; }
             public float Db { get; set; }
+
             public Vector3 Position { get; set; }
             public Vector3 Normal { get; set; }
+        }
+
+        /// <summary>
+        /// Calculates the reflection vector when a ray hits a surface.
+        /// </summary>
+        /// <param name="incidentVector">The incoming ray direction (should be normalized).</param>
+        /// <param name="normal">The surface normal at the hit point (should be normalized).</param>
+        /// <returns>The reflection vector.</returns>
+        public static Vector3 CalculateReflection(Vector3 incidentVector, Vector3 normal)
+        {
+            // Formula: reflection = incident - 2 * (incident • normal) * normal
+            // Where • represents dot product
+
+            float dotProduct = incidentVector.Dot(normal);
+            return incidentVector - 2 * dotProduct * normal;
         }
 
         /// <summary>
