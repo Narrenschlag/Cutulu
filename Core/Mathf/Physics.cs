@@ -44,7 +44,7 @@ namespace Cutulu.Core
                 return false;
             }
 
-            hit = new RaycastHit(globalOrigin, (Vector3)result["position"], (GodotObject)result["collider"], result);
+            hit = new RaycastHit(globalOrigin, result);
             return true;
         }
 
@@ -99,7 +99,7 @@ namespace Cutulu.Core
 
                 if (check())
                 {
-                    hit = new RaycastHit(origin, _hit.Point, _hit.Collider, _hit.Result, distance + _v.DistanceTo(_hit.Point));
+                    hit = new RaycastHit(_hit.Point, _hit.Collider, _hit.Result, distance + _v.DistanceTo(_hit.Point));
                     return true;
                 }
 
@@ -113,7 +113,7 @@ namespace Cutulu.Core
 
                 if (check(rest / resolution))
                 {
-                    hit = new RaycastHit(origin, _hit.Point, _hit.Collider, _hit.Result, distance + _v.DistanceTo(_hit.Point));
+                    hit = new RaycastHit(_hit.Point, _hit.Collider, _hit.Result, distance + _v.DistanceTo(_hit.Point));
                     return true;
                 }
             }
@@ -137,22 +137,25 @@ namespace Cutulu.Core
     #region RaycastHit                      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public struct RaycastHit
     {
-        public GodotObject Collider;
-        public float Distance;
-        public Vector3 Point;
+        public GodotObject Collider { get; set; }
+        public float Distance { get; set; }
+        public Vector3 Normal { get; set; }
+        public Vector3 Point { get; set; }
 
         public Dictionary Result;
 
-        public RaycastHit(Vector3 origin, Vector3 point, GodotObject collider, Dictionary result)
+        public RaycastHit(Vector3 origin, Dictionary result)
         {
-            this.Collider = collider;
-            this.Point = point;
-
-            Distance = origin.DistanceTo(point);
             this.Result = result;
+
+            Normal = result["normal"].AsVector3();
+            Point = result["position"].AsVector3();
+            Collider = result["collider"].AsGodotObject();
+
+            Distance = origin.DistanceTo(Point);
         }
 
-        public RaycastHit(Vector3 origin, Vector3 point, GodotObject collider, Dictionary result, float distance)
+        public RaycastHit(Vector3 point, GodotObject collider, Dictionary result, float distance)
         {
             this.Collider = collider;
             this.Distance = distance;

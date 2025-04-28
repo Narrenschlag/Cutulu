@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://cwba4lgwsdsry"]
+
+[ext_resource type="AudioStream" uid="uid://dmg1r33p2p55x" path="res://Ain't No Rest For The Wicked by Cage The Elephant _Lyrics_.mp3" id="1_4n7bt"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("1_4n7bt")
+autoplay = true
