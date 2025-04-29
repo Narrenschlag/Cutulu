@@ -2,7 +2,9 @@ namespace Cutulu.Core
 {
     using Godot;
 
-    public struct Directory
+    using ACCESS = Godot.DirAccess;
+
+    public partial struct Directory
     {
         public readonly string GodotLocal;
         public readonly string FileSystem;
@@ -21,16 +23,16 @@ namespace Cutulu.Core
             FileSystem = ProjectSettings.GlobalizePath(GodotLocal);
         }
 
-        public bool Exists() => DirAccess.DirExistsAbsolute(FileSystem);
+        public bool Exists() => ACCESS.DirExistsAbsolute(FileSystem);
 
         public Error Delete()
         {
-            return Exists() ? DirAccess.RemoveAbsolute(FileSystem) : Error.Ok;
+            return Exists() ? ACCESS.RemoveAbsolute(FileSystem) : Error.Ok;
         }
 
         public Error Create()
         {
-            return Exists() ? Error.Ok : DirAccess.MakeDirAbsolute(FileSystem);
+            return Exists() ? Error.Ok : ACCESS.MakeDirAbsolute(FileSystem);
         }
 
         public Directory[] GetSubDirectories()
@@ -39,7 +41,7 @@ namespace Cutulu.Core
 
             if (Exists())
             {
-                var _subs = DirAccess.GetDirectoriesAt(FileSystem);
+                var _subs = ACCESS.GetDirectoriesAt(FileSystem);
 
                 if (_subs != null)
                 {
@@ -61,7 +63,7 @@ namespace Cutulu.Core
 
             if (Exists())
             {
-                var _subs = DirAccess.GetFilesAt(FileSystem);
+                var _subs = ACCESS.GetFilesAt(FileSystem);
 
                 if (_subs != null)
                 {
@@ -78,7 +80,7 @@ namespace Cutulu.Core
         }
     }
 
-    public static class Directoryf
+    public static partial class Directoryf
     {
         public static string TrimToDirectory(this string path) => TrimToDirectory(path, '\\', '/');
 
