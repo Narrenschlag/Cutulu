@@ -18,9 +18,9 @@ namespace Cutulu.Lattice
                 {
                     var path = FormatPath(filePaths[i], rootDirectory);
 
-                    if (path.NotEmpty() && IO.Exists(path))
+                    if (path.NotEmpty() && path.PathExists())
                     {
-                        var manifest = IO.ReadString(path);
+                        var manifest = new File(path).ReadString();
 
                         if (manifest.NotEmpty()) entries.AddRange(ParseManifest(manifest, path));
                     }

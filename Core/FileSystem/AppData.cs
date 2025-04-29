@@ -1,12 +1,13 @@
 namespace Cutulu.Core
 {
+    using System;
     using System.Collections.Generic;
 
     public static class AppData
     {
         public static readonly Dictionary<string, object> Bin = new();
 
-        public const string Path = $"{IO.USER_PATH}ApplicationData/";
+        public const string Path = $"{CONST.USER_PATH}ApplicationData/";
         public const string End = ".appData";
 
         private static string GetPath(string key) => $"{Path}{key}{End}";
@@ -26,7 +27,7 @@ namespace Cutulu.Core
 
             else if (ContainsAppData(key))
             {
-                IO.TryRead(GetPath(key), out output, IO.FileType.Binary);
+                new File(GetPath(key)).TryRead(out output);
                 Bin[key] = output;
 
                 return true;
@@ -47,7 +48,7 @@ namespace Cutulu.Core
 
             else
             {
-                IO.Write(obj, GetPath(key), IO.FileType.Binary);
+                new File(GetPath(key)).Write(obj);
                 Bin[key] = obj;
             }
         }
@@ -56,7 +57,7 @@ namespace Cutulu.Core
         {
             if (ContainsAppData(key) == false)
             {
-                IO.Write(obj, GetPath(key), IO.FileType.Binary);
+                new File(GetPath(key)).Write(obj);
                 Bin[key] = obj;
                 return true;
             }
@@ -68,13 +69,13 @@ namespace Cutulu.Core
         {
             if (ContainsAppData(key))
             {
-                IO.DeleteFile(GetPath(key));
+                new File(GetPath(key)).Delete();
             }
         }
 
         public static bool ContainsAppData(this string key)
         {
-            return IO.Exists(GetPath(key));
+            return new File(GetPath(key)).Exists();
         }
     }
 }

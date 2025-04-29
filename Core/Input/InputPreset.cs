@@ -5,7 +5,7 @@ namespace Cutulu.Core
     /// </summary>
     public partial class InputPreset
     {
-        public const string PRESET_PATH = $"{IO.USER_PATH}Input_Presets/slot%.preset";
+        public const string PRESET_PATH = $"{CONST.USER_PATH}Input_Presets/slot%.preset";
 
         public InputDevice.InputIndex[] Array { get; set; } = System.Array.Empty<InputDevice.InputIndex>();
         public InputDevice.Enum Type { get; set; } = InputDevice.Enum.Invalid;
@@ -14,17 +14,17 @@ namespace Cutulu.Core
 
         public static InputPreset LoadFromFile(string slot)
         {
-            return IO.TryRead(GetPath(slot), out InputPreset preset, IO.FileType.Binary) ? preset : null;
+            return new File(GetPath(slot)).TryRead(out InputPreset preset) ? preset : null;
         }
 
         public void WriteToFile(string slot)
         {
-            IO.Write(this, GetPath(slot), IO.FileType.Binary);
+            new File(GetPath(slot)).Write(this);
         }
 
         public static bool FileExists(string slot)
         {
-            return IO.Exists(GetPath(slot));
+            return GetPath(slot).PathExists();
         }
 
         private static string GetPath(string slot)

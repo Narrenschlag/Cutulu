@@ -76,31 +76,5 @@ namespace Cutulu.Core
             if (_directory.EndsWith("//") || _directory.EndsWith("\\\\")) return _directory;
             else return $"{_directory.TrimEnd('/').TrimEnd('\\')}/";
         }
-
-        /// <summary>
-        /// Returns full file paths at given directory
-        /// </summary>
-        public static string[] GetFilePaths(this string _directory)
-        {
-            var _names = IO.GetFileNames(_directory = AsDirectory(_directory));
-
-            for (var i = 0; i < _names.Length; i++)
-                _names[i] = $"{_directory}{_names[i]}";
-
-            return _names;
-        }
-
-        /// <summary>
-        /// Returns full directory paths at given directory
-        /// </summary>
-        public static string[] GetDirectoryPaths(this string _directory)
-        {
-            var _names = IO.GetDirectoryNames(_directory = AsDirectory(_directory));
-
-            for (var i = 0; i < _names.Length; i++)
-                _names[i] = $"{_directory}{_names[i]}/";
-
-            return _names;
-        }
     }
 }

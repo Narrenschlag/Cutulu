@@ -6,42 +6,42 @@ namespace Cutulu.Core
 
     public partial struct Directory
     {
-        public readonly string GodotLocal;
-        public readonly string FileSystem;
+        public readonly string SystemPath;
+        public readonly string GodotPath;
 
         public Directory(string _path = "res://file.txt", bool _mkDir = true)
         {
-            FileSystem = ProjectSettings.GlobalizePath(_path = _path.TrimToDirectory());
-            GodotLocal = ProjectSettings.LocalizePath(FileSystem);
+            SystemPath = ProjectSettings.GlobalizePath(_path.TrimToDirectory());
+            GodotPath = ProjectSettings.LocalizePath(SystemPath);
 
             if (_mkDir) Create();
         }
 
         public Directory()
         {
-            GodotLocal = "res://";
-            FileSystem = ProjectSettings.GlobalizePath(GodotLocal);
+            GodotPath = "res://";
+            SystemPath = ProjectSettings.GlobalizePath(GodotPath);
         }
 
-        public bool Exists() => ACCESS.DirExistsAbsolute(FileSystem);
+        public readonly bool Exists() => ACCESS.DirExistsAbsolute(SystemPath);
 
-        public Error Delete()
+        public readonly Error Delete()
         {
-            return Exists() ? ACCESS.RemoveAbsolute(FileSystem) : Error.Ok;
+            return Exists() ? ACCESS.RemoveAbsolute(SystemPath) : Error.Ok;
         }
 
-        public Error Create()
+        public readonly Error Create()
         {
-            return Exists() ? Error.Ok : ACCESS.MakeDirAbsolute(FileSystem);
+            return Exists() ? Error.Ok : ACCESS.MakeDirAbsolute(SystemPath);
         }
 
-        public Directory[] GetSubDirectories()
+        public readonly Directory[] GetSubDirectories()
         {
             Directory[] _array = null;
 
             if (Exists())
             {
-                var _subs = ACCESS.GetDirectoriesAt(FileSystem);
+                var _subs = ACCESS.GetDirectoriesAt(SystemPath);
 
                 if (_subs != null)
                 {
@@ -49,7 +49,7 @@ namespace Cutulu.Core
 
                     for (int i = 0; i < _subs.Length; i++)
                     {
-                        _array[i] = new(FileSystem + _subs[i] + '/');
+                        _array[i] = new(SystemPath + _subs[i] + '/');
                     }
                 }
             }
@@ -57,13 +57,13 @@ namespace Cutulu.Core
             return _array ?? [];
         }
 
-        public File[] GetSubFiles()
+        public readonly File[] GetSubFiles()
         {
             File[] _array = null;
 
             if (Exists())
             {
-                var _subs = ACCESS.GetFilesAt(FileSystem);
+                var _subs = ACCESS.GetFilesAt(SystemPath);
 
                 if (_subs != null)
                 {
@@ -71,7 +71,7 @@ namespace Cutulu.Core
 
                     for (int i = 0; i < _subs.Length; i++)
                     {
-                        _array[i] = new(FileSystem + _subs[i]);
+                        _array[i] = new(SystemPath + _subs[i]);
                     }
                 }
             }
@@ -99,5 +99,9 @@ namespace Cutulu.Core
 
             return contains ? path.TrimEndUntil(chars) : path;
         }
+
+        public static bool PathExists(this string _path) => ACCESS.DirExistsAbsolute(ProjectSettings.GlobalizePath(_path.Trim()));
+
+        public static void DeletePath(this string _path) => ACCESS.RemoveAbsolute(ProjectSettings.GlobalizePath(_path.Trim()));
     }
 }

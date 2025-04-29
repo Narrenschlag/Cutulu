@@ -6,7 +6,7 @@ namespace Cutulu.Lattice
 
     public class AssemblyInstance
     {
-        public readonly List<string> Entries = new();
+        public readonly List<string> Entries = [];
 
         private readonly IMod Source;
 
@@ -25,7 +25,7 @@ namespace Cutulu.Lattice
 
             foreach (var (_, Path) in entries)
             {
-                if (Path.ToLower().EndsWith(".dll") && IO.Exists(Path))
+                if (Path.ToLower().EndsWith(".dll") && Path.PathExists())
                     Entries.TryAdd(Path);
             }
         }

@@ -18,7 +18,9 @@ namespace Cutulu.Core
         {
             if (rootFolder.EndsWith('/') == false) rootFolder += '/';
 
-            var files = IO.GetFileNames(rootFolder);
+            var _directory = new Directory(rootFolder);
+
+            var files = _directory.GetSubFiles();
             if (files.NotEmpty())
             {
                 for (int i = 0; i < files.Length; i++)
@@ -27,9 +29,9 @@ namespace Cutulu.Core
 
                     for (int e = 0; e < fileEndings.Length; e++)
                     {
-                        if (files[i].EndsWith(fileEndings[e]))
+                        if (files[i].SystemPath.EndsWith(fileEndings[e]))
                         {
-                            filePaths.Add($"{rootFolder}{files[i]}");
+                            filePaths.Add(files[i].SystemPath);
                             added = true;
                             break;
                         }
@@ -47,12 +49,12 @@ namespace Cutulu.Core
                 }
             }
 
-            var directories = IO.GetDirectoryNames(rootFolder);
+            var directories = _directory.GetSubDirectories();
             if (directories.NotEmpty())
             {
                 for (int i = 0; i < directories.Length; i++)
                 {
-                    FindFiles($"{rootFolder}{directories[i]}/", ref filePaths, fileEndings, zipFileEndings);
+                    FindFiles(directories[i].SystemPath, ref filePaths, fileEndings, zipFileEndings);
                 }
             }
         }
@@ -101,9 +103,9 @@ namespace Cutulu.Core
             {
                 if (buffer.IsEmpty()) return;
 
-                var temp = $"{IO.USER_PATH}.bin/.temp/";
+                var temp = $"{CONST.USER_PATH}.bin/.temp/";
                 DirAccess.MakeDirRecursiveAbsolute(temp);
-                (temp += "zip.temp").WriteBytes(buffer);
+                new File(temp += "zip.temp").Write(buffer);
 
                 var reader = new ZipReader();
                 if (reader.Open(temp) != Error.Ok) return;
@@ -147,6 +149,8 @@ namespace Cutulu.Core
         #endregion
 
         #region Read Data
+        // TODO: Fix this at a later stage if even ever needed.
+        /*
         /// <summary>
         /// Returns data from path as given file type if existing and parsable.
         /// </summary>
@@ -229,6 +233,7 @@ namespace Cutulu.Core
             result = default;
             return false;
         }
+        */
 
         public static bool TryGetData(string path, out byte[] buffer)
         {
@@ -238,7 +243,7 @@ namespace Cutulu.Core
 
             var paths = path.Split('?', CONST.StringSplit);
 
-            if (paths.IsEmpty() || paths[0].Exists() == false) return false;
+            if (paths.IsEmpty() || new File(paths[0]).Exists() == false) return false;
 
             // Is a zip file entry
             if (paths.Length > 1)
@@ -262,9 +267,9 @@ namespace Cutulu.Core
                     else
                     {
                         // Write temp zip file
-                        var temp = $"{IO.USER_PATH}.bin/.temp/";
+                        var temp = $"{CONST.USER_PATH}.bin/.temp/";
                         DirAccess.MakeDirRecursiveAbsolute(temp);
-                        (temp += "zip.temp").WriteBytes(buffer);
+                        new File(temp += "zip.temp").Write(buffer);
 
                         // Cant open zip file
                         if (reader.Open(temp) != Error.Ok)
@@ -295,7 +300,7 @@ namespace Cutulu.Core
             // Is a net file
             else
             {
-                buffer = paths[0].ReadBytes();
+                buffer = new File(paths[0]).Read();
             }
 
             // Return true if buffer could be read

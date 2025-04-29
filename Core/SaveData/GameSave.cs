@@ -11,6 +11,7 @@ namespace Cutulu.Core
     public static class GameSave
     {
         #region Frontend      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         /// <summary>
         /// Last SaveFileName assigned when file was loaded/created
         /// </summary>
@@ -54,7 +55,7 @@ namespace Cutulu.Core
             LastSaveFileName = saveFileName;
 
             // Load json
-            string json = SaveFilePath(saveFileName).ReadString();
+            string json = new File(SaveFilePath(saveFileName)).ReadString();
 
             // Assign to local
             Local = json.json<Dictionary<string, object>>();
@@ -82,7 +83,7 @@ namespace Cutulu.Core
             Local ??= new();
 
             // Write to file
-            SaveFilePath(saveFileName).WriteString(Local.json());
+            new File(SaveFilePath(saveFileName)).WriteString(Local.json());
         }
 
         /// <summary>
@@ -97,13 +98,13 @@ namespace Cutulu.Core
             }
 
             // Delete file if existing
-            IO.DeleteFile(SaveFilePath(saveFileName));
+            SaveFilePath(saveFileName).DeletePath();
         }
 
         /// <summary>
         /// Returns if save file is existing already
         /// </summary>
-        public static bool Exists(string saveFileName) => SaveFilePath(saveFileName).Exists();
+        public static bool Exists(string saveFileName) => SaveFilePath(saveFileName).PathExists();
 
         /// <summary>
         /// Adds value if key is not added yet
@@ -160,7 +161,8 @@ namespace Cutulu.Core
         }
 
         #region Path and File Ending Management
-        private const string DefaultSaveLocation = $"{IO.USER_PATH}save_games/";
+
+        private const string DefaultSaveLocation = $"{CONST.USER_PATH}save_games/";
         private const string DefaultSaveFileEnding = ".cutulu";
         private static string saveFileEnding;
         private static string saveLocation;
@@ -203,10 +205,13 @@ namespace Cutulu.Core
         /// Returns save file path with given SaveFileName, using the SaveLocation and the SaveFileEnding.
         /// </summary>
         public static string SaveFilePath(string saveFileName) => $"{SaveLocation}{saveFileName}{(saveFileName.EndsWith(SaveFileEnding) ? "" : SaveFileEnding)}";
+
         #endregion
+
         #endregion
 
         #region Backend       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private static Dictionary<string, object> Local;
 
         private static V safeGetValue<V>(string key, ref object value)
@@ -230,6 +235,7 @@ namespace Cutulu.Core
 
             return (V)value;
         }
+
         #endregion
     }
 }

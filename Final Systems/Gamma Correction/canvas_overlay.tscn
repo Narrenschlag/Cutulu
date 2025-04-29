@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://blrridideg5tj"]
 
-[ext_resource type="Shader" path="res://Cutulu/Final Systems/Gamma Correction/gamma.gdshader" id="1_8syhp"]
-[ext_resource type="Script" path="res://Cutulu/Final Systems/Gamma Correction/GammaCorrection.cs" id="2_ik3xl"]
+[ext_resource type="Shader" uid="uid://65a0ei1o6cus" path="res://Cutulu/Final Systems/Gamma Correction/gamma.gdshader" id="1_8syhp"]
+[ext_resource type="Script" uid="uid://bc4xciacsn0a3" path="res://Cutulu/Final Systems/Gamma Correction/GammaCorrection.cs" id="2_ik3xl"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0byya"]
 shader = ExtResource("1_8syhp")

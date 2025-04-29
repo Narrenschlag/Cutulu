@@ -8,8 +8,8 @@ namespace Cutulu.Core
 
     public partial class File : IDisposable
     {
-        public readonly string GodotLocal;
-        public readonly string FileSystem;
+        public readonly string SystemPath;
+        public readonly string GodotPath;
 
         private ACCESS Access { get; set; }
 
@@ -17,8 +17,8 @@ namespace Cutulu.Core
 
         public File(string _path = "res://file.txt")
         {
-            FileSystem = ProjectSettings.GlobalizePath(_path = _path.Trim());
-            GodotLocal = ProjectSettings.LocalizePath(FileSystem);
+            SystemPath = ProjectSettings.GlobalizePath(_path.Trim());
+            GodotPath = ProjectSettings.LocalizePath(SystemPath);
         }
 
         public void Dispose()
@@ -34,7 +34,7 @@ namespace Cutulu.Core
 
         #region Main functions
 
-        public bool Exists() => ACCESS.FileExists(FileSystem);
+        public bool Exists() => ACCESS.FileExists(SystemPath);
 
         public bool IsOpen() => Access != null;
 
@@ -44,7 +44,7 @@ namespace Cutulu.Core
             {
                 Close();
 
-                Access = ACCESS.Open(FileSystem, Flags = _flags);
+                Access = ACCESS.Open(SystemPath, Flags = _flags);
             }
 
             return Access;
@@ -58,7 +58,7 @@ namespace Cutulu.Core
 
         public Error Delete()
         {
-            return Exists() ? DirAccess.RemoveAbsolute(FileSystem) : Error.Ok;
+            return Exists() ? DirAccess.RemoveAbsolute(SystemPath) : Error.Ok;
         }
 
         public ulong GetFileSize()
@@ -100,12 +100,12 @@ namespace Cutulu.Core
 
         public Directory[] GetSiblingDirectories()
         {
-            return new Directory(FileSystem).GetSubDirectories();
+            return new Directory(SystemPath).GetSubDirectories();
         }
 
         public File[] GetSiblingFiles()
         {
-            var _siblings = new Directory(FileSystem).GetSubFiles();
+            var _siblings = new Directory(SystemPath).GetSubFiles();
 
             if (_siblings.Length > 1)
             {
@@ -113,7 +113,7 @@ namespace Cutulu.Core
 
                 for (int i = 0, k = 0; i < _siblings.Length; i++, k++)
                 {
-                    if (i == k && _siblings[i].FileSystem == FileSystem) i++;
+                    if (i == k && _siblings[i].SystemPath == SystemPath) i++;
                     else _files[k] = _siblings[i];
                 }
 
@@ -166,6 +166,34 @@ namespace Cutulu.Core
         public string[] ReadStringLines(bool _include_empty_lines = false)
         {
             return ReadString().Split('\n', _include_empty_lines ? System.StringSplitOptions.TrimEntries : CONST.StringSplit) ?? [];
+        }
+
+        #endregion
+
+        #region GDResource functions
+
+        public T ReadGDResource<T>() where T : Resource
+        {
+            return GD.Load(GodotPath) is T _t && _t.NotNull() ? _t : default;
+        }
+
+        #endregion
+
+        #region Encoder functions
+
+        public bool TryRead<T>(out T _output)
+        {
+            return Read().TryDecode(out _output);
+        }
+
+        public T Read<T>()
+        {
+            return TryRead(out T _output) ? _output : default;
+        }
+
+        public void Write(object _input)
+        {
+            Write(_input.Encode());
         }
 
         #endregion

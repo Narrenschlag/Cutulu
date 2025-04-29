@@ -8,16 +8,16 @@ namespace Cutulu.Lattice
 
     public static class ModLoader
     {
-        public static readonly Dictionary<IMod, ModInstance> Instances = new();
+        public static readonly Dictionary<IMod, ModInstance> Instances = [];
         public static string[] ModIds { get; set; }
 
-        public static readonly string[] DefaultDirectories = new[]{
-            $"{IO.PROJECT_PATH}Assets/",
-            $"{IO.PROJECT_PATH}Mods/",
+        public static readonly string[] DefaultDirectories = [
+            $"{CONST.PROJECT_PATH}Assets/",
+            $"{CONST.PROJECT_PATH}Mods/",
 
-            $"{IO.USER_PATH}Assets/",
-            $"{IO.USER_PATH}Mods/",
-        };
+            $"{CONST.USER_PATH}Assets/",
+            $"{CONST.USER_PATH}Mods/",
+        ];
 
         /// <summary>
         /// Find all mods in directories and loads them as instances,
@@ -46,37 +46,41 @@ namespace Cutulu.Lattice
             foreach (var directory in directories)
                 loadFromDir(directory);
 
-            void loadFromDir(string directory)
+            void loadFromDir(string _directory_path)
             {
-                if (directory.IsEmpty()) return;
+                if (_directory_path.IsEmpty()) return;
 
-                var files = IO.GetFileNames(directory);
+                var _directory = new Directory(_directory_path);
 
-                if (files.NotEmpty())
+                var _files = _directory.GetSubFiles();
+                if (_files.NotEmpty())
                 {
-                    foreach (var file in files)
+                    foreach (var _file in _files)
                     {
-                        if (file.ToLower().EndsWith(IMod.FileEnding))
+                        if (_file.GodotPath.EndsWith(IMod.FileEnding))
                         {
-                            if (IO.TryRead(directory + file, out ExternalMod mod, IO.FileType.Json))
-                            {
-                                mod.FilePath = directory + file;
+                            var _json = _file.ReadString();
+                            if (_json.IsEmpty()) continue;
 
-                                load(mod).Enabled = enabledByDefault;
+                            var _mod = _json.json<ExternalMod>();
+                            if (_mod != null)
+                            {
+                                _mod.FilePath = _file.SystemPath;
+
+                                load(_mod).Enabled = enabledByDefault;
                             }
 
-                            else CoreBridge.LogError($"Cannot load mod file at {directory + file}");
+                            else CoreBridge.LogError($"Cannot load mod file at {_file.SystemPath}");
                         }
                     }
                 }
 
-                var directories = IO.GetDirectoryNames(directory);
-
-                if (directories.NotEmpty())
+                var _directories = _directory.GetSubDirectories();
+                if (_directories.NotEmpty())
                 {
-                    foreach (var dir in directories)
+                    foreach (var _dir in _directories)
                     {
-                        loadFromDir($"{directory}{dir}/");
+                        loadFromDir(_dir.SystemPath);
                     }
                 }
             }

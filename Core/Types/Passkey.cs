@@ -5,7 +5,7 @@ namespace Cutulu.Core
     public struct Passkey
     {
         public const string DefaultPath = $"{DefaultDirectory}LocalPasskey{FileEnding}";
-        public const string DefaultDirectory = $"{IO.USER_PATH}.private/";
+        public const string DefaultDirectory = $"{CONST.USER_PATH}.private/";
         public const string FileEnding = ".key";
 
         public const byte Tiny = 8;
@@ -46,28 +46,32 @@ namespace Cutulu.Core
         /// <summary>
         /// Writes passkey to path
         /// </summary>
-        public readonly void Write(string path) => IO.Write(Key, path, IO.FileType.Binary);
+        public readonly void Write(string path) => new File(path).Write(Key);
         public readonly void WriteByName(string name) => Write($"{DefaultDirectory}{name}{FileEnding}");
         public readonly void Write() => Write(DefaultPath);
 
         /// <summary>
         /// Loads passkey from path
         /// </summary>
-        public static Passkey Read(string path) => IO.TryRead(path, out Passkey key, IO.FileType.Binary) ? key : default;
+        public static Passkey Read(string path) => new File(path).TryRead(out Passkey _key) ? _key : default;
         public static Passkey ReadByName(string name) => Read($"{DefaultDirectory}{name}{FileEnding}");
         public static Passkey Read() => Read(DefaultPath);
 
         public static KeyValuePair<string, Passkey>[] ReadAtDirectory(string path, string fileEnding = ".remote")
         {
-            var paths = IO.GetFileNames(path);
+            var _sets = new HashSet<KeyValuePair<string, Passkey>>();
+            var _files = new Directory(path).GetSubFiles();
 
-            var array = new KeyValuePair<string, Passkey>[paths.Size()];
-            for (ushort i = 0; i < array.Length; i++)
+            if (_files.NotEmpty())
             {
-                array[i] = new($"{paths[i][..^fileEnding.Length]}", Read($"{path}{paths[i]}"));
+                for (ushort i = 0; i < _files.Length; i++)
+                {
+                    if (_files[i].GodotPath.EndsWith(fileEnding) && _files[i].TryRead(out Passkey _key))
+                        _sets.Add(new($"{_files[i].SystemPath[..^fileEnding.Length]}", _key));
+                }
             }
 
-            return array;
+            return [.. _sets];
         }
 
         /// <summary>

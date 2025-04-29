@@ -27,7 +27,7 @@ namespace Cutulu.Lattice
 
             for (int i = 0; i < entries.Length; i++)
             {
-                if (IO.Exists(entries[i].Path) == false) CoreBridge.LogError($"Asset at path '{entries[i].Path}' does not exist.");
+                if (entries[i].Path.PathExists() == false) CoreBridge.LogError($"Asset at path '{entries[i].Path}' does not exist.");
 
                 // Register direct address
                 else References[entries[i].Name] = entries[i].Path;
@@ -43,11 +43,11 @@ namespace Cutulu.Lattice
                 switch (typeof(T))
                 {
                     case Type i when i == typeof(string):
-                        obj = IO.ReadString(References[name]);
+                        obj = new File(References[name]).ReadString();
                         break;
 
                     case Type i when i == typeof(byte[]):
-                        obj = IO.ReadBytes(References[name]);
+                        obj = new File(References[name]).Read();
                         break;
 
                     case Type i when i.IsSubclassOf(typeof(Resource)):

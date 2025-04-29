@@ -24,7 +24,7 @@ namespace Cutulu.Lattice
 
                 foreach (var entry in entries)
                 {
-                    if (entry.Path.ToLower().EndsWith(".pck") && IO.Exists(entry.Path))
+                    if (entry.Path.ToLower().EndsWith(".pck") && entry.Path.PathExists())
                         Godot.ProjectSettings.LoadResourcePack(entry.Path);
                 }
             }

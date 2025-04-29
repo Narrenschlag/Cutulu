@@ -14,8 +14,8 @@ namespace Cutulu.Network
 
     public static class IO
     {
-        public const string LocalhostIPv4 = "127.0.0.1";
-        public const string LocalhostIPv6 = "::1";
+        public const string LocalhostIPv4 = CONST.LocalHostIPv4;
+        public const string LocalhostIPv6 = CONST.LocalHostIPv6;
 
         /// <summary>
         /// Returns address
