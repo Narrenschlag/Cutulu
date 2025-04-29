@@ -13,6 +13,8 @@ namespace Cutulu.Core
 
         private ACCESS Access { get; set; }
 
+        public FLAGS Flags { get; private set; }
+
         public File(string _path = "res://file.txt")
         {
             FileSystem = ProjectSettings.GlobalizePath(_path = _path.Trim());
@@ -42,7 +44,7 @@ namespace Cutulu.Core
             {
                 Close();
 
-                Access = ACCESS.Open(FileSystem, _flags);
+                Access = ACCESS.Open(FileSystem, Flags = _flags);
             }
 
             return Access;
