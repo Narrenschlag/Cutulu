@@ -1,11 +1,12 @@
 namespace Cutulu.Core
 {
+    using System;
     using Godot;
 
     using ACCESS = Godot.FileAccess;
     using FLAGS = Godot.FileAccess.ModeFlags;
 
-    public partial struct File
+    public partial class File : IDisposable
     {
         public readonly string GodotLocal;
         public readonly string FileSystem;
@@ -16,6 +17,17 @@ namespace Cutulu.Core
         {
             FileSystem = ProjectSettings.GlobalizePath(_path = _path.Trim());
             GodotLocal = ProjectSettings.LocalizePath(FileSystem);
+        }
+
+        public void Dispose()
+        {
+            Close();
+        }
+
+        // Finalizer - will be called by garbage collector
+        ~File()
+        {
+            Dispose();
         }
 
         #region Main functions
