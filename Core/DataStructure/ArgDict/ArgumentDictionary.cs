@@ -12,7 +12,7 @@ namespace Cutulu.Core
             {
                 foreach (var _plain in _args)
                 {
-                    var _split = _plain.Split(_seperator, Constant.StringSplit);
+                    var _split = _plain.Split(_seperator, CONST.StringSplit);
 
                     if (_split.Size() >= 2)
                     {

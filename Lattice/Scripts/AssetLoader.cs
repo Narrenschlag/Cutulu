@@ -32,7 +32,7 @@ namespace Cutulu.Lattice
                     if (pair.Key.Contains('/') || pair.Key.Contains('\\'))
                     {
                         // Find all collections
-                        var args = pair.Key.TrimEndUntil('/', '\\').Split(new[] { '/', '\\' }, Constant.StringSplit);
+                        var args = pair.Key.TrimEndUntil('/', '\\').Split(new[] { '/', '\\' }, CONST.StringSplit);
 
                         // Register collections
                         if (args.Size() > 0)

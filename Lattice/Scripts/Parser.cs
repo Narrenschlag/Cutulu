@@ -44,11 +44,11 @@ namespace Cutulu.Lattice
 
                     for (var i = 0; i < lines.Length; i++)
                     {
-                        var args = lines[i].Split(new[] { ' ', '\t' }, Constant.StringSplit);
+                        var args = lines[i].Split(new[] { ' ', '\t' }, CONST.StringSplit);
 
                         if (args.Size() >= 2)
                         {
-                            var pathArgs = args[1].Split(new[] { ' ', '\t' }, Constant.StringSplit);
+                            var pathArgs = args[1].Split(new[] { ' ', '\t' }, CONST.StringSplit);
 
                             if (pathArgs.NotEmpty())
                                 entries.Add((args[0].RemoveChar(IMod.Seperator), FormatPath(pathArgs[0], rootDirectory)));
@@ -115,7 +115,7 @@ namespace Cutulu.Lattice
 
                 if (parentDirectory.NotEmpty())
                 {
-                    var args = parentDirectory.Trim().Split(new[] { '/', '\\' }, Constant.StringSplit);
+                    var args = parentDirectory.Trim().Split(new[] { '/', '\\' }, CONST.StringSplit);
 
                     if (args.Size() > layers)
                     {
@@ -144,8 +144,8 @@ namespace Cutulu.Lattice
 
             if (fileDirectory.StartsWith(rootDirectory)) return $"./{fileDirectory[rootDirectory.Length..]}{fileName}";
 
-            var argsFile = fileDirectory.Split(new[] { '/', '\\' }, Constant.StringSplit);
-            var argsRoot = rootDirectory.Split(new[] { '/', '\\' }, Constant.StringSplit);
+            var argsFile = fileDirectory.Split(new[] { '/', '\\' }, CONST.StringSplit);
+            var argsRoot = rootDirectory.Split(new[] { '/', '\\' }, CONST.StringSplit);
             int steps = 1, offset = 0;
 
             for (int i = argsRoot.Length - 1; i >= 0; i--)

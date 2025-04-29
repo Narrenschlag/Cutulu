@@ -22,7 +22,7 @@ namespace Cutulu.Lattice
                 {
                     if (line.StartsWith(KeyChar))
                     {
-                        var args = line.Split(new[] { ' ', '\t' }, 2, Constant.StringSplit);
+                        var args = line.Split(new[] { ' ', '\t' }, 2, CONST.StringSplit);
 
                         // Assign value to dictionary
                         if (key.NotEmpty() && value.NotEmpty())

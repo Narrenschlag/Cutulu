@@ -46,7 +46,7 @@ namespace Cutulu.Core
                 if (str[^1] == ids[i]) return str.Trim();
             }
 
-            var splits = str.Split(ids, Constant.StringSplit);
+            var splits = str.Split(ids, CONST.StringSplit);
             if (splits.Size() < 2) return str;
             return str[..^splits[^1].Length];
         }
@@ -132,7 +132,7 @@ namespace Cutulu.Core
         /// </summary>
         public static string[] SplitAnd(this string source, char seperator, Func<string, string> actionPerLine, bool ignoreEmptyEntries = false)
         {
-            string[] splits = source.Split(seperator, Constant.StringSplit);
+            string[] splits = source.Split(seperator, CONST.StringSplit);
             List<string> lines = new();
 
             for (int i = 0; i < splits.Length; i++)
@@ -228,7 +228,7 @@ namespace Cutulu.Core
         {
             if (source.IsEmpty()) return source;
 
-            string[] lines = source.Split('\n', Constant.StringSplit);
+            string[] lines = source.Split('\n', CONST.StringSplit);
             StringBuilder stringBuilder = new();
 
             stringBuilder.Append(lines[0]);
@@ -244,24 +244,7 @@ namespace Cutulu.Core
         {
             if (identifier.IsEmpty() || source.IsEmpty() || source.Contains(identifier[0]) == false || source.Contains(identifier) == false) return source;
 
-            return source.Split(identifier, Constant.StringSplit)[0];
-        }
-
-        public static string TrimToDirectory(this string path) => TrimToDirectory(path, '\\', '/');
-        public static string TrimToDirectory(this string path, params char[] chars)
-        {
-            if (path.IsEmpty() || chars.IsEmpty()) return path;
-
-            var contains = false;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                if (path.Contains(chars[i]) == false) continue;
-
-                contains = true;
-                break;
-            }
-
-            return contains ? path.TrimEndUntil(chars) : path;
+            return source.Split(identifier, CONST.StringSplit)[0];
         }
 
         public static string ReplaceFirst(this string str, char c, object value)

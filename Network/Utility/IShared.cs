@@ -77,7 +77,7 @@ namespace Cutulu.Network
         {
             if (scene.ResourcePath.NotEmpty())
             {
-                var split = scene.ResourcePath.Split('/', '\\', Constant.StringSplit);
+                var split = scene.ResourcePath.Split('/', '\\', CONST.StringSplit);
 
                 if (split.Size() > 0)
                     return split[^1];
