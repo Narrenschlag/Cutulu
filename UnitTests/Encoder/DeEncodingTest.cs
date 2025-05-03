@@ -73,6 +73,7 @@ namespace Cutulu.Core.UnitTest
             finally
             {
                 Debug.LogError($"Succeeded.");
+                Application.Quit();
             }
         }
 
