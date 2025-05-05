@@ -186,12 +186,21 @@ namespace Cutulu.Core
         /// <summary>
         /// Decodes a byte array into an object
         /// </summary>
-        public static T Decode<T>(this byte[] buffer)
+        public static T Decode<T>(this byte[] _buffer)
         {
-            using var memory = new MemoryStream(buffer);
+            var _obj = Decode(_buffer, typeof(T));
+            return _obj is T _t ? _t : default;
+        }
+
+        /// <summary>
+        /// Decodes a byte array into an object
+        /// </summary>
+        public static object Decode(this byte[] _buffer, Type _type)
+        {
+            using var memory = new MemoryStream(_buffer);
             using var reader = new BinaryReader(memory);
 
-            return (T)Decode(reader, typeof(T));
+            return Decode(reader, _type);
         }
 
         /// <summary>
@@ -302,22 +311,19 @@ namespace Cutulu.Core
             }
         }
 
-        /// <summary>
-        /// Safely decodes a byte array into an object
-        /// </summary>
-        public static bool TryDecode<T>(this byte[] buffer, out T value, bool enableLogging = true)
+        public static bool TryDecode(this byte[] _buffer, Type _type, out object _value, bool enableLogging = true)
         {
             // Buffer is empty
-            if (buffer.IsEmpty())
+            if (_buffer.IsEmpty())
             {
-                value = default;
+                _value = default;
                 return false;
             }
 
             try
             {
-                value = Decode<T>(buffer);
-                return value != null;
+                _value = Decode(_buffer, _type);
+                return _value != null;
             }
 
             catch (Exception ex)
@@ -327,19 +333,30 @@ namespace Cutulu.Core
                     switch (ex)
                     {
                         case EndOfStreamException _:
-                            Debug.LogError($"Cannot decode as typeof({typeof(T)}): Unable to read beyond the end of the stream. Buffer may belong to another data type. [{LastPropertyType.FullName}, {LastPropertyName}?]");
+                            Debug.LogError($"Cannot decode as typeof({_type}): Unable to read beyond the end of the stream. Buffer may belong to another data type. [{LastPropertyType.FullName}, {LastPropertyName}?]");
                             Debug.LogWarning($"Error Message: {ex.Message}");
                             break;
 
                         default:
-                            Debug.LogError($"Cannot decode typeof({typeof(T)}, {ex.GetType().Name}): {ex.Message}\n{ex.StackTrace}");
+                            Debug.LogError($"Cannot decode typeof({_type}, {ex.GetType().Name}): {ex.Message}\n{ex.StackTrace}");
                             break;
                     }
                 }
 
-                value = default;
+                _value = default;
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Safely decodes a byte array into an object
+        /// </summary>
+        public static bool TryDecode<T>(this byte[] _buffer, out T _value, bool _enableLogging = true)
+        {
+            var _decoded = TryDecode(_buffer, typeof(T), out var _obj, _enableLogging);
+
+            _value = (T)_obj;
+            return _decoded;
         }
 
         /// <summary>
