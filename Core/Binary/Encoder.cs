@@ -124,54 +124,54 @@ namespace Cutulu.Core
             return true;
         }
 
-        private static bool EncodeUnknown(BinaryWriter writer, ref object obj)
+        private static bool EncodeUnknown(BinaryWriter _writer, ref object _obj)
         {
-            if (obj == null) return false;
-            var type = obj.GetType();
+            if (_obj == null) return false;
+            var _type = _obj.GetType();
 
             // Encode enum
-            if (type.IsEnum)
+            if (_type.IsEnum)
             {
-                writer.Write(Encode(Convert.ChangeType(obj, type.GetEnumUnderlyingType())));
+                _writer.Write(Encode(Convert.ChangeType(_obj, _type.GetEnumUnderlyingType())));
             }
 
             // Arrays
-            else if (type.IsArray && obj is Array array)
+            else if (_type.IsArray && _obj is Array array)
             {
-                writer.Write((ushort)array.Length);
-                type = type.GetElementType();
+                _writer.Write((ushort)array.Length);
+                _type = _type.GetElementType();
 
                 for (ushort i = 0; i < array.Length; i++)
                 {
-                    var value = array.GetValue(i);
+                    var _value = array.GetValue(i);
 
                     // Write null array as empty array
-                    if (value == null && type.IsArray) writer.Write(default(ushort));
+                    if (_value == null && _type.IsArray) _writer.Write(default(ushort));
 
                     // Write array value
-                    else writer.Write(Encode(value));
+                    else _writer.Write(Encode(_value));
                 }
             }
 
             // Classes and structs
             else
             {
-                var properties = type.GetProperties();
+                var _properties = _type.GetSetProperties();
 
-                for (ushort i = 0; i < properties.Length; i++)
+                for (ushort i = 0; i < _properties.Length; i++)
                 {
                     // Skip properties that have [DontEncode] attribute
-                    if (((DontEncode[])properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
+                    if (((DontEncode[])_properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
                         continue;
 
-                    var value = properties[i].GetValue(obj);
-                    type = properties[i].GetType();
+                    var _value = _properties[i].GetValue(_obj);
+                    _type = _properties[i].GetType();
 
                     // Write value
-                    writer.Write(value == null ?
-                            type.IsArray ? new byte[2] : // Write null array as empty array
+                    _writer.Write(_value == null ?
+                            _type.IsArray ? new byte[2] : // Write null array as empty array
                             new byte[1] : // Write null string as empty byte
-                        Encode(value) // Encode value as usual
+                        Encode(_value) // Encode value as usual
                     );
                 }
             }
@@ -229,53 +229,53 @@ namespace Cutulu.Core
             };
         }
 
-        private static object DecodeUnknown(BinaryReader reader, Type type)
+        private static object DecodeUnknown(BinaryReader _reader, Type _type)
         {
             // Enums
-            if (type.IsEnum)
+            if (_type.IsEnum)
             {
-                return Enum.ToObject(type, Decode(reader, type.GetEnumUnderlyingType()));
+                return Enum.ToObject(_type, Decode(_reader, _type.GetEnumUnderlyingType()));
             }
 
             // Arrays
-            if (type.IsArray)
+            if (_type.IsArray)
             {
-                type = type.GetElementType();
+                _type = _type.GetElementType();
 
                 // Unable to read beyond end of stream
-                if (reader.RemainingByteLength() < 2)
+                if (_reader.RemainingByteLength() < 2)
                 {
                     throw new EndOfStreamException($"Unable to read array. Reached end of stream.");
                 }
 
-                var array = Array.CreateInstance(type, reader.ReadUInt16());
+                var _array = Array.CreateInstance(_type, _reader.ReadUInt16());
 
-                for (ushort i = 0; i < array.Length; i++)
+                for (ushort i = 0; i < _array.Length; i++)
                 {
-                    array.SetValue(Decode(reader, type), i);
+                    _array.SetValue(Decode(_reader, _type), i);
                 }
 
-                return array;
+                return _array;
             }
 
             // Classes and structs
             else
             {
-                var output = Activator.CreateInstance(type);
-                var properties = type.GetProperties();
+                var _output = Activator.CreateInstance(_type);
+                var _properties = _type.GetSetProperties();
 
-                for (ushort i = 0; i < properties.Length; i++)
+                for (ushort i = 0; i < _properties.Length; i++)
                 {
                     // Skip properties that have [DontEncode] attribute
-                    if (((DontEncode[])properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
+                    if (((DontEncode[])_properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
                         continue;
 
-                    LastPropertyName = properties[i].Name;
+                    LastPropertyName = _properties[i].Name;
 
-                    properties[i].SetValue(output, Decode(reader, properties[i].PropertyType));
+                    _properties[i].SetValue(_output, Decode(_reader, _properties[i].PropertyType));
                 }
 
-                return output;
+                return _output;
             }
         }
 

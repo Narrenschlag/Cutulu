@@ -8,7 +8,6 @@ namespace Cutulu.Network
     using Godot;
 
     using Core;
-    using Web;
 
     using HttpRequest = Web.HttpRequest;
 
@@ -110,6 +109,22 @@ namespace Cutulu.Network
         public static void GetGlobalIPv6(Node node, HttpRequest.Result result)
         {
             _ = new HttpRequest(node, "https://api6.ipify.org/", result);
+        }
+
+        /// <summary>
+        /// Returns ip address bytes
+        /// </summary>
+        public static byte[] IpAddressToByteArray(this string ipAddress)
+        {
+            // Try to parse the input as an IP address
+            if (!IPAddress.TryParse(ipAddress, out IPAddress address))
+            {
+                throw new System.ArgumentException("Invalid IP address format", nameof(ipAddress));
+            }
+
+            // GetAddressBytes returns the address as a byte array
+            // IPv4 will return 4 bytes, IPv6 will return 16 bytes
+            return address.GetAddressBytes();
         }
     }
 }
