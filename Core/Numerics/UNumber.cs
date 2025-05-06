@@ -1,6 +1,7 @@
 namespace Cutulu.Core
 {
     using System;
+    using Godot;
 
     /// <summary>
     /// Represents a number. Dynamic in it's byte size.
@@ -27,6 +28,11 @@ namespace Cutulu.Core
                         Buffer = v.Encode();
                         return;
 
+                    case short v:
+                        if (v <= byte.MaxValue) value = (byte)Mathf.Max(v, 0);
+                        else value = (ushort)Mathf.Max(v, 0);
+                        break;
+
                     case ushort v:
                         if (IsByte(ref v))
                         {
@@ -41,6 +47,12 @@ namespace Cutulu.Core
                             return;
                         }
 
+                    case int v:
+                        if (v <= byte.MaxValue) value = (byte)Mathf.Max(v, 0);
+                        else if (v <= ushort.MaxValue) value = (ushort)Mathf.Max(v, 0);
+                        else value = (uint)Mathf.Max(v, 0);
+                        break;
+
                     case uint v:
                         if (IsUShort(ref v))
                         {
@@ -54,6 +66,13 @@ namespace Cutulu.Core
                             Buffer = v.Encode();
                             return;
                         }
+
+                    case long v:
+                        if (v <= byte.MaxValue) value = (byte)Mathf.Max(v, 0);
+                        else if (v <= ushort.MaxValue) value = (ushort)Mathf.Max(v, 0);
+                        else if (v <= uint.MaxValue) value = (uint)Mathf.Max(v, 0);
+                        else value = (ulong)Mathf.Max(v, 0);
+                        break;
 
                     case ulong v:
                         if (IsUInt(ref v))
@@ -176,20 +195,26 @@ namespace Cutulu.Core
         }
 
         public static implicit operator UNumber(byte value) => new(value);
+        public static implicit operator UNumber(short value) => new(value);
         public static implicit operator UNumber(ushort value) => new(value);
+        public static implicit operator UNumber(int value) => new(value);
         public static implicit operator UNumber(uint value) => new(value);
+        public static implicit operator UNumber(long value) => new(value);
         public static implicit operator UNumber(ulong value) => new(value);
 
         public static implicit operator byte(UNumber value) => value.GetByte();
         public static implicit operator ushort(UNumber value) => value.GetUShort();
+        public static implicit operator short(UNumber value) => (short)value.GetUShort();
         public static implicit operator uint(UNumber value) => value.GetUInt();
+        public static implicit operator int(UNumber value) => (int)value.GetUInt();
         public static implicit operator ulong(UNumber value) => value.GetULong();
+        public static implicit operator long(UNumber value) => (long)value.GetULong();
 
-        class Encoder : BinaryEncoder<Number>
+        class Encoder : BinaryEncoder<UNumber>
         {
             public override void Encode(System.IO.BinaryWriter writer, ref object value)
             {
-                var number = (Number)value;
+                var number = (UNumber)value;
 
                 writer.Write((byte)number.Buffer.Length);
                 writer.Write(number.Buffer);
@@ -197,7 +222,8 @@ namespace Cutulu.Core
 
             public override object Decode(System.IO.BinaryReader reader)
             {
-                return new Number() { Buffer = reader.ReadBytes(reader.ReadByte()), };
+                var _length = reader.ReadByte();
+                return new UNumber() { Buffer = reader.ReadBytes(_length), };
             }
         }
 

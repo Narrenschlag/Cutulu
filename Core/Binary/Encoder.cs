@@ -84,7 +84,9 @@ namespace Cutulu.Core
 
             switch (obj)
             {
-                case byte[] v when raw: writer.Write(v); break;
+                case byte[] v:
+                    if (raw == false) writer.Write(new UNumber(v.Length).Encode());
+                    writer.Write(v); break;
 
                 case string v: writer.Write(v); break;
                 case bool v: writer.Write(v); break;
@@ -138,7 +140,7 @@ namespace Cutulu.Core
             // Arrays
             else if (_type.IsArray && _obj is Array array)
             {
-                _writer.Write((ushort)array.Length);
+                _writer.Write(new UNumber(array.Length).Encode());
                 _type = _type.GetElementType();
 
                 for (ushort i = 0; i < array.Length; i++)
@@ -156,23 +158,22 @@ namespace Cutulu.Core
             // Classes and structs
             else
             {
-                var _properties = _type.GetSetProperties();
+                var _manager = PropertyManager.Open(_type);
 
-                for (ushort i = 0; i < _properties.Length; i++)
+                for (ushort i = 0; i < _manager.Properties.Length; i++)
                 {
                     // Skip properties that have [DontEncode] attribute
-                    if (((DontEncode[])_properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
+                    if (((DontEncode[])_manager.GetInfo(i).GetCustomAttributes(typeof(DontEncode))).Length > 0)
                         continue;
 
-                    var _value = _properties[i].GetValue(_obj);
-                    _type = _properties[i].GetType();
+                    var _value = _manager.GetValue(_obj, i);
+                    _type = _manager.GetType(i);
 
                     // Write value
-                    _writer.Write(_value == null ?
+                    if (_value == null) _writer.Write(
                             _type.IsArray ? new byte[2] : // Write null array as empty array
-                            new byte[1] : // Write null string as empty byte
-                        Encode(_value) // Encode value as usual
-                    );
+                            new byte[1]); // Write null string as empty byte
+                    else Encode(_writer, _value); // Encode value as usual
                 }
             }
 
@@ -200,7 +201,7 @@ namespace Cutulu.Core
             using var memory = new MemoryStream(_buffer);
             using var reader = new BinaryReader(memory);
 
-            return Decode(reader, _type);
+            return Decode(reader, _type, true);
         }
 
         /// <summary>
@@ -208,16 +209,16 @@ namespace Cutulu.Core
         /// </summary>
         public static T Decode<T>(this BinaryReader reader)
         {
-            return (T)Decode(reader, typeof(T));
+            return (T)Decode(reader, typeof(T), true);
         }
 
-        private static object Decode(this BinaryReader reader, Type type)
+        private static object Decode(this BinaryReader reader, Type type, bool _raw = false)
         {
             LastPropertyType = type;
 
             return type switch
             {
-                var t when t == typeof(byte[]) => reader.ReadRemainingBytes(),
+                var t when t == typeof(byte[]) => _raw ? reader.ReadRemainingBytes() : reader.ReadBytes(Decode<UNumber>(reader)),
                 var t when t == typeof(string) => reader.ReadString(),
                 var t when t == typeof(bool) => reader.ReadBoolean(),
                 var t when t == typeof(char) => reader.ReadChar(),
@@ -254,10 +255,10 @@ namespace Cutulu.Core
                 // Unable to read beyond end of stream
                 if (_reader.RemainingByteLength() < 2)
                 {
-                    throw new EndOfStreamException($"Unable to read array. Reached end of stream.");
+                    throw new EndOfStreamException($"Unable to read array. Reached end of stream. {_reader.RemainingByteLength()}");
                 }
 
-                var _array = Array.CreateInstance(_type, _reader.ReadUInt16());
+                var _array = Array.CreateInstance(_type, Decode<UNumber>(_reader));
 
                 for (ushort i = 0; i < _array.Length; i++)
                 {
@@ -271,17 +272,17 @@ namespace Cutulu.Core
             else
             {
                 var _output = Activator.CreateInstance(_type);
-                var _properties = _type.GetSetProperties();
+                var _manager = PropertyManager.Open(_type);
 
-                for (ushort i = 0; i < _properties.Length; i++)
+                for (ushort i = 0; i < _manager.Properties.Length; i++)
                 {
                     // Skip properties that have [DontEncode] attribute
-                    if (((DontEncode[])_properties[i].GetCustomAttributes(typeof(DontEncode))).Length > 0)
+                    if (((DontEncode[])_manager.GetInfo(i).GetCustomAttributes(typeof(DontEncode))).Length > 0)
                         continue;
 
-                    LastPropertyName = _properties[i].Name;
+                    LastPropertyName = _manager.GetInfo(i).Name;
 
-                    _properties[i].SetValue(_output, Decode(_reader, _properties[i].PropertyType));
+                    _manager.SetValue(_output, i, Decode(_reader, _manager.GetType(i)));
                 }
 
                 return _output;

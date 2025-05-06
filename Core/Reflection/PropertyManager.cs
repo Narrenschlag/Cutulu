@@ -47,12 +47,12 @@ namespace Cutulu.Core
 
         public Type GetType(string _name) => GetInfo(_name).PropertyType;
 
-        public object GetValue(int _idx, object _obj) => GetInfo(_idx).GetValue(_obj);
+        public object GetValue(object _ref, int _idx) => GetInfo(_idx).GetValue(_ref);
 
-        public object GetValue(string _name, object _obj) => GetInfo(_name).GetValue(_obj);
+        public object GetValue(object _ref, string _name) => GetInfo(_name).GetValue(_ref);
 
-        public void SetValue(int _idx, object _obj, object _value) => GetInfo(_idx).SetValue(_obj, _value);
+        public void SetValue(object _ref, int _idx, object _value) => GetInfo(_idx).SetValue(_ref, _value);
 
-        public void SetValue(string _name, object _obj, object _value) => GetInfo(_name).SetValue(_obj, _value);
+        public void SetValue(object _ref, string _name, object _value) => GetInfo(_name).SetValue(_ref, _value);
     }
 }
