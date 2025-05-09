@@ -197,7 +197,8 @@ namespace Cutulu.Core
 
             public override object Decode(System.IO.BinaryReader reader)
             {
-                return new Number() { Buffer = reader.ReadBytes(reader.ReadByte()), };
+                var _length = reader.ReadByte();
+                return new Number() { Buffer = reader.ReadBytes(_length), };
             }
         }
 
