@@ -214,16 +214,34 @@ namespace Cutulu.Core
         {
             public override void Encode(System.IO.BinaryWriter writer, ref object value)
             {
-                var number = (UNumber)value;
+                var _number = (UNumber)value;
 
-                writer.Write((byte)number.Buffer.Length);
-                writer.Write(number.Buffer);
+                if (_number < 128) writer.Write((byte)_number);
+
+                else
+                {
+                    var _builder = new BitBuilder((byte)_number.Buffer.Length)
+                    {
+                        [7] = true
+                    };
+
+                    writer.Write(_builder.ByteBuffer);
+                    writer.Write(_number.Buffer);
+                }
             }
 
             public override object Decode(System.IO.BinaryReader reader)
             {
-                var _length = reader.ReadByte();
-                return new UNumber() { Buffer = reader.ReadBytes(_length), };
+                var _byte = reader.ReadByte();
+
+                if (_byte < 128) return new UNumber(_byte);
+
+                var _builder = new BitBuilder(_byte)
+                {
+                    [7] = false
+                };
+
+                return new UNumber() { Buffer = reader.ReadBytes(_builder.ByteBuffer[0]), };
             }
         }
 

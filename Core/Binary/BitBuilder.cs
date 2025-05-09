@@ -10,14 +10,14 @@ namespace Cutulu.Core
     /// </summary>
     public readonly struct BitBuilder : IEnumerable<bool>
     {
-        private readonly List<bool> buffer;
+        private readonly List<bool> Buffer;
 
         /// <summary>
         /// Creates a new BitBuilder.
         /// </summary>
         public BitBuilder(object value = null)
         {
-            buffer = new();
+            Buffer = [];
 
             Add(value);
         }
@@ -25,14 +25,14 @@ namespace Cutulu.Core
         // Indexer to make 'Index' act like an array
         public bool this[int index]
         {
-            get { return buffer[index]; }  // Get value at the given index
-            set { buffer[index] = value; } // Set value at the given index
+            get { return Buffer[index]; }  // Get value at the given index
+            set { Buffer[index] = value; } // Set value at the given index
         }
 
         /// <summary>
         /// Returns the buffer as a bit array.
         /// </summary>
-        public bool[] BitBuffer => buffer.ToArray();
+        public bool[] BitBuffer => Buffer.ToArray();
 
         /// <summary>
         /// Returns the buffer as a byte array.
@@ -41,29 +41,29 @@ namespace Cutulu.Core
         {
             get
             {
-                var result = new byte[ByteLength];
+                var _buffer = new byte[ByteLength];
 
-                for (var i = 0; i < buffer.Count; i++)
+                for (var i = 0; i < Buffer.Count; i++)
                 {
-                    if (buffer[i])
+                    if (Buffer[i])
                     {
-                        var byteIndex = i / 8;
-                        var bitIndex = (byte)(i % 8);
+                        var _bit_index = (byte)(i % 8);
+                        var _byte_index = i / 8;
 
-                        Bitf.EnableBit(ref result[byteIndex], ref bitIndex);
+                        Bitf.EnableBit(ref _buffer[_byte_index], ref _bit_index);
                     }
                 }
 
-                return result;
+                return _buffer;
             }
         }
 
-        public int ByteLength => Mathf.CeilToInt(buffer.Count / 8.0f);
-        public int Length => buffer.Count;
+        public int ByteLength => Mathf.CeilToInt(Buffer.Count / 8.0f);
+        public int Length => Buffer.Count;
 
         public IEnumerator<bool> GetEnumerator()
         {
-            return buffer.GetEnumerator();
+            return Buffer.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -71,6 +71,10 @@ namespace Cutulu.Core
             return GetEnumerator();
         }
 
+        public void Clear()
+        {
+            Buffer.Clear();
+        }
         /// <summary>
         /// Adds a binary pattern of bits to the buffer.
         /// 00000001 is a byte with value 1.
@@ -102,7 +106,7 @@ namespace Cutulu.Core
         {
             for (var i = 0; i < targetLength - Length; i++)
             {
-                buffer.Add(value);
+                Buffer.Add(value);
             }
         }
 
@@ -110,37 +114,37 @@ namespace Cutulu.Core
         {
             for (var i = 0; i < length; i++)
             {
-                buffer.Add(value);
+                Buffer.Add(value);
             }
         }
 
         public void Add(object value)
         {
-            var bytes = value == null ? Array.Empty<byte>() : value.Encode();
+            var _bytes = value == null ? [] : value.Encode();
 
-            for (var i = 0; i < bytes.Length; i++)
+            for (var i = 0; i < _bytes.Length; i++)
             {
                 for (var k = 0; k < 8; k++)
                 {
                     // Add bits to buffer
-                    buffer.Add((bytes[i] & (1 << (7 - k))) != 0);
+                    Buffer.Add((_bytes[i] & (1 << (7 - k))) != 0);
                 }
             }
         }
 
         public void Add(bool value)
         {
-            buffer.Add(value);
+            Buffer.Add(value);
         }
 
         public void Insert(int index, bool value)
         {
-            buffer.Insert(index, value);
+            Buffer.Insert(index, value);
         }
 
         public void RemoveAt(int index)
         {
-            buffer.RemoveAt(index);
+            Buffer.RemoveAt(index);
         }
 
         public void SetRange(int index, int length, params bool[] values)
