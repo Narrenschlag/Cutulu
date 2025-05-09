@@ -53,7 +53,7 @@ namespace Cutulu.Core
             }
         }
 
-        public readonly bool Unpack(Dictionary<KEY, VALUE> _dict)
+        public readonly bool Unpack(Dictionary<KEY, VALUE> _dict, params Number[] _ignore_idx)
         {
             try
             {
@@ -61,6 +61,7 @@ namespace Cutulu.Core
                 using var _reader = new BinaryReader(_memory);
 
                 var _manager = PropertyManager.Open<VALUE>();
+                var _ignore_any = _ignore_idx.NotEmpty();
 
                 foreach (var _key in Keys)
                 {
@@ -71,7 +72,7 @@ namespace Cutulu.Core
                     {
                         var _idx = Index[_k];
 
-                        if (_reader.TryDecode(_manager.GetType(_idx), out var _value))
+                        if (_reader.TryDecode(_manager.GetType(_idx), out var _value) && (_ignore_any == false || _ignore_idx.Contains(_idx) == false))
                             _manager.SetValue(_entry, _idx, _value);
                     }
                 }
