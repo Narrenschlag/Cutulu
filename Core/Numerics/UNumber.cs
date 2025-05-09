@@ -1,6 +1,5 @@
 namespace Cutulu.Core
 {
-    using System;
     using Godot;
 
     /// <summary>
@@ -94,53 +93,6 @@ namespace Cutulu.Core
                 TypeEnum.ULong => Buffer.Decode<ulong>(),
                 _ => default(byte),
             };
-        }
-
-        public static byte GetNumberId(params UNumber[] numbers)
-        {
-            if (numbers.Length > 4) throw new($"Can only identify up to 4 numbers at a time.");
-
-            var bitBuilder = new BitBuilder(default(byte));
-
-            for (var i = 0; i < numbers.Length; i++)
-            {
-                switch (numbers[i].GetTypeEnum())
-                {
-                    case TypeEnum.Byte:
-                        bitBuilder.AddBinary("00");
-                        break;
-
-                    case TypeEnum.UShort:
-                        bitBuilder.AddBinary("01");
-                        break;
-
-                    case TypeEnum.UInt:
-                        bitBuilder.AddBinary("10");
-                        break;
-
-                    case TypeEnum.ULong:
-                        bitBuilder.AddBinary("11");
-                        break;
-                }
-            }
-
-            bitBuilder.Fill(8, false);
-
-            return bitBuilder.ByteBuffer[0];
-        }
-
-        public static TypeEnum[] ReadNumberId(byte numberId)
-        {
-            var bitBuilder = new BitBuilder(numberId);
-            var result = new TypeEnum[4];
-
-            for (var i = 0; i < 4; i++)
-            {
-                result[i] = (TypeEnum)bitBuilder.GetByte(i * 2, 2);
-                result[i]++;
-            }
-
-            return result;
         }
 
         public static implicit operator UNumber(byte value) => new(value);
