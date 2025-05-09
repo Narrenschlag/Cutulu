@@ -6,6 +6,8 @@ namespace Cutulu.Core
 
         public PackedProperties() { }
 
+        public PackedProperties(object _ref, params string[] _name) : this(_ref, GetIdx(_name, _ref.GetType())) { }
+
         public PackedProperties(object _ref, params int[] _idx)
         {
             try
@@ -15,23 +17,6 @@ namespace Cutulu.Core
                 for (int i = 0; i < Properties.Length; i++)
                 {
                     Properties[i] = new(_ref, _idx[i]);
-                }
-            }
-            catch (System.Exception _ex)
-            {
-                Debug.LogError($"Packing failed. {_ex.Message}");
-            }
-        }
-
-        public PackedProperties(object _ref, params string[] _name)
-        {
-            try
-            {
-                Properties = new PackedProperty[_name.Length];
-
-                for (int i = 0; i < Properties.Length; i++)
-                {
-                    Properties[i] = new(_ref, _name[i]);
                 }
             }
             catch (System.Exception _ex)
@@ -56,6 +41,23 @@ namespace Cutulu.Core
                 Debug.LogError($"Unpacking failed. {_ex.Message}");
                 return false;
             }
+        }
+
+        public static int[] GetIdx(string[] _name, System.Type _type)
+        {
+            var _idx = new int[_name.Size()];
+
+            if (_idx.Length > 0)
+            {
+                var _manager = PropertyManager.Open(_type);
+
+                for (int i = 0; i < _idx.Length; i++)
+                {
+                    _idx[i] = _manager.GetIndex(_name[i]);
+                }
+            }
+
+            return _idx;
         }
     }
 }
