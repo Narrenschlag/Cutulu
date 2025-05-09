@@ -11,131 +11,80 @@ namespace Cutulu.Core
         public byte[] Buffer { get; set; }
 
         public readonly TypeEnum GetTypeEnum() =>
-            Buffer.IsEmpty() ? TypeEnum.Invalid :
+            Buffer.IsEmpty() || Buffer.Length > 8 ? TypeEnum.Invalid :
             Buffer.Length == 8 ? TypeEnum.ULong :
             Buffer.Length == 4 ? TypeEnum.UInt :
             Buffer.Length == 2 ? TypeEnum.UShort :
             TypeEnum.Byte;
 
-        public UNumber() { Buffer = null; }
-        public UNumber(object value)
+        public static byte GetLength(TypeEnum _type)
         {
-            while (true)
+            return _type switch
             {
-                switch (value)
-                {
-                    case byte v:
-                        Buffer = v.Encode();
-                        return;
+                TypeEnum.UShort => 2,
+                TypeEnum.UInt => 4,
+                TypeEnum.ULong => 8,
+                _ => 1,
+            };
+        }
 
-                    case short v:
-                        if (v <= byte.MaxValue) value = (byte)Mathf.Max(v, 0);
-                        else value = (ushort)Mathf.Max(v, 0);
-                        break;
+        public UNumber() { Buffer = null; }
+        public UNumber(object _value)
+        {
+            Buffer = GetBuffer(_value);
+        }
 
-                    case ushort v:
-                        if (IsByte(ref v))
-                        {
-                            value = (byte)v;
-                            break;
-                        }
+        private static byte[] GetBuffer(object _obj)
+        {
+            // Convert signed to unsigned
+            switch (_obj)
+            {
+                case sbyte v:
+                    _obj = (byte)Mathf.Max(v, 0);
+                    break;
 
-                        // Is ushort
-                        else
-                        {
-                            Buffer = v.Encode();
-                            return;
-                        }
+                case short v:
+                    _obj = (ushort)Mathf.Max(v, 0);
+                    break;
 
-                    case int v:
-                        if (v <= byte.MaxValue) value = (byte)Mathf.Max(v, 0);
-                        else if (v <= ushort.MaxValue) value = (ushort)Mathf.Max(v, 0);
-                        else value = (uint)Mathf.Max(v, 0);
-                        break;
+                case int v:
+                    _obj = (uint)Mathf.Max(v, 0);
+                    break;
 
-                    case uint v:
-                        if (IsUShort(ref v))
-                        {
-                            value = (short)v;
-                            break;
-                        }
-
-                        // Is uint
-                        else
-                        {
-                            Buffer = v.Encode();
-                            return;
-                        }
-
-                    case long v:
-                        if (v <= byte.MaxValue) value = (byte)Mathf.Max(v, 0);
-                        else if (v <= ushort.MaxValue) value = (ushort)Mathf.Max(v, 0);
-                        else if (v <= uint.MaxValue) value = (uint)Mathf.Max(v, 0);
-                        else value = (ulong)Mathf.Max(v, 0);
-                        break;
-
-                    case ulong v:
-                        if (IsUInt(ref v))
-                        {
-                            value = (int)v;
-                            break;
-                        }
-
-                        // Is ulong
-                        else
-                        {
-                            Buffer = v.Encode();
-                            return;
-                        }
-
-                    default:
-                        Buffer = Array.Empty<byte>();
-                        return;
-                }
+                case long v:
+                    _obj = (ulong)Mathf.Max(v, 0);
+                    break;
             }
 
-            static bool IsByte(ref ushort value) => value <= byte.MaxValue && value >= byte.MinValue;
-            static bool IsUShort(ref uint value) => value <= ushort.MaxValue && value >= ushort.MinValue;
-            static bool IsUInt(ref ulong value) => value <= uint.MaxValue && value >= uint.MinValue;
-        }
-
-        public readonly byte GetByte()
-        {
-            return GetTypeEnum() switch
+            // Reduce to lowest type
+            switch (_obj)
             {
-                TypeEnum.Byte => Buffer.Decode<byte>(),
-                TypeEnum.UShort => (byte)Buffer.Decode<ushort>(),
-                TypeEnum.UInt => (byte)Buffer.Decode<uint>(),
-                TypeEnum.ULong => (byte)Buffer.Decode<ulong>(),
-                _ => default,
-            };
+                case byte: break;
+
+                case ushort v:
+                    if (v <= byte.MaxValue) _obj = (byte)v;
+                    break;
+
+                case uint v:
+                    if (v <= byte.MaxValue) _obj = (byte)v;
+                    else if (v <= ushort.MaxValue) _obj = (ushort)v;
+                    break;
+
+                case ulong v:
+                    if (v <= byte.MaxValue) _obj = (byte)v;
+                    else if (v <= ushort.MaxValue) _obj = (ushort)v;
+                    else if (v <= uint.MaxValue) _obj = (uint)v;
+                    break;
+
+                default:
+                    _obj = default(byte);
+                    break;
+            }
+
+            return _obj.Encode();
         }
 
-        public readonly ushort GetUShort()
-        {
-            return GetTypeEnum() switch
-            {
-                TypeEnum.Byte => Buffer.Decode<byte>(),
-                TypeEnum.UShort => Buffer.Decode<ushort>(),
-                TypeEnum.UInt => (ushort)Buffer.Decode<uint>(),
-                TypeEnum.ULong => (ushort)Buffer.Decode<ulong>(),
-                _ => default,
-            };
-        }
-
-        public readonly uint GetUInt()
-        {
-            return GetTypeEnum() switch
-            {
-                TypeEnum.Byte => Buffer.Decode<byte>(),
-                TypeEnum.UShort => Buffer.Decode<ushort>(),
-                TypeEnum.UInt => Buffer.Decode<uint>(),
-                TypeEnum.ULong => (uint)Buffer.Decode<ulong>(),
-                _ => default,
-            };
-        }
-
-        public readonly ulong GetULong()
+        private readonly ulong GetValue()
         {
             return GetTypeEnum() switch
             {
@@ -143,7 +92,7 @@ namespace Cutulu.Core
                 TypeEnum.UShort => Buffer.Decode<ushort>(),
                 TypeEnum.UInt => Buffer.Decode<uint>(),
                 TypeEnum.ULong => Buffer.Decode<ulong>(),
-                _ => default,
+                _ => default(byte),
             };
         }
 
@@ -202,30 +151,29 @@ namespace Cutulu.Core
         public static implicit operator UNumber(long value) => new(value);
         public static implicit operator UNumber(ulong value) => new(value);
 
-        public static implicit operator byte(UNumber value) => value.GetByte();
-        public static implicit operator ushort(UNumber value) => value.GetUShort();
-        public static implicit operator short(UNumber value) => (short)value.GetUShort();
-        public static implicit operator uint(UNumber value) => value.GetUInt();
-        public static implicit operator int(UNumber value) => (int)value.GetUInt();
-        public static implicit operator ulong(UNumber value) => value.GetULong();
-        public static implicit operator long(UNumber value) => (long)value.GetULong();
+        public static implicit operator byte(UNumber value) => (byte)value.GetValue();
+        public static implicit operator ushort(UNumber value) => (ushort)value.GetValue();
+        public static implicit operator short(UNumber value) => (short)value.GetValue();
+        public static implicit operator uint(UNumber value) => (uint)value.GetValue();
+        public static implicit operator int(UNumber value) => (int)value.GetValue();
+        public static implicit operator ulong(UNumber value) => value.GetValue();
+        public static implicit operator long(UNumber value) => (long)value.GetValue();
+
+        public new readonly string ToString() => ((ulong)this).ToString();
 
         class Encoder : BinaryEncoder<UNumber>
         {
+            private const byte DIV = 252;
+
             public override void Encode(System.IO.BinaryWriter writer, ref object value)
             {
                 var _number = (UNumber)value;
 
-                if (_number < 128) writer.Write((byte)_number);
-
+                if (_number.Buffer.Length < 1 || _number.Buffer.Length > 8) writer.Write((byte)0);
+                else if (_number < DIV && _number.Buffer.Length == 1) writer.Write((byte)_number);
                 else
                 {
-                    var _builder = new BitBuilder((byte)_number.Buffer.Length)
-                    {
-                        [7] = true
-                    };
-
-                    writer.Write(_builder.ByteBuffer);
+                    writer.Write((byte)(_number.GetTypeEnum() + DIV - 1));
                     writer.Write(_number.Buffer);
                 }
             }
@@ -234,14 +182,8 @@ namespace Cutulu.Core
             {
                 var _byte = reader.ReadByte();
 
-                if (_byte < 128) return new UNumber(_byte);
-
-                var _builder = new BitBuilder(_byte)
-                {
-                    [7] = false
-                };
-
-                return new UNumber() { Buffer = reader.ReadBytes(_builder.ByteBuffer[0]), };
+                return _byte < DIV ? new UNumber(_byte) :
+                new() { Buffer = reader.ReadBytes(GetLength((TypeEnum)(_byte - DIV + 1))), };
             }
         }
 
