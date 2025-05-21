@@ -4,12 +4,6 @@ namespace Cutulu.Core
     {
         public bool[] Bits;
 
-        public bool this[int bitIndex]
-        {
-            get => Get(bitIndex);
-            set => Set(bitIndex, value);
-        }
-
         public Mask()
         {
             throw new("Cannot create empty mask. needs atleast one bit!");
@@ -31,9 +25,9 @@ namespace Cutulu.Core
         }
 
         public readonly void Set(int bit, bool newValue) => Bits[bit] = newValue;
-        public bool Get(int bit) => Bits[bit];
+        public readonly bool Get(int bit) => Bits[bit];
 
-        public int Integer
+        public readonly int Integer
         {
             get
             {
@@ -44,6 +38,12 @@ namespace Cutulu.Core
 
                 return x;
             }
+        }
+
+        public readonly bool this[int bitIndex]
+        {
+            get => Get(bitIndex);
+            set => Set(bitIndex, value);
         }
     }
 }

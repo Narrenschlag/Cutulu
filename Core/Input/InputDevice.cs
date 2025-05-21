@@ -45,7 +45,7 @@ namespace Cutulu.Core
 
         #region Pressed
 
-        private readonly Dictionary<InputKey, object> PressedKey = new();
+        private readonly Dictionary<InputKey, object> PressedKey = [];
 
         public bool IsAnyPressed() => IsAnyPressed(out InputKey[] _);
 
@@ -75,7 +75,7 @@ namespace Cutulu.Core
                 if (index.IsPressed(this)) list.Add(index);
             }
 
-            indexes = list.ToArray();
+            indexes = [.. list];
             return indexes.NotEmpty();
         }
 
@@ -121,7 +121,7 @@ namespace Cutulu.Core
 
         #region Just Pressed & Just Released
 
-        private readonly List<InputKey> JustPressedKeys = new(), JustReleasedKeys = new();
+        private readonly List<InputKey> JustPressedKeys = [], JustReleasedKeys = [];
 
         public bool IsJustPressed(string indexName) => IsJustPressed(this[indexName]);
         public bool IsJustPressed(InputKey key) => JustPressedKeys.Contains(key);
@@ -149,7 +149,7 @@ namespace Cutulu.Core
 
         #region Indexes
 
-        private readonly Dictionary<string, InputIndex> Indexes = new();
+        private readonly Dictionary<string, InputIndex> Indexes = [];
 
         public ICollection<string> IndexesRegistered => Indexes.Keys;
 
@@ -167,18 +167,11 @@ namespace Cutulu.Core
             }
         }
 
-        public partial struct InputIndex
+        public partial struct InputIndex(string identifier, bool and, params InputKey[] keys)
         {
-            public string Identifier { get; set; }
-            public InputKey[] Keys { get; set; }
-            public bool And { get; set; }
-
-            public InputIndex(string identifier, bool and, params InputKey[] keys)
-            {
-                Keys = keys.IsEmpty() ? Array.Empty<InputKey>() : keys;
-                Identifier = identifier;
-                And = and;
-            }
+            public string Identifier { get; set; } = identifier;
+            public InputKey[] Keys { get; set; } = keys.IsEmpty() ? [] : keys;
+            public bool And { get; set; } = and;
 
             public readonly bool IsJustReleased(InputDevice device) => IsPressed(device) && ValidatePress(device.JustReleasedKeys, false);
             public readonly bool IsJustPressed(InputDevice device) => IsPressed(device) && ValidatePress(device.JustPressedKeys, false);

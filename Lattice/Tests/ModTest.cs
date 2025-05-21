@@ -12,7 +12,7 @@ namespace Cutulu.Lattice.Tests
 
         protected override int StepCount => 3;
 
-        protected override async Task<bool> _Process()
+        protected override async Task<bool> Process()
         {
             var instances = ModLoader.Load(Mods, null, true);
 

@@ -1,7 +1,7 @@
-using Godot;
-
 namespace Cutulu.Core
 {
+    using Godot;
+
     public partial class Compass : Node
     {
         /// <summary>

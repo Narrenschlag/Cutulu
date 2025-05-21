@@ -5,7 +5,7 @@ namespace Cutulu.Core
 {
     public class NestedString
     {
-        public List<NestedString> Children { get; set; }
+        public readonly List<NestedString> Children = [];
         public string Value { get; set; }
 
         public NestedString Parent { get; set; }
@@ -15,11 +15,10 @@ namespace Cutulu.Core
         public int StartX { get; set; }
         public int LastX { get; set; }
 
-        public bool emptyValue() => Value.IsEmpty();
+        public bool EmptyValue() => Value.IsEmpty();
 
         public NestedString(string Key, int Start, int Last, NestedString parent = null, int depth = 0)
         {
-            Children = new List<NestedString>();
             this.Key = Key;
 
             StartX = Start;
@@ -36,10 +35,10 @@ namespace Cutulu.Core
         // Just a concept, as this is actually not made as JSON alternative but basically for my dialogue system
         private static T Parse<T>(string plain, string[] openKeys, string closeKey = "$", char openSuffix = ':', char closePrefix = ':', bool clipDepth = true, bool trimValues = true) where T : class, new()
         {
-            NestedString nestedString = Parse(plain, openKeys, closeKey, openSuffix, closePrefix, trimValues);
-            T _class = new T();
+            var nestedString = Parse(plain, openKeys, closeKey, openSuffix, closePrefix, trimValues);
+            var _class = new T();
 
-            List<(string key, string value)> list = new();
+            List<(string key, string value)> list = [];
             foreach ((string key, string value) in list)
                 _class.SetParameterValue(key, value);
 
@@ -49,30 +48,30 @@ namespace Cutulu.Core
 
         #region Parsing
         public static NestedString Parse(string plain, string openKey, string closeKey = "$", char openSuffix = ':', char closePrefix = ':', bool clipDepth = true, bool trimValues = true)
-            => Parse(plain, new string[1] { openKey }, closeKey, openSuffix, closePrefix, clipDepth, trimValues);
+            => Parse(plain, [openKey], closeKey, openSuffix, closePrefix, clipDepth, trimValues);
 
         public static NestedString Parse(string plain, string[] openKeys = null, string closeKey = "$", char openSuffix = ':', char closePrefix = ':', bool clipDepth = true, bool trimValues = true)
         {
             // Fix keys (remove emties, trim existing)
             if (openKeys.NotEmpty())
             {
-                List<string> _keys = new List<string>();
+                List<string> _keys = new();
                 for (int i = openKeys.Length - 1; i >= 0; i--)
                 {
                     if (openKeys[i].NotEmpty()) _keys.Add(openKeys[i].Trim());
                 }
 
-                openKeys = _keys.ToArray();
+                openKeys = [.. _keys];
             }
 
             // Assign default key
             if (openKeys.IsEmpty()) openKeys = new string[1] { "$" };
 
             // Define result value to be given back
-            NestedString result = new NestedString("", 0, plain.Length - 1);
+            NestedString result = new("", 0, plain.Length - 1);
 
             // Variable values
-            NestedString current = result;
+            var current = result;
             int depth = 0, last = 0;
 
             // Algorithm for full text
@@ -125,7 +124,7 @@ namespace Cutulu.Core
             #region Depth
             void deeper(string key, int start, int last)
             {
-                NestedString nested = new NestedString(key, start, last, current, depth + 1);
+                NestedString nested = new(key, start, last, current, depth + 1);
 
                 current.Children.Add(nested);
                 current = nested;
@@ -138,9 +137,8 @@ namespace Cutulu.Core
                 if (current.Parent == null) throw new($"Depth out of range at char {i}");
 
                 if (current.Value.Trim().IsEmpty()) current.Value = null;
-                if (current.Children.IsEmpty()) current.Children = null;
 
-                bool isEmpty = current.Children == null && current.Value == null;
+                var isEmpty = current.Children == null && current.Value == null;
                 current = current.Parent;
 
                 if (isEmpty) current.Children.RemoveAt(current.Children.Count - 1);
@@ -186,7 +184,7 @@ namespace Cutulu.Core
         public static string ToString(NestedString nestedString, string closeKey = "$", char openSuffix = ':', char closePrefix = ':')
         {
             // Define string builder for performance
-            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new();
             loop(nestedString, false);
 
             // Recursive loop
@@ -219,7 +217,7 @@ namespace Cutulu.Core
         public static void FixDepth(NestedString nestedString)
         {
             // Remove empty and replace their child's parent
-            if (nestedString.emptyValue() && nestedString.Parent != null)
+            if (nestedString.EmptyValue() && nestedString.Parent != null)
             {
                 for (int i = nestedString.Children.Count - 1; i >= 0; i--)
                 {
@@ -278,11 +276,11 @@ namespace Cutulu.Core
         public string[] ReadValues(string key) => ReadValues(this, key);
         public static string[] ReadValues(NestedString nestedString, string key)
         {
-            List<string> values = new List<string>();
+            List<string> values = [];
             key = key.Trim();
 
             loop(nestedString, ref values);
-            return values.IsEmpty() ? null : values.ToArray();
+            return values.IsEmpty() ? null : [.. values];
 
             void loop(NestedString nestedString, ref List<string> values)
             {
@@ -298,11 +296,11 @@ namespace Cutulu.Core
         public (string value, int start, int last)[] ReadValues2(string key) => ReadValues2(this, key);
         public static (string value, int start, int last)[] ReadValues2(NestedString nestedString, string key)
         {
-            List<(string value, int start, int last)> values = new List<(string value, int start, int last)>();
+            List<(string value, int start, int last)> values = [];
             key = key.Trim();
 
             loop(nestedString, ref values);
-            return values.IsEmpty() ? null : values.ToArray();
+            return values.IsEmpty() ? null : [.. values];
 
             void loop(NestedString nestedString, ref List<(string value, int start, int last)> values)
             {

@@ -2,19 +2,22 @@ using Godot;
 
 namespace Cutulu.Core
 {
+    /// <summary>
+    /// Mathf extension for area calculations.
+    /// </summary>
     public static class Areaf
     {
         public static float GetAreaInM2(this Vector2 a, Vector2 b, Vector2 c)
         {
             // Calculate two vectors representing two sides of the triangle
-            Vector2 side1 = b - a;
-            Vector2 side2 = c - a;
+            var side1 = b - a;
+            var side2 = c - a;
 
             // Calculate the cross product of the two sides
-            float crossProduct = Vector2f.Cross(side1, side2);
+            var crossProduct = Vector2f.Cross(side1, side2);
 
             // Area of the triangle is half of the magnitude of the cross product
-            float area = Mathf.Abs(crossProduct) * 0.5f;
+            var area = Mathf.Abs(crossProduct) * 0.5f;
 
             return area;
         }

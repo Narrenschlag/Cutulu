@@ -9,9 +9,9 @@ namespace Cutulu.Core
     /// </summary>
     public partial class InputHandler : Node
     {
-        private readonly List<(byte TimeStamp, int DeviceId, InputKey Key, bool justPressed)> Queue = new();
-        private readonly Dictionary<int, Dictionary<InputKey, byte>> MouseQueue = new();
-        public readonly Dictionary<int, InputDevice> Devices = new();
+        private readonly List<(byte TimeStamp, int DeviceId, InputKey Key, bool justPressed)> Queue = [];
+        private readonly Dictionary<int, Dictionary<InputKey, byte>> MouseQueue = [];
+        public readonly Dictionary<int, InputDevice> Devices = [];
 
         [Export] public float MouseDeadZone = 2.0f;
         [Export] public float MouseMaxVal = 8.0f;
@@ -162,7 +162,7 @@ namespace Cutulu.Core
                     {
                         if (MouseQueue.TryGetValue(deviceId, out var mouseQueue) == false)
                         {
-                            MouseQueue[deviceId] = mouseQueue = new();
+                            MouseQueue[deviceId] = mouseQueue = [];
                         }
 
                         mouseQueue[key] = TimeStamp;

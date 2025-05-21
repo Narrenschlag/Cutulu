@@ -2,52 +2,51 @@ using System.Collections.Generic;
 
 namespace Cutulu.Core
 {
-    public struct Dictionary<TRootKey, TKey, TValue>
+    public readonly struct Dictionary<TRootKey, TKey, TValue>
     {
-        private Dictionary<TRootKey, Dictionary<TKey, TValue>> dic;
+        private readonly Dictionary<TRootKey, Dictionary<TKey, TValue>> Dic;
 
         public Dictionary()
         {
-            dic = new Dictionary<TRootKey, Dictionary<TKey, TValue>>();
+            Dic = [];
         }
 
-        public void Add(TRootKey rootKey, TKey key, TValue value)
+        public readonly void Add(TRootKey rootKey, TKey key, TValue value)
         {
-            if (dic == null) dic = new Dictionary<TRootKey, Dictionary<TKey, TValue>>();
-            if (!ContainsKey(rootKey)) dic.Add(rootKey, new Dictionary<TKey, TValue>());
+            if (!ContainsKey(rootKey)) Dic.Add(rootKey, []);
 
-            dic[rootKey].Add(key, value);
+            Dic[rootKey][key] = value;
         }
 
-        public TValue this[TRootKey rootKey, TKey key]
+        public readonly TValue this[TRootKey rootKey, TKey key]
         {
-            set => dic[rootKey][key] = value;
-            get => dic[rootKey][key];
+            set => Dic[rootKey][key] = value;
+            get => Dic[rootKey][key];
         }
 
-        public bool TryGetValue(TRootKey rootKey, out Dictionary<TKey, TValue> value) => dic.TryGetValue(rootKey, out value);
-        public bool TryGetValue(TRootKey rootKey, TKey key, out TValue value)
+        public readonly bool TryGetValue(TRootKey rootKey, out Dictionary<TKey, TValue> value) => Dic.TryGetValue(rootKey, out value);
+        public readonly bool TryGetValue(TRootKey rootKey, TKey key, out TValue value)
         {
             if (ContainsKey(rootKey, key))
             {
-                value = dic[rootKey][key];
+                value = Dic[rootKey][key];
                 return true;
             }
 
-            value = default(TValue);
+            value = default;
             return false;
         }
 
-        public bool ContainsKey(TRootKey rootKey, TKey key) => ContainsKey(rootKey) && dic[rootKey].ContainsKey(key);
-        public bool ContainsKey(TRootKey rootKey) => dic.IsEmpty() ? false : dic.ContainsKey(rootKey);
+        public readonly bool ContainsKey(TRootKey rootKey, TKey key) => ContainsKey(rootKey) && Dic[rootKey].ContainsKey(key);
+        public readonly bool ContainsKey(TRootKey rootKey) => !Dic.IsEmpty() && Dic.ContainsKey(rootKey);
 
-        public void Remove(TRootKey rootKey, TKey key) => dic[rootKey].Remove(key);
-        public void Remove(TRootKey rootKey) => dic.Remove(rootKey);
+        public readonly void Remove(TRootKey rootKey, TKey key) => Dic[rootKey].Remove(key);
+        public readonly void Remove(TRootKey rootKey) => Dic.Remove(rootKey);
 
-        public bool IsNull() => dic == null;
-        public bool NotNull() => !IsNull();
+        public readonly bool IsNull() => Dic == null;
+        public readonly bool NotNull() => !IsNull();
 
-        public bool IsEmpty() => IsNull() || dic.IsEmpty();
-        public bool NotEmpty() => !IsEmpty();
+        public readonly bool IsEmpty() => IsNull() || Dic.IsEmpty();
+        public readonly bool NotEmpty() => !IsEmpty();
     }
 }

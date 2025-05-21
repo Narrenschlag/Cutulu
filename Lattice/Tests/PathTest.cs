@@ -12,7 +12,7 @@ namespace Cutulu.Lattice.Tests
 
         protected override int StepCount => 1;
 
-        protected override async Task<bool> _Process()
+        protected override async Task<bool> Process()
         {
             var manifest = Mod.ReadAssetEntries();
 

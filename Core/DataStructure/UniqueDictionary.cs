@@ -5,8 +5,8 @@ namespace Cutulu.Core
 {
     public class UniqueDictionary<Key, Value>
     {
-        public readonly Dictionary<Value, Key> Reverse = new();
-        public readonly Dictionary<Key, Value> Index = new();
+        public readonly Dictionary<Value, Key> Reverse = [];
+        public readonly Dictionary<Key, Value> Index = [];
 
         public int Length => Index.Count;
         public int Count => Index.Count;

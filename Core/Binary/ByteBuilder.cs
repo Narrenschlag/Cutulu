@@ -8,27 +8,27 @@ namespace Cutulu.Core
     /// </summary>
     public class ByteBuilder
     {
-        private int writeBitPosition;
-        private int readBitPosition;
-        private List<byte> buffer;
+        private readonly List<byte> _buffer;
+        private int _writeBitPosition;
+        private int _readBitPosition;
 
         /// <summary>
         /// Creates a new BitBuilder.
         /// </summary>
         public ByteBuilder(object value = null)
         {
-            buffer = new List<byte>(value == null ? Array.Empty<byte>() : value.Encode());
-            writeBitPosition = buffer.Count * 8;
-            readBitPosition = 0;
+            _buffer = value == null ? [] : new List<byte>(value.Encode());
+            _writeBitPosition = _buffer.Count * 8;
+            _readBitPosition = 0;
         }
 
         /// <summary>
         /// Returns the buffer as a byte array.
         /// </summary>
-        public byte[] Buffer => buffer.ToArray();
+        public byte[] Buffer => [.. _buffer];
 
-        public int BitLength => buffer.Count * 8;
-        public int ByteLength => buffer.Count;
+        public int BitLength => _buffer.Count * 8;
+        public int ByteLength => _buffer.Count;
 
         /// <summary>
         /// Returns buffer as given type T.
@@ -45,8 +45,8 @@ namespace Cutulu.Core
         /// </summary>
         public void Write(byte[] data)
         {
-            buffer.AddRange(data);
-            writeBitPosition += data.Length * 8;
+            _buffer.AddRange(data);
+            _writeBitPosition += data.Length * 8;
         }
 
         /// <summary>
@@ -61,20 +61,20 @@ namespace Cutulu.Core
         {
             foreach (bool bit in bits)
             {
-                var byteIndex = writeBitPosition / 8;
-                var bitIndex = writeBitPosition % 8;
+                var byteIndex = _writeBitPosition / 8;
+                var bitIndex = _writeBitPosition % 8;
 
-                if (byteIndex >= buffer.Count)
+                if (byteIndex >= _buffer.Count)
                 {
-                    buffer.Add(0);
+                    _buffer.Add(0);
                 }
 
                 if (bit)
                 {
-                    buffer[byteIndex] |= (byte)(1 << (7 - bitIndex));
+                    _buffer[byteIndex] |= (byte)(1 << (7 - bitIndex));
                 }
 
-                writeBitPosition++;
+                _writeBitPosition++;
             }
         }
 
@@ -83,11 +83,11 @@ namespace Cutulu.Core
         /// </summary>
         public byte[] Read(int length)
         {
-            if (length > buffer.Count - (readBitPosition / 8))
+            if (length > _buffer.Count - (_readBitPosition / 8))
                 throw new ArgumentOutOfRangeException(nameof(length), "Not enough bytes available.");
 
-            var result = buffer.GetRange(readBitPosition / 8, length).ToArray();
-            readBitPosition += length * 8;
+            var result = _buffer.GetRange(_readBitPosition / 8, length).ToArray();
+            _readBitPosition += length * 8;
             return result;
         }
 
@@ -99,25 +99,25 @@ namespace Cutulu.Core
             if (length < 0)
                 throw new ArgumentOutOfRangeException(nameof(length), "Length must be non-negative.");
 
-            var availableBits = buffer.Count * 8 - readBitPosition;
+            var availableBits = _buffer.Count * 8 - _readBitPosition;
             if (length > availableBits)
                 throw new ArgumentOutOfRangeException(nameof(length), $"Not enough bits available. Requested: {length}, Available: {availableBits}");
 
             var result = new bool[length];
             for (int i = 0; i < length; i++)
             {
-                var byteIndex = readBitPosition / 8;
-                var bitIndex = readBitPosition % 8;
-                result[i] = (buffer[byteIndex] & (1 << (7 - bitIndex))) != 0;
-                readBitPosition++;
+                var byteIndex = _readBitPosition / 8;
+                var bitIndex = _readBitPosition % 8;
+                result[i] = (_buffer[byteIndex] & (1 << (7 - bitIndex))) != 0;
+                _readBitPosition++;
             }
 
             // Remove fully read bytes
-            var bytesToRemove = readBitPosition / 8;
+            var bytesToRemove = _readBitPosition / 8;
             if (bytesToRemove > 0)
             {
-                buffer.RemoveRange(0, bytesToRemove);
-                readBitPosition %= 8;
+                _buffer.RemoveRange(0, bytesToRemove);
+                _readBitPosition %= 8;
             }
 
             return result;

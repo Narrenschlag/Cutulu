@@ -1,13 +1,12 @@
 namespace Cutulu.Core
 {
-    using System;
     using System.Collections.Generic;
 
     public static class AppData
     {
-        public static readonly Dictionary<string, object> Bin = new();
+        public static readonly Dictionary<string, object> Bin = [];
 
-        public const string Path = $"{CONST.USER_PATH}ApplicationData/";
+        public const string Path = $"{CONST.USER_PATH}AppData/";
         public const string End = ".appData";
 
         private static string GetPath(string key) => $"{Path}{key}{End}";

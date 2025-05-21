@@ -7,19 +7,19 @@ namespace Cutulu.Core
         public VALUE[] Values { get; private set; }
         public int Range { get; private set; }
 
-        protected Vector3 rotation { get; set; }
-        protected Orientation orientation { get; set; }
+        protected Orientation HexOrientation { get; set; }
+        protected Vector3 HexRotation { get; set; }
 
         public virtual Orientation Orientation
         {
             get
             {
-                if (rotation != GlobalRotation || orientation == default)
+                if (HexRotation != GlobalRotation || HexOrientation == default)
                 {
-                    orientation = new(this);
+                    HexOrientation = new(this);
                 }
 
-                return orientation;
+                return HexOrientation;
             }
         }
 

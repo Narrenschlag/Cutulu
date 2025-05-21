@@ -23,6 +23,7 @@ namespace Cutulu.Core
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Close();
         }
 

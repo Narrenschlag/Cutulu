@@ -87,7 +87,7 @@ namespace Cutulu.Core
 
                 Vector3I _ => Hexagon3.GetVertices(orientation),
 
-                _ => Array.Empty<Vector3>(),
+                _ => [],
             };
         }
 
@@ -104,7 +104,7 @@ namespace Cutulu.Core
 
                 Vector3I k => Hexagon3.GetVertices(k, orientation),
 
-                _ => Array.Empty<Vector3>(),
+                _ => [],
             };
         }
 
@@ -143,7 +143,7 @@ namespace Cutulu.Core
 
                 Vector3I k => (T[])(object)Hexagon3.GetRange(k, ringCount),
 
-                _ => Array.Empty<T>(),
+                _ => [],
             };
         }
 
@@ -165,7 +165,7 @@ namespace Cutulu.Core
 
                 Vector3I k => (T[])(object)Hexagon3.GetRing(k, ring),
 
-                _ => Array.Empty<T>(),
+                _ => [],
             };
         }
     }

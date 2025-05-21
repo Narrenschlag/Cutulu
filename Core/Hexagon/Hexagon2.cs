@@ -5,7 +5,7 @@ namespace Cutulu.Core
 
     public static class Hexagon2
     {
-        public static readonly Vector2I[] Neighbours = new Vector2I[]{
+        public static readonly Vector2I[] Neighbours = [
             new(+1, -1),
             new(+1, +0),
             new(+0, +1),
@@ -13,7 +13,7 @@ namespace Cutulu.Core
             new(-1, +1),
             new(-1, +0),
             new(+0, -1),
-        };
+        ];
 
         public static readonly float ReferenceAngle = Vector2f.GetAngleD(Neighbours[0]).AbsMod(360f);
 
@@ -111,7 +111,7 @@ namespace Cutulu.Core
         /// </summary>
         public static Vector3[] GetVertices(Vector2I axial, Orientation orientation)
         {
-            if (orientation == null) return Array.Empty<Vector3>();
+            if (orientation == null) return [];
 
             var neighbours = new Vector3[Hexagon.Num];
             var corners = new Vector3[Hexagon.Num];
@@ -181,7 +181,7 @@ namespace Cutulu.Core
         public static Vector2I[] GetRange(Vector2I axial, int ringCount)
         {
             if ((ringCount = Mathf.Abs(ringCount)) < 1)
-                return new[] { axial };
+                return [axial];
 
             var result = new Vector2I[1 + 3 * ringCount * (ringCount + 1)];
             var N = ringCount;
@@ -203,7 +203,7 @@ namespace Cutulu.Core
         public static Vector2I[] GetRing(Vector2I axial, int ring)
         {
             if ((ring = Mathf.Abs(ring)) < 1)
-                return new[] { axial };
+                return [axial];
 
             var result = new Vector2I[Hexagon.GetCellCountInRing(ring)];
             var sideLength = result.Length / Hexagon.Num;
@@ -254,7 +254,7 @@ namespace Cutulu.Core
         /// </summary>
         public static Vector2I[] GetPath(IPathfindingTarget target, Vector2I start, Vector2I end, Orientation orientation)
         {
-            if (orientation == null) return Array.Empty<Vector2I>();
+            if (orientation == null) return [];
 
             Pathfinding.TryFindPath(target, start, end, out var path);
 

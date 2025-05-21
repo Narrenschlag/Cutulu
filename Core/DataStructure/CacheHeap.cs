@@ -5,7 +5,7 @@ namespace Cutulu.Core
 
     public class CacheHeap<V>
     {
-        public readonly Dictionary<int, KeyValuePair<short, V>> Data = new();
+        public readonly Dictionary<int, KeyValuePair<short, V>> Data = [];
 
         public CacheHeap()
         {

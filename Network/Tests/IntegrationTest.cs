@@ -11,7 +11,7 @@ namespace Cutulu.Network
     {
         protected override int StepCount => 16;
 
-        protected override async Task<bool> _Process()
+        protected override async Task<bool> Process()
         {
             const int TcpPort = 9977;
 

@@ -5,15 +5,15 @@ namespace Cutulu.Core
 
     public class PathHeap
     {
-        private List<Vector3> list;
-        private List<float> keys;
+        private readonly List<Vector3> list;
+        private readonly List<float> keys;
 
-        public float PathLength => keys[keys.Count - 1];
+        public float PathLength => keys[^1];
 
         public PathHeap(List<Vector3> list)
         {
-            keys = new List<float>() { 0 };
-            this.list = list;
+            this.list = list ?? [];
+            keys = [0];
 
             float sum = 0;
             if (list.NotEmpty())
@@ -26,11 +26,11 @@ namespace Cutulu.Core
                 }
         }
 
-        public PathHeap(Vector3 v3) : this(new List<Vector3>() { v3 }) { }
+        public PathHeap(Vector3 v3) : this([v3]) { }
 
         public void Add(Vector3 element)
         {
-            keys.Add(keys[keys.Count - 1] + list[list.Count - 1].DistanceTo(element));
+            keys.Add(keys[^1] + list[^1].DistanceTo(element));
             list.Add(element);
         }
 

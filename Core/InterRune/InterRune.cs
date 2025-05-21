@@ -1,75 +1,78 @@
 namespace Cutulu.Core
 {
-    using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Text;
+    using System.IO;
+    using System;
     using Godot;
 
+    /// <summary>
+    /// Born on C3 2024 in Hamburg. Converts bytes into words.
+    /// </summary>
     public static class InterRune
     {
-        private static readonly Dictionary<char, byte> startNum = new();
+        private static readonly Dictionary<char, byte> _startNum = [];
         public static Dictionary<char, byte> StartNum
         {
             get
             {
-                if (startNum.Count < 1)
+                if (_startNum.Count < 1)
                 {
                     for (byte i = 0; i < Start.Length; i++)
                     {
-                        startNum[Start[i]] = i;
+                        _startNum[Start[i]] = i;
                     }
                 }
 
-                return startNum;
+                return _startNum;
             }
         }
 
-        private static readonly Dictionary<char, byte> centerNum = new();
+        private static readonly Dictionary<char, byte> _centerNum = [];
         public static Dictionary<char, byte> CenterNum
         {
             get
             {
-                if (centerNum.Count < 1)
+                if (_centerNum.Count < 1)
                 {
                     for (byte i = 0; i < Center.Length; i++)
                     {
-                        centerNum[Center[i]] = i;
+                        _centerNum[Center[i]] = i;
                     }
                 }
 
-                return centerNum;
+                return _centerNum;
             }
         }
 
-        private static readonly Dictionary<char, byte> endNum = new();
+        private static readonly Dictionary<char, byte> _endNum = [];
         public static Dictionary<char, byte> EndNum
         {
             get
             {
-                if (endNum.Count < 1)
+                if (_endNum.Count < 1)
                 {
                     for (byte i = 0; i < End.Length; i++)
                     {
-                        endNum[End[i]] = i;
+                        _endNum[End[i]] = i;
                     }
                 }
 
-                return endNum;
+                return _endNum;
             }
         }
 
-        public static readonly char[] Start = new[]{
+        public static readonly char[] Start = [
             'n', 'g', 'b', 's', 'l', 'd', 'r', 'w',
-        };
+        ];
 
-        public static readonly char[] Center = new[]{
+        public static readonly char[] Center = [
             'a', 'e', 'i', 'o'
-        };
+        ];
 
-        public static readonly char[] End = new[]{
+        public static readonly char[] End = [
             'm', 'b', 'f', 't', 'k', 'n', 's', 'l',
-        };
+        ];
 
         public const char MultiChar = 'u';
 

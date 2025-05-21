@@ -2,9 +2,9 @@ using Godot;
 
 namespace Cutulu.Core
 {
-    public partial struct HexagonRuleCase
+    public readonly partial struct HexagonRuleCase
     {
-        public static readonly char[] OnChars = new[] { '1', 'i', 'I' };
+        public static readonly char[] OnChars = ['1', 'i', 'I'];
 
         public readonly bool[] Neighbours;
         public readonly byte Length;
@@ -41,7 +41,7 @@ namespace Cutulu.Core
             }
         }
 
-        public new string ToString()
+        public new readonly string ToString()
         {
             var str = "";
 
@@ -53,12 +53,12 @@ namespace Cutulu.Core
             return str;
         }
 
-        public void Reverse()
+        public readonly void Reverse()
         {
             System.Array.Reverse(Neighbours);
         }
 
-        public void Offset(int offset)
+        public readonly void Offset(int offset)
         {
             if (offset == 0) return;
 
@@ -72,7 +72,7 @@ namespace Cutulu.Core
             }
         }
 
-        public void Flip()
+        public readonly void Flip()
         {
             var length = Mathf.FloorToInt(Neighbours.Length / 2f);
 
@@ -82,7 +82,7 @@ namespace Cutulu.Core
             }
         }
 
-        public void Invert()
+        public readonly void Invert()
         {
             for (var i = 0; i < Neighbours.Length; i++)
             {
@@ -90,7 +90,7 @@ namespace Cutulu.Core
             }
         }
 
-        public bool Compare(HexagonRuleCase[] cases, out int idx, out byte rotation)
+        public readonly bool Compare(HexagonRuleCase[] cases, out int idx, out byte rotation)
         {
             if (cases.NotEmpty())
             {
@@ -107,7 +107,7 @@ namespace Cutulu.Core
             return false;
         }
 
-        public bool Compare(HexagonRuleCase other, out byte rotation)
+        public readonly bool Compare(HexagonRuleCase other, out byte rotation)
         {
             rotation = 0;
 

@@ -18,7 +18,7 @@ namespace Cutulu.Core
 
         public virtual async Task<bool> Start()
         {
-            return await _Process();
+            return await Process();
         }
 
         protected virtual void NextStep()
@@ -49,7 +49,7 @@ namespace Cutulu.Core
             Debug.LogR($"[color={color.ToHtml()}][{Name}] {message}");
         }
 
-        protected virtual async Task<bool> _Process()
+        protected virtual async Task<bool> Process()
         {
             await Task.Delay(0);
             return true;

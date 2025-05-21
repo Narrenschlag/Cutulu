@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using Godot;
-
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
+    using Godot;
+
     /// <summary>
     /// You can use this by inherting from IPathfindingTarget and overriding the cost. Just return 0 if you want to make a point unwalkable.
     /// That's it. When that's done use the extension methods to call your pathfinding.  
@@ -56,10 +56,11 @@ namespace Cutulu.Core
 
                     var tentativeGScore = gScore[current] + walkableCost;
 
-                    if (!gScore.ContainsKey(neighbour) || tentativeGScore < gScore[neighbour])
+                    if (!gScore.TryGetValue(neighbour, out float value) || tentativeGScore < value)
                     {
                         cameFrom[neighbour] = current;
-                        gScore[neighbour] = tentativeGScore;
+                        value = tentativeGScore;
+                        gScore[neighbour] = value;
                         fScore[neighbour] = gScore[neighbour] + HeuristicCostEstimate(neighbour, end);
 
                         if (!openSet.Contains((fScore[neighbour], neighbour)))
@@ -70,7 +71,7 @@ namespace Cutulu.Core
                 }
             }
 
-            return System.Array.Empty<Vector2I>(); // No path found
+            return []; // No path found
         }
 
         /// <summary>
@@ -96,7 +97,7 @@ namespace Cutulu.Core
             }
 
             totalPath.Reverse();
-            return totalPath.ToArray();
+            return [.. totalPath];
         }
     }
 

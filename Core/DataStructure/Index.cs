@@ -4,50 +4,49 @@ namespace Cutulu.Core
 {
     public class Index<A, B>
     {
-        public Dictionary<A, List<B>> dic { get; set; }
+        public readonly Dictionary<A, List<B>> Dic = [];
         public int Entries { get; set; }
 
         public Index()
         {
-            dic = new Dictionary<A, List<B>>();
             Entries = 0;
         }
 
         public void Clear()
         {
             Entries = 0;
-            dic.Clear();
+            Dic.Clear();
         }
 
         public void Add(A key, B value)
         {
-            if (!dic.TryGetValue(key, out List<B> list)) dic.Add(key, new List<B>() { value });
+            if (!Dic.TryGetValue(key, out List<B> list)) Dic.Add(key, [value]);
             else if (!list.Contains(value)) list.Add(value);
 
             else return;
             Entries++;
         }
 
-        public bool Contains(A key) => dic.ContainsKey(key);
+        public bool Contains(A key) => Dic.ContainsKey(key);
 
-        public List<B> Get(A key) => Contains(key) ? dic[key] : null;
+        public List<B> Get(A key) => Contains(key) ? Dic[key] : null;
         public bool TryGet(A key, out List<B> list)
         {
             list = Get(key);
             return list.NotEmpty();
         }
 
-        public B First(A key) => Contains(key) ? dic[key][0] : default;
+        public B First(A key) => Contains(key) ? Dic[key][0] : default;
 
-        public void Remove(A key) => dic.TryRemove(key);
+        public void Remove(A key) => Dic.TryRemove(key);
         public void Remove(A key, B value)
         {
             if (TryGet(key, out List<B> list) && list.Contains(value))
             {
-                dic[key].Remove(value);
+                Dic[key].Remove(value);
 
-                if (dic[key].IsEmpty())
-                    dic.Remove(key);
+                if (Dic[key].IsEmpty())
+                    Dic.Remove(key);
 
                 Entries--;
             }

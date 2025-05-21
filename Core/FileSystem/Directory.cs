@@ -4,7 +4,7 @@ namespace Cutulu.Core
 
     using ACCESS = Godot.DirAccess;
 
-    public partial struct Directory
+    public readonly partial struct Directory
     {
         public readonly string SystemPath;
         public readonly string GodotPath;

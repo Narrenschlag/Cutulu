@@ -4,7 +4,7 @@ namespace Cutulu.Core
 
     public static class Hexagon3
     {
-        public static readonly Vector3I[] Neighbours = new Vector3I[]{
+        public static readonly Vector3I[] Neighbours = [
             new(+1, -1, +0),
             new(+1, +0, -1),
             new(+0, +1, -1),
@@ -12,7 +12,7 @@ namespace Cutulu.Core
             new(-1, +1, +0),
             new(-1, +0, +1),
             new(+0, -1, +1),
-        };
+        ];
 
         /// <summary>
         /// Returns distance between two points
@@ -129,7 +129,7 @@ namespace Cutulu.Core
         public static Vector3I[] GetRange(Vector3I cubic, int ringCount)
         {
             if ((ringCount = Mathf.Abs(ringCount)) < 1)
-                return new[] { cubic };
+                return [cubic];
 
             var result = new Vector3I[1 + 3 * ringCount * (ringCount + 1)];
             var N = ringCount;
@@ -151,7 +151,7 @@ namespace Cutulu.Core
         public static Vector3I[] GetRing(Vector3I cubic, int ring)
         {
             if ((ring = Mathf.Abs(ring)) < 1)
-                return new[] { cubic };
+                return [cubic];
 
             var result = new Vector3I[Hexagon.GetCellCountInRing(ring)];
             var sideLength = result.Length / Hexagon.Num;

@@ -5,7 +5,7 @@ namespace Cutulu.Core
 {
     public struct TextureMap
     {
-        public Dictionary<int, List<Vector2I>> Dictionary;
+        public readonly Dictionary<int, List<Vector2I>> Dictionary = [];
         private int[,] Map { get; set; }
 
         /// <summary>
@@ -14,7 +14,6 @@ namespace Cutulu.Core
         public TextureMap(Texture2D texture, Dictionary<Color, int> mapper) : this(texture, mapper, (Vector2I)texture.GetSize(), Vector2I.Zero) { }
         public TextureMap(Texture2D texture, Dictionary<Color, int> mapper, Vector2I Size, Vector2I Offset)
         {
-            Dictionary = new Dictionary<int, List<Vector2I>>();
             Image image = texture.GetImage();
             Map = new int[Size.X, Size.Y];
 
@@ -29,8 +28,7 @@ namespace Cutulu.Core
                     {
                         if (!Dictionary.TryGetValue(value, out List<Vector2I> list))
                         {
-                            list = new List<Vector2I>();
-                            Dictionary.Add(value, list);
+                            Dictionary.Add(value, list = []);
                         }
 
                         list.Add(new Vector2I(x, y) - Offset);
@@ -39,9 +37,9 @@ namespace Cutulu.Core
             }
         }
 
-        public int GetHeight() => Map.GetLength(1);
-        public int GetWidth() => Map.GetLength(0);
-        public int this[int x, int y]
+        public readonly int GetHeight() => Map.GetLength(1);
+        public readonly int GetWidth() => Map.GetLength(0);
+        public readonly int this[int x, int y]
         {
             get => Map[x, y];
         }
