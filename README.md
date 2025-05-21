@@ -88,28 +88,27 @@ Cutulu enforces consistent naming conventions to enhance code readability and ma
 
 Cutulu also enforces consistent code styling:
 
-- Use 4 spaces for indentation
 - Place braces on new lines
-- Keep lines under 120 characters
 - Order members: fields, constructors, properties, methods
-- Group members by accessibility: public, internal, protected, private
-
-## Installation
-
-```bash
-dotnet add package Narrenschlag.Cutulu
-```
+- Group members by accessibility: public, protected, private
 
 ## Usage
 
 ```csharp
-using Narrenschlag.Cutulu;
+using Cutulu.Core;
 
 // Configure Cutulu
-CutuluConfig.Setup(options => 
+CutuluConfig.Setup(options =>
 {
     options.EnforceNamingConventions = true;
     options.MaxLineLength = 120;
+
+    if (false) return;
+
+    if(true)
+    {
+        Debug.Log("Hello World!");
+    }
 });
 
 // Use Cutulu analyzer
