@@ -39,3 +39,83 @@ The 3rd generation of my input system, fully utilized in the Colloseum framework
 
 # Unity Migration
 As I come from almost a decade of Unity Engine development I got used to a few functions of the engine. Therefore I added a lot of functions resemling the Unity way like Debug.Log() and Application.Quit(). Take a look at the respective scripts for further detail.
+
+
+
+## Naming Conventions
+
+Cutulu enforces consistent naming conventions to enhance code readability and maintainability. It is currently in the process of being updated using these conventions.
+
+### Types & Classes
+| Type | Convention | Example |
+|------|------------|---------|
+| Classes | PascalCase | `CustomerService` |
+| Interfaces | PascalCase with "I" prefix | `IRepository` |
+| Structs | PascalCase | `Vector3` |
+| Records | PascalCase | `UserRecord` |
+| Generic Types | PascalCase with "T" prefix | `TEntity` |
+
+### Variables & Fields
+| Type | Convention | Example |
+|------|------------|---------|
+| Local Variables | camelCase | `firstName` |
+| Private Fields | camelCase with underscore | `_counter` |
+| Public Fields | PascalCase | `MaxSize` |
+| Constants | PascalCase | `MaxConnections` |
+| Static Fields | PascalCase | `Logger` |
+
+### Methods & Properties
+| Type | Convention | Example |
+|------|------------|---------|
+| Methods | PascalCase | `GetById()` |
+| Properties | PascalCase | `IsActive` |
+| Events | PascalCase | `DataChanged` |
+| Delegates | PascalCase | `ProcessCompleteHandler` |
+
+### Parameters & Enums
+| Type | Convention | Example |
+|------|------------|---------|
+| Parameters | camelCase | `userId` |
+| Enums | PascalCase | `OrderStatus` |
+| Enum Values | PascalCase | `OrderStatus.Pending` |
+
+### Namespaces
+| Type | Convention | Example |
+|------|------------|---------|
+| Namespaces | PascalCase | `Narrenschlag.Cutulu.Core` |
+
+## Code Style Guidelines
+
+Cutulu also enforces consistent code styling:
+
+- Use 4 spaces for indentation
+- Place braces on new lines
+- Keep lines under 120 characters
+- Order members: fields, constructors, properties, methods
+- Group members by accessibility: public, internal, protected, private
+
+## Installation
+
+```bash
+dotnet add package Narrenschlag.Cutulu
+```
+
+## Usage
+
+```csharp
+using Narrenschlag.Cutulu;
+
+// Configure Cutulu
+CutuluConfig.Setup(options => 
+{
+    options.EnforceNamingConventions = true;
+    options.MaxLineLength = 120;
+});
+
+// Use Cutulu analyzer
+var report = CutuluAnalyzer.Analyze(sourceCode);
+```
+
+## License
+
+MIT © Narrenschlag
