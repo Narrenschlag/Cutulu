@@ -6,7 +6,7 @@ namespace Cutulu.Core
 
     public partial class PropertyManager
     {
-        private static readonly Dictionary<Type, PropertyManager> Cache = new();
+        private static readonly Dictionary<Type, PropertyManager> Cache = [];
         public static void ClearCache() => Cache.Clear();
 
         public readonly Dictionary<string, int> NameToIdx;
@@ -38,6 +38,7 @@ namespace Cutulu.Core
         }
 
         public int GetIndex(string _name) => NameToIdx[_name.Trim().ToLower()];
+        public string GetName(int _idx) => Properties[_idx].Name;
 
         public PropertyInfo GetInfo(int _idx) => Properties[_idx];
 

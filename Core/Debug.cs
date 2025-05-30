@@ -1,10 +1,10 @@
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
     using Godot;
 
     public static class Debug
     {
-        #region Logging                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>
         /// Logs an error message.
         /// </summary>
@@ -46,6 +46,18 @@ namespace Cutulu.Core
 
             Log(result + " }");
         }
-        #endregion
+
+        public static void LogHierarchie(this Node obj)
+        {
+            var elements = new List<string>() { obj.Name };
+
+            while ((obj = obj.GetParent()).NotNull())
+            {
+                elements.Add(obj.Name);
+            }
+
+            elements.Reverse();
+            Log(string.Join(" -> ", elements));
+        }
     }
 }
