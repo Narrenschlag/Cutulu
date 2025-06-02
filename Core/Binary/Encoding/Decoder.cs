@@ -63,7 +63,7 @@ namespace Cutulu.Core
                     {
                         case EndOfStreamException _:
                             Debug.LogError($"Cannot decode as typeof({_type}): Unable to read beyond the end of the stream. Buffer may belong to another data type. [{BinaryEncoding.LastPropertyType.FullName}, {BinaryEncoding.LastPropertyName}?]");
-                            Debug.LogWarning($"Error Message: {ex.Message}");
+                            Debug.LogWarning($"Error Message: {ex.Message}\n{ex.StackTrace}");
                             break;
 
                         default:
@@ -170,8 +170,8 @@ namespace Cutulu.Core
                 {
                     _type = _type.GetElementType();
 
-                    // Unable to read beyond end of stream
-                    if (_reader.RemainingByteLength() < 2)
+                    // Unable to read beyond end of stream (UNumber is always atleast 1 byte)
+                    if (_reader.RemainingByteLength() < 1)
                     {
                         throw new EndOfStreamException($"Unable to read array. Reached end of stream. {_reader.RemainingByteLength()}");
                     }
