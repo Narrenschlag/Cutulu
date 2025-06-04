@@ -152,7 +152,8 @@ namespace Cutulu.Network.Sockets
             Token = CancellationToken.None;
             TokenSource = null;
 
-            if (IsConnected)
+            // Check if socket still exists
+            if (Socket != null)
             {
                 // Dispose client
                 Client.Close();
