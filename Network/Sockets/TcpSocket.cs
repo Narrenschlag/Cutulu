@@ -87,6 +87,11 @@ namespace Cutulu.Network.Sockets
                         case OperationCanceledException:
                             break;
 
+                        case IOException:
+                            Debug.LogError($"[color=indianred]{GetType().Name.ToUpper()}_CONNECT_ERROR(IOException)");
+                            Disconnect(253);
+                            break;
+
                         default:
                             if (ex.StackTrace.Contains("CancellationToken")) break;
 
@@ -196,13 +201,31 @@ namespace Cutulu.Network.Sockets
         {
             if (IsConnected == false || buffers.IsEmpty() || Client.GetStream() is not NetworkStream stream) return false;
 
-            for (int i = 0; i < buffers.Length; i++)
+            try
             {
-                if (buffers[i].NotEmpty())
-                    stream.Write(buffers[i]);
+                for (int i = 0; i < buffers.Length; i++)
+                {
+                    if (buffers[i].NotEmpty())
+                        stream.Write(buffers[i]);
+                }
+
+                stream.Flush();
             }
 
-            stream.Flush();
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case IOException:
+                        Debug.LogR($"[color=indianred]{GetType().Name.ToUpper()}_CONNECTION_CLOSED_WHILE_SENDING");
+                        Disconnect(254);
+                        break;
+
+                    default:
+                        Debug.LogError($"{GetType().Name.ToUpper()}_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                        break;
+                }
+            }
 
             return true;
         }
