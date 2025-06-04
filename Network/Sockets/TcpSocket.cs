@@ -88,7 +88,7 @@ namespace Cutulu.Network.Sockets
                             break;
 
                         case IOException:
-                            Debug.LogError($"[color=indianred]{GetType().Name.ToUpper()}_CONNECT_ERROR(IOException)");
+                            Debug.LogError($"{GetType().Name.ToUpper()}_CONNECT_ERROR(IOException)");
                             Disconnect(253);
                             break;
 
@@ -217,7 +217,7 @@ namespace Cutulu.Network.Sockets
                 switch (ex)
                 {
                     case IOException:
-                        Debug.LogR($"[color=indianred]{GetType().Name.ToUpper()}_CONNECTION_CLOSED_WHILE_SENDING");
+                        Debug.LogError($"{GetType().Name.ToUpper()}_CONNECTION_CLOSED_WHILE_SENDING");
                         Disconnect(254);
                         break;
 
