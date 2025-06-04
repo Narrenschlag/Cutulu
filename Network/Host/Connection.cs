@@ -14,7 +14,7 @@ namespace Cutulu.Network
         public IPEndPoint EndPoint { get; private set; } = endpoint;
         public HostManager Host { get; private set; } = host;
 
-        public readonly HashSet<Listener> Listeners = [];
+        public readonly HashSet<IListener> Listeners = [];
         public long UserId { get; private set; } = uid;
 
         public bool IsConnected => Socket != null && Socket.IsConnected;

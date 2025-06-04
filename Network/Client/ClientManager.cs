@@ -10,7 +10,7 @@ namespace Cutulu.Network
 
     public partial class ClientManager
     {
-        public readonly HashSet<Listener> Listeners = [];
+        public readonly HashSet<IListener> Listeners = [];
 
         public readonly TcpSocket TcpClient;
         public readonly UdpSocket UdpClient;

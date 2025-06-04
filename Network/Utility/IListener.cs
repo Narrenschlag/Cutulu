@@ -4,7 +4,7 @@ namespace Cutulu.Network
     /// Listener is basically a parasitic class that can be added to a connection or client manager
     /// <para>It reads incomming packets and marks them as read to block any further processing</para>
     /// </summary>
-    public partial interface Listener
+    public partial interface IListener
     {
         /// <summary>
         /// Called when a packet is received
