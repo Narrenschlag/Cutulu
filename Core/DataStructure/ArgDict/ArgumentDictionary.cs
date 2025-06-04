@@ -18,6 +18,14 @@ namespace Cutulu.Core
                     {
                         _dictionary[_split[0].ToLower()] = _split[1].ToLower();
                     }
+
+                    else
+                    {
+                        var key = _plain.ToLower().Trim();
+
+                        if (_dictionary.ContainsKey(key) == false)
+                            _dictionary[key] = string.Empty;
+                    }
                 }
             }
 
