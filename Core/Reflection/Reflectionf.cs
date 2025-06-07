@@ -7,6 +7,24 @@ namespace Cutulu.Core
 
     public static class Reflectionf
     {
+        #region Property
+
+        public static T Duplicate<T>(this T original) where T : new()
+        {
+            var duplicate = new T();
+
+            original.MirrorTo(ref duplicate);
+
+            return duplicate;
+        }
+
+        public static void Duplicate<T>(this T original, ref T duplicate)
+        {
+            original.MirrorTo(ref duplicate);
+        }
+
+        #endregion
+
         #region Types        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>

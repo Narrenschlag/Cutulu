@@ -31,6 +31,11 @@ namespace Cutulu.Core
         public static void LogR(this string message) => GD.PrintRich(message);
 
         /// <summary>
+        /// Logs a default console message. Message is formatted using bbcode.
+        /// </summary>
+        public static void LogR<T>(this string message, Color color) => GD.PrintRich($"[b][color={color.ToHtml()}][{typeof(T).Name}][/color][/b] {message}");
+
+        /// <summary>
         /// Logs a default console message.
         /// </summary>
         public static void Log<T>(this T[] array, string name = "array")
