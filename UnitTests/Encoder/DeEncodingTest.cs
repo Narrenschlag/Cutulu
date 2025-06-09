@@ -1,9 +1,10 @@
-using System;
-using System.IO;
-using Godot;
-
 namespace Cutulu.Core.UnitTest
 {
+    using System.IO;
+    using System;
+    using Godot;
+    using System.Collections;
+
     public partial class DeEncodingTest : Node
     {
         public override void _EnterTree()
@@ -81,6 +82,10 @@ namespace Cutulu.Core.UnitTest
                     throw new("Dictionary<string, int> cannot be decoded");
 
                 foreach (var pair in dict) Debug.LogR($"[color=seagreen]> [/color]{pair.Key}: {pair.Value}");
+
+                Debug.LogR($"[color=seagreen]>>>[/color] Array is generic: {new int[1].GetType().IsGenericType}");
+                Debug.LogR($"[color=seagreen]>>>[/color] Array<T> is generic: {Array.Empty<TestClass0>().GetType().IsGenericType}");
+                Debug.LogR($"[color=seagreen]>>>[/color] List<T> is generic: {new System.Collections.Generic.List<int>().GetType().IsGenericType}");
 
                 #endregion
 

@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
+
     public class Dictionary<TRootKey, TKey, TValue> : Dictionary<TRootKey, Dictionary<TKey, TValue>>
     {
         public TValue this[TRootKey rootKey, TKey key]

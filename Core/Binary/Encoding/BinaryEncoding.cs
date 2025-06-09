@@ -19,6 +19,9 @@ namespace Cutulu.Core
         public static string LastPropertyName { get; set; }
         public static Type LastPropertyType { get; set; }
 
+        public static readonly Dictionary<Type, GenericBinaryEncoder> GenericEncoderCache = [];
+        public static readonly HashSet<GenericBinaryEncoder> GenericEncoders = [];
+
         static BinaryEncoding()
         {
             RegisterAllEncoders();
@@ -30,7 +33,7 @@ namespace Cutulu.Core
             var assembly = Assembly.GetExecutingAssembly();
 
             // Find all encoder types
-            var encoderTypes = EncoderFinder.FindEncoders(assembly);
+            EncoderFinder.FindEncoders(assembly, out var encoderTypes, out var genericTypes);
 
             // Instantiate each encoder and add it to the dictionary
             foreach (var encoderType in encoderTypes)
@@ -48,6 +51,44 @@ namespace Cutulu.Core
                         Encoders[encoderGenericType] = encoderInstance;
                 }
             }
+
+            // Instantiate each encoder and add it to the dictionary
+            foreach (var genericType in genericTypes)
+            {
+                if (Activator.CreateInstance(genericType) is GenericBinaryEncoder encoderInstance)
+                {
+                    // Skip inactive encoders
+                    if (encoderInstance.Active() == false) continue;
+
+                    GenericEncoders.Add(encoderInstance);
+                }
+            }
+        }
+
+        public static bool TryGetGenericEncoder(Type type, out GenericBinaryEncoder encoder)
+        {
+            if (type.IsGenericType == false)
+            {
+                encoder = null;
+            }
+
+            else
+            {
+                // Check cache
+                if (GenericEncoderCache.TryGetValue(type, out encoder) == false || encoder == null)
+                {
+                    // Find encoder
+                    foreach (var e in GenericEncoders)
+                    {
+                        if (e.ApplysTo(type) == false) continue;
+
+                        GenericEncoderCache[type] = encoder = e;
+                        break;
+                    }
+                }
+            }
+
+            return encoder != null;
         }
 
         #endregion
@@ -80,6 +121,7 @@ namespace Cutulu.Core
     {
         void Encode(BinaryWriter writer, ref object value);
         object Decode(BinaryReader reader);
+
         int Priority();
         bool Active();
     }
@@ -89,18 +131,24 @@ namespace Cutulu.Core
     /// </summary>
     public abstract class BinaryEncoder<T> : IBinaryEncoder
     {
-        public virtual void Encode(BinaryWriter writer, ref object value)
-        {
-
-        }
-
-        public virtual object Decode(BinaryReader reader)
-        {
-            return default;
-        }
-
-        public virtual int Priority() => 0;
+        public virtual void Encode(BinaryWriter writer, ref object value) { }
+        public virtual object Decode(BinaryReader reader) => default;
 
         public virtual bool Active() => true;
+        public virtual int Priority() => 0;
+    }
+
+    public abstract class GenericBinaryEncoder
+    {
+        public virtual bool ApplysTo(Type type) => type.IsSubclassOf(GetType());
+
+        public virtual new Type GetType() => typeof(object);
+        public virtual int GenericCount() => 2;
+
+        public virtual void Encode(BinaryWriter writer, ref object value, Type type) { }
+        public virtual object Decode(BinaryReader reader, Type type) => default;
+
+        public virtual bool Active() => true;
+        public virtual int Priority() => 0;
     }
 }

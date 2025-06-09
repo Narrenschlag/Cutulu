@@ -133,8 +133,13 @@ namespace Cutulu.Core
                 case float v: writer.Write(v); break;
 
                 default:
+                    var type = obj.GetType();
+
                     // Encode using custom encoder
-                    if (BinaryEncoding.Encoders.TryGetValue(obj.GetType(), out var encoder)) encoder.Encode(writer, ref obj);
+                    if (BinaryEncoding.Encoders.TryGetValue(type, out var encoder)) encoder.Encode(writer, ref obj);
+
+                    // Encode using custom generic encoder
+                    else if (BinaryEncoding.TryGetGenericEncoder(type, out var genericEncoder)) genericEncoder.Encode(writer, ref obj, type);
 
                     // Encode types without serializer
                     else if (EncodeUnknown(writer, ref obj) == false) return false;
@@ -171,20 +176,6 @@ namespace Cutulu.Core
                         // Write array value
                         else Encode(_writer, _value, false);
                     }
-                }
-
-                // Dictionary
-                else if (_obj is IDictionary _dict && _type.GenericTypeArguments.Length == 2)
-                {
-                    Encode(_writer, new UNumber(_dict.Count), false);
-
-                    var _keys = _dict.Keys;
-                    foreach (var key in _keys)
-                        Encode(_writer, key, false);
-
-                    var _values = _dict.Values;
-                    foreach (var value in _values)
-                        Encode(_writer, value, false);
                 }
 
                 // Classes and structs
