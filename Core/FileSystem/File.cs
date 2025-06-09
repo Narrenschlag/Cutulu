@@ -156,17 +156,27 @@ namespace Cutulu.Core
 
         public void WriteString(string _string)
         {
-            Write(_string.IsEmpty() ? null : _string.Encode());
+            if (_string.IsEmpty()) return;
+
+            using var _stream = new System.IO.MemoryStream();
+            using var _writer = new System.IO.StreamWriter(_stream); // Because of plain text
+
+            _writer.Write(_string);
+            _writer.Flush();
         }
 
         public string ReadString()
         {
-            return Read().TryDecode(out string _string) && _string.NotEmpty() ? _string : string.Empty;
+            using var _stream = new System.IO.MemoryStream(Read());
+            using var _reader = new System.IO.StreamReader(_stream); // Because of plain text
+
+            var _string = _reader.ReadToEnd();
+            return _string.NotEmpty() ? _string : string.Empty;
         }
 
         public string[] ReadStringLines(bool _include_empty_lines = false)
         {
-            return ReadString().Split('\n', _include_empty_lines ? System.StringSplitOptions.TrimEntries : CONST.StringSplit) ?? [];
+            return ReadString().Split('\n', _include_empty_lines ? StringSplitOptions.TrimEntries : CONST.StringSplit) ?? [];
         }
 
         #endregion
