@@ -1,5 +1,6 @@
 namespace Cutulu.Core
 {
+    using System.Collections;
     using System.Reflection;
     using System.IO;
     using System;
@@ -105,8 +106,8 @@ namespace Cutulu.Core
                     switch (ex)
                     {
                         case EndOfStreamException _:
-                            Debug.LogError($"Cannot decode as typeof({_type}): Unable to read beyond the end of the stream. Buffer may belong to another data type. [{BinaryEncoding.LastPropertyType.FullName}, {BinaryEncoding.LastPropertyName}?]");
-                            Debug.LogWarning($"Error Message: {ex.Message}");
+                            Debug.LogError($"Cannot decode as typeof({_type}): Unable to read beyond the end of the stream. Buffer may belong to another data type. [{BinaryEncoding.LastPropertyType.FullName}, {BinaryEncoding.LastPropertyName}?, {_buffer.Size()} b]");
+                            Debug.LogWarning($"Error Message: {ex.Message}\n{ex.StackTrace}");
                             break;
 
                         default:
@@ -184,6 +185,39 @@ namespace Cutulu.Core
                     }
 
                     return _array;
+                }
+
+                // Dictionary !!! Careful with:
+                // Tuple<int, string>
+                // KeyValuePair<string, int>
+                // Action<int, string>
+                // Func<int, string, bool>
+                // CustomGenericType<T1, T2>
+                else if (_type.IsGenericType && _type.GenericTypeArguments.Length == 2)
+                {
+                    // Unable to read beyond end of stream (UNumber is always atleast 1 byte)
+                    if (_reader.RemainingByteLength() < 1)
+                    {
+                        throw new EndOfStreamException($"Unable to read array. Reached end of stream. {_reader.RemainingByteLength()}");
+                    }
+
+                    // Read entry count
+                    var count = Decode<UNumber>(_reader);
+                    var _dict = (IDictionary)Activator.CreateInstance(_type);
+
+                    // Return if dictionary is empty
+                    if (count < 1) return _dict;
+
+                    // Allocate keys into indexed array
+                    var keyType = _type.GenericTypeArguments[0];
+                    var keys = Array.CreateInstance(keyType, count);
+                    for (int i = 0; i < count; i++) keys.SetValue(Decode(_reader, keyType, false), i);
+
+                    // Allocate values directly into dictionary
+                    var valueType = _type.GenericTypeArguments[1];
+                    for (int i = 0; i < count; i++) _dict[keys.GetValue(i)] = Decode(_reader, valueType, false);
+
+                    return _dict;
                 }
 
                 // Classes and structs

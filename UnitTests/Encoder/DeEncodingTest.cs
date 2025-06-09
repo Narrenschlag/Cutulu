@@ -10,7 +10,7 @@ namespace Cutulu.Core.UnitTest
         {
             int
             step = 0,
-            steps = 3;
+            steps = 4;
 
             void stepLog(string hint) => Debug.LogError($"Integration Test ___{hint}___ [{++step}/{steps}]");
 
@@ -62,6 +62,43 @@ namespace Cutulu.Core.UnitTest
 
                 Debug.Log($"{vector30} => [{buff.Length} bytes] => {vector31}");
                 #endregion
+
+                #region Step 4
+                stepLog("DictionaryEncoder");
+
+                var dict = new System.Collections.Generic.Dictionary<string, int>()
+                {
+                    { "entry0", -1 },
+                    { "last", 9997 },
+                };
+
+                buff = dict.Encode();
+
+                Debug.Log($"Encoded {dict.GetType().Name}[{dict.Count} entries] into {buff.Length} bytes");
+                foreach (var pair in dict) Debug.LogR($"[color=magenta]> [/color]{pair.Key}: {pair.Value}");
+
+                if (buff.TryDecode(out System.Collections.Generic.Dictionary<string, int> dict2) == false || dict2.Count != dict.Count)
+                    throw new("Dictionary<string, int> cannot be decoded");
+
+                foreach (var pair in dict) Debug.LogR($"[color=seagreen]> [/color]{pair.Key}: {pair.Value}");
+
+                #endregion
+
+                /*
+                #region Step 5
+                stepLog("(,)-Encoder");
+
+                var abc = (69, "Name");
+
+                buff = abc.Encode();
+
+                Debug.Log($"Encoded {abc.GetType().Name}[{dict.Count} entries] into {buff.Length} bytes");
+
+                if (buff.TryDecode(out (int UID, string Name) def) == false || def != abc)
+                    throw new($"{abc.GetType().Name} cannot be decoded");
+
+                #endregion
+                */
             }
 
             catch (Exception ex)

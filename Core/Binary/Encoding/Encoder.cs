@@ -1,5 +1,6 @@
 namespace Cutulu.Core
 {
+    using System.Collections;
     using System.Reflection;
     using System.IO;
     using System;
@@ -170,6 +171,20 @@ namespace Cutulu.Core
                         // Write array value
                         else Encode(_writer, _value, false);
                     }
+                }
+
+                // Dictionary
+                else if (_obj is IDictionary _dict && _type.GenericTypeArguments.Length == 2)
+                {
+                    Encode(_writer, new UNumber(_dict.Count), false);
+
+                    var _keys = _dict.Keys;
+                    foreach (var key in _keys)
+                        Encode(_writer, key, false);
+
+                    var _values = _dict.Values;
+                    foreach (var value in _values)
+                        Encode(_writer, value, false);
                 }
 
                 // Classes and structs

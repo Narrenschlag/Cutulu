@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dfr0wbu5a8a7w"]
 
-[ext_resource type="Script" uid="uid://bqp81hfvma2t" path="res://Cutulu/UnitTests/Encoder/DeEncodingTest.cs" id="1_17h0s"]
+[ext_resource type="Script" uid="uid://cjhgtd43cwho2" path="res://Cutulu/UnitTests/Encoder/DeEncodingTest.cs" id="1_17h0s"]
 
 [node name="DeEncoding" type="Node"]
 script = ExtResource("1_17h0s")
