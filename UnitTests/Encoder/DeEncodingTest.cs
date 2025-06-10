@@ -3,7 +3,6 @@ namespace Cutulu.Core.UnitTest
     using System.IO;
     using System;
     using Godot;
-    using System.Collections;
 
     public partial class DeEncodingTest : Node
     {
@@ -11,7 +10,7 @@ namespace Cutulu.Core.UnitTest
         {
             int
             step = 0,
-            steps = 4;
+            steps = 5;
 
             void stepLog(string hint) => Debug.LogError($"Integration Test ___{hint}___ [{++step}/{steps}]");
 
@@ -89,21 +88,32 @@ namespace Cutulu.Core.UnitTest
 
                 #endregion
 
-                /*
                 #region Step 5
                 stepLog("(,)-Encoder");
 
-                var abc = (69, "Name");
+                var abc = (69, 'P');
 
                 buff = abc.Encode();
 
-                Debug.Log($"Encoded {abc.GetType().Name}[{dict.Count} entries] into {buff.Length} bytes");
+                Debug.Log($"Encoded {abc.GetType().Name} into {buff.Length} bytes");
 
-                if (buff.TryDecode(out (int UID, string Name) def) == false || def != abc)
+                if (buff.TryDecode(out (int UID, char Name) def) == false || def != abc)
                     throw new($"{abc.GetType().Name} cannot be decoded");
 
+                Debug.Log($"Decoded into {abc.Item1}={def.UID}, {abc.Item2}={def.Name}");
+
+                var ghi = (69, '+', new Vector2(-101, 101), "Name");
+
+                buff = ghi.Encode();
+
+                Debug.Log($"Encoded {ghi.GetType().Name} into {buff.Length} bytes");
+
+                if (buff.TryDecode(out (int UID, char Char, Vector2 V2, string Name) jkl) == false || jkl != ghi)
+                    throw new($"{ghi.GetType().Name} cannot be decoded");
+
+                Debug.Log($"Decoded into {ghi.Item1}={jkl.UID}, {ghi.Item2}={jkl.Char}, {ghi.Item3}={jkl.V2}, {ghi.Item4}={jkl.Name}");
+
                 #endregion
-                */
             }
 
             catch (Exception ex)
