@@ -84,11 +84,14 @@ namespace Cutulu.Core
                             .GetGenericArguments()[0];
                 });
 
-                var count = ((ICollection)value).Count;
-                writer.Encode(new UNumber(count));
+                var count = new UNumber(value == null ? 0 : ((ICollection)value).Count);
+                writer.Encode(count);
 
-                foreach (var item in (IEnumerable)value)
-                    writer.Encode(item, itemType);
+                if (count > 0)
+                {
+                    foreach (var item in (IEnumerable)value)
+                        writer.Encode(item, itemType);
+                }
             }
 
             public override object Decode(BinaryReader reader, Type type)
