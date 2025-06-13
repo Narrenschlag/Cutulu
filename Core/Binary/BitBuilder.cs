@@ -12,13 +12,13 @@ namespace Cutulu.Core
     {
         private readonly List<bool> Buffer;
 
+        public BitBuilder() => Buffer = [];
+
         /// <summary>
         /// Creates a new BitBuilder.
         /// </summary>
-        public BitBuilder(object value = null)
+        public BitBuilder(object value = null) : this()
         {
-            Buffer = [];
-
             Add(value);
         }
 
@@ -32,7 +32,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Returns the buffer as a bit array.
         /// </summary>
-        public bool[] BitBuffer => Buffer.ToArray();
+        public bool[] BitBuffer => [.. Buffer];
 
         /// <summary>
         /// Returns the buffer as a byte array.
@@ -75,6 +75,7 @@ namespace Cutulu.Core
         {
             Buffer.Clear();
         }
+
         /// <summary>
         /// Adds a binary pattern of bits to the buffer.
         /// 00000001 is a byte with value 1.
@@ -106,7 +107,7 @@ namespace Cutulu.Core
         {
             for (var i = 0; i < targetLength - Length; i++)
             {
-                Buffer.Add(value);
+                Add(value);
             }
         }
 
@@ -114,7 +115,7 @@ namespace Cutulu.Core
         {
             for (var i = 0; i < length; i++)
             {
-                Buffer.Add(value);
+                Add(value);
             }
         }
 
