@@ -6,7 +6,7 @@ namespace Cutulu.Core
 
     public partial class PropertyManager
     {
-        private static readonly Dictionary<(Type Type, Type BaseType), PropertyManager> Cache = [];
+        private static readonly Dictionary<Type, Type, PropertyManager> Cache = [];
         public static void ClearCache() => Cache.Clear();
 
         public readonly Dictionary<string, int> NameToIdx;
@@ -19,11 +19,10 @@ namespace Cutulu.Core
             Properties = (Type = type).GetSetProperties();
 
             // Ignores BaseType properties
-            if (type.IsSubclassOf(BaseType = baseType))
-            {
+            if ((BaseType = baseType) != typeof(object) && type.IsSubclassOf(BaseType))
                 Properties = Properties[Open(BaseType).Properties.Length..];
-            }
 
+            // Assign NameToIdx
             NameToIdx = [];
             foreach (var property in Properties)
                 NameToIdx[property.Name.ToLower()] = NameToIdx.Count;
@@ -31,19 +30,20 @@ namespace Cutulu.Core
 
         ~PropertyManager()
         {
-            Cache.Remove((Type, BaseType));
+            Cache.Remove(Type, BaseType);
         }
 
         public static PropertyManager Open<T, B>() where B : T => Open(typeof(T), typeof(B));
 
         public static PropertyManager Open<T>(Type baseType = null) => Open(typeof(T), baseType);
 
+        /// <summary>
+        /// Optimizes the whole process of getting a PropertyManager for a given type by caching it for repeated calls
+        /// </summary>
         public static PropertyManager Open(Type type, Type baseType = null)
         {
-            if (baseType == typeof(object)) baseType = null;
-
-            if (Cache.TryGetValue((type, baseType), out var cached) == false)
-                Cache[(type, baseType)] = cached = new(type, baseType);
+            if (Cache.TryGetValue(type, baseType ??= typeof(object), out var cached) == false)
+                Cache[type, baseType] = cached = new(type, baseType);
 
             return cached;
         }
