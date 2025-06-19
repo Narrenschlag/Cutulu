@@ -6,41 +6,46 @@ namespace Cutulu.Core
 
     public partial class PropertyManager
     {
-        private static readonly Dictionary<Type, PropertyManager> Cache = [];
+        private static readonly Dictionary<Type, Type, PropertyManager> Cache = [];
         public static void ClearCache() => Cache.Clear();
 
         public readonly Dictionary<string, int> NameToIdx;
         public readonly PropertyInfo[] Properties;
+        public readonly Type BaseType;
         public readonly Type Type;
 
-        public PropertyManager(Type _type)
+        private PropertyManager(Type type, Type baseType)
         {
-            Properties = (Type = _type).GetSetProperties();
+            Properties = (Type = type).GetSetProperties();
 
-            // Ignores Godot.Resource properties
-            if (_type.IsSubclassOf(typeof(Godot.Resource)))
-            {
-                Properties = Properties[Open<Godot.Resource>().Properties.Length..];
-            }
+            // Ignores BaseType properties
+            if ((BaseType = baseType) != typeof(object) && type.IsSubclassOf(BaseType))
+                Properties = Properties[Open(BaseType).Properties.Length..];
 
+            // Assign NameToIdx
             NameToIdx = [];
-            foreach (var _property in Properties)
-                NameToIdx[_property.Name.ToLower()] = NameToIdx.Count;
+            foreach (var property in Properties)
+                NameToIdx[property.Name.ToLower()] = NameToIdx.Count;
         }
 
         ~PropertyManager()
         {
-            Cache.Remove(Type);
+            Cache.Remove(Type, BaseType);
         }
 
-        public static PropertyManager Open<T>() => Open(typeof(T));
+        public static PropertyManager Open<T, B>() where B : T => Open(typeof(T), typeof(B));
 
-        public static PropertyManager Open(Type _type)
+        public static PropertyManager Open<T>(Type baseType = null) => Open(typeof(T), baseType);
+
+        /// <summary>
+        /// Optimizes the whole process of getting a PropertyManager for a given type by caching it for repeated calls
+        /// </summary>
+        public static PropertyManager Open(Type type, Type baseType = null)
         {
-            if (Cache.TryGetValue(_type, out var _cached) == false)
-                Cache[_type] = _cached = new(_type);
+            if (Cache.TryGetValue(type, baseType ??= typeof(object), out var cached) == false)
+                Cache[type, baseType] = cached = new(type, baseType);
 
-            return _cached;
+            return cached;
         }
 
         public int GetIndex(string _name) => NameToIdx[PrepareString(_name)];
