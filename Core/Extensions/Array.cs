@@ -52,6 +52,23 @@ namespace Cutulu.Core
             return true;
         }
 
+        public static bool SequenceEquals(this Array array, Array b)
+        {
+            if (array.Length != b.Length) return false;
+            if (array == b) return true;
+
+            if (array != null && array.Length > 0)
+            {
+                for (var i = 0; i < array.Length; i++)
+                {
+                    if (array.GetValue(i).Equals(b.GetValue(i)) == false)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
         public static bool Compare<T>(this T[] array, T[] other)
         {
             if (array.Size() == other.Size())

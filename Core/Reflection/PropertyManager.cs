@@ -17,6 +17,12 @@ namespace Cutulu.Core
         {
             Properties = (Type = _type).GetSetProperties();
 
+            // Ignores Godot.Resource properties
+            if (_type.IsSubclassOf(typeof(Godot.Resource)))
+            {
+                Properties = Properties[Open<Godot.Resource>().Properties.Length..];
+            }
+
             NameToIdx = [];
             foreach (var _property in Properties)
                 NameToIdx[_property.Name.ToLower()] = NameToIdx.Count;
@@ -37,7 +43,7 @@ namespace Cutulu.Core
             return _cached;
         }
 
-        public int GetIndex(string _name) => NameToIdx[_name.Trim().ToLower()];
+        public int GetIndex(string _name) => NameToIdx[PrepareString(_name)];
         public string GetName(int _idx) => Properties[_idx].Name;
 
         public PropertyInfo GetInfo(int _idx) => Properties[_idx];
@@ -55,5 +61,7 @@ namespace Cutulu.Core
         public void SetValue(object _ref, int _idx, object _value) => GetInfo(_idx).SetValue(_ref, _value);
 
         public void SetValue(object _ref, string _name, object _value) => GetInfo(_name).SetValue(_ref, _value);
+
+        public static string PrepareString(string _str) => _str.Trim().ToLower();
     }
 }

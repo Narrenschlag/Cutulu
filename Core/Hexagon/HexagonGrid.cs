@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     using Godot;
 
-    public partial class HexagonGrid<VALUE> : Node3D where VALUE : Node3D
+    public abstract partial class HexagonGrid<VALUE> : Node3D where VALUE : Node3D
     {
         public VALUE[] Values { get; private set; }
         public int Range { get; private set; }
