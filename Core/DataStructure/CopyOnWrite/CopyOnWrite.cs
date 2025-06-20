@@ -11,8 +11,12 @@ namespace Cutulu.Core
     /// </summary>
     public abstract class CopyOnWrite<ENTRY> where ENTRY : ICopyOnWriteEntry
     {
-        // General Caches
+        // General Caches and Notifiers
         public Dictionary<uint, ENTRY> Entries { get; set; }
+
+        public readonly Notification<ENTRY> EntryAdded = new();
+        public readonly Notification<ENTRY> EntryUpdated = new();
+        public readonly Notification<ENTRY> EntryRemoved = new();
 
         // Authoritive Caches and Values
         public Dictionary<uint, (Guid A, Guid B)> Hashes { get; set; }
@@ -53,12 +57,25 @@ namespace Cutulu.Core
         /// <summary>
         /// Registers given entry after modification.
         /// </summary>
-        public void FinishModification(ENTRY entry) => Add(entry);
+        public void FinishModification(ENTRY entry, int count)
+        {
+            // Add but do not invoke add notification
+            Add(entry, count, false);
+
+            // Invoke notification
+            EntryUpdated.Invoke(entry);
+        }
 
         /// <summary>
         /// Registers entry, assigns UID and increases usage count by given count.
         /// </summary>
         public uint Add(ENTRY entry, int count = 1)
+        {
+            // Add and invoke add notification
+            return Add(entry, count, true);
+        }
+
+        private uint Add(ENTRY entry, int count, bool invokeAdded)
         {
             // Non valid entry
             if (entry.IsNull()) return default;
@@ -84,6 +101,9 @@ namespace Cutulu.Core
             Entries[uid] = entry;
             Hashes[uid] = hashed;
 
+            // Invoke notification
+            if (invokeAdded) EntryAdded.Invoke(entry);
+
             // Awnser with uid after creation
             return uid;
         }
@@ -98,12 +118,19 @@ namespace Cutulu.Core
             if (count >= usageCount)
             {
                 UsageCount.Remove(uid);
-                Entries.Remove(uid);
 
                 if (Hashes.TryGetValue(uid, out var hashes))
                 {
                     Hashed.Remove(hashes.A, hashes.B);
                     Hashes.Remove(uid);
+                }
+
+                if (Entries.TryGetValue(uid, out var entry))
+                {
+                    Entries.Remove(uid);
+
+                    // Invoke notification
+                    EntryRemoved.Invoke(entry);
                 }
             }
 
