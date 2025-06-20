@@ -38,7 +38,7 @@ namespace Cutulu.Core
         {
             if ((count = Mathf.Abs(count)) < 1 || UsageCount.TryGetValue(uid, out var usageCount) == false) return;
 
-            if (usageCount >= count)
+            if (count >= usageCount)
             {
                 UsageCount.Remove(uid);
                 Entries.Remove(uid);
