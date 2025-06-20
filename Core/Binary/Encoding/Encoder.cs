@@ -16,7 +16,7 @@ namespace Cutulu.Core
         public static void Encode(this BinaryWriter _writer, object _obj, Type _type)
         {
             // Write empty array
-            if (_obj == null && _type.IsArray) _writer.Write(default(ushort));
+            if (_obj.IsNull() && _type.IsArray) _writer.Write(default(ushort));
 
             // Write object
             else Encode(_writer, _obj, true);
@@ -105,7 +105,7 @@ namespace Cutulu.Core
 
         private static bool Encode(BinaryWriter writer, object obj, bool _first_iteration)
         {
-            if (obj == null) return false;
+            if (obj.IsNull()) return false;
 
             switch (obj)
             {
