@@ -35,6 +35,35 @@ namespace Cutulu.Core
             EntryUID = 0;
         }
 
+        public void Clear()
+        {
+            Entries.Clear();
+            UsageCount.Clear();
+            Hashed.Clear();
+            Hashes.Clear();
+            EntryUID = 0;
+        }
+
+        public IEnumerable<ENTRY> GetEntries() => Entries.Values;
+
+        public ENTRY GetEntry(uint uid, ENTRY @default = default) => TryGetEntry(uid, out var entry) ? entry : @default;
+
+        public bool ContainsEntry(uint uid) => Entries.ContainsKey(uid);
+
+        public bool TryGetEntry(uint uid, out ENTRY entry) => Entries.TryGetValue(uid, out entry);
+
+        /// <summary>
+        /// This is the main function of the class. Use this if you want to get the entry UID for the base entry object. For example the file it is based on. 
+        /// </summary>
+        public uint GetOrCreateUID(ENTRY entryBase)
+        {
+            (var A, var B) = GetHash(entryBase);
+
+            if (Hashed.TryGetValue(A, B, out var uid)) return uid;
+
+            return Add(entryBase.DuplicateEntry<ENTRY>());
+        }
+
         /// <summary>
         /// Prepares entry of uid for modification. Use returned entry for modifications. Call FinishModification(entry) after modifications.
         /// </summary>
@@ -45,11 +74,11 @@ namespace Cutulu.Core
             // Allow modifying the given instance directly
             if (UsageCount.TryGetValue(uid, out var usageCount) == false || usageCount <= count) return entry;
 
-            // Reduce usages by one
-            Remove(uid, count);
-
             var duplicate = entry.DuplicateEntry<ENTRY>();
             duplicate.UID = 0;
+
+            // Reduce usages by one
+            Remove(uid, count);
 
             return duplicate;
         }
@@ -113,7 +142,8 @@ namespace Cutulu.Core
         /// </summary>
         public void Remove(uint uid, int count)
         {
-            if ((count = Mathf.Abs(count)) < 1 || UsageCount.TryGetValue(uid, out var usageCount) == false) return;
+            if (count == 0 || UsageCount.TryGetValue(uid, out var usageCount) == false) return;
+            count = Mathf.Abs(count);
 
             if (count >= usageCount)
             {
@@ -143,21 +173,15 @@ namespace Cutulu.Core
         public static (Guid A, Guid B) GetHash(ENTRY entry)
         {
             var data = entry.GetHashableData();
-
-            using var sha256 = SHA256.Create();
             using var stream = new MemoryStream();
             using var writer = new BinaryWriter(stream);
 
             foreach (var item in data)
-            {
                 writer.Encode(item);
-                writer.Encode('|');
-            }
 
-            var hash = sha256.ComputeHash(stream.ToArray());
+            var hash = SHA256.HashData(stream.ToArray());
 
             return (new(hash[..16]), new(hash[16..]));
-            //return Convert.ToHexString(hash); // -> 32 bytes
         }
 
         /// <summary>
