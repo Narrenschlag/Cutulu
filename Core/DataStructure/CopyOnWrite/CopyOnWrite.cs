@@ -22,6 +22,7 @@ namespace Cutulu.Core
         public Dictionary<uint, (Guid A, Guid B)> Hashes { get; set; }
         public Dictionary<Guid, Guid, uint> Hashed { get; set; }
         public Dictionary<uint, uint> UsageCount { get; set; }
+        
         private uint EntryUID { get; set; }
 
         public CopyOnWrite()
