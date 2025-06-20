@@ -32,28 +32,6 @@ namespace Cutulu.Core
         }
 
         /// <summary>
-        /// Reduce usage count of given uid by given count. Removes card if usage count is below 1.
-        /// </summary>
-        public void Remove(uint uid, int count)
-        {
-            if ((count = Mathf.Abs(count)) < 1 || UsageCount.TryGetValue(uid, out var usageCount) == false) return;
-
-            if (count >= usageCount)
-            {
-                UsageCount.Remove(uid);
-                Entries.Remove(uid);
-
-                if (Hashes.TryGetValue(uid, out var hashes))
-                {
-                    Hashed.Remove(hashes.A, hashes.B);
-                    Hashes.Remove(uid);
-                }
-            }
-
-            else UsageCount[uid] -= (uint)count;
-        }
-
-        /// <summary>
         /// Prepares entry of uid for modification. Use returned entry for modifications. Call FinishModification(entry) after modifications.
         /// </summary>
         public ENTRY PrepareForModification(uint uid, int count)
@@ -108,6 +86,28 @@ namespace Cutulu.Core
 
             // Awnser with uid after creation
             return uid;
+        }
+
+        /// <summary>
+        /// Reduce usage count of given uid by given count. Removes card if usage count is below 1.
+        /// </summary>
+        public void Remove(uint uid, int count)
+        {
+            if ((count = Mathf.Abs(count)) < 1 || UsageCount.TryGetValue(uid, out var usageCount) == false) return;
+
+            if (count >= usageCount)
+            {
+                UsageCount.Remove(uid);
+                Entries.Remove(uid);
+
+                if (Hashes.TryGetValue(uid, out var hashes))
+                {
+                    Hashed.Remove(hashes.A, hashes.B);
+                    Hashes.Remove(uid);
+                }
+            }
+
+            else UsageCount[uid] -= (uint)count;
         }
 
         /// <summary>
