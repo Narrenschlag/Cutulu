@@ -76,6 +76,8 @@ namespace Cutulu.Core
         public int SetUsage(uint uid, int count = 1) => this[uid] = count;
         public int GetUsage(uint uid) => this[uid];
 
+        public int Count => Entries.Count;
+
         public IReadOnlyCollection<ENTRY> GetEntries() => Entries.Values;
 
         public ENTRY GetEntryOrDefault(uint uid, ENTRY @default = default) => TryGetEntry(uid, out var entry) ? entry : @default;
