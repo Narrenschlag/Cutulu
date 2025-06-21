@@ -68,5 +68,23 @@ namespace Cutulu.Core
         public void SetValue(object _ref, string _name, object _value) => GetInfo(_name).SetValue(_ref, _value);
 
         public static string PrepareString(string _str) => _str.Trim().ToLower();
+
+        /// <summary>
+        /// Returns every property index with a non equal value (a.Value != b.Value, performs a.Value.IsEqualTo(b.Value)). Returns empty if every value is equal, a or b is null or there's a type mismatch.
+        /// </summary>
+        public int[] GetNonEqual(object _a, object _b)
+        {
+            if (_a.IsNull() || _b.IsNull() || _a.GetType() != _b.GetType() || _a == _b) return [];
+
+            var list = new List<int>();
+
+            for (var i = 0; i < Properties.Length; i++)
+            {
+                if (GetValue(_a, i).IsEqualTo(GetValue(_b, i)))
+                    list.Add(i);
+            }
+
+            return [.. list];
+        }
     }
 }
