@@ -35,13 +35,20 @@ namespace Cutulu.Core
             EntryUID = 0;
         }
 
-        public void Clear()
+        public void Clear(bool clearNotifications = false)
         {
             UsageCount.Clear();
             Entries.Clear();
             Hashed.Clear();
             Hashes.Clear();
             EntryUID = 0;
+
+            if (clearNotifications)
+            {
+                EntryAdded.Clear();
+                EntryModified.Clear();
+                EntryRemoved.Clear();
+            }
         }
 
         public int this[uint uid, bool removeBelowZero = true]
@@ -149,6 +156,7 @@ namespace Cutulu.Core
             }
 
             // Create and assign UID
+            entry = entry.GetSafeEntry<ENTRY>();
             uid = ++EntryUID;
             entry.UID = uid;
 
@@ -169,7 +177,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Removes any trace of the given entry. EntryRemoved.Invoke() is called after removal.
         /// </summary>
-        public bool Remove(uint uid)
+        public bool Remove(uint uid, bool destroy = true)
         {
             UsageCount.Remove(uid);
 
@@ -185,6 +193,9 @@ namespace Cutulu.Core
 
                 // Invoke notification
                 EntryRemoved.Invoke(entry);
+
+                // Destroy entry after removal
+                if (destroy) entry.Destroy();
 
                 return true;
             }
@@ -235,12 +246,19 @@ namespace Cutulu.Core
         /// </summary>
         public interface IEntry
         {
+            // Unique Identifier for the entry
             public uint UID { get; set; }
 
+            // Here you return properties you want to hash for the entry like a name and other values
             public object[] GetHashableData();
 
+            // Can be redirected to Godot.Resource.Duplicate()
             public T DuplicateEntry<T>() where T : ENTRY;
 
+            // Just return "this" if it's already a safe copy, else return a duplicate
+            public T GetSafeEntry<T>() where T : ENTRY;
+
+            // Dispose of the entry
             public void Destroy();
         }
     }
