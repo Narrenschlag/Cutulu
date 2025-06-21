@@ -4,25 +4,24 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using System.IO;
     using System;
-    using Godot;
 
     /// <summary>
-    /// This class was mainly made for the authoritive card dealer of my Merchants & Mercenaries game. It does what it's name suggests.
+    /// This class was mainly made for the authoritative card dealer of my Merchants & Mercenaries game. It does what it's name suggests.
     /// </summary>
-    public abstract class CopyOnWrite<ENTRY> where ENTRY : ICopyOnWriteEntry
+    public class CopyOnWrite<ENTRY> where ENTRY : CopyOnWrite<ENTRY>.IEntry
     {
         // General Caches and Notifiers
-        public Dictionary<uint, ENTRY> Entries { get; set; }
+        private Dictionary<uint, ENTRY> Entries { get; set; }
 
         public readonly Notification<ENTRY> EntryAdded = new();
-        public readonly Notification<ENTRY> EntryUpdated = new();
+        public readonly Notification<ENTRY> EntryModified = new();
         public readonly Notification<ENTRY> EntryRemoved = new();
 
-        // Authoritive Caches and Values
-        public Dictionary<uint, (Guid A, Guid B)> Hashes { get; set; }
-        public Dictionary<Guid, Guid, uint> Hashed { get; set; }
-        public Dictionary<uint, uint> UsageCount { get; set; }
-        
+        // Authoritative Caches and Values
+        private Dictionary<uint, (Guid A, Guid B)> Hashes { get; set; }
+        private Dictionary<Guid, Guid, uint> Hashed { get; set; }
+
+        private Dictionary<uint, int> UsageCount { get; set; }
         private uint EntryUID { get; set; }
 
         public CopyOnWrite()
@@ -38,16 +37,41 @@ namespace Cutulu.Core
 
         public void Clear()
         {
-            Entries.Clear();
             UsageCount.Clear();
+            Entries.Clear();
             Hashed.Clear();
             Hashes.Clear();
             EntryUID = 0;
         }
 
-        public IEnumerable<ENTRY> GetEntries() => Entries.Values;
+        public int this[uint uid, bool removeBelowZero = true]
+        {
+            get => UsageCount.TryGetValue(uid, out var value) ? value : 0;
+            set
+            {
+                if (ContainsEntry(uid) == false) return;
 
-        public ENTRY GetEntry(uint uid, ENTRY @default = default) => TryGetEntry(uid, out var entry) ? entry : @default;
+                if (value > 0)
+                {
+                    UsageCount[uid] = value;
+                }
+
+                else
+                {
+                    if (removeBelowZero && UsageCount.ContainsKey(uid)) Remove(uid);
+                    else UsageCount.Remove(uid);
+                }
+            }
+        }
+
+        public int IncreaseUsage(uint uid, int count = 1) => this[uid] += count;
+        public int DecreaseUsage(uint uid, int count = 1) => this[uid] -= count;
+        public int SetUsage(uint uid, int count = 1) => this[uid] = count;
+        public int GetUsage(uint uid) => this[uid];
+
+        public IReadOnlyCollection<ENTRY> GetEntries() => Entries.Values;
+
+        public ENTRY GetEntryOrDefault(uint uid, ENTRY @default = default) => TryGetEntry(uid, out var entry) ? entry : @default;
 
         public bool ContainsEntry(uint uid) => Entries.ContainsKey(uid);
 
@@ -66,40 +90,40 @@ namespace Cutulu.Core
         }
 
         /// <summary>
-        /// Prepares entry of uid for modification. Use returned entry for modifications. Call FinishModification(entry) after modifications.
+        /// Prepares entry of uid for modification. Use returned entry for modifications. Call FinishModification(entry) after modifications. If count is above 0 the usage count will be considered.
         /// </summary>
-        public ENTRY PrepareForModification(uint uid, int count)
+        public ENTRY StartModification(uint uid, int count = 0)
         {
             if (uid < 1 || Entries.TryGetValue(uid, out var entry) == false) return default;
 
             // Allow modifying the given instance directly
-            if (UsageCount.TryGetValue(uid, out var usageCount) == false || usageCount <= count) return entry;
+            if (count > 0 && this[uid] <= count) return entry;
 
             var duplicate = entry.DuplicateEntry<ENTRY>();
             duplicate.UID = 0;
 
-            // Reduce usages by one
-            Remove(uid, count);
+            // Reduce usage count
+            if (count > 0) this[uid] -= count;
 
             return duplicate;
         }
 
         /// <summary>
-        /// Registers given entry after modification.
+        /// Registers given entry after modification. If count is above 0 the usage count will be modified by that value. EntryModified.Invoke() is called after addition.
         /// </summary>
-        public void FinishModification(ENTRY entry, int count)
+        public void FinishModification(ENTRY entry, int count = 0)
         {
             // Add but do not invoke add notification
             Add(entry, count, false);
 
             // Invoke notification
-            EntryUpdated.Invoke(entry);
+            EntryModified.Invoke(entry);
         }
 
         /// <summary>
-        /// Registers entry, assigns UID and increases usage count by given count.
+        /// Registers entry and assigns UID. If count is above 0 the usage count will be modified by that value. EntryAdded.Invoke() is called after addition.
         /// </summary>
-        public uint Add(ENTRY entry, int count = 1)
+        public uint Add(ENTRY entry, int count = 0)
         {
             // Add and invoke add notification
             return Add(entry, count, true);
@@ -108,8 +132,11 @@ namespace Cutulu.Core
         private uint Add(ENTRY entry, int count, bool invokeAdded)
         {
             // Non valid entry
-            if (entry.IsNull()) return default;
-            var _count = (uint)Mathf.Max(1, count);
+            if (entry.IsNull())
+            {
+                Debug.LogError($"CopyOnWrite: Tried to add null entry of type {typeof(ENTRY)} [ADDITION: {invokeAdded}]");
+                return default;
+            }
 
             // Get hashed GUIDs of the entry
             var hashed = GetHash(entry);
@@ -117,7 +144,7 @@ namespace Cutulu.Core
             // Check if there is already a duplicate
             if (Hashed.TryGetValue(hashed.A, hashed.B, out var uid))
             {
-                UsageCount[uid] += _count;
+                if (count > 0) this[uid] += count;
                 return uid;
             }
 
@@ -127,45 +154,42 @@ namespace Cutulu.Core
 
             // Register entry under uid
             Hashed[hashed.A, hashed.B] = uid;
-            UsageCount[uid] = _count;
             Entries[uid] = entry;
             Hashes[uid] = hashed;
+
+            if (count > 0) this[uid] = count;
 
             // Invoke notification
             if (invokeAdded) EntryAdded.Invoke(entry);
 
-            // Awnser with uid after creation
+            // Answer with uid after creation
             return uid;
         }
 
         /// <summary>
-        /// Reduce usage count of given uid by given count. Removes card if usage count is below 1.
+        /// Removes any trace of the given entry. EntryRemoved.Invoke() is called after removal.
         /// </summary>
-        public void Remove(uint uid, int count)
+        public bool Remove(uint uid)
         {
-            if (count == 0 || UsageCount.TryGetValue(uid, out var usageCount) == false) return;
-            count = Mathf.Abs(count);
+            UsageCount.Remove(uid);
 
-            if (count >= usageCount)
+            if (Hashes.TryGetValue(uid, out var hashes))
             {
-                UsageCount.Remove(uid);
-
-                if (Hashes.TryGetValue(uid, out var hashes))
-                {
-                    Hashed.Remove(hashes.A, hashes.B);
-                    Hashes.Remove(uid);
-                }
-
-                if (Entries.TryGetValue(uid, out var entry))
-                {
-                    Entries.Remove(uid);
-
-                    // Invoke notification
-                    EntryRemoved.Invoke(entry);
-                }
+                Hashed.Remove(hashes.A, hashes.B);
+                Hashes.Remove(uid);
             }
 
-            else UsageCount[uid] -= (uint)count;
+            if (Entries.TryGetValue(uid, out var entry))
+            {
+                Entries.Remove(uid);
+
+                // Invoke notification
+                EntryRemoved.Invoke(entry);
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -186,27 +210,38 @@ namespace Cutulu.Core
         }
 
         /// <summary>
-        /// Apply entries for non authorative synchronisation.
+        /// Only updates local Entries cache; does not affect usage counts, hashes, or UID tracking.
+        /// Use with care in sync scenarios.
         /// </summary>
         public void Apply(params ENTRY[] entries)
         {
             if (entries.IsEmpty()) return;
 
             foreach (var entry in entries)
-                if (entry.NotNull())
+                if (entry.NotNull() && entry.UID != 0)
+                {
+                    if (Entries.TryGetValue(entry.UID, out var old))
+                    {
+                        Debug.LogError($"CopyOnWrite: Entry {entry.UID} was already present in cache. Destroying old entry.");
+                        old.Destroy();
+                    }
+
                     Entries[entry.UID] = entry;
+                }
         }
-    }
 
-    /// <summary>
-    /// Interface used for CopyOnWrite entries.
-    /// </summary>
-    public interface ICopyOnWriteEntry
-    {
-        public uint UID { get; set; }
+        /// <summary>
+        /// Interface used for CopyOnWrite entries.
+        /// </summary>
+        public interface IEntry
+        {
+            public uint UID { get; set; }
 
-        public object[] GetHashableData();
+            public object[] GetHashableData();
 
-        public T DuplicateEntry<T>() where T : ICopyOnWriteEntry;
+            public T DuplicateEntry<T>() where T : ENTRY;
+
+            public void Destroy();
+        }
     }
 }
