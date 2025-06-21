@@ -1,72 +1,132 @@
 namespace Cutulu.Core
 {
+    using System.Runtime.CompilerServices;
+    using System.Collections.Generic;
     using System.Collections;
+    using System.Reflection;
+    using System;
 
     /// <summary>
-    /// Provides deep comparison logic for any object, including Godot.Resources, collections, and dictionaries.
+    /// Provides deep comparison logic for any object, including collections, dictionaries, and graphs.
+    /// Uses flags for configurable depth and behavior.
     /// </summary>
     public static class PropertyCompare
     {
         /// <summary>
-        /// Performs a deep comparison of two objects, including collections and Godot.Resource instances.
+        /// Flag-based comparison options.
         /// </summary>
-        /// <param name="a">The first object to compare.</param>
-        /// <param name="b">The second object to compare.</param>
-        /// <returns>True if the objects are deeply equal; otherwise, false.</returns>
-        public static bool IsEqualTo(this object a, object b, bool deepBinaryComparison = false)
+        [Flags]
+        public enum TYPE : byte
         {
-            if (a.IsNull() != b.IsNull()) return false;
-            if (a.IsNull() || ReferenceEquals(a, b)) return true;
-            if (a.GetType() != b.GetType()) return false;
-
-            // Handle deep binary comparisons by encoding both and comparing their buffer
-            if (deepBinaryComparison) return a.Encode().SequenceEquals(b.Encode());
-
-            // Handle dictionaries
-            if (a is IDictionary dictA && b is IDictionary dictB)
-                return AreDictionariesEqual(dictA, dictB);
-
-            // Handle collections (e.g., List, Array)
-            if (a is ICollection colA && b is ICollection colB)
-                return AreCollectionsEqual(colA, colB);
-
-            // Handle general enumerables
-            if (a is IEnumerable enumA && b is IEnumerable enumB)
-                return AreEnumerablesEqual(enumA, enumB);
-
-            // Fallback to default equality
-            return Equals(a, b);
+            DEFAULT = 1,                     // Use basic Equals(), no reflection
+            EXPENSIVE_BINARY = 2,            // Compare encoded buffers, expensive but very reliable
+            PROPERTIES_AND_FIELDS = 4,       // Compare public fields and properties
+            DICTIONARY_KEYS_DEEP = 8,        // Compare dictionary keys deeply
         }
 
-        private static bool AreDictionariesEqual(IDictionary a, IDictionary b)
+        /// <summary>
+        /// Performs a deep comparison between two objects using specified flags.
+        /// </summary>
+        public static bool IsEqualTo(this object obj, object other, TYPE settings = TYPE.DEFAULT)
         {
-            if (a.Count != b.Count) return false;
+            return IsEqualTo(obj, other, settings, new(ReferencePairComparer.Instance));
+        }
 
-            foreach (var key in a.Keys)
+        /// <summary>
+        /// Internal recursive logic with cycle detection and configurable behavior.
+        /// </summary>
+        private static bool IsEqualTo(object obj, object other, TYPE settings, HashSet<(object, object)> visited)
+        {
+            // Equals each other
+            if (obj == other) return true;
+
+            // Null comparison
+            if (obj.IsNull() || other.IsNull()) return false;
+
+            var type = obj.GetType();
+            if (type != other.GetType()) return false;
+
+            // Avoid infinite loops on circular references
+            var pair = (obj, other);
+            if (!visited.Add(pair)) return true;
+
+            try
             {
-                if (!b.Contains(key)) return false;
-                if (!a[key].IsEqualTo(b[key])) return false;
+                // Custom comparison
+                if (obj is ICustomPropertyComparer custom)
+                    return custom.CustomIsEqualTo(other);
+
+                // Deep compare binary buffers
+                if (settings.HasFlag(TYPE.EXPENSIVE_BINARY))
+                    return obj.Encode().SequenceEquals(other.Encode());
+
+                // Handle dictionaries
+                if (obj is IDictionary dictA && other is IDictionary dictB)
+                    return AreDictionariesEqual(dictA, dictB, settings, visited);
+
+                // Handle collections (excluding string)
+                if (obj is IEnumerable enumA && obj is not string)
+                    return AreEnumerablesEqual(enumA, (IEnumerable)other, settings, visited);
+
+                // Handle property and field-based comparison
+                if (settings.HasFlag(TYPE.PROPERTIES_AND_FIELDS) &&
+                    !type.IsPrimitive && !type.IsEnum && type != typeof(string))
+                    return ArePropertiesAndFieldsEqual(obj, other, type, settings, visited);
+
+                // Default fallback comparison
+                return obj.Equals(other);
+            }
+            finally
+            {
+                visited.Remove(pair);
+            }
+        }
+
+        /// <summary>
+        /// Compares two dictionaries with optional deep key comparison.
+        /// </summary>
+        private static bool AreDictionariesEqual(IDictionary dictA, IDictionary dictB, TYPE settings, HashSet<(object, object)> visited)
+        {
+            if (dictA.Count != dictB.Count) return false;
+
+            if (settings.HasFlag(TYPE.DICTIONARY_KEYS_DEEP))
+            {
+                foreach (DictionaryEntry entryA in dictA)
+                {
+                    bool found = false;
+
+                    foreach (DictionaryEntry entryB in dictB)
+                    {
+                        if (IsEqualTo(entryA.Key, entryB.Key, settings, visited))
+                        {
+                            if (!IsEqualTo(entryA.Value, entryB.Value, settings, visited))
+                                return false;
+
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) return false;
+                }
+
+                return true;
+            }
+
+            // Shallow key comparison (fast path)
+            foreach (DictionaryEntry entry in dictA)
+            {
+                if (!dictB.Contains(entry.Key)) return false;
+                if (!IsEqualTo(entry.Value, dictB[entry.Key], settings, visited)) return false;
             }
 
             return true;
         }
 
-        private static bool AreCollectionsEqual(ICollection a, ICollection b)
-        {
-            if (a.Count != b.Count) return false;
-
-            var enumA = a.GetEnumerator();
-            var enumB = b.GetEnumerator();
-
-            while (enumA.MoveNext() && enumB.MoveNext())
-            {
-                if (!enumA.Current.IsEqualTo(enumB.Current)) return false;
-            }
-
-            return true;
-        }
-
-        private static bool AreEnumerablesEqual(IEnumerable a, IEnumerable b)
+        /// <summary>
+        /// Compares two enumerables (e.g., arrays, lists) in order.
+        /// </summary>
+        private static bool AreEnumerablesEqual(IEnumerable a, IEnumerable b, TYPE settings, HashSet<(object, object)> visited)
         {
             var enumA = a.GetEnumerator();
             var enumB = b.GetEnumerator();
@@ -79,10 +139,57 @@ namespace Cutulu.Core
                 if (hasA != hasB) return false;
                 if (!hasA) break;
 
-                if (!enumA.Current.IsEqualTo(enumB.Current)) return false;
+                if (!IsEqualTo(enumA.Current, enumB.Current, settings, visited)) return false;
             }
 
             return true;
         }
+
+        /// <summary>
+        /// Recursively compares public properties and fields of complex objects.
+        /// </summary>
+        private static bool ArePropertiesAndFieldsEqual(object a, object b, Type type, TYPE settings, HashSet<(object, object)> visited)
+        {
+            var props = PropertyManager.Open(type).Properties;
+            foreach (var prop in props)
+            {
+                if (prop.GetIndexParameters().Length > 0) continue; // skip indexers
+                var valA = prop.GetValue(a);
+                var valB = prop.GetValue(b);
+                if (!IsEqualTo(valA, valB, settings, visited)) return false;
+            }
+
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var field in fields)
+            {
+                var valA = field.GetValue(a);
+                var valB = field.GetValue(b);
+                if (!IsEqualTo(valA, valB, settings, visited)) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Prevents recursion by tracking object pairs based on reference identity.
+        /// </summary>
+        private sealed class ReferencePairComparer : IEqualityComparer<(object, object)>
+        {
+            public static readonly ReferencePairComparer Instance = new();
+
+            public bool Equals((object, object) x, (object, object) y) =>
+                ReferenceEquals(x.Item1, y.Item1) && ReferenceEquals(x.Item2, y.Item2);
+
+            public int GetHashCode((object, object) obj) =>
+                RuntimeHelpers.GetHashCode(obj.Item1) ^ RuntimeHelpers.GetHashCode(obj.Item2);
+        }
+    }
+
+    public interface ICustomPropertyComparer
+    {
+        /// <summary>
+        /// Do not reference this function in any way. It is exclusively for PropertyCompare.
+        /// </summary>
+        public bool CustomIsEqualTo(object value);
     }
 }
