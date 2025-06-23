@@ -74,7 +74,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Returns every property index with a non equal value (a.Value != b.Value, performs a.Value.IsEqualTo(b.Value)). Returns empty if every value is equal, a or b is null or there's a type mismatch.
         /// </summary>
-        public int[] GetNonEqual(object _a, object _b)
+        public int[] GetNonEqual(object _a, object _b, params int[] blacklist)
         {
             if (_a.IsNull() || _b.IsNull() || _a.GetType() != _b.GetType() || _a == _b) return [];
 
@@ -84,6 +84,13 @@ namespace Cutulu.Core
             {
                 if (GetValue(_a, i).IsEqualTo(GetValue(_b, i)) == false)
                     list.Add(i);
+            }
+
+            // Handle blacklist
+            if (blacklist.NotEmpty())
+            {
+                foreach (var idx in blacklist)
+                    list.Remove(idx);
             }
 
             return [.. list];

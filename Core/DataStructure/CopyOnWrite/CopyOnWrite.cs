@@ -95,7 +95,7 @@ namespace Cutulu.Core
 
             if (Hashed.TryGetValue(A, B, out var uid)) return uid;
 
-            return Add(entryBase.DuplicateEntry<ENTRY>());
+            return Add(entryBase.GetSafeEntry<ENTRY>());
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace Cutulu.Core
             // Allow modifying the given instance directly
             if (count > 0 && this[uid] <= count) return entry;
 
-            var duplicate = entry.DuplicateEntry<ENTRY>();
+            var duplicate = entry.GetSafeEntry<ENTRY>();
             duplicate.UID = 0;
 
             // Reduce usage count
