@@ -20,7 +20,9 @@ namespace Cutulu.Core
 
             // Ignores BaseType properties
             if ((BaseType = baseType) != typeof(object) && type.IsSubclassOf(BaseType))
-                Properties = Properties[Open(BaseType).Properties.Length..];
+            {
+                Properties = Properties[..(Properties.Length - Open(BaseType).Properties.Length)];
+            }
 
             // Assign NameToIdx
             NameToIdx = [];
@@ -80,7 +82,7 @@ namespace Cutulu.Core
 
             for (var i = 0; i < Properties.Length; i++)
             {
-                if (GetValue(_a, i).IsEqualTo(GetValue(_b, i)))
+                if (GetValue(_a, i).IsEqualTo(GetValue(_b, i)) == false)
                     list.Add(i);
             }
 
