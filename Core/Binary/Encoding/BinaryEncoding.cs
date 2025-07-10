@@ -34,10 +34,10 @@ namespace Cutulu.Core
             var flags = Reflection.TypeFinder.DefaultFlags;
 
             var finder = new Reflection.TypeFinder();
-            var type = typeof(BinaryEncoder<>);
+            Type type;
 
             // Instantiate each encoder and add it to the dictionary
-            finder.FindTypes(type, flags, assembly);
+            finder.FindTypes(type = typeof(BinaryEncoder<>), flags, assembly);
             foreach (var encoderType in finder.Types[type])
             {
                 // Get the generic type argument from the encoder
