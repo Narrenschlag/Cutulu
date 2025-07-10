@@ -28,6 +28,7 @@ namespace Cutulu.Core.Reflection
             assembly ??= Assembly.GetExecutingAssembly();
             var types = GetCachedTypes(assembly);
 
+            var abstractAllowed = flags.HasFlag(FLAGS.ABSTRACT_ALLOWED);
             var genericOnly = flags.HasFlag(FLAGS.GENERIC_ONLY);
             var classOnly = flags.HasFlag(FLAGS.CLASS_ONLY);
 
@@ -35,7 +36,7 @@ namespace Cutulu.Core.Reflection
             {
                 if (ProcessedTypes.Contains(curType)) continue;
 
-                if ((classOnly && !curType.IsClass) || curType.IsAbstract) continue;
+                if ((classOnly && curType.IsClass == false) || (abstractAllowed == false && curType.IsAbstract)) continue;
 
                 if (!genericOnly && refType.IsAssignableFrom(curType))
                 {
@@ -81,6 +82,7 @@ namespace Cutulu.Core.Reflection
             NONE = 0,
             CLASS_ONLY = 1,
             GENERIC_ONLY = 2,
+            ABSTRACT_ALLOWED = 4,
         }
     }
 }
