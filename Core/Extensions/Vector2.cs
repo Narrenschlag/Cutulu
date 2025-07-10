@@ -17,7 +17,7 @@ namespace Cutulu.Core
         public static Vector2I RoundToInt(this Vector2 v2) => new(Mathf.RoundToInt(v2.X), Mathf.RoundToInt(v2.Y));
         public static Vector2I FloorToInt(this Vector2 v2) => new(Mathf.FloorToInt(v2.X), Mathf.FloorToInt(v2.Y));
         public static Vector2I CeilToInt(this Vector2 v2) => new(Mathf.CeilToInt(v2.X), Mathf.CeilToInt(v2.Y));
-        
+
         public static Vector2 Abs(this Vector2 v2) => new(Mathf.Abs(v2.X), Mathf.Abs(v2.Y));
         public static Vector2 Max(this Vector2 o, Vector2 a, Vector2 b) => o.DistanceTo(a) > o.DistanceTo(b) ? a : b;
         public static Vector2 Min(this Vector2 o, Vector2 a, Vector2 b) => o.DistanceTo(a) < o.DistanceTo(b) ? a : b;
@@ -37,7 +37,13 @@ namespace Cutulu.Core
         /// Returns angle from Vector2.Right. In Radians.
         /// </summary>
         public static float GetAngle(this Vector2 direction) => GetAngle(direction, Vector2.Right);
-        public static float GetAngle(this Vector2 direction, Vector2 from) => direction.Normalized().Angle() + from.Normalized().Angle();
+        public static float GetAngle(this Vector2 direction, Vector2 up)
+        {
+            direction = direction.Normalized();
+            up = up.Normalized();
+
+            return Mathf.Wrap(Mathf.Atan2(direction.Y, direction.X) - Mathf.Atan2(up.Y, up.X), -Mathf.Pi, Mathf.Pi);
+        }
 
         /// <summary>
         /// Returns direction from Vector2.Right. In Degrees.

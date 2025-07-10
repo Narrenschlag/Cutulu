@@ -75,7 +75,7 @@ namespace Cutulu.Mesh
             for (int i = 0; i < points.Length; i++)
             {
                 tool.SetColor(color);
-                tool.AddVertex(points[i]);
+                tool.AddVertex(points[i] - points[0]);
             }
 
             var mesh = new MeshInstance3D()
@@ -86,7 +86,7 @@ namespace Cutulu.Mesh
             };
 
             parent.AddChild(mesh);
-            mesh.GlobalPosition = Vector3.Zero;
+            mesh.GlobalPosition = points[0];
 
             return mesh;
         }
@@ -115,8 +115,8 @@ namespace Cutulu.Mesh
         #endregion
 
         #region Line Functions		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public static MeshInstance3D DrawRay(this Node node, Color color, Vector3 source, Vector3 direction) => DrawLine(node, color, new Vector3[2] { source, source + direction });
-        public static MeshInstance3D DrawLine(this Node node, Color color, Vector3 from, Vector3 to) => DrawLine(node, color, new Vector3[2] { from, to });
+        public static MeshInstance3D DrawRay(this Node node, Color color, Vector3 source, Vector3 direction) => DrawLine(node, color, [source, source + direction]);
+        public static MeshInstance3D DrawLine(this Node node, Color color, Vector3 from, Vector3 to) => DrawLine(node, color, [from, to]);
         #endregion
 
         #region Curve Functions		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
