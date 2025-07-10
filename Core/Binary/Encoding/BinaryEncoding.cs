@@ -31,12 +31,14 @@ namespace Cutulu.Core
         {
             // Get the assembly where BinaryEncoder<T> implementations are located
             var assembly = Assembly.GetExecutingAssembly();
+            var flags = Reflection.TypeFinder.DefaultFlags;
 
-            // Find all encoder types
-            EncoderFinder.FindEncoders(assembly, out var encoderTypes, out var genericTypes);
+            var finder = new Reflection.TypeFinder();
+            var type = typeof(BinaryEncoder<>);
 
             // Instantiate each encoder and add it to the dictionary
-            foreach (var encoderType in encoderTypes)
+            finder.FindTypes(type, flags, assembly);
+            foreach (var encoderType in finder.Types[type])
             {
                 // Get the generic type argument from the encoder
                 var encoderGenericType = encoderType.BaseType.GetGenericArguments().FirstOrDefault();
@@ -54,20 +56,22 @@ namespace Cutulu.Core
 
             // Instantiate each encoder and add it to the dictionary
             var generics = new Dictionary<Type, GenericBinaryEncoder>();
-            foreach (var genericType in genericTypes)
+
+            finder.FindTypes(type = typeof(GenericBinaryEncoder), flags, assembly);
+            foreach (var genericType in finder.Types[type])
             {
                 if (Activator.CreateInstance(genericType) is GenericBinaryEncoder encoderInstance)
                 {
                     // Skip inactive encoders
                     if (encoderInstance.Active() == false) continue;
 
-                    var type = encoderInstance.GetType();
-                    if (generics.TryGetValue(type, out var existing) == false || existing.Priority() < encoderInstance.Priority())
-                        generics[type] = encoderInstance;
+                    var t = encoderInstance.GetType();
+                    if (generics.TryGetValue(t, out var existing) == false || existing.Priority() < encoderInstance.Priority())
+                        generics[t] = encoderInstance;
 
                     // Equal priority
                     else if (existing.Priority() == encoderInstance.Priority())
-                        Debug.LogR($"[color=darkorange][b][Generic Encoder Setup][/b][/color] {genericType.Name}<{type.Name}> has the same priority as {((object)existing).GetType()}<{type.Name}>: [color=gray]Skipping {genericType.Name}");
+                        Debug.LogR($"[color=darkorange][b][Generic Encoder Setup][/b][/color] {genericType.Name}<{t.Name}> has the same priority as {((object)existing).GetType()}<{t.Name}>: [color=gray]Skipping {genericType.Name}");
                 }
             }
             GenericEncoders = [.. generics.Values];

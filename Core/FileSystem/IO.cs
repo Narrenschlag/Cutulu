@@ -17,7 +17,8 @@ namespace Cutulu.Core
 
         public static JsonSerializerOptions JsonOptions(bool simpleFormat = true, bool indentFormat = false)
         {
-            if (options.IsNull()) options = new Dictionary<bool, bool, JsonSerializerOptions>();
+            options ??= [];
+
             if (!options.TryGetValue(simpleFormat, indentFormat, out var _options))
             {
                 _options = new JsonSerializerOptions()
