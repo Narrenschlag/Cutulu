@@ -7,7 +7,10 @@ namespace Cutulu.Network
     using System.Linq;
     using Core;
 
-    using HttpRequest = Web.HttpRequest;
+
+#if GODOT4_0_OR_GREATER
+    using HttpRequest = Cutulu.Web.HttpRequest;
+#endif
 
     public static class IO
     {

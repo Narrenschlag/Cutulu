@@ -1,8 +1,5 @@
 namespace Cutulu.Lattice
 {
-    using System.Collections.Generic;
-    using Cutulu.Core;
-
     public interface IMod
     {
         public const string FileEnding = ".duck";

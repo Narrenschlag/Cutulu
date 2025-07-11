@@ -1,7 +1,8 @@
-using System.Collections.Generic;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+using System.Collections.Generic;
+
     public struct Passkey
     {
         public const string DefaultPath = $"{DefaultDirectory}LocalPasskey{FileEnding}";
@@ -85,3 +86,4 @@ namespace Cutulu.Core
         public bool Compare(byte[] bytes) => Equals(new Passkey(bytes));
     }
 }
+#endif

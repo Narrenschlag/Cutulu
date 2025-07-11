@@ -61,10 +61,12 @@ namespace Cutulu.Core
 #endif
         }
 
+#if GODOT4_0_OR_GREATER
         /// <summary>
         /// Logs a default console message. Message is formatted using bbcode.
         /// </summary>
         public static void LogR<T>(this string message, Color color) => LogR($"[b][color={color.ToHtml()}][{typeof(T).Name}][/color][/b] {message}");
+#endif
 
         /// <summary>
         /// Logs a default console message.
@@ -83,6 +85,7 @@ namespace Cutulu.Core
             Log(result + " }");
         }
 
+#if GODOT4_0_OR_GREATER
         public static void LogHierarchie(this Node obj)
         {
             var elements = new List<string>() { obj.Name };
@@ -95,5 +98,6 @@ namespace Cutulu.Core
             elements.Reverse();
             Log(string.Join(" -> ", elements));
         }
+#endif
     }
 }

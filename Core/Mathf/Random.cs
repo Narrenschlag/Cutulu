@@ -15,7 +15,7 @@ namespace Cutulu.Core
         /// <summary>
 		///	Random value: [min ]max
         /// </summary>
-        public static int Range(int minIncluded, int maxExcluded) => minIncluded == maxExcluded - 1 ? minIncluded : Godot.Mathf.RoundToInt(Range(minIncluded, (float)(maxExcluded - 1)));
+        public static int Range(int minIncluded, int maxExcluded) => minIncluded == maxExcluded - 1 ? minIncluded : (int)System.Math.Round(Range(minIncluded, (float)(maxExcluded - 1)));
 
         /// <summary>
 		///	Random value: [0 ]max

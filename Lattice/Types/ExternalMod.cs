@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Lattice
 {
     using Cutulu.Core;
@@ -44,3 +45,4 @@ namespace Cutulu.Lattice
         public (string Name, string Path)[] ReadPackageEntries() => Parser.ParseManifestFiles(GodotPackageManifestPaths, FilePath);
     }
 }
+#endif

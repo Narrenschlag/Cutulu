@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Lattice
 {
     public class ModInstance
@@ -37,3 +38,4 @@ namespace Cutulu.Lattice
         }
     }
 }
+#endif

@@ -1,8 +1,9 @@
-using System.Collections.Generic;
-using System.Text.Json;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
+    using System.Text.Json;
+
     /// <summary>
     /// Static, Json-based save system designed for smaller games to easily implement saving.
     /// <br/>May be used for middle sized games too. Larger save files may result in slow saving/loading performance.
@@ -239,3 +240,4 @@ namespace Cutulu.Core
         #endregion
     }
 }
+#endif

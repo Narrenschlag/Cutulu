@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
@@ -51,3 +52,4 @@ namespace Cutulu.Lattice
         }
     }
 }
+#endif

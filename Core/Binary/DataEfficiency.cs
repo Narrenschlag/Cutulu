@@ -76,6 +76,7 @@ namespace Cutulu.Core
             }
         }
 
+#if GODOT4_0_OR_GREATER
         public struct Money
         {
             public string Currency { get; }
@@ -94,6 +95,7 @@ namespace Cutulu.Core
             /// </summary>
             public readonly Money Merge(Money toMerge, float factorAtoB) => new(Amount + toMerge.Amount * factorAtoB, Currency);
         }
+#endif
 
         public class int2
         {

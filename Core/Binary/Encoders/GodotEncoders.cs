@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using System.IO;
@@ -98,3 +99,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

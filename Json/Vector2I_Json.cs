@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Json
 {
     using System.Text.Json.Serialization;
@@ -29,3 +30,4 @@ namespace Cutulu.Json
         }
     }
 }
+#endif
