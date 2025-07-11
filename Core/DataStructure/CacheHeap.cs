@@ -1,7 +1,7 @@
 namespace Cutulu.Core
 {
     using System.Collections.Generic;
-    using Godot;
+    using System;
 
     public class CacheHeap<V>
     {
@@ -14,7 +14,7 @@ namespace Cutulu.Core
 
         public int Count => Data.Count;
 
-        public static bool CanOverride(int oldStamp, int newStamp) => Mathf.Abs(oldStamp - newStamp) > short.MaxValue || newStamp > oldStamp;
+        public static bool CanOverride(int oldStamp, int newStamp) => Math.Abs(oldStamp - newStamp) > short.MaxValue || newStamp > oldStamp;
 
         public bool TrySet(int key, V value, short stamp)
         {

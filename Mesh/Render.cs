@@ -1,8 +1,7 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Mesh
 {
     using Godot;
-    using Mesh;
-
     using Core;
 
     public static class Render
@@ -197,3 +196,4 @@ namespace Cutulu.Mesh
         #endregion
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using System.Collections.Generic;
@@ -118,3 +119,4 @@ namespace Cutulu.Core
         public IEnumerable<Vector2I> GetNeighbors();
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
@@ -8,11 +9,12 @@ namespace Cutulu.Lattice
 
     public static class AssetLoader
     {
-        public static readonly Dictionary<string, AssetInstance> References = new();
-        public static readonly Dictionary<string, List<string>> Collections = new();
+        public static readonly Dictionary<string, AssetInstance> References = [];
+        public static readonly Dictionary<string, List<string>> Collections = [];
 
-        public static readonly Dictionary<string, Dictionary<Type, object>> Cache = new();
-        public static readonly Dictionary<IMod, AssetInstance> Instances = new();
+        public static readonly Dictionary<string, Dictionary<Type, object>> Cache = [];
+        public static readonly Dictionary<IMod, AssetInstance> Instances = [];
+        private static readonly char[] separator = ['/', '\\'];
 
         /// <summary>
         /// Register assets
@@ -32,7 +34,7 @@ namespace Cutulu.Lattice
                     if (pair.Key.Contains('/') || pair.Key.Contains('\\'))
                     {
                         // Find all collections
-                        var args = pair.Key.TrimEndUntil('/', '\\').Split(new[] { '/', '\\' }, CONST.StringSplit);
+                        var args = pair.Key.TrimEndUntil('/', '\\').Split(separator, CONST.StringSplit);
 
                         // Register collections
                         if (args.Size() > 0)
@@ -46,7 +48,7 @@ namespace Cutulu.Lattice
 
                                 if (Collections.TryGetValue(dir, out var references) == false)
                                 {
-                                    Collections[dir] = references = new();
+                                    Collections[dir] = references = [];
                                 }
 
                                 references.TryAdd(pair.Key);
@@ -94,19 +96,19 @@ namespace Cutulu.Lattice
                         list.Add(_t);
                 }
 
-                values = list.ToArray();
+                values = [.. list];
 
                 // Assign to cache
                 if (values.NotEmpty())
                 {
                     if (Cache.TryGetValue(collection, out dictionary) == false)
-                        Cache[collection] = dictionary = new();
+                        Cache[collection] = dictionary = [];
 
                     dictionary[typeof(T)] = values;
                 }
             }
 
-            else values = Array.Empty<T>();
+            else values = [];
 
             return values.NotEmpty();
         }
@@ -130,7 +132,7 @@ namespace Cutulu.Lattice
             if (References.TryGetValue(name, out var instance) && instance.TryGet(name, out value))
             {
                 if (Cache.TryGetValue(name, out dictionary) == false)
-                    Cache[name] = dictionary = new();
+                    Cache[name] = dictionary = [];
 
                 dictionary[typeof(T)] = value;
                 return true;
@@ -164,3 +166,4 @@ namespace Cutulu.Lattice
         }
     }
 }
+#endif

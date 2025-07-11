@@ -1,20 +1,21 @@
-using System.IO;
-using Godot;
-
 namespace Cutulu.Core
 {
+    using System.IO;
+
     public struct ColorRGB
     {
         public byte R { get; set; }
         public byte G { get; set; }
         public byte B { get; set; }
 
-        public ColorRGB(Color color)
+#if GODOT4_0_OR_GREATER
+        public ColorRGB(Godot.Color color)
         {
             R = (byte)color.R8;
             G = (byte)color.G8;
             B = (byte)color.B8;
         }
+#endif
 
         public ColorRGB(byte r, byte g, byte b)
         {
@@ -23,7 +24,9 @@ namespace Cutulu.Core
             B = b;
         }
 
-        public readonly Color RGB32(float alpha = 1) => new(R / 255f, G / 255f, B / 255f, alpha);
+#if GODOT4_0_OR_GREATER
+        public readonly Godot.Color RGB32(float alpha = 1) => new(R / 255f, G / 255f, B / 255f, alpha);
+#endif
 
         public class Formatter : BinaryEncoder<ColorRGB>
         {
@@ -40,6 +43,7 @@ namespace Cutulu.Core
         }
     }
 
+#if GODOT4_0_OR_GREATER
     public struct Vector2S
     {
         public short X { get; set; }
@@ -51,8 +55,8 @@ namespace Cutulu.Core
             Y = y;
         }
 
-        public Vector3 ToVector3(float y = 0) => new(X, y, Y);
-        public Vector2 ToVector2() => new(X, Y);
+        public readonly Godot.Vector3 ToVector3(float y = 0) => new(X, y, Y);
+        public readonly Godot.Vector2 ToVector2() => new(X, Y);
 
         public class Formatter : BinaryEncoder<Vector2S>
         {
@@ -67,12 +71,13 @@ namespace Cutulu.Core
             public override object Decode(BinaryReader reader) => new Vector2S(reader.ReadInt16(), reader.ReadInt16());
         }
     }
+#endif
 
     public struct Vector38
     {
         public byte[] Values;
 
-        public Vector38(byte x, byte y, byte z) => Values = new byte[3] { x, y, z };
+        public Vector38(byte x, byte y, byte z) => Values = [x, y, z];
 
         public class Formatter : BinaryEncoder<Vector38>
         {

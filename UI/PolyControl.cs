@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.UI
 {
     using System;
@@ -82,17 +83,18 @@ namespace Cutulu.UI
 
         protected void SetTriangle()
         {
-            points = new Vector2[]{
+            points = [
                 new(0, RHeight),
                 new(RWidth / 2, 0),
                 new(RWidth, RHeight),
-            };
+            ];
 
-            colors = new Color[]{
+            colors = [
                 Colors.Red,
                 Colors.Green,
                 Colors.Blue
-            };
+            ];
         }
     }
 }
+#endif

@@ -1,7 +1,7 @@
 namespace Cutulu.Core
 {
     using System.Collections.Generic;
-    using Godot;
+    using System;
 
     public static class Listf
     {
@@ -29,7 +29,7 @@ namespace Cutulu.Core
         }
 
         public static T GetClampedElement<T>(this List<T> list, int index)
-        => list.IsEmpty() ? default : list[Mathf.Clamp(index, 0, list.Count - 1)];
+        => list.IsEmpty() ? default : list[Math.Clamp(index, 0, list.Count - 1)];
 
         public static void Shuffle<T>(this List<T> list)
         {
@@ -43,9 +43,10 @@ namespace Cutulu.Core
             }
         }
 
-        public static List<Vector3> ClampDistanceRelative(this List<Vector3> list, float percentage)
+#if GODOT4_0_OR_GREATER
+        public static List<Godot.Vector3> ClampDistanceRelative(this List<Godot.Vector3> list, float percentage)
         {
-            percentage = Mathf.Clamp(percentage, 0, 1);
+            percentage = Math.Clamp(percentage, 0, 1);
             if (percentage >= 1 || list.IsEmpty()) return list;
             if (percentage <= 0) return null;
 
@@ -57,13 +58,13 @@ namespace Cutulu.Core
             return ClampDistance(list, sum * percentage);
         }
 
-        public static List<Vector2> ClampDistanceRelative(this List<Vector2> list, float percentage)
+        public static List<Godot.Vector2> ClampDistanceRelative(this List<Godot.Vector2> list, float percentage)
         {
-            percentage = Mathf.Clamp(percentage, 0, 1);
+            percentage = Math.Clamp(percentage, 0, 1);
             if (percentage >= 1 || list.IsEmpty()) return list;
             if (percentage <= 0) return null;
 
-            float sum = 0;
+            var sum = 0f;
 
             for (int i = 0; i < list.Count - 1; i++)
                 sum += list[i].DistanceTo(list[i + 1]);
@@ -71,9 +72,9 @@ namespace Cutulu.Core
             return ClampDistance(list, sum * percentage);
         }
 
-        public static List<Vector3> ClampDistance(this List<Vector3> list, float distance)
+        public static List<Godot.Vector3> ClampDistance(this List<Godot.Vector3> list, float distance)
         {
-            List<Vector3> result = new();
+            List<Godot.Vector3> result = [];
             float current = 0;
 
             for (int i = 0; i < list.Count - 1; i++)
@@ -101,9 +102,9 @@ namespace Cutulu.Core
             return result;
         }
 
-        public static List<Vector2> ClampDistance(this List<Vector2> list, float distance)
+        public static List<Godot.Vector2> ClampDistance(this List<Godot.Vector2> list, float distance)
         {
-            List<Vector2> result = new();
+            List<Godot.Vector2> result = [];
             float current = 0;
 
             for (int i = 0; i < list.Count - 1; i++)
@@ -130,5 +131,6 @@ namespace Cutulu.Core
 
             return result;
         }
+#endif
     }
 }

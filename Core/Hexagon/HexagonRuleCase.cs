@@ -1,7 +1,8 @@
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using Godot;
+
     public readonly partial struct HexagonRuleCase
     {
         public static readonly char[] OnChars = ['1', 'i', 'I'];
@@ -130,3 +131,4 @@ namespace Cutulu.Core
         public bool CanConnectRule(Vector2I axial);
     }
 }
+#endif

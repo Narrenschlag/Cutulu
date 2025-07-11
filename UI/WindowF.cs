@@ -1,7 +1,7 @@
-﻿namespace Cutulu.UI
+﻿#if GODOT4_0_OR_GREATER
+namespace Cutulu.UI
 {
     using Godot;
-
     using Core;
 
     static class WindowF
@@ -46,3 +46,4 @@
         }
     }
 }
+#endif

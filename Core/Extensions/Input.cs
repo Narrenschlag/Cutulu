@@ -1,9 +1,12 @@
 namespace Cutulu.Core
 {
+#if GODOT4_0_OR_GREATER
     using Godot;
+#endif
 
     public static class Inputf
     {
+#if GODOT4_0_OR_GREATER
         public static bool GetKey(this string name, float threshhold = .5f) => GetValue(name) >= threshhold;
         public static float GetValue(this string name) => Godot.Input.GetActionRawStrength(name);
 
@@ -69,5 +72,6 @@ namespace Cutulu.Core
 
             Godot.Input.MouseMode = capturedMouse ? Godot.Input.MouseModeEnum.Captured : Godot.Input.MouseModeEnum.Visible;
         }
+#endif
     }
 }

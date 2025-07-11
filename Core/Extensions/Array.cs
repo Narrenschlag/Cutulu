@@ -3,8 +3,6 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using System;
 
-    using Godot;
-
     public static class Arrayf
     {
         public static T[] MoveElements<T>(this T[] array, int moveValue)
@@ -117,7 +115,7 @@ namespace Cutulu.Core
         => array.NotEmpty() ? array[Random.Range(0, array.Length)] : @default;
 
         public static T GetClampedElement<T>(this T[] array, int index)
-        => array.IsEmpty() ? default : array[Mathf.Clamp(index, 0, array.Length - 1)];
+        => array.IsEmpty() ? default : array[Math.Clamp(index, 0, array.Length - 1)];
 
         public static bool Contains<T>(this T[] array, T element)
         => array != null && array.Length > 0 && ((ICollection<T>)array).Contains(element);

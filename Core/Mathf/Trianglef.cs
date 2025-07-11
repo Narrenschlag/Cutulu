@@ -1,8 +1,9 @@
-using System.Collections.Generic;
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
+    using Godot;
+
     public static class Trianglef
     {
         public static Vector2[] OrderClockwise(Vector2 a, Vector2 b, Vector2 c)
@@ -150,3 +151,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

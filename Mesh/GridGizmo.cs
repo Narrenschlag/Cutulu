@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Mesh
 {
     using System.Threading.Tasks;
@@ -128,3 +129,4 @@ namespace Cutulu.Mesh
         }
     }
 }
+#endif

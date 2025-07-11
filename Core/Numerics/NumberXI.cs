@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using Godot;
@@ -30,7 +31,7 @@ namespace Cutulu.Core
             }
         }
 
-        public readonly Godot.Vector2I GetVector2I()
+        public readonly Vector2I GetVector2I()
         {
             return new(Numbers[0].GetInt(), Numbers.Length > 1 ? Numbers[1].GetInt() : 0);
         }
@@ -91,3 +92,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

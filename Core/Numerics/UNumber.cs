@@ -1,6 +1,6 @@
 namespace Cutulu.Core
 {
-    using Godot;
+    using System;
 
     /// <summary>
     /// Represents a number. Dynamic in it's byte size.
@@ -39,19 +39,19 @@ namespace Cutulu.Core
             switch (_obj)
             {
                 case sbyte v:
-                    _obj = (byte)Mathf.Max(v, 0);
+                    _obj = (byte)Math.Max(v, (byte)0);
                     break;
 
                 case short v:
-                    _obj = (ushort)Mathf.Max(v, 0);
+                    _obj = (ushort)Math.Max(v, (short)0);
                     break;
 
                 case int v:
-                    _obj = (uint)Mathf.Max(v, 0);
+                    _obj = (uint)Math.Max(v, 0);
                     break;
 
                 case long v:
-                    _obj = (ulong)Mathf.Max(v, 0);
+                    _obj = (ulong)Math.Max(v, 0);
                     break;
             }
 

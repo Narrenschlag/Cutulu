@@ -5,8 +5,6 @@ namespace Cutulu.Network
     using System.Net;
 
     using System.Linq;
-    using Godot;
-
     using Core;
 
     using HttpRequest = Web.HttpRequest;
@@ -95,10 +93,11 @@ namespace Cutulu.Network
             return null;
         }
 
+#if GODOT4_0_OR_GREATER
         /// <summary>
         /// Opens a web request. If connected to the internet it will return your global IPAddress
         /// </summary>
-        public static void GetGlobalIPv4(Node node, HttpRequest.Result result)
+        public static void GetGlobalIPv4(Godot.Node node, HttpRequest.Result result)
         {
             _ = new HttpRequest(node, "https://ipinfo.io/ip", result);
         }
@@ -106,10 +105,11 @@ namespace Cutulu.Network
         /// <summary>
         /// Opens a web request. If connected to the internet it will return your global IPAddress
         /// </summary>
-        public static void GetGlobalIPv6(Node node, HttpRequest.Result result)
+        public static void GetGlobalIPv6(Godot.Node node, HttpRequest.Result result)
         {
             _ = new HttpRequest(node, "https://api6.ipify.org/", result);
         }
+#endif
 
         /// <summary>
         /// Returns ip address bytes

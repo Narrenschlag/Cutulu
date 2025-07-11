@@ -1,9 +1,12 @@
 namespace Cutulu.Core
 {
+#if GODOT4_0_OR_GREATER
     using Godot;
+#endif
 
     public static class Application
     {
+#if GODOT4_0_OR_GREATER
         /// <summary>
         /// Close the application
         /// </summary>
@@ -49,5 +52,6 @@ namespace Cutulu.Core
             // Get all command line arguments
             return (_args = OS.GetCmdlineArgs()).NotEmpty();
         }
+#endif
     }
 }

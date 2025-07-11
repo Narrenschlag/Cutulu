@@ -1,7 +1,8 @@
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using Godot;
+
     public static class Vector3Sorftf
     {
         public static Vector3[] SortByDistanceTo(this Vector3[] array, Vector3 position, bool ignoreY = false)
@@ -73,3 +74,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

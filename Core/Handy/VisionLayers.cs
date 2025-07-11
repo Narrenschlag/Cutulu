@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu
 {
     using System.Collections.Generic;
@@ -11,8 +12,8 @@ namespace Cutulu
     /// </summary>
     public static class VisionLayers
     {
-        private readonly static Dictionary<object, int> Keys = new();
-        private readonly static List<int> Indecies = new();
+        private readonly static Dictionary<object, int> Keys = [];
+        private readonly static List<int> Indecies = [];
 
         /// <summary>
         /// Adds key to dictionary and assigns it an index. Ignores if already contained.
@@ -143,3 +144,4 @@ namespace Cutulu
         }
     }
 }
+#endif

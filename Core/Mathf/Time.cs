@@ -2,7 +2,6 @@ namespace Cutulu.Core
 {
     using System.Threading.Tasks;
     using System;
-    using Godot;
 
     /// <summary>
     /// Has to be setup once provided with a root node it is working with
@@ -95,7 +94,7 @@ namespace Cutulu.Core
             // Every minute
             MinuteElapsed?.Invoke();
 
-            await Task.Delay(Mathf.RoundToInt((60f - Seconds) * 1000));
+            await Task.Delay((int)Math.Round((60f - Seconds) * 1000));
 
             // Recall this function every 60s
             OnMinuteElapsed();
@@ -115,7 +114,7 @@ namespace Cutulu.Core
             DayOfYear = (ushort)Now.DayOfYear;
             DayOfMonth = (ushort)Now.Day;
 
-            WeekOfYear = (ushort)Mathf.FloorToInt((float)DayOfYear / 7);
+            WeekOfYear = (ushort)Math.Floor((float)DayOfYear / 7);
             MonthOfYear = (ushort)Now.Month;
             Year = (ushort)Now.Year;
         }

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Audio
 {
     using Cutulu.Lattice;
@@ -27,3 +28,4 @@ namespace Cutulu.Audio
         public virtual AudioStream GetStream() => AssetLoader.TryGet(StreamAsset, out AudioStream stream) ? stream : null;
     }
 }
+#endif

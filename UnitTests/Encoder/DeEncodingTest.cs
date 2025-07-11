@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core.UnitTest
 {
     using System.IO;
@@ -153,3 +154,4 @@ namespace Cutulu.Core.UnitTest
         }
     }
 }
+#endif

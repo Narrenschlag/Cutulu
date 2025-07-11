@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using Godot;
@@ -91,3 +92,4 @@ namespace Cutulu.Core
         public float Value(float x, float y, float z) => RangeGate(noise.GetNoise3D(x, y, z));
     }
 }
+#endif

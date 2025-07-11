@@ -1,9 +1,9 @@
-using System.Collections.Generic;
-using System.Text;
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
+    using Godot;
+
     /// <summary>
     /// OE - Odin's Eye is used to find and read files that may be nested in zip files. Important for mod support.
     /// Using '?' as a directory splitter '/' for (nested) zip files.
@@ -314,3 +314,4 @@ namespace Cutulu.Core
         #endregion
     }
 }
+#endif

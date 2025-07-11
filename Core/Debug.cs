@@ -1,7 +1,10 @@
 namespace Cutulu.Core
 {
     using System.Collections.Generic;
+
+#if GODOT4_0_OR_GREATER
     using Godot;
+#endif
 
     public static class Debug
     {
@@ -13,27 +16,55 @@ namespace Cutulu.Core
         /// <summary>
         /// Logs an error message.
         /// </summary>
-        public static void LogError(this string message) => GD.PrintErr(message);
+        public static void LogError(this string message)
+        {
+#if GODOT4_0_OR_GREATER
+            GD.PrintErr(message);
+#else
+            Log($"[ERROR] {message}");
+#endif
+        }
 
         /// <summary>
         /// Logs a warning console message.
         /// </summary>
-        public static void LogWarning(this string message) => GD.PushWarning(message);
+        public static void LogWarning(this string message)
+        {
+#if GODOT4_0_OR_GREATER
+            GD.PushWarning(message);
+#else
+            Log($"[WARNING] {message}");
+#endif
+        }
 
         /// <summary>
         /// Logs a default console message.
         /// </summary>
-        public static void Log(this string message) => GD.Print(message);
+        public static void Log(this string message)
+        {
+#if GODOT4_0_OR_GREATER
+            GD.Print(message);
+#else
+            Console.WriteLine(message);
+#endif
+        }
 
         /// <summary>
         /// Logs a default console message. Message is formatted using bbcode.
         /// </summary>
-        public static void LogR(this string message) => GD.PrintRich(message);
+        public static void LogR(this string message)
+        {
+#if GODOT4_0_OR_GREATER
+            GD.PrintRich(message);
+#else
+            Log($"[RICH] {message}");
+#endif
+        }
 
         /// <summary>
         /// Logs a default console message. Message is formatted using bbcode.
         /// </summary>
-        public static void LogR<T>(this string message, Color color) => GD.PrintRich($"[b][color={color.ToHtml()}][{typeof(T).Name}][/color][/b] {message}");
+        public static void LogR<T>(this string message, Color color) => LogR($"[b][color={color.ToHtml()}][{typeof(T).Name}][/color][/b] {message}");
 
         /// <summary>
         /// Logs a default console message.

@@ -1,6 +1,6 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
-    using System;
     using Godot;
 
     public static class Hexagon
@@ -170,3 +170,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

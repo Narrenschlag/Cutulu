@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using JsonEncoder = System.Text.Encodings.Web.JavaScriptEncoder;
@@ -100,3 +101,4 @@ namespace Cutulu.Core
         public void OnReadFromJson();
     }
 }
+#endif

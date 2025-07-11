@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Audio
 {
     using Godot;
@@ -14,3 +15,4 @@ namespace Cutulu.Audio
         }
     }
 }
+#endif

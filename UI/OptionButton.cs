@@ -1,8 +1,7 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.UI
 {
     using Godot;
-
-    using Core;
 
     [GlobalClass]
     public partial class OptionButton : RichTextLabel
@@ -53,3 +52,4 @@ namespace Cutulu.UI
         }
     }
 }
+#endif

@@ -1,9 +1,10 @@
-using System.Collections.Generic;
-using System;
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
+    using System;
+    using Godot;
+
     /// <summary>
     /// The Polygonf class provides static methods for triangulating a polygon represented by a collection of Vector3 vertices in a 2D space.
     /// This class is part of the Cutulu SDK by Maximilian Schecklmann and is designed to work with the Godot API.
@@ -259,3 +260,4 @@ namespace Cutulu.Core
         #endregion
     }
 }
+#endif

@@ -1,7 +1,7 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Mesh
 {
     using Godot;
-
     using Core;
 
     public static class Meshf
@@ -133,3 +133,4 @@ namespace Cutulu.Mesh
         }
     }
 }
+#endif

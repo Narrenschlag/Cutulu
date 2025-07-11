@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Web
 {
     using System.Text;
@@ -64,3 +65,4 @@ namespace Cutulu.Web
         }
     }
 }
+#endif

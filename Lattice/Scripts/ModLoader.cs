@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
@@ -98,7 +99,7 @@ namespace Cutulu.Lattice
             foreach (var mod in Instances.Keys)
                 ModIds[i++] = mod.ID;
 
-            return Instances.Values.ToArray();
+            return [.. Instances.Values];
         }
 
         /// <summary>
@@ -194,3 +195,4 @@ namespace Cutulu.Lattice
         }
     }
 }
+#endif

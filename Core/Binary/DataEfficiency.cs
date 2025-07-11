@@ -1,7 +1,7 @@
-using Godot;
-
 namespace Cutulu.Core
 {
+    using System;
+
     public static class DataEfficiency
     {
         #region Bind 8 bools to 1 Byte
@@ -11,7 +11,7 @@ namespace Cutulu.Core
 
             if (boolN != null && boolN.Length > 0)
             {
-                byte length = (byte)Mathf.Clamp(boolN.Length, 0, 7);
+                byte length = (byte)Math.Clamp(boolN.Length, 0, 7);
 
                 for (byte n = 0; n < length; n++)
                 {

@@ -1,8 +1,8 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.UI
 {
     using System;
     using Godot;
-
     using Core;
 
     [GlobalClass]
@@ -196,3 +196,4 @@ namespace Cutulu.UI
         }
     }
 }
+#endif

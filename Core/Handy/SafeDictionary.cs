@@ -1,7 +1,8 @@
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using Godot;
+
     public partial class SafeDictionary<K, V> : Resource
     {
         private System.Collections.Generic.Dictionary<K, V> loaded;
@@ -9,7 +10,7 @@ namespace Cutulu.Core
         {
             get
             {
-                if (loaded == null) Load(loaded = new());
+                if (loaded == null) Load(loaded = []);
 
                 return loaded;
             }
@@ -21,3 +22,4 @@ namespace Cutulu.Core
         public bool TryGetValue(K key, out V value) => Loaded.TryGetValue(key, out value);
     }
 }
+#endif

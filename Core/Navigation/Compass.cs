@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using Godot;
@@ -11,3 +12,4 @@ namespace Cutulu.Core
         => Godot.Input.GetGyroscope()[1].toDegrees();
     }
 }
+#endif

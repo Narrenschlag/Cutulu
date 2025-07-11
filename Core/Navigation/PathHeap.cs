@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using System.Collections.Generic;
@@ -37,3 +38,4 @@ namespace Cutulu.Core
         public float PercentageAt(int index) => keys[Mathf.Clamp(index, 0, keys.Count - 1)] / PathLength;
     }
 }
+#endif

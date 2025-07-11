@@ -1,8 +1,9 @@
-using System.Collections.Generic;
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
+    using Godot;
+
     public struct TextureMap
     {
         public readonly Dictionary<int, List<Vector2I>> Dictionary = [];
@@ -45,3 +46,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

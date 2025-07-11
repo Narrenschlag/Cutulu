@@ -1,9 +1,12 @@
 namespace Cutulu.Core
 {
+#if GODOT4_0_OR_GREATER
     using Godot;
+#endif
 
     public static class Colorf
     {
+#if GODOT4_0_OR_GREATER
         private readonly static Vector3[] LerpMatrix = new Vector3[] {
             new (1, 0, 0),
             new (1, 1, 0),
@@ -25,5 +28,6 @@ namespace Cutulu.Core
 
             return new(vec.X, vec.Y, vec.Z, alpha);
         }
+#endif
     }
 }

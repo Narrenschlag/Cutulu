@@ -1,14 +1,16 @@
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
-	public partial class AutoRotate : Node3D
-	{
-		[Export] public Vector3 Speed;
+    using Godot;
 
-		public override void _Process(double delta)
-		{
-			RotationDegrees += (float)delta * Speed;
-		}
-	}
+    public partial class AutoRotate : Node3D
+    {
+        [Export] public Vector3 Speed;
+
+        public override void _Process(double delta)
+        {
+            RotationDegrees += (float)delta * Speed;
+        }
+    }
 }
+#endif

@@ -1,8 +1,8 @@
-using System.IO;
-using Godot;
-
 namespace Cutulu.Core
 {
+    using System.IO;
+    using Godot;
+
     /// <summary>
     /// Use static method Register() to see more.
     /// </summary>

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Lattice
 {
     using System.Collections.Generic;
@@ -8,7 +9,7 @@ namespace Cutulu.Lattice
 
     public class AssetInstance
     {
-        public readonly Dictionary<string, string> References = new();
+        public readonly Dictionary<string, string> References = [];
 
         public readonly IMod Source;
 
@@ -73,3 +74,4 @@ namespace Cutulu.Lattice
         }
     }
 }
+#endif

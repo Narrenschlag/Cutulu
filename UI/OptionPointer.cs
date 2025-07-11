@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.UI
 {
     using Godot;
@@ -58,3 +59,4 @@ namespace Cutulu.UI
         }
     }
 }
+#endif

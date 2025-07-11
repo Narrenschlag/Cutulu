@@ -1,8 +1,7 @@
-using System;
-using Godot;
-
 namespace Cutulu.Core
 {
+    using System;
+
     /// <summary>
     /// Byte math and manipulation functions for fast development.
     /// </summary>

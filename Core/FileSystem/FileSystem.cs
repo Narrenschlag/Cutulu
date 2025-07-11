@@ -1,8 +1,9 @@
-using System;
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System;
+    using Godot;
+
     public static class FileSystem
     {
         /// <summary>
@@ -78,3 +79,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

@@ -3,7 +3,6 @@ namespace Cutulu.Core
     using System.Collections.Generic;
     using System.Collections;
     using System;
-    using Godot;
 
     /// <summary>
     /// A simple wrapper for binary data that allows for easy reading and writing of bits and bytes.
@@ -58,7 +57,7 @@ namespace Cutulu.Core
             }
         }
 
-        public int ByteLength => Mathf.CeilToInt(Buffer.Count / 8.0f);
+        public int ByteLength => (int)Math.Ceiling(Buffer.Count / 8.0f);
         public int Length => Buffer.Count;
 
         public IEnumerator<bool> GetEnumerator()

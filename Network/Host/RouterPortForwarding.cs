@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Network
 {
     using Cutulu.Core;
@@ -133,3 +134,4 @@ namespace Cutulu.Network
         }
     }
 }
+#endif

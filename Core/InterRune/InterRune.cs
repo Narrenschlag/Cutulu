@@ -4,7 +4,6 @@ namespace Cutulu.Core
     using System.Text;
     using System.IO;
     using System;
-    using Godot;
 
     /// <summary>
     /// Born on C3 2024 in Hamburg. Converts bytes into words.
@@ -160,12 +159,12 @@ namespace Cutulu.Core
         public static string AsRune(this byte value)
         {
             var f = (float)value / Center.Length;
-            var i = Mathf.FloorToInt(f);
-            var r = Mathf.RoundToInt(f % 1f * Center.Length);
+            var i = (int)Math.Floor(f);
+            var r = (int)Math.Round(f % 1f * Center.Length);
 
             var a = Start[i % Start.Length];
             var b = Center[r];
-            var c = End[Mathf.FloorToInt(i / Start.Length)];
+            var c = End[(int)Math.Floor((float)i / Start.Length)];
 
             return $"{a}{b}{c}";
         }

@@ -1,16 +1,16 @@
 namespace Cutulu.Core
 {
-    using Godot;
+    using System;
 
     public static class Intf
     {
-        public static int abs(this int i) => Mathf.Abs(i);
+        public static int abs(this int i) => Math.Abs(i);
 
-        public static int max(this int f0, int f1) => Mathf.Max(f0, f1);
+        public static int max(this int f0, int f1) => Math.Max(f0, f1);
         public static int max(this int f0, int f1, int f2) => max(max(f0, f1), f2);
         public static int max(this int f0, int f1, int f2, int f3) => max(max(f0, f1, f2), f3);
 
-        public static int min(this int f0, int f1) => Mathf.Min(f0, f1);
+        public static int min(this int f0, int f1) => Math.Min(f0, f1);
         public static int min(this int f0, int f1, int f2) => min(min(f0, f1), f2);
         public static int min(this int f0, int f1, int f2, int f3) => min(min(f0, f1, f2), f3);
 
@@ -20,7 +20,7 @@ namespace Cutulu.Core
 
             for (byte i = 1; i < values.Length && i < byte.MaxValue; i++)
             {
-                value = Mathf.Min(value, values[i]);
+                value = Math.Min(value, values[i]);
             }
 
             return value;
@@ -33,7 +33,7 @@ namespace Cutulu.Core
 
             for (byte i = 1; i < values.Length && i < byte.MaxValue; i++)
             {
-                value = Mathf.Max(value, values[i]);
+                value = Math.Max(value, values[i]);
             }
 
             return value;

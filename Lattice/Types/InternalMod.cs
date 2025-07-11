@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Lattice
 {
     using System;
@@ -61,3 +62,4 @@ namespace Cutulu.Lattice
         public (string Name, string Path)[] ReadAssemblyEntries() => Array.Empty<(string, string)>();
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using Godot;
@@ -105,3 +106,4 @@ namespace Cutulu.Core
         public static void DeletePath(this string _path) => ACCESS.RemoveAbsolute(ProjectSettings.GlobalizePath(_path.Trim()));
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using Godot;
@@ -30,3 +31,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

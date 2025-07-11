@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Mesh
 {
     using System.Collections.Generic;
@@ -55,3 +56,4 @@ namespace Cutulu.Mesh
         }
     }
 }
+#endif

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://eeo46a1pfa0"
-path="res://.godot/imported/github-logo.png-0a5cb42eb62c81a38567a302a4c6b044.ctex"
+path="res://.godot/imported/github-logo.png-fce5c5dce33ce2607138a283161c26cb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Cutulu/github-logo.png"
-dest_files=["res://.godot/imported/github-logo.png-0a5cb42eb62c81a38567a302a4c6b044.ctex"]
+source_file="res://Dependencies/Cutulu/github-logo.png"
+dest_files=["res://.godot/imported/github-logo.png-fce5c5dce33ce2607138a283161c26cb.ctex"]
 
 [params]
 

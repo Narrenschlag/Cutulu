@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Network
 {
     using Godot;
@@ -8,3 +9,4 @@ namespace Cutulu.Network
         [Export] public Node Host { get; set; }
     }
 }
+#endif

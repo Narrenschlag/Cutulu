@@ -1,8 +1,9 @@
-using System.IO;
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.IO;
+    using Godot;
+
     public struct Direction
     {
         public byte[] Values { get; set; }
@@ -33,3 +34,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

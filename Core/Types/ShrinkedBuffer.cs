@@ -1,9 +1,8 @@
-using System;
-using System.IO;
-using Godot;
-
 namespace Cutulu.Core
 {
+    using System.IO;
+    using System;
+
     /// <summary>
     /// Used to shrink byte buffers to a minimum.
     /// Use the offset value for special edge cases.
@@ -27,7 +26,7 @@ namespace Cutulu.Core
             byte[] offsetBytes = reader.ReadBytes(offset);
 
             // Calculate Steps
-            int steps = Mathf.FloorToInt((stream.Length) / 16f);
+            int steps = (int)Math.Floor(stream.Length / 16f);
 
             // Shrink given 4x4 byte pairs at a time
             Elements = new Shrinked[steps];

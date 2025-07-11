@@ -1,7 +1,8 @@
-using Godot;
-
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using Godot;
+
     /// <summary>
     /// Mathf extension for area calculations.
     /// </summary>
@@ -33,3 +34,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

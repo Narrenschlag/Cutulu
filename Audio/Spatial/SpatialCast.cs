@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Audio.Spatial
 {
     using System.Threading.Tasks;
@@ -141,3 +142,4 @@ namespace Cutulu.Audio.Spatial
         }
     }
 }
+#endif

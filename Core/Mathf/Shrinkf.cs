@@ -1,14 +1,14 @@
-using System.IO;
-using Godot;
-
 namespace Cutulu.Core
 {
+    using System.IO;
+    using System;
+
     public static class Shrinkf
     {
         public static byte[] Compress(this byte[] buffer, out byte[] lengths)
         {
             // Calculate steps
-            int steps = Mathf.FloorToInt(buffer.Length / 16f);
+            var steps = (int)Math.Floor(buffer.Length / 16f);
             lengths = new byte[steps];
 
             Debug.Log($"{buffer.Length} bytes => {steps} steps");

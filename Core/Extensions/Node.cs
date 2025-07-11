@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using System.Collections.Generic;
@@ -312,3 +313,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

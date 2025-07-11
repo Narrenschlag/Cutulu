@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
     using System.Threading.Tasks;
@@ -56,3 +57,4 @@ namespace Cutulu.Core
         }
     }
 }
+#endif

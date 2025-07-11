@@ -1,9 +1,9 @@
-using System.Collections.Generic;
-using System.Collections;
-using Godot;
-
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
+    using System.Collections;
+    using System;
+
     public struct BoolStore : IEnumerable<bool>
     {
         public byte[] FormattableBoolBuffer { readonly get => BoolBuffer; set => BoolBuffer = value; }
@@ -13,7 +13,7 @@ namespace Cutulu.Core
 
         public BoolStore(int capacity, params bool[] values)
         {
-            BoolBuffer = new byte[Mathf.FloorToInt(capacity / 8f)];
+            BoolBuffer = new byte[(int)Math.Floor(capacity / 8f)];
             Capacity = capacity;
 
             for (int i = 0; i < capacity && i < values.Length; i++)
