@@ -79,6 +79,35 @@ namespace Cutulu.Core
 
             return _array ?? [];
         }
+
+        public readonly File[] GetSubFiles(params string[] fileTypes)
+        {
+            if (fileTypes.IsEmpty()) return GetSubFiles();
+
+            var list = new System.Collections.Generic.HashSet<File>();
+
+            if (Exists())
+            {
+                var _subs = ACCESS.GetFilesAt(SystemPath);
+
+                if (_subs != null)
+                {
+                    for (int i = 0; i < _subs.Length; i++)
+                    {
+                        foreach (var fileType in fileTypes)
+                        {
+                            if (_subs[i].EndsWith(fileType))
+                            {
+                                list.Add(new(SystemPath + _subs[i]));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return list.ToArray();
+        }
     }
 
     public static partial class Directoryf
