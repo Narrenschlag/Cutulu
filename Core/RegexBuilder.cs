@@ -1,4 +1,4 @@
-namespace Cutulu.Core.Regex
+namespace Cutulu.Core
 {
     using System.Text.RegularExpressions;
     using System.Collections.Generic;
