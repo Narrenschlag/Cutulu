@@ -1,219 +1,250 @@
+namespace Cutulu.Core;
+
 #if GODOT4_0_OR_GREATER
-namespace Cutulu.Core
+using FLAGS = Godot.FileAccess.ModeFlags;
+using ACCESS = Godot.FileAccess;
+using Godot;
+#else
+using System.IO;
+#endif
+
+using System;
+
+public partial class File : IDisposable
 {
-    using System;
-    using Godot;
+    public readonly string SystemPath;
 
-    using ACCESS = Godot.FileAccess;
-    using FLAGS = Godot.FileAccess.ModeFlags;
+#if GODOT4_0_OR_GREATER
+    public readonly string GodotPath;
+    private ACCESS Access { get; set; }
+    public FLAGS Flags { get; private set; }
+#endif
 
-    public partial class File : IDisposable
+    #region Constructor
+
+    public File(string path)
     {
-        public readonly string SystemPath;
-        public readonly string GodotPath;
+#if GODOT4_0_OR_GREATER
+        SystemPath = ProjectSettings.GlobalizePath(path.Trim());
+        GodotPath = ProjectSettings.LocalizePath(SystemPath);
+#else
+            SystemPath = Path.GetFullPath(path.Trim());
+#endif
+    }
 
-        private ACCESS Access { get; set; }
+    public void Dispose()
+    {
+#if GODOT4_0_OR_GREATER
+        Access?.Close();
+        Access = null;
+#endif
+        GC.SuppressFinalize(this);
+    }
 
-        public FLAGS Flags { get; private set; }
+    ~File() => Dispose();
 
-        public File(string _path = "res://file.txt")
-        {
-            SystemPath = ProjectSettings.GlobalizePath(_path.Trim());
-            GodotPath = ProjectSettings.LocalizePath(SystemPath);
-        }
+    #endregion
 
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-            Close();
-        }
+    #region Raw Functions
 
-        // Finalizer - will be called by garbage collector
-        ~File()
-        {
-            Dispose();
-        }
-
-        #region Main functions
-
-        public bool Exists() => ACCESS.FileExists(SystemPath);
-
-        public bool IsOpen() => Access != null;
-
-        public FileAccess Open(FLAGS _flags, bool _reopen = true)
-        {
-            if (IsOpen() == false || _reopen)
-            {
-                Close();
-
-                Access = ACCESS.Open(SystemPath, Flags = _flags);
-            }
-
-            return Access;
-        }
-
-        public void Close()
+#if GODOT4_0_OR_GREATER
+    public ACCESS Open(FLAGS flags, bool reopen = true)
+    {
+        if (Access == null || reopen)
         {
             Access?.Close();
-            Access = null;
+            Access = ACCESS.Open(SystemPath, Flags = flags);
         }
-
-        public Error Delete()
-        {
-            return Exists() ? DirAccess.RemoveAbsolute(SystemPath) : Error.Ok;
-        }
-
-        public ulong GetFileSize()
-        {
-            var _length = GetFileSizeRaw();
-            Close();
-
-            return _length;
-        }
-
-        public byte[] Read()
-        {
-            var _buffer = ReadRaw(GetFileSizeRaw());
-            Close();
-
-            return _buffer;
-        }
-
-        public byte[] Read(ulong _length)
-        {
-            var _buffer = ReadRaw(_length);
-            Close();
-
-            return _buffer;
-        }
-
-        public void Write(byte[] _buffer)
-        {
-            if (_buffer.IsEmpty()) Delete();
-
-            else
-            {
-                Open(FLAGS.Write, true);
-                WriteRaw(_buffer);
-                FlushRaw();
-                Close();
-            }
-        }
-
-        public Directory[] GetSiblingDirectories()
-        {
-            return new Directory(SystemPath).GetSubDirectories();
-        }
-
-        public File[] GetSiblingFiles()
-        {
-            var _siblings = new Directory(SystemPath).GetSubFiles();
-
-            if (_siblings.Length > 1)
-            {
-                var _files = new File[_siblings.Length - 1];
-
-                for (int i = 0, k = 0; i < _siblings.Length; i++, k++)
-                {
-                    if (i == k && _siblings[i].SystemPath == SystemPath) i++;
-                    else _files[k] = _siblings[i];
-                }
-
-                return _files;
-            }
-
-            return [];
-        }
-
-        #endregion
-
-        #region Raw functions
-
-        public ulong GetFileSizeRaw()
-        {
-            return Open(FLAGS.Read, false)?.GetLength() ?? default;
-        }
-
-        public byte[] ReadRaw(ulong _length)
-        {
-            return Open(FLAGS.Read, false)?.GetBuffer((long)_length) ?? [];
-        }
-
-        public void WriteRaw(byte[] _buffer)
-        {
-            if (_buffer.IsEmpty()) return;
-
-            Open(FLAGS.Write, false)?.StoreBuffer(_buffer);
-        }
-
-        public void FlushRaw()
-        {
-            Open(FLAGS.Write, false)?.Flush();
-        }
-
-        #endregion
-
-        #region String functions
-
-        public void WriteString(string _string)
-        {
-            if (_string.IsEmpty()) return;
-
-            using var _stream = new System.IO.MemoryStream();
-            using var _writer = new System.IO.StreamWriter(_stream); // Because of plain text
-
-            _writer.Write(_string);
-            _writer.Flush();
-        }
-
-        public string ReadString()
-        {
-            using var _stream = new System.IO.MemoryStream(Read());
-            using var _reader = new System.IO.StreamReader(_stream); // Because of plain text
-
-            var _string = _reader.ReadToEnd();
-            return _string.NotEmpty() ? _string : string.Empty;
-        }
-
-        public string[] ReadStringLines(bool _include_empty_lines = false)
-        {
-            return ReadString().Split('\n', _include_empty_lines ? StringSplitOptions.TrimEntries : CONST.StringSplit) ?? [];
-        }
-
-        #endregion
-
-        #region GDResource functions
-
-        public T ReadGDResource<T>() where T : Resource
-        {
-            return GD.Load(GodotPath) is T _t && _t.NotNull() ? _t : default;
-        }
-
-        #endregion
-
-        #region Encoder functions
-
-        public bool TryRead<T>(out T _output)
-        {
-            return Read().TryDecode(out _output);
-        }
-
-        public T Read<T>()
-        {
-            return TryRead(out T _output) ? _output : default;
-        }
-
-        public void Write(object _input)
-        {
-            Write(_input.Encode());
-        }
-
-        #endregion
+        return Access;
     }
 
-    public static partial class Filef
+    public void Flush()
     {
-
+        Access?.Flush();
     }
-}
+
+    public void Close()
+    {
+        Access?.Close();
+        Access = null;
+    }
+
+    public byte[] ReadRaw(ulong length)
+    {
+        return Open(FLAGS.Read, false)?.GetBuffer((long)length) ?? [];
+    }
+
+    public void WriteRaw(byte[] buffer)
+    {
+        if (buffer?.Length > 0)
+            Open(FLAGS.Write, false)?.StoreBuffer(buffer);
+    }
+
+    public ulong GetFileSizeRaw()
+    {
+        return Open(FLAGS.Read, false)?.GetLength() ?? 0;
+    }
+#else
+    public byte[] ReadRaw(long length)
+    {
+        return System.IO.File.ReadAllBytes(SystemPath);
+    }
+
+    public void WriteRaw(byte[] buffer)
+    {
+        System.IO.File.WriteAllBytes(SystemPath, buffer);
+    }
+
+    public long GetFileSizeRaw()
+    {
+        return new FileInfo(SystemPath).Length;
+    }
+
+    public void Flush() { }
+
+    public void Close() { }
 #endif
+
+    #endregion
+
+    #region Base Functions
+
+    public byte[] Read()
+    {
+        var _buffer = ReadRaw(GetFileSizeRaw());
+        Close();
+
+        return _buffer;
+    }
+
+    public byte[] Read(ulong _length)
+    {
+        var _buffer = ReadRaw(_length);
+        Close();
+
+        return _buffer;
+    }
+
+    public void Write(byte[] _buffer)
+    {
+        if (_buffer.IsEmpty()) Delete();
+
+        else
+        {
+            Open(FLAGS.Write, true);
+            WriteRaw(_buffer);
+            Flush();
+            Close();
+        }
+    }
+
+    #endregion
+
+    #region Encoder functions
+
+    public bool TryRead<T>(out T _output)
+    {
+        return Read().TryDecode(out _output);
+    }
+
+    public T Read<T>()
+    {
+        return TryRead(out T _output) ? _output : default;
+    }
+
+    public void Write(object _input)
+    {
+        Write(_input.Encode());
+    }
+
+    #endregion
+
+    #region String functions
+
+    public void WriteString(string _string)
+    {
+        if (_string.IsEmpty()) return;
+
+        using var _stream = new System.IO.MemoryStream();
+        using var _writer = new System.IO.StreamWriter(_stream); // Because of plain text
+
+        _writer.Write(_string);
+        _writer.Flush();
+
+        Write(_stream.ToArray());
+    }
+
+    public string ReadString()
+    {
+        using var _stream = new System.IO.MemoryStream(Read());
+        using var _reader = new System.IO.StreamReader(_stream); // Because of plain text
+
+        var _string = _reader.ReadToEnd();
+        return _string.NotEmpty() ? _string : string.Empty;
+    }
+
+    public string[] ReadStringLines(bool _include_empty_lines = false)
+    {
+        return ReadString().Split('\n', _include_empty_lines ? StringSplitOptions.TrimEntries : CONST.StringSplit) ?? [];
+    }
+
+    #endregion
+
+    #region GDResource functions
+
+#if GODOT4_0_OR_GREATER
+    public T ReadGDResource<T>() where T : Resource
+    {
+        return GD.Load(GodotPath) is T _t && _t.NotNull() ? _t : default;
+    }
+#endif
+
+    #endregion
+
+    #region File System
+
+    public bool Exists()
+    {
+#if GODOT4_0_OR_GREATER
+        return ACCESS.FileExists(SystemPath);
+#else
+            return File.Exists(SystemPath);
+#endif
+    }
+
+    public void Delete()
+    {
+#if GODOT4_0_OR_GREATER
+        DirAccess.RemoveAbsolute(SystemPath);
+#else
+            System.IO.File.Delete(SystemPath);
+#endif
+    }
+
+    public Directory[] GetSiblingDirectories()
+    {
+        return new Directory(SystemPath).GetSubDirectories();
+    }
+
+    public File[] GetSiblingFiles()
+    {
+        var _siblings = new Directory(SystemPath).GetSubFiles();
+
+        if (_siblings.Length > 1)
+        {
+            var _files = new File[_siblings.Length - 1];
+
+            for (int i = 0, k = 0; i < _siblings.Length; i++, k++)
+            {
+                if (i == k && _siblings[i].SystemPath == SystemPath) i++;
+                else _files[k] = _siblings[i];
+            }
+
+            return _files;
+        }
+
+        return [];
+    }
+
+    #endregion
+}

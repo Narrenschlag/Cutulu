@@ -13,22 +13,41 @@ public class AutoCompleteEngine
 {
     private readonly Dictionary<string, UsageData> Usage = [];
     private readonly LevenshteinHelper Levenshtein = new();
-    private readonly List<IndexedEntry> Index = [];
+    private readonly List<IndexedEntry> Items = [];
 
-    public void LoadIndex(IEnumerable<string> rawTerms, bool add = false)
+    public void LoadItems(IEnumerable<string> rawTerms, bool add = false)
     {
-        // Handle index
-        if (add == false) Index.Clear();
-        foreach (var term in rawTerms)
-            Index.Add(new(term));
-
-        // Handle usage
+        // Handle index & Reset usage
         if (add == false)
         {
-            Usage.Clear();
-            foreach (var usage in LoadObject<List<UsageData>>() ?? new())
-                Usage[usage.NormalizedName] = usage;
+            Items.Clear();
+            Reset();
         }
+
+        foreach (var term in rawTerms)
+            Items.Add(new(term));
+    }
+
+    public void LoadItems(IEnumerable<(string, object)> items, bool add = false)
+    {
+        // Handle index & Reset usage
+        if (add == false)
+        {
+            Items.Clear();
+            Reset();
+        }
+
+        // Handle index
+        foreach (var item in items)
+            Items.Add(new(item.Item1, item.Item2));
+    }
+
+    private void Reset()
+    {
+        Usage.Clear();
+
+        foreach (var usage in LoadObject<List<UsageData>>() ?? [])
+            Usage[usage.NormalizedName] = usage;
     }
 
     public void SaveUsage() => SaveObject(Usage.Values.ToList());
@@ -40,7 +59,7 @@ public class AutoCompleteEngine
 
         var results = new List<ScoredResult>();
 
-        foreach (var entry in Index)
+        foreach (var entry in Items)
         {
             var baseScore = ScoreMatch(entry, normalizedQuery, queryTokens);
             var usageScore = ScoreUsage(entry.Normalized);

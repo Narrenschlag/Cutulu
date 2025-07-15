@@ -1,138 +1,207 @@
+namespace Cutulu.Core;
+
 #if GODOT4_0_OR_GREATER
-namespace Cutulu.Core
+using Godot;
+using ACCESS = Godot.DirAccess;
+#else
+using System.IO;
+#endif
+using System;
+using System.Collections.Generic;
+
+/// <summary>
+/// Cross-platform file directory abstraction for both Godot and .NET.
+/// </summary>
+public readonly partial struct Directory
 {
-    using Godot;
+    public readonly string SystemPath;
 
-    using ACCESS = Godot.DirAccess;
+#if GODOT4_0_OR_GREATER
+    public readonly string GodotPath;
+#endif
 
-    public readonly partial struct Directory
+    public Directory(string path = "res://", bool createIfMissing = true)
     {
-        public readonly string SystemPath;
-        public readonly string GodotPath;
+        path = path.TrimToDirectory();
 
-        public Directory(string _path = "res://file.txt", bool _mkDir = true)
-        {
-            SystemPath = ProjectSettings.GlobalizePath(_path.TrimToDirectory());
-            GodotPath = ProjectSettings.LocalizePath(SystemPath);
-
-            if (_mkDir) Create();
-        }
-
-        public Directory()
-        {
-            GodotPath = "res://";
-            SystemPath = ProjectSettings.GlobalizePath(GodotPath);
-        }
-
-        public readonly bool Exists() => ACCESS.DirExistsAbsolute(SystemPath);
-
-        public readonly Error Delete()
-        {
-            return Exists() ? ACCESS.RemoveAbsolute(SystemPath) : Error.Ok;
-        }
-
-        public readonly Error Create()
-        {
-            return Exists() ? Error.Ok : ACCESS.MakeDirAbsolute(SystemPath);
-        }
-
-        public readonly Directory[] GetSubDirectories()
-        {
-            Directory[] _array = null;
-
-            if (Exists())
-            {
-                var _subs = ACCESS.GetDirectoriesAt(SystemPath);
-
-                if (_subs != null)
-                {
-                    _array = new Directory[_subs.Length];
-
-                    for (int i = 0; i < _subs.Length; i++)
-                    {
-                        _array[i] = new(SystemPath + _subs[i] + '/');
-                    }
-                }
-            }
-
-            return _array ?? [];
-        }
-
-        public readonly File[] GetSubFiles()
-        {
-            File[] _array = null;
-
-            if (Exists())
-            {
-                var _subs = ACCESS.GetFilesAt(SystemPath);
-
-                if (_subs != null)
-                {
-                    _array = new File[_subs.Length];
-
-                    for (int i = 0; i < _subs.Length; i++)
-                    {
-                        _array[i] = new(SystemPath + _subs[i]);
-                    }
-                }
-            }
-
-            return _array ?? [];
-        }
-
-        public readonly File[] GetSubFiles(params string[] fileTypes)
-        {
-            if (fileTypes.IsEmpty()) return GetSubFiles();
-
-            var list = new System.Collections.Generic.HashSet<File>();
-
-            if (Exists())
-            {
-                var _subs = ACCESS.GetFilesAt(SystemPath);
-
-                if (_subs != null)
-                {
-                    for (int i = 0; i < _subs.Length; i++)
-                    {
-                        foreach (var fileType in fileTypes)
-                        {
-                            if (_subs[i].EndsWith(fileType))
-                            {
-                                list.Add(new(SystemPath + _subs[i]));
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return list.ToArray();
-        }
+#if GODOT4_0_OR_GREATER
+        SystemPath = ProjectSettings.GlobalizePath(path);
+        GodotPath = ProjectSettings.LocalizePath(SystemPath);
+#else
+            SystemPath = Path.GetFullPath(path);
+#endif
+        if (createIfMissing)
+            Create();
     }
 
-    public static partial class Directoryf
+    public Directory()
+        : this("res://", true) { }
+
+    /// <summary>Returns true if the directory exists.</summary>
+    public bool Exists()
     {
-        public static string TrimToDirectory(this string path) => TrimToDirectory(path, '\\', '/');
+#if GODOT4_0_OR_GREATER
+        return ACCESS.DirExistsAbsolute(SystemPath);
+#else
+            return Directory.Exists(SystemPath);
+#endif
+    }
 
-        public static string TrimToDirectory(this string path, params char[] chars)
-        {
-            if (path.IsEmpty() || chars.IsEmpty()) return path;
-
-            var contains = false;
-            for (int i = 0; i < chars.Length; i++)
+    /// <summary>Creates the directory if it doesn't exist.</summary>
+    public Error Create()
+    {
+#if GODOT4_0_OR_GREATER
+        return Exists() ? Error.Ok : ACCESS.MakeDirAbsolute(SystemPath);
+#else
+            try
             {
-                if (path.Contains(chars[i]) == false) continue;
-
-                contains = true;
-                break;
+                if (!Exists())
+                    System.IO.Directory.CreateDirectory(SystemPath);
+                return Error.Ok;
             }
+            catch { return Error.Failed; }
+#endif
+    }
 
-            return contains ? path.TrimEndUntil(chars) : path;
+    /// <summary>Deletes the directory if it exists.</summary>
+    public Error Delete()
+    {
+#if GODOT4_0_OR_GREATER
+        return Exists() ? ACCESS.RemoveAbsolute(SystemPath) : Error.Ok;
+#else
+            try
+            {
+                if (Exists())
+                    System.IO.Directory.Delete(SystemPath, true);
+                return Error.Ok;
+            }
+            catch { return Error.Failed; }
+#endif
+    }
+
+    /// <summary>Returns all subdirectories inside this directory.</summary>
+    public Directory[] GetSubDirectories()
+    {
+#if GODOT4_0_OR_GREATER
+        if (!Exists()) return [];
+
+        var subs = ACCESS.GetDirectoriesAt(SystemPath);
+        if (subs == null) return [];
+
+        var result = new Directory[subs.Length];
+        for (int i = 0; i < subs.Length; i++)
+            result[i] = new(SystemPath + "/" + subs[i] + "/");
+
+        return result;
+#else
+            if (!Exists()) return [];
+
+            var dirs = System.IO.Directory.GetDirectories(SystemPath);
+            var result = new Directory[dirs.Length];
+            for (int i = 0; i < dirs.Length; i++)
+                result[i] = new(dirs[i]);
+
+            return result;
+#endif
+    }
+
+    /// <summary>Returns all files inside this directory.</summary>
+    public File[] GetSubFiles()
+    {
+#if GODOT4_0_OR_GREATER
+        if (!Exists()) return [];
+
+        var files = ACCESS.GetFilesAt(SystemPath);
+        var result = new File[files.Length];
+        for (int i = 0; i < files.Length; i++)
+            result[i] = new(SystemPath + "/" + files[i]);
+
+        return result;
+#else
+            if (!Exists()) return [];
+
+            var files = System.IO.Directory.GetFiles(SystemPath);
+            var result = new File[files.Length];
+            for (int i = 0; i < files.Length; i++)
+                result[i] = new(files[i]);
+
+            return result;
+#endif
+    }
+
+    /// <summary>Returns all files inside this directory filtered by extension(s).</summary>
+    public File[] GetSubFiles(params string[] fileTypes)
+    {
+        if (fileTypes == null || fileTypes.Length == 0)
+            return GetSubFiles();
+
+        var list = new List<File>();
+
+#if GODOT4_0_OR_GREATER
+        var subs = ACCESS.GetFilesAt(SystemPath);
+        if (subs != null)
+        {
+            foreach (var file in subs)
+            {
+                foreach (var ext in fileTypes)
+                {
+                    if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                    {
+                        list.Add(new File(SystemPath + "/" + file));
+                        break;
+                    }
+                }
+            }
         }
-
-        public static bool PathExists(this string _path) => ACCESS.DirExistsAbsolute(ProjectSettings.GlobalizePath(_path.Trim()));
-
-        public static void DeletePath(this string _path) => ACCESS.RemoveAbsolute(ProjectSettings.GlobalizePath(_path.Trim()));
+#else
+            var subs = System.IO.Directory.GetFiles(SystemPath);
+            foreach (var file in subs)
+            {
+                foreach (var ext in fileTypes)
+                {
+                    if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                    {
+                        list.Add(new File(file));
+                        break;
+                    }
+                }
+            }
+#endif
+        return [.. list];
     }
 }
+
+public static partial class Directoryf
+{
+    public static string TrimToDirectory(this string path) => TrimToDirectory(path, '\\', '/');
+
+    public static string TrimToDirectory(this string path, params char[] chars)
+    {
+        if (string.IsNullOrEmpty(path) || chars.IsEmpty()) return path;
+
+        var index = path.LastIndexOfAny(chars);
+        return index >= 0 ? path[..(index + 1)] : path;
+    }
+
+    public static bool PathExists(this string path)
+    {
+#if GODOT4_0_OR_GREATER
+        return ACCESS.DirExistsAbsolute(ProjectSettings.GlobalizePath(path.Trim()));
+#else
+            return System.IO.Directory.Exists(path) || System.IO.File.Exists(path);
 #endif
+    }
+
+    public static void DeletePath(this string path)
+    {
+#if GODOT4_0_OR_GREATER
+        ACCESS.RemoveAbsolute(ProjectSettings.GlobalizePath(path.Trim()));
+#else
+            var clean = path.Trim();
+            if (System.IO.Directory.Exists(clean))
+                System.IO.Directory.Delete(clean, true);
+            else if (System.IO.File.Exists(clean))
+                System.IO.File.Delete(clean);
+#endif
+    }
+}
