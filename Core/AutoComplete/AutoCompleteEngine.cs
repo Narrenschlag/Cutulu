@@ -18,41 +18,35 @@ public class AutoCompleteEngine
     public void LoadItems(IEnumerable<string> rawTerms, bool add = false)
     {
         // Handle index & Reset usage
-        if (add == false)
-        {
-            Items.Clear();
-            Reset();
-        }
+        if (add == false) Clear();
 
         foreach (var term in rawTerms)
             Items.Add(new(term));
     }
 
-    public void LoadItems(IEnumerable<string> rawTerms, object key, bool add = false)
+    public void LoadItems<KEY>(IEnumerable<string> rawTerms, KEY key, bool add = false)
     {
         // Handle index & Reset usage
-        if (add == false)
-        {
-            Items.Clear();
-            Reset();
-        }
+        if (add == false) Clear();
 
         foreach (var term in rawTerms)
             Items.Add(new(term, key));
     }
 
-    public void LoadItems(IEnumerable<(string Text, object Key)> items, bool add = false)
+    public void LoadItems<KEY>(IEnumerable<KeyValuePair<string, KEY>> items, bool add = false)
     {
         // Handle index & Reset usage
-        if (add == false)
-        {
-            Items.Clear();
-            Reset();
-        }
+        if (add == false) Clear();
 
         // Handle index
         foreach (var (Text, Key) in items)
             Items.Add(new(Text, Key));
+    }
+
+    public void Clear()
+    {
+        Items.Clear();
+        Reset();
     }
 
     private void Reset()
@@ -77,7 +71,7 @@ public class AutoCompleteEngine
             var baseScore = ScoreMatch(entry, normalizedQuery, queryTokens);
             var usageScore = ScoreUsage(entry.Normalized);
 
-            results.Add(new ScoredResult(entry.Original, baseScore + usageScore));
+            results.Add(new ScoredResult(entry.Original, baseScore + usageScore, entry.Key));
         }
 
         return results

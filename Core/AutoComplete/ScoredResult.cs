@@ -1,3 +1,3 @@
 namespace Cutulu.Core.AutoComplete;
 
-public record ScoredResult(string Text, int Score);
+public record ScoredResult(string Text, int Score, object Key);
