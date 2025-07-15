@@ -24,7 +24,7 @@ public static class BitapMatcher
 
         foreach (char c in text)
         {
-            int charMask = patternMask.ContainsKey(c) ? patternMask[c] : 0;
+            int charMask = patternMask.TryGetValue(c, out int value) ? value : 0;
 
             int prevRk1 = R[0];
             R[0] = (R[0] << 1 | 1) & charMask;
