@@ -28,7 +28,20 @@ public class AutoCompleteEngine
             Items.Add(new(term));
     }
 
-    public void LoadItems(IEnumerable<(string, object)> items, bool add = false)
+    public void LoadItems(IEnumerable<string> rawTerms, object key, bool add = false)
+    {
+        // Handle index & Reset usage
+        if (add == false)
+        {
+            Items.Clear();
+            Reset();
+        }
+
+        foreach (var term in rawTerms)
+            Items.Add(new(term, key));
+    }
+
+    public void LoadItems(IEnumerable<(string Text, object Key)> items, bool add = false)
     {
         // Handle index & Reset usage
         if (add == false)
@@ -38,8 +51,8 @@ public class AutoCompleteEngine
         }
 
         // Handle index
-        foreach (var item in items)
-            Items.Add(new(item.Item1, item.Item2));
+        foreach (var (Text, Key) in items)
+            Items.Add(new(Text, Key));
     }
 
     private void Reset()
@@ -52,7 +65,7 @@ public class AutoCompleteEngine
 
     public void SaveUsage() => SaveObject(Usage.Values.ToList());
 
-    public List<string> Search(string query, int maxResults = 10)
+    public List<ScoredResult> Search(string query, int maxResults = 10)
     {
         var normalizedQuery = Normalizer.Normalize(query);
         var queryTokens = Normalizer.Tokenize(normalizedQuery);
@@ -70,6 +83,12 @@ public class AutoCompleteEngine
         return results
             .OrderByDescending(r => r.Score)
             .Take(maxResults)
+            .ToList();
+    }
+
+    public List<string> SearchString(string query, int maxResults = 10)
+    {
+        return Search(query, maxResults)
             .Select(r => r.Text)
             .ToList();
     }
@@ -215,6 +234,6 @@ public class AutoCompleteEngine
         return new string(chars);
     }
 
-    private void SaveObject<T>(T _) { } // leave for user to implement
-    private T? LoadObject<T>() where T : class => null;
+    private void SaveObject<T>(T _) => AppData.SetAppData("text/autocomplete.pref", _);
+    private static T? LoadObject<T>() where T : class => AppData.GetAppData<T>("text/autocomplete.pref");
 }
