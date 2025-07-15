@@ -13,7 +13,7 @@ public class AutoCompleteEngine
 {
     private readonly Dictionary<string, UsageData> Usage = [];
     private readonly LevenshteinHelper Levenshtein = new();
-    private readonly List<IndexedEntry> Items = [];
+    private readonly HashSet<IndexedEntry> Items = [];
 
     public void LoadItems(IEnumerable<string> rawTerms, bool add = false)
     {

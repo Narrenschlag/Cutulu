@@ -66,12 +66,15 @@ namespace Cutulu.Core
             if (nodes.NotEmpty()) Destroy(nodes.ToArray(), forceInstant);
         }
 
-        public static void Destroy(this Node node, bool forceInstant = false)
+        public static void Destroy(this object node, bool forceInstant = false)
         {
             if (node.IsNull()) return;
 
-            if (forceInstant) node.Free();
-            else node.QueueFree();
+            if (node is Node n)
+            {
+                if (forceInstant) n.Free();
+                else n.QueueFree();
+            }
         }
 
         public static void Destroy<T>(this T[] nodes, bool forceInstant = false) where T : Node
