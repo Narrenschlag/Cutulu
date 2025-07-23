@@ -14,7 +14,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Event called when a tagable is tagged
         /// </summary>
-        //public event Action<Tagable, object> TagUpdated;
+        public event System.Action<Tagable, object> TagUpdated;
 
         /// <summary>
         /// Adds a tag to a tagable
@@ -71,8 +71,15 @@ namespace Cutulu.Core
         /// </summary>
         public void Clear()
         {
+            var cache = new Dictionary<object, HashSet<Tagable>>(TagablesByTag);
+
             TagablesByTag.Clear();
             TagablesByUID.Clear();
+
+            // Notify about taged values
+            foreach (var pair in cache)
+                foreach (var tag in pair.Value)
+                    TagUpdated?.Invoke(tag, pair.Key);
         }
 
         private void Add(Tagable _tagable, params object[] _tags)
@@ -101,6 +108,8 @@ namespace Cutulu.Core
                     // Add tag to data
                     if (_data.Tags.Contains(_tag) == false)
                         _data.Tags.Add(_tag);
+
+                    TagUpdated?.Invoke(_tagable, _tag);
                 }
             }
         }
@@ -145,6 +154,8 @@ namespace Cutulu.Core
 
                     if (_tagables.Count < 1)
                         TagablesByTag.Remove(_tag);
+
+                    TagUpdated?.Invoke(_tagable, _tag);
                 }
             }
         }
