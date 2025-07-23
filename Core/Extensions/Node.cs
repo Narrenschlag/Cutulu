@@ -231,7 +231,7 @@ namespace Cutulu.Core
 
         public static List<T> GetNodesInChildren<T>(this Node node, bool includeSelf = true, byte layerDepth = 0)
         {
-            List<T> list = new();
+            List<T> list = [];
             loop(node, includeSelf, 0);
             return list;
 

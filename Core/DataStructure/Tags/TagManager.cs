@@ -43,7 +43,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Return all tagables with the given tag
         /// </summary>
-        public HashSet<Tagable> Get(string _tag)
+        public HashSet<Tagable> Get(object _tag)
         {
             return TagablesByTag.TryGetValue(_tag, out var _tagables) ? _tagables : [];
         }
