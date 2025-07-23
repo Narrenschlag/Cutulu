@@ -14,7 +14,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Event called when a tagable is tagged
         /// </summary>
-        public event System.Action<Tagable, object> TagUpdated;
+        //public event Action<Tagable, object> TagUpdated;
 
         /// <summary>
         /// Adds a tag to a tagable

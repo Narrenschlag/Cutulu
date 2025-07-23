@@ -381,5 +381,10 @@ public class AutoCompleteEngine
     }
 
     private void SaveObject<T>(T _) => AppData.SetAppData("text/autocomplete.pref", _);
+
+#if GODOT4_0_OR_GREATER
+    private static T LoadObject<T>() where T : class => AppData.GetAppData<T>("text/autocomplete.pref");
+#else
     private static T? LoadObject<T>() where T : class => AppData.GetAppData<T>("text/autocomplete.pref");
+#endif
 }
