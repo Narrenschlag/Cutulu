@@ -1,6 +1,6 @@
 namespace Cutulu.Core
 {
-    public interface Tagable
+    public interface ITagable
     {
         public long GetUniqueTagID();
     }

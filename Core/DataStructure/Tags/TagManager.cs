@@ -6,7 +6,7 @@ namespace Cutulu.Core
     /// <para>Tags tagables to make them easier to find</para>
     /// <para>Tagables can have multiple tags</para>
     /// </summary>
-    public partial class TagManager<Tagable> where Tagable : Core.Tagable
+    public partial class TagManager<Tagable> where Tagable : ITagable
     {
         private readonly Dictionary<object, HashSet<Tagable>> TagablesByTag = [];
         private readonly Dictionary<long, TagReference> TagablesByUID = [];

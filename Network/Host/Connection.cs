@@ -8,7 +8,7 @@ namespace Cutulu.Network
     using Protocols;
     using Core;
 
-    public partial class Connection(long uid, HostManager host, Sockets.TcpSocket socket, IPEndPoint endpoint) : Tagable
+    public partial class Connection(long uid, HostManager host, Sockets.TcpSocket socket, IPEndPoint endpoint) : ITagable
     {
         public Sockets.TcpSocket Socket { get; private set; } = socket;
         public IPEndPoint EndPoint { get; private set; } = endpoint;
@@ -18,7 +18,7 @@ namespace Cutulu.Network
         public long UserId { get; private set; } = uid;
 
         public bool IsConnected => Socket != null && Socket.IsConnected;
-        long Tagable.GetUniqueTagID() => UserId;
+        long ITagable.GetUniqueTagID() => UserId;
 
         public event Action<short, byte[]> Received;
 
