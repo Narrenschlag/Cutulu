@@ -1,6 +1,5 @@
 namespace Cutulu.Core
 {
-    using System.Collections;
     using System.Reflection;
     using System.IO;
     using System;
@@ -16,7 +15,7 @@ namespace Cutulu.Core
         public static void Encode(this BinaryWriter _writer, object _obj, Type _type)
         {
             // Write empty array
-            if (_obj.IsNull() && _type.IsArray) _writer.Write(default(ushort));
+            if (_obj.IsNull() && _type.IsArray) _writer.Write(new UNumber());
 
             // Write object
             else Encode(_writer, _obj, true);
@@ -166,12 +165,12 @@ namespace Cutulu.Core
                     Encode(_writer, new UNumber(array.Length), false);
                     _type = _type.GetElementType();
 
-                    for (ushort i = 0; i < array.Length; i++)
+                    for (int i = 0; i < array.Length; i++)
                     {
                         var _value = array.GetValue(i);
 
                         // Write null array as empty array
-                        if (_value == null && _type.IsArray) _writer.Write(default(ushort));
+                        if (_value == null && _type.IsArray) _writer.Write(new UNumber());
 
                         // Write array value
                         else Encode(_writer, _value, false);
