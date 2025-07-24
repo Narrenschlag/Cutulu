@@ -54,7 +54,7 @@ namespace Cutulu.Network
 
             if (_node is IShared shared && _node.NotNull())
             {
-                var unpacked = ((IShared)shared).Unpack<N>(parent, asClient);
+                var unpacked = shared.Unpack<N>(parent, asClient);
 
                 //Debug.LogError($"Unpacking asset as typeof({typeof(N)}): {unpacked.NotNull()}"); //@{unpacked.GetParent().Name}");
                 return unpacked;
@@ -85,6 +85,24 @@ namespace Cutulu.Network
             }
 
             return string.Empty;
+        }
+    }
+
+    public static class SharedNodeUtility
+    {
+        public static N Unpack<N>(this PackedScene packed, Node parent, bool asClient)
+        {
+            return IShared.Unpack<N>(packed, parent, asClient);
+        }
+
+        public static N UnpackClient<N>(this PackedScene packed, Node parent)
+        {
+            return IShared.Unpack<N>(packed, parent, true);
+        }
+
+        public static N UnpackHost<N>(this PackedScene packed, Node parent)
+        {
+            return IShared.Unpack<N>(packed, parent, false);
         }
     }
 }

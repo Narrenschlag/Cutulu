@@ -18,9 +18,15 @@ namespace Cutulu.Core
         }
 
 #if GODOT4_0_OR_GREATER
-        public static bool Destroy(this GodotObject obj)
+        public static bool Destroy(this GodotObject obj, bool freeNow = false)
         {
             if (obj.IsNull()) return false;
+
+            if (obj is Node node)
+            {
+                if (freeNow) node.Free();
+                else node.QueueFree();
+            }
 
             obj.Dispose();
             return true;
