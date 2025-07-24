@@ -134,7 +134,11 @@ namespace Cutulu.Core
             }
 
             if (oldParent.NotNull()) lock (oldParent) oldParent.RemoveChild(node);
-            if (newParent.NotNull()) lock (newParent) newParent.AddChild(node);
+            if (newParent.NotNull()) lock (newParent)
+                {
+                    node.Owner = null; // -> Reset owner of node before adding to new parent
+                    newParent.AddChild(node);
+                }
 
             if (node is Node3D _node3D)
             {
