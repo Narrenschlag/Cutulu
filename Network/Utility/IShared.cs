@@ -10,6 +10,10 @@ namespace Cutulu.Network
         public Node Client { get; set; }
         public Node Host { get; set; }
 
+        public Node[] Shared { get; set; }
+
+        public void _Unpack(bool asClient);
+
         public N Unpack<N>(Node parent, bool asClient)
         {
             if (this is not Node godot || godot.IsNull()) return default;
@@ -29,6 +33,13 @@ namespace Cutulu.Network
 
             parent.SetChild(_node);
 
+            // Reparent shared nodes
+            if (Shared.NotEmpty())
+            {
+                foreach (var shared in Shared)
+                    parent.SetChild(shared);
+            }
+
             var children = godot.GetNodesInChildren<IShared>(false, 1);
             if (children.NotEmpty())
             {
@@ -41,6 +52,7 @@ namespace Cutulu.Network
                 }
             }
 
+            try { _Unpack(asClient); } catch { }
             godot.Destroy();
 
             return n;

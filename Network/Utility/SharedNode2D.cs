@@ -7,6 +7,10 @@ namespace Cutulu.Network
     {
         [Export] public Node Client { get; set; }
         [Export] public Node Host { get; set; }
+        
+        [Export] public Node[] Shared { get; set; }
+        
+        public virtual void _Unpack(bool asClient) { }
     }
 }
 #endif
