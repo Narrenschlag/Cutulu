@@ -37,7 +37,7 @@ namespace Cutulu.Network
             if (Shared.NotEmpty())
             {
                 foreach (var shared in Shared)
-                    parent.SetChild(shared);
+                    _node.SetChild(shared);
             }
 
             var children = godot.GetNodesInChildren<IShared>(false, 1);

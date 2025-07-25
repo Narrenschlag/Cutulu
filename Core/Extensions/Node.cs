@@ -127,20 +127,24 @@ namespace Cutulu.Core
             if (oldParent == newParent) return;
 
             Vector3 position = default, rotation = default;
-            if (node is Node3D node3D)
+            if (node.IsInsideTree() && node is Node3D node3D)
             {
                 position = node3D.GlobalPosition;
                 rotation = node3D.GlobalRotation;
             }
 
-            if (oldParent.NotNull()) lock (oldParent) oldParent.RemoveChild(node);
+            if (oldParent.NotNull()) lock (oldParent)
+                {
+                    oldParent.RemoveChild(node);
+                }
+
             if (newParent.NotNull()) lock (newParent)
                 {
                     node.Owner = null; // -> Reset owner of node before adding to new parent
                     newParent.AddChild(node);
                 }
 
-            if (node is Node3D _node3D)
+            if (node.IsInsideTree() && node is Node3D _node3D)
             {
                 _node3D.GlobalPosition = position;
                 _node3D.GlobalRotation = rotation;
@@ -241,6 +245,7 @@ namespace Cutulu.Core
 
             void loop(Node node, bool includeSelf, byte layer)
             {
+                if (node.IsNull()) return;
                 if (includeSelf) add(node);
 
                 foreach (Node n in node.GetChildren())
