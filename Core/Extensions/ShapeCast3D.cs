@@ -14,7 +14,7 @@ namespace Cutulu.Core
             {
                 var body = shapeCast.GetCollider(idx);
 
-                if (body is T t)
+                if (body.NotNull() && body is T t)
                     list.Add(t);
             }
 

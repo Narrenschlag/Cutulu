@@ -1,6 +1,7 @@
 #if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Godot;
@@ -45,44 +46,11 @@ namespace Cutulu.Core
             collection.Clear();
         }
 
-        public static async void Destroy(this Node node, float lifeTime, bool forceInstant = false)
-        {
-            await Task.Delay(Mathf.RoundToInt(lifeTime * 1000));
-
-            if (node.NotNull())
-            {
-                lock (node)
-                {
-                    Destroy(node, forceInstant);
-                }
-            }
-        }
-
         public static void DestroyChildrenOf<T>(this Node parent, bool forceInstant = false) where T : Node
         {
             if (parent.IsNull()) return;
 
-            var nodes = parent.GetNodesInChildren<T>(false);
-            if (nodes.NotEmpty()) Destroy(nodes.ToArray(), forceInstant);
-        }
-
-        public static void Destroy(this object node, bool forceInstant = false)
-        {
-            if (node.IsNull()) return;
-
-            if (node is Node n)
-            {
-                if (forceInstant) n.Free();
-                else n.QueueFree();
-            }
-        }
-
-        public static void Destroy<T>(this T[] nodes, bool forceInstant = false) where T : Node
-        {
-            if (nodes.IsEmpty()) return;
-
-            foreach (var node in nodes)
-                node.Destroy(forceInstant);
+            parent.GetNodesInChildren<T>(false).Destroy(forceInstant);
         }
 
         public static Vector3 Forward(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Forward : -(global ? node.GlobalTransform : node.Transform).Basis.Z;
