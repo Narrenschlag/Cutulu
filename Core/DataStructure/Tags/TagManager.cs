@@ -10,6 +10,9 @@ namespace Cutulu.Core
     {
         private readonly Dictionary<object, HashSet<Tagable>> TagablesByTag = [];
         private readonly Dictionary<long, TagReference> TagablesByUID = [];
+        private readonly Dictionary<Tagable, int> UniqueTagables = [];
+
+        public IReadOnlyCollection<Tagable> TagEntries => UniqueTagables.Keys;
 
         /// <summary>
         /// Event called when a tagable is tagged
@@ -90,6 +93,10 @@ namespace Cutulu.Core
             if (TagablesByUID.TryGetValue(_tagable.GetUniqueTagID(), out var _data) == false)
                 TagablesByUID[_tagable.GetUniqueTagID()] = _data = new(_tagable);
 
+            // Assign unique tag count
+            if (UniqueTagables.ContainsKey(_tagable) == false) UniqueTagables[_tagable] = 1;
+            else UniqueTagables[_tagable]++;
+
             // Add tags to tagable
             if (_tags.NotEmpty())
             {
@@ -118,6 +125,10 @@ namespace Cutulu.Core
         {
             // Return if not registered
             if (_tagable == null || TagablesByUID.TryGetValue(_tagable.GetUniqueTagID(), out var _data) == false) return;
+
+            // Assign unique tag count
+            if (UniqueTagables.ContainsKey(_tagable) && UniqueTagables[_tagable]-- < 1)
+                UniqueTagables.Remove(_tagable);
 
             // Delete all data of tagable
             if (_tags.IsEmpty())
