@@ -27,6 +27,8 @@ namespace Cutulu.Core
             };
         }
 
+        public override readonly string ToString() => Buffer.IsEmpty() ? "0" : ((ulong)this).ToString();
+
         public UNumber() { Buffer = null; }
         public UNumber(object _value)
         {
@@ -110,8 +112,6 @@ namespace Cutulu.Core
         public static implicit operator int(UNumber value) => (int)value.GetValue();
         public static implicit operator ulong(UNumber value) => value.GetValue();
         public static implicit operator long(UNumber value) => (long)value.GetValue();
-
-        public new readonly string ToString() => ((ulong)this).ToString();
 
         class Encoder : BinaryEncoder<UNumber>
         {
