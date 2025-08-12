@@ -3,21 +3,30 @@ namespace Cutulu.Network;
 using Cutulu.Core;
 using Godot;
 
-public partial class SharedSplitter3D : Node3D, ISharedSplitter
+public partial class SharedSplitter3D : Node3D, ISharable
 {
-    [Export] public Node[] ClientRemove { get; set; }
-    [Export] public Node[] HostRemove { get; set; }
+    [Export] private bool DestroyByDefault { get; set; } = true;
+    [Export] public Node[] ClientExclusive { get; set; }
+    [Export] public Node[] HostExclusive { get; set; }
 
-    [ExportGroup("IShared")]
-    [Export] public Node Client { get; set; }
-    [Export] public Node Host { get; set; }
-    public Node[] Shared { get; set; }
-
-    public void Split(Node parent, bool asClient)
+    public virtual T Unpack<T>(Node parent, bool asClient)
     {
-        if (asClient) ClientRemove.ClearAndDestroy();
-        else HostRemove.ClearAndDestroy();
+        var array = asClient ? HostExclusive : ClientExclusive;
+
+        if (array.NotEmpty())
+        {
+            foreach (var item in array)
+                if (item.NotNull()) Disable(item);
+        }
+
+        parent.SetChild(this);
+
+        return this is T t ? t : default;
     }
 
-    public void _Unpack(bool asClient) { }
+    public virtual void Disable(Node node)
+    {
+        if (DestroyByDefault) node.Destroy();
+        else node.SetActive(false);
+    }
 }

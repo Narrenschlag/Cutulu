@@ -9,7 +9,9 @@ namespace Cutulu.Network
         [Export] public Node Host { get; set; }
         
         [Export] public Node[] Shared { get; set; }
-        
+
+        public virtual T Unpack<T>(Node parent, bool asClient) => (this as IShared).DefaultSharedUnpackNode<T>(parent, asClient);
+                
         public virtual void _Unpack(bool asClient) { }
     }
 }

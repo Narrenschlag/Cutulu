@@ -4,7 +4,7 @@ namespace Cutulu.Network
     using Godot;
     using Core;
 
-    public interface IShared
+    public interface IShared : ISharable
     {
         public Node Client { get; set; }
         public Node Host { get; set; }
@@ -13,15 +13,9 @@ namespace Cutulu.Network
 
         public abstract void _Unpack(bool asClient);
 
-        public N Unpack<N>(Node parent, bool asClient)
+        public N DefaultSharedUnpackNode<N>(Node parent, bool asClient)
         {
             if (this is not Node godot || godot.IsNull()) return default;
-
-            if (this is ISharedSplitter splitter)
-            {
-                splitter.Split(parent, asClient);
-                return default;
-            }
 
             var _node = asClient ? Client : Host;
 
@@ -45,7 +39,7 @@ namespace Cutulu.Network
                     _node.SetChild(shared);
             }
 
-            var children = _node.GetNodesInChildren<IShared>(false, 2);
+            var children = _node.GetNodesInChildren<ISharable>(false, 2);
             if (children.NotEmpty())
             {
                 foreach (var child in children)
@@ -69,7 +63,7 @@ namespace Cutulu.Network
 
             var _node = packed.Instantiate<Node>(parent);
 
-            if (_node is IShared shared && _node.NotNull())
+            if (_node is ISharable shared && _node.NotNull())
             {
                 var unpacked = shared.Unpack<N>(parent, asClient);
 
