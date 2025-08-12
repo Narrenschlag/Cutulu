@@ -43,7 +43,8 @@ namespace Cutulu.Core
                 node.Destroy();
             }
 
-            collection.Clear();
+            if (collection.IsReadOnly == false)
+                collection.Clear();
         }
 
         public static void DestroyChildrenOf<T>(this Node parent, bool forceInstant = false) where T : Node
