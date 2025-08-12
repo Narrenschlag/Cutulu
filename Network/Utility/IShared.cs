@@ -11,11 +11,17 @@ namespace Cutulu.Network
 
         public Node[] Shared { get; set; }
 
-        public void _Unpack(bool asClient);
+        public abstract void _Unpack(bool asClient);
 
         public N Unpack<N>(Node parent, bool asClient)
         {
             if (this is not Node godot || godot.IsNull()) return default;
+
+            if (this is ISharedSplitter splitter)
+            {
+                splitter.Split(parent, asClient);
+                return default;
+            }
 
             var _node = asClient ? Client : Host;
 
