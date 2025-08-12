@@ -29,4 +29,6 @@ public partial class SharedSplitter3D : Node3D, ISharable
         if (DestroyByDefault) node.Destroy();
         else node.SetActive(false);
     }
+
+    public bool DestroyAfterUnpacking() => false;
 }

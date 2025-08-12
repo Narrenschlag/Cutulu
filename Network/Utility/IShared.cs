@@ -30,29 +30,39 @@ namespace Cutulu.Network
                 return default;
             }
 
-            parent.SetChild(_node);
-
-            // Reparent shared nodes
-            if (Shared.NotEmpty())
+            if (DestroyAfterUnpacking())
             {
-                foreach (var shared in Shared)
-                    _node.SetChild(shared);
-            }
+                parent.SetChild(_node);
 
-            var children = _node.GetNodesInChildren<ISharable>(false, 2);
-            if (children.NotEmpty())
-            {
-                foreach (var child in children)
+                // Reparent shared nodes
+                if (Shared.NotEmpty())
                 {
-                    if (child != Client && child != Host)
+                    foreach (var shared in Shared)
+                        _node.SetChild(shared);
+                }
+
+                var children = _node.GetNodesInChildren<ISharable>(false, 2);
+                if (children.NotEmpty())
+                {
+                    foreach (var child in children)
                     {
-                        child.Unpack<Node>(_node, asClient);
+                        if (child != Client && child != Host)
+                        {
+                            child.Unpack<Node>(_node, asClient);
+                        }
                     }
                 }
+
+                try { _Unpack(asClient); } catch { }
+                godot.Destroy();
             }
 
-            try { _Unpack(asClient); } catch { }
-            godot.Destroy();
+            else
+            {
+                parent.SetChild(godot);
+
+                try { _Unpack(asClient); } catch { }
+            }
 
             return n;
         }

@@ -106,7 +106,7 @@ namespace Cutulu.Core
         }
 
         public static bool NotEmpty<T>(this T[] array)
-        => array != null && array.Length > 0;
+        => array.NotNull() && array.Length > 0;
 
         public static bool IsEmpty<T>(this T[] array)
         => !NotEmpty(array);

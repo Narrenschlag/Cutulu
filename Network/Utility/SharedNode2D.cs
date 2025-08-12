@@ -13,6 +13,8 @@ namespace Cutulu.Network
         public virtual T Unpack<T>(Node parent, bool asClient) => (this as IShared).DefaultSharedUnpackNode<T>(parent, asClient);
                 
         public virtual void _Unpack(bool asClient) { }
+
+        public bool DestroyAfterUnpacking() => true;
     }
 }
 #endif
