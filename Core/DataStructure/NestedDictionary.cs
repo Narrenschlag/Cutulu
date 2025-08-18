@@ -10,6 +10,16 @@ namespace Cutulu.Core
             set => Add(rootKey, key, value);
         }
 
+        public new Dictionary<TKey, TValue> this[TRootKey key]
+        {
+            get => base[key] ??= [];
+            set
+            {
+                if (value.IsNull()) Remove(key);
+                else base[key] = value;
+            }
+        }
+
         public void Add(TRootKey rootKey, TKey key, TValue value)
         {
             if (!ContainsKey(rootKey)) Add(rootKey, []);
@@ -31,6 +41,6 @@ namespace Cutulu.Core
 
         public bool ContainsKey(TRootKey rootKey, TKey key) => ContainsKey(rootKey) && this[rootKey].ContainsKey(key);
 
-        public void Remove(TRootKey rootKey, TKey key) => this[rootKey].Remove(key);
+        public bool Remove(TRootKey rootKey, TKey key) => this[rootKey].Remove(key);
     }
 }
