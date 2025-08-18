@@ -105,12 +105,6 @@ namespace Cutulu.Core
             return array.NotEmpty() ? array[i.AbsMod(array.Length)] : default;
         }
 
-        public static bool NotEmpty<T>(this T[] array)
-        => array.NotNull() && array.Length > 0;
-
-        public static bool IsEmpty<T>(this T[] array)
-        => !NotEmpty(array);
-
         public static T RandomElement<T>(this T[] array, T @default = default)
         => array.NotEmpty() ? array[Random.Range(0, array.Length)] : @default;
 
