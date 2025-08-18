@@ -8,11 +8,28 @@ namespace Cutulu.Core
         public static bool IsEmpty<T, U>(this Dictionary<T, U> dic) => !NotEmpty(dic);
 
         /// <summary>
+        /// Removes null keys from dictionary.
+        /// </summary>
+        public static Dictionary<K, V> ClearNullKeys<K, V>(this Dictionary<K, V> dic)
+        {
+            if (dic == null) return null;
+
+            var keys = new K[dic.Count];
+            dic.Keys.CopyTo(keys, 0);
+
+            foreach (var key in keys)
+                if (key.IsNull())
+                    dic.Remove(key);
+
+            return dic;
+        }
+
+        /// <summary>
         /// Sets entry no matter if key is already contained.
         /// </summary>
         public static void Set<K, V>(this Dictionary<K, V> dic, K key, V value)
         {
-            if ((dic ??= new()).ContainsKey(key))
+            if ((dic ??= []).ContainsKey(key))
             {
                 dic[key] = value;
             }
@@ -28,7 +45,7 @@ namespace Cutulu.Core
         /// </summary>
         public static bool TryAdd<K, V>(this Dictionary<K, V> dic, K key, V value)
         {
-            if ((dic ??= new()).ContainsKey(key))
+            if ((dic ??= []).ContainsKey(key))
             {
                 return false;
             }
@@ -45,7 +62,7 @@ namespace Cutulu.Core
         /// </summary>
         public static bool TryRemove<K, V>(this Dictionary<K, V> dic, K key)
         {
-            if ((dic ??= new()).ContainsKey(key) == false)
+            if ((dic ??= []).ContainsKey(key) == false)
             {
                 return false;
             }
