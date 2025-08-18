@@ -12,7 +12,14 @@ namespace Cutulu.Core
 
         public new Dictionary<TKey, TValue> this[TRootKey key]
         {
-            get => base[key] ??= [];
+            get
+            {
+                if (TryGetValue(key, out var result) && result.NotNull()) return result;
+
+                base[key] = result = [];
+                return result;
+            }
+            
             set
             {
                 if (value.IsNull()) Remove(key);
