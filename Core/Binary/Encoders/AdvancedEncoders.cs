@@ -84,7 +84,7 @@ namespace Cutulu.Core
                             .GetGenericArguments()[0];
                 });
 
-                var count = new UNumber(value == null ? 0 : ((ICollection)value).Count);
+                var count = (UNumber)(value == null ? 0 : ((ICollection)value).Count);
                 writer.Encode(count);
 
                 if (count > 0)

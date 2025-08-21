@@ -109,7 +109,7 @@ namespace Cutulu.Core
             switch (obj)
             {
                 case byte[] v:
-                    if (_first_iteration == false) Encode(writer, new UNumber(v.Length), false);
+                    if (_first_iteration == false) Encode(writer, (UNumber)v.Length, false);
                     writer.Write(v); break;
 
                 case string v: writer.Write(v); break;
@@ -162,7 +162,7 @@ namespace Cutulu.Core
                 // Arrays
                 else if (_type.IsArray && _obj is Array array)
                 {
-                    Encode(_writer, new UNumber(array.Length), false);
+                    Encode(_writer, (UNumber)array.Length, false);
                     _type = _type.GetElementType();
 
                     for (int i = 0; i < array.Length; i++)
