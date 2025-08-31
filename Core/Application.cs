@@ -52,6 +52,12 @@ namespace Cutulu.Core
             // Get all command line arguments
             return (_args = OS.GetCmdlineArgs()).NotEmpty();
         }
+
+        /// <summary>
+        /// Returns any --script-args if provided
+        /// <para>Schema: "command-to-start-application" --script-args "arg1 arg2 arg3"</para>
+        /// </summary>
+        public static string[] GetCmdLineArgs() => TryGetCmdLineArgs(out var args) ? args ?? [] : [];
 #endif
     }
 }

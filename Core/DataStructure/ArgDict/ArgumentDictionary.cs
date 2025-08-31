@@ -37,5 +37,10 @@ namespace Cutulu.Core
             _value = 0;
             return _source.TryGetValue(_key, out _key) && int.TryParse(_key, out _value);
         }
+
+        public static int GetInt(this Dictionary<string, string> _source, string _key, int _default)
+        {
+            return TryGetInt(_source, _key, out var _val) ? _val : _default;
+        }
     }
 }
