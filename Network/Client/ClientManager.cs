@@ -58,6 +58,8 @@ namespace Cutulu.Network
         {
             await Stop(11);
 
+            Debug.Log($"Started client connection to {Address}:{TcpPort}:{UdpPort}");
+
             Validation = VALIDATION.INVALID;
             ThreadIdx++;
 
@@ -173,6 +175,7 @@ namespace Cutulu.Network
         private async void ConnectEvent(TcpSocket socket)
         {
             await socket.SendAsync([(byte)ConnectionTypeEnum.Connect], UdpClient.GetLocalEndpoint().Port.Encode());
+            Debug.Log($"Sent CONNECT({(byte)ConnectionTypeEnum.Connect}) packet to {socket.Socket.RemoteEndPoint}. Waiting for response.");
             Validation = VALIDATION.IN_PROGRESS;
 
             var (Success, Buffer) = await socket.Receive(1);

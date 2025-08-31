@@ -155,30 +155,43 @@ namespace Cutulu.Network
 
         protected virtual void ConnectedEvent(Connection _connection)
         {
+            Debug.Log($"New stream connected0: {_connection.UserId}");
             lock (this) Connected?.Invoke(_connection);
         }
 
         private async void HandleNewClient(TcpSocket socket)
         {
+            Debug.Log($"New socket connected-1: {socket.Port}");
             var packet = await socket.Receive(1);
 
-            if (packet.Success == false) return;
+            if (packet.Success == false)
+            {
+                Debug.LogError($"Failed to receive connection type length from {socket.Socket.RemoteEndPoint}. Closing connection.");
+                socket.Close();
+                return;
+            }
 
             switch ((ConnectionTypeEnum)packet.Buffer[0])
             {
                 case ConnectionTypeEnum.Ping when PingBuffer.NotEmpty():
                     await socket.SendAsync(PingBuffer.Length.Encode(), PingBuffer);
+                    Debug.LogError($"Ping response sent to {socket.Socket.RemoteEndPoint}. Closing connection.");
+                    socket.Close();
                     return;
 
                 // To connect, write a byte, containing the ConnectionType value and four bytes containing the port number as Int32.
-                case ConnectionTypeEnum.Connect when socket.Socket.Available >= 4:
+                case ConnectionTypeEnum.Connect: // when socket.Socket.Available >= 4:
                     break;
 
                 default:
+                    Debug.LogError($"Unknown connection type({packet.Buffer[0]}) received from {socket.Socket.RemoteEndPoint}. Closing connection.");
+                    socket.Close();
                     return;
             }
 
             packet = await socket.Receive(4);
+            Debug.Log($"Received connection type [{packet.Success}].");
+
             if (packet.Success == false) return;
 
             await socket.SendAsync(true.Encode());
