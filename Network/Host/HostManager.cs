@@ -10,6 +10,11 @@ namespace Cutulu.Network
 
     public partial class HostManager
     {
+        public readonly Dictionary<byte, ConnectionHandler> ConnectionHandlers = new([
+            FormatHandler(new ConnectHandler((byte)ConnectionTypeEnum.Connect)),
+            FormatHandler(new PingHandler((byte)ConnectionTypeEnum.Ping)),
+        ]);
+
         public readonly Dictionary<IPEndPoint, Connection> ConnectionsByUdp = [];
         public readonly Dictionary<TcpSocket, Connection> Connections = [];
 
@@ -29,6 +34,9 @@ namespace Cutulu.Network
         public Action<Connection, short, byte[]> Received;
         public Action<Connection> Connected, Disconnected;
         public Action Started, Stopped;
+
+        private Wrapper wrapper { get; set; }
+        public Wrapper GetWrapper() => wrapper ??= new(this);
 
         public HostManager()
         {
@@ -52,6 +60,24 @@ namespace Cutulu.Network
             TcpPort = tcpPort;
             UdpPort = udpPort;
         }
+
+        #region Validators
+
+        public bool TryGetHandler(byte key, out ConnectionHandler validator) => ConnectionHandlers.TryGetValue(key, out validator);
+
+        public bool ContainsHandler(byte key) => ConnectionHandlers.ContainsKey(key);
+
+        public KeyValuePair<byte, ConnectionHandler> RegisterHandler(ConnectionHandler validator)
+        {
+            var val = FormatHandler(validator);
+            ConnectionHandlers[validator.Key] = validator;
+            return val;
+        }
+
+        private static KeyValuePair<byte, ConnectionHandler> FormatHandler(ConnectionHandler validator)
+        => new(validator.Key, validator);
+
+        #endregion
 
         #region Callable Functions
 
@@ -171,78 +197,20 @@ namespace Cutulu.Network
                 return;
             }
 
-            switch ((ConnectionTypeEnum)packet.Buffer[0])
+            if (ConnectionHandlers.TryGetValue(packet.Buffer[0], out var handler) && handler.NotNull())
             {
-                case ConnectionTypeEnum.Ping when PingBuffer.NotEmpty():
-                    await socket.SendAsync(PingBuffer.Length.Encode(), PingBuffer);
-                    Debug.LogError($"Ping response sent to {socket.Socket.RemoteEndPoint}. Closing connection.");
-                    socket.Close();
-                    return;
+                var (Status, Data) = await handler.Validate(GetWrapper(), socket);
 
-                // To connect, write a byte, containing the ConnectionType value and four bytes containing the port number as Int32.
-                case ConnectionTypeEnum.Connect: // when socket.Socket.Available >= 4:
-                    break;
-
-                default:
-                    Debug.LogError($"Unknown connection type({packet.Buffer[0]}) received from {socket.Socket.RemoteEndPoint}. Closing connection.");
-                    socket.Close();
-                    return;
+                if (Status) await handler.Handle(GetWrapper(), socket, Data);
+                else Debug.LogError($"Handler<{handler.GetType().Name}> does not approve of connection. Closing connection.");
             }
 
-            packet = await socket.Receive(4);
-            Debug.Log($"Received connection type [{packet.Success}].");
-
-            if (packet.Success == false) return;
-
-            await socket.SendAsync(true.Encode());
-
-            var connection = new Connection(LastUID++, this, socket, new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>()));
-
-            // Check if the client is still connected
-            try
+            else
             {
-                await socket.SendAsync(connection.UserId.Encode());
-            }
-            catch
-            {
-                Debug.LogError($"Socket closed session remotely. Aboarting onboarding process.");
-                return;
+                Debug.LogError($"Unknown connection type({packet.Buffer[0]}) received from {socket.Socket.RemoteEndPoint}. No handler has been assigned. Closing connection.");
             }
 
-            // Remove already connected connections with same address
-            if (ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))
-                DisconnectEvent(existingConnection.Socket);
-
-            // Stop connection if max client limit has been reached
-            if (MaxClients > 0 && Connections.Count >= MaxClients)
-            {
-                Debug.LogError($"Maximum client capacity has been reached. Cancelling connection.");
-                return;
-            }
-
-            ConnectionsByUdp[connection.EndPoint] = connection;
-            Connections[socket] = connection;
-
-            await socket.ClearBuffer();
-            ConnectedEvent(connection);
-
-            while (active())
-            {
-                packet = await connection.Socket.Receive(4);
-                if (packet.Success == false) continue;
-                if (active() == false) continue;
-
-                packet = await connection.Socket.Receive(packet.Buffer.Decode<int>());
-                if (active() == false) continue;
-
-                if (packet.Success) connection.ReceiveBuffer(packet.Buffer);
-            }
-
-            bool active() => connection != null && connection.Socket != null && connection.Socket.IsConnected;
-
-            // Close connection
-            if (connection.Kick() == false)
-                socket?.Close();
+            socket?.Close();
         }
 
         private void DisconnectEvent(TcpSocket socket)
@@ -266,5 +234,16 @@ namespace Cutulu.Network
         }
 
         #endregion
+
+        public class Wrapper(HostManager manager)
+        {
+            public readonly HostManager Manager = manager;
+
+            public void InvokeDisconnect(TcpSocket socket) => Manager.DisconnectEvent(socket);
+
+            public void InvokeConnect(Connection connection) => Manager.ConnectedEvent(connection);
+
+            public long NextUID() => Manager.LastUID++;
+        }
     }
 }

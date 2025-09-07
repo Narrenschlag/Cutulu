@@ -4,7 +4,7 @@ namespace Cutulu.Network
     {
         Invalid = 0,
         
-        Ping = 1,
-        Connect = 2,
+        Ping = 7,
+        Connect = 13,
     }
 }
