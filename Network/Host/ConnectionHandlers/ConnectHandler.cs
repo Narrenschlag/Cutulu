@@ -71,8 +71,9 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
 
         bool active() => connection != null && connection.Socket != null && connection.Socket.IsConnected;
 
+        Debug.LogR($"[color=indianred][i]Connection has been closed remotely. [color=darkgray](Connection:{connection.NotNull()}, Socket:{connection.Socket.NotNull()} [{connection?.Socket?.IsConnected.ToString() ?? "<null>"}])");
+
         // Close connection
-        if (connection.Kick() == false)
-            socket?.Close();
+        if (connection.Kick() == false) socket?.Close();
     }
 }

@@ -29,6 +29,7 @@ namespace Cutulu.Network
         {
             try
             {
+                Debug.Log($"Kicked {GetType().Name}[{UserId}]");
                 Socket.Close();
                 return true;
             }

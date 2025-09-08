@@ -107,6 +107,7 @@ namespace Cutulu.Network
         /// </summary>
         public virtual async Task Stop(byte exitCode = 0)
         {
+            Debug.Log($"Stopped client connection to {Address}:{TcpPort}:{UdpPort} [exitCode={exitCode}]");
             Validation = VALIDATION.INVALID;
 
             TcpClient.Disconnect(exitCode);
