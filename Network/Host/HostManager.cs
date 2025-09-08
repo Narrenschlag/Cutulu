@@ -243,7 +243,7 @@ namespace Cutulu.Network
 
             public void InvokeConnect(Connection connection) => Manager.ConnectedEvent(connection);
 
-            public long NextUID() => Manager.LastUID++;
+            public long NextUID() => ++Manager.LastUID;
         }
     }
 }

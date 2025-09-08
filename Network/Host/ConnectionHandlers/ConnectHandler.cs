@@ -48,6 +48,7 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
         wrapper.Manager.ConnectionsByUdp[connection.EndPoint] = connection;
         wrapper.Manager.Connections[socket] = connection;
 
+        //Debug.LogR($"[color=magenta][b][ConnectHandler][/b][/color] New connection: {connection.UserId}");
         await socket.ClearBuffer();
         return (true, connection);
     }
@@ -55,6 +56,7 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
     public override async Task Handle(HostManager.Wrapper wrapper, TcpSocket socket, object data)
     {
         if (data.IsNull() || data is not Connection connection) return;
+        //Debug.LogR($"[color=magenta][b][ConnectHandler][/b][/color] Handed connection: {connection.UserId}");
         wrapper.InvokeConnect(connection);
 
         while (active())
@@ -71,7 +73,7 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
 
         bool active() => connection != null && connection.Socket != null && connection.Socket.IsConnected;
 
-        Debug.LogR($"[color=indianred][i]Connection has been closed remotely. [color=darkgray](Connection:{connection.NotNull()}, Socket:{connection.Socket.NotNull()} [{connection?.Socket?.IsConnected.ToString() ?? "<null>"}])");
+        //Debug.LogR($"[color=indianred][i]Connection has been closed. [color=darkgray](Connection:{connection.NotNull()}, Socket:{connection.Socket.NotNull()} [{connection?.Socket?.IsConnected.ToString() ?? "<null>"}])");
 
         // Close connection
         if (connection.Kick() == false) socket?.Close();
