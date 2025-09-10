@@ -9,7 +9,7 @@ using INP = Godot.Input;
 public partial class FreeCamera : Camera3D
 {
     [Export] private Vector2 RotationModifier { get; set; } = new(-1.0f, -1.0f);
-    [Export] private float RotationSpeed { get; set; } = 0.005f;
+    [Export] private float RotationSpeed { get; set; } = 0.002f;
 
     [Export] private Vector3 MoveModifier { get; set; } = new(1.0f, -1.0f, 1.0f);
     [Export] private float MoveSpeed { get; set; } = 50.0f;
@@ -37,6 +37,9 @@ public partial class FreeCamera : Camera3D
     public override void _Ready()
     {
         INP.MouseMode = INP.MouseModeEnum.Captured;
+
+        RotationX = GlobalRotation.X;
+        RotationY = GlobalRotation.Y;
     }
 
     public override void _Process(double delta)
@@ -44,7 +47,7 @@ public partial class FreeCamera : Camera3D
         GlobalPosition += GetMoveVelocity() * (float)delta;
 
         var rotation = GetMouseVelocity() * (float)delta;
-        RotationX += rotation.Y;
+        RotationX = Mathf.Clamp(RotationX + rotation.Y, -Mathf.Pi * 0.5f, Mathf.Pi * 0.5f);
         RotationY += rotation.X;
 
         GlobalRotation = new Vector3(RotationX, RotationY, 0);

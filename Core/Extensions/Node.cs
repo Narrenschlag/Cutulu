@@ -36,6 +36,8 @@ namespace Cutulu.Core
 
         public static void ClearAndDestroy<T>(this ICollection<T> collection) where T : Node
         {
+            if (collection.IsEmpty()) return;
+
             foreach (var node in collection)
             {
                 if (node.IsNull()) continue;
