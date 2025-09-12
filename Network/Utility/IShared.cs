@@ -21,7 +21,7 @@ namespace Cutulu.Network
 
             // IMPORTANT NOTE
             // If this won't work even though it should
-            // It may be that your overwrite the host/client children with different scripts
+            // It may be that you did overwrite the host/client children with different scripts
 
             if (_node is not N n || _node.IsNull())
             {

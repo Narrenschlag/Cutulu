@@ -15,7 +15,7 @@ public static class objectExtension
     public static bool IsNull(this object obj)
     {
 #if GODOT4_0_OR_GREATER
-        return obj == null || (obj is GodotObject gd && GodotObject.IsInstanceValid(gd) == false);
+        return obj == null || (obj is GodotObject gd && (GodotObject.IsInstanceValid(gd) == false || gd.IsQueuedForDeletion()));
 #else
         return obj == null;
 #endif
