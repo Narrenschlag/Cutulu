@@ -29,10 +29,10 @@ public readonly partial struct Directory
         SystemPath = ProjectSettings.GlobalizePath(path);
         GodotPath = ProjectSettings.LocalizePath(SystemPath);
 #else
-            SystemPath = Path.GetFullPath(path);
+        SystemPath = Path.GetFullPath(path);
 #endif
-        if (createIfMissing)
-            Create();
+
+        if (createIfMissing) MakeDir();
     }
 
     public Directory()
@@ -44,39 +44,34 @@ public readonly partial struct Directory
 #if GODOT4_0_OR_GREATER
         return ACCESS.DirExistsAbsolute(SystemPath);
 #else
-            return Directory.Exists(SystemPath);
+        return Directory.Exists(SystemPath);
 #endif
     }
 
     /// <summary>Creates the directory if it doesn't exist.</summary>
-    public Error Create()
+    public bool MakeDir()
     {
-#if GODOT4_0_OR_GREATER
-        return Exists() ? Error.Ok : ACCESS.MakeDirAbsolute(SystemPath);
-#else
-            try
-            {
-                if (!Exists())
-                    System.IO.Directory.CreateDirectory(SystemPath);
-                return Error.Ok;
-            }
-            catch { return Error.Failed; }
-#endif
+        try
+        {
+            if (Exists() == false) System.IO.Directory.CreateDirectory(SystemPath);
+            return true;
+        }
+        catch { return false; }
     }
 
     /// <summary>Deletes the directory if it exists.</summary>
-    public Error Delete()
+    public bool Delete()
     {
 #if GODOT4_0_OR_GREATER
-        return Exists() ? ACCESS.RemoveAbsolute(SystemPath) : Error.Ok;
+        return !Exists() || ACCESS.RemoveAbsolute(SystemPath) == Error.Ok;
 #else
             try
             {
                 if (Exists())
                     System.IO.Directory.Delete(SystemPath, true);
-                return Error.Ok;
+                return true;
             }
-            catch { return Error.Failed; }
+            catch { return false; }
 #endif
     }
 

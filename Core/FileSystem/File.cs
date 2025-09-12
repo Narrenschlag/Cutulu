@@ -53,7 +53,12 @@ public partial class File : IDisposable
         if (Access == null || reopen)
         {
             Access?.Close();
+
+            if (flags.HasFlag(FLAGS.Write))
+                _ = new Directory(SystemPath);
+
             Access = ACCESS.Open(SystemPath, Flags = flags);
+            if (Access.IsNull()) Debug.LogError($"{ACCESS.GetOpenError()}");
         }
         return Access;
     }

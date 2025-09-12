@@ -19,6 +19,7 @@ namespace Cutulu.Core
         public static void LogError(this string message)
         {
 #if GODOT4_0_OR_GREATER
+            Logging.Logging.Log($"[ERROR] {message}");
             GD.PrintErr(message);
 #else
             Log($"[ERROR] {message}");
@@ -31,6 +32,7 @@ namespace Cutulu.Core
         public static void LogWarning(this string message)
         {
 #if GODOT4_0_OR_GREATER
+            Logging.Logging.Log($"[WARNING] {message}");
             GD.PushWarning(message);
 #else
             Log($"[WARNING] {message}");
@@ -42,6 +44,8 @@ namespace Cutulu.Core
         /// </summary>
         public static void Log(this string message)
         {
+            Logging.Logging.Log(message);
+
 #if GODOT4_0_OR_GREATER
             GD.Print(message);
 #else
@@ -55,6 +59,7 @@ namespace Cutulu.Core
         public static void LogR(this string message)
         {
 #if GODOT4_0_OR_GREATER
+            Logging.Logging.Log(message);
             GD.PrintRich(message);
 #else
             Log($"[RICH] {message}");
