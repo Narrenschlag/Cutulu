@@ -274,7 +274,7 @@ namespace Cutulu.Core
             return builder.ToString();
         }
 
-        public static bool IsEmpty(this string str) => string.IsNullOrEmpty(str);
+        public static bool IsEmpty(this string str) => string.IsNullOrWhiteSpace(str);
         public static bool NotEmpty(this string str) => !IsEmpty(str);
 
         // Kind of splits up a string to only write down the contents between the signals. Nice for a lot of stuff.
