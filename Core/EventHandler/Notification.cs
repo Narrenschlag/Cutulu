@@ -90,4 +90,24 @@ namespace Cutulu.Core
             return notifier;
         }
     }
+
+    public partial class Notification<T1, T2> : ANotification<(T1, T2)>
+    {
+        public void Add(object host, Action<T1, T2> action) => base.Add(host, value => action(value.Item1, value.Item2));
+        public void Bind(object host, Action<T1, T2> action) => Add(host, action);
+
+        public void Invoke(T1 value1, T2 value2) => base.Invoke((value1, value2));
+
+        public static Notification<T1, T2> operator +(Notification<T1, T2> notifier, (object host, Action<T1, T2> action) pair)
+        {
+            notifier.Add(pair.host, pair.action);
+            return notifier;
+        }
+
+        public static Notification<T1, T2> operator -(Notification<T1, T2> notifier, object host)
+        {
+            notifier.Remove(host);
+            return notifier;
+        }
+    }
 }
