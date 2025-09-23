@@ -7,6 +7,8 @@ namespace Cutulu.Core
     /// </summary>
     public readonly struct UNumber
     {
+        public static readonly UNumber Zero = new(0);
+
         public readonly ulong Value;
 
         public readonly TypeEnum GetTypeEnum() =>

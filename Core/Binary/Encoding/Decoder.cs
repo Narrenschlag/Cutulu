@@ -128,7 +128,7 @@ namespace Cutulu.Core
         {
             var _decoded = TryDecode(_buffer, typeof(T), out var _obj, _enable_logging);
 
-            _value = (T)_obj;
+            _value = _decoded ? (T)_obj : default;
             return _decoded;
         }
 
