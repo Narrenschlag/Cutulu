@@ -236,57 +236,62 @@ namespace Cutulu.Network.Sockets
         /// </summary>
         public virtual async Task<(bool Success, byte[] Buffer)> Receive(int length)
         {
-            if (length > 0 && IsConnected && Receiving == false && Client.GetStream() is NetworkStream stream)
+            if (length <= 0 || !IsConnected || Client.GetStream() is not NetworkStream stream) return (false, []);
+
+            var buffer = new byte[length];
+
+            try
             {
-                Receiving = true;
+                var readTotal = 0;
 
-                var buffer = new byte[length];
-                var _token = Token;
-
-                try
+                while (readTotal < length)
                 {
-                    var read = await stream.ReadAsync(buffer, _token);
-                    if (read < length) throw new IOException($"LOST_CONNECTION");
-
-                    return (true, buffer);
+                    int read = await stream.ReadAsync(
+                        buffer.AsMemory(readTotal, length - readTotal),
+                        Token
+                    );
+                    if (read == 0) throw new IOException("Remote closed");
+                    readTotal += read;
                 }
 
-                catch (Exception ex)
-                {
-                    var prefix = Host != null ? "HOST" : "CLIENT";
-                    prefix = $"{prefix}_{GetType().Name.ToUpper()}";
-
-                    switch (ex)
-                    {
-                        case IOException iox when iox.Message.StartsWith("LOST_CONNECTION"):
-                            Debug.LogR($"[color=indianred]{prefix}_{ex.Message}");
-                            break;
-
-                        case IOException iox when iox.Message.ToLower().Contains("unable"):
-                            Debug.LogR($"[color=indianred]{prefix}_CONNECTION_CLOSED");
-                            break;
-
-                        case OperationCanceledException:
-                            break;
-
-                        default:
-                            if (ex.StackTrace.Contains("CancellationToken")) break;
-
-                            Debug.LogError($"{prefix}_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
-                            break;
-
-                    }
-
-                    Disconnect(255);
-                }
-
-                finally
-                {
-                    Receiving = false;
-                }
+                return (true, buffer);
             }
 
-            return (false, Array.Empty<byte>());
+            catch (Exception ex)
+            {
+                var prefix = Host != null ? "HOST" : "CLIENT";
+                prefix = $"{prefix}_{GetType().Name.ToUpper()}";
+
+                switch (ex)
+                {
+                    case IOException iox when iox.Message.StartsWith("LOST_CONNECTION"):
+                        Debug.LogR($"[color=indianred]{prefix}_{ex.Message}");
+                        break;
+
+                    case IOException iox when iox.Message.ToLower().Contains("unable"):
+                        Debug.LogR($"[color=indianred]{prefix}_CONNECTION_CLOSED");
+                        break;
+
+                    case OperationCanceledException:
+                        break;
+
+                    default:
+                        if (ex.StackTrace.Contains("CancellationToken")) break;
+
+                        Debug.LogError($"{prefix}_ERROR({ex.GetType().Name}, {ex.Message})\n{ex.StackTrace}");
+                        break;
+
+                }
+
+                Disconnect(255);
+            }
+
+            finally
+            {
+                Receiving = false;
+            }
+
+            return (false, []);
         }
 
         #endregion

@@ -120,15 +120,18 @@ namespace Cutulu.Network
         /// <summary>
         /// Sends data to host.
         /// </summary>
-        public virtual void Send(short key, object obj, bool reliable = true)
+        public virtual bool Send(short key, object obj, bool reliable = true)
         {
             if (IsConnected)
             {
                 var packet = PacketProtocol.Pack(key, obj, out var length);
 
-                if (reliable) TcpClient.Send(length.Encode(), packet);
+                if (reliable) return TcpClient.Send(length.Encode(), packet);
                 else UdpClient.Send(packet);
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -225,10 +228,7 @@ namespace Cutulu.Network
 
                 if (packet.Success)
                 {
-                    lock (this)
-                    {
-                        ReceiveBuffer(packet.Buffer);
-                    }
+                    lock (this) ReceiveBuffer(packet.Buffer);
                 }
 
                 udp();
@@ -246,10 +246,7 @@ namespace Cutulu.Network
 
                 if (packet.Success)
                 {
-                    lock (this)
-                    {
-                        ReceiveBuffer(packet.Buffer);
-                    }
+                    lock (this) ReceiveBuffer(packet.Buffer);
                 }
             }
 
