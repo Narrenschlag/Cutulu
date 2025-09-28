@@ -62,13 +62,12 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
         while (active())
         {
             var packet = await connection.Socket.Receive(4);
-            if (packet.Success == false) continue;
-            if (active() == false) continue;
 
+            if (packet.Success == false || active() == false) continue;
             packet = await connection.Socket.Receive(packet.Buffer.Decode<int>());
-            if (active() == false) continue;
 
-            if (packet.Success) connection.ReceiveBuffer(packet.Buffer);
+            if (packet.Success == false || active() == false) continue;
+            connection.ReceiveBuffer(packet.Buffer);
         }
 
         bool active() => connection != null && connection.Socket != null && connection.Socket.IsConnected;
