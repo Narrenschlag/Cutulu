@@ -72,6 +72,26 @@ namespace Cutulu.Core
 
             return array;
         }
+
+        public static T GetClosestTo<T>(this T[] array, Vector3 position, bool ignoreY = false) where T : Node3D
+        {
+            var closest = array[0];
+            var closestDistance = ignoreY ? closest.GlobalPosition.toXY().DistanceTo(position.toXY()) : (closest.GlobalPosition - position).Length();
+
+            for (int i = 1; i < array.Length; i++)
+            {
+                var current = array[i];
+                var currentDistance = ignoreY ? current.GlobalPosition.toXY().DistanceTo(position.toXY()) : (current.GlobalPosition - position).Length();
+
+                if (currentDistance < closestDistance)
+                {
+                    closest = current;
+                    closestDistance = currentDistance;
+                }
+            }
+            
+            return closest;
+        }
     }
 }
 #endif
