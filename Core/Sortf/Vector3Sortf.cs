@@ -1,6 +1,7 @@
 #if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.Collections.Generic;
     using Godot;
 
     public static class Vector3Sorftf
@@ -73,23 +74,39 @@ namespace Cutulu.Core
             return array;
         }
 
-        public static T GetClosestTo<T>(this T[] array, Vector3 position, bool ignoreY = false) where T : Node3D
+        public static T GetClosestTo<T>(this IEnumerable<T> collection, Vector3 position, bool ignoreY = false) where T : Node3D
         {
-            var closest = array[0];
-            var closestDistance = ignoreY ? closest.GlobalPosition.toXY().DistanceTo(position.toXY()) : (closest.GlobalPosition - position).Length();
+            var closestDistance = -1.0f;
+            var closest = default(T);
 
-            for (int i = 1; i < array.Length; i++)
+            foreach (var node in collection)
             {
-                var current = array[i];
-                var currentDistance = ignoreY ? current.GlobalPosition.toXY().DistanceTo(position.toXY()) : (current.GlobalPosition - position).Length();
-
-                if (currentDistance < closestDistance)
+                var distance = ignoreY ? node.GlobalPosition.toXY().DistanceTo(position.toXY()) : (node.GlobalPosition - position).Length();
+                if (closestDistance < 0 || distance < closestDistance)
                 {
-                    closest = current;
-                    closestDistance = currentDistance;
+                    closestDistance = distance;
+                    closest = node;
                 }
             }
-            
+
+            return closest;
+        }
+
+        public static K GetClosestTo<K, T>(this IDictionary<K, T> collection, Vector3 position, bool ignoreY = false) where T : Node3D
+        {
+            var closestDistance = -1.0f;
+            var closest = default(K);
+
+            foreach (var pair in collection)
+            {
+                var distance = ignoreY ? pair.Value.GlobalPosition.toXY().DistanceTo(position.toXY()) : (pair.Value.GlobalPosition - position).Length();
+                if (closestDistance < 0 || distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closest = pair.Key;
+                }
+            }
+
             return closest;
         }
     }

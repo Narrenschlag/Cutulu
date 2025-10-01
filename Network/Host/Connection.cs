@@ -51,7 +51,7 @@ namespace Cutulu.Network
                 var packet = PacketProtocol.Pack(key, obj, out var length);
 
                 if (reliable) Socket?.Send(length.Encode(), packet);
-                else Host.UdpHost.Listener?.Send(new[] { EndPoint }, packet);
+                else Host.UdpHost.Listener?.Send([EndPoint], packet);
             }
         }
 

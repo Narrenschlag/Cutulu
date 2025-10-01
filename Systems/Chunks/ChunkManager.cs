@@ -1,8 +1,8 @@
 namespace Cutulu.Systems.Chunks;
 
-using System;
 using System.Collections.Generic;
 using Cutulu.Core;
+using System;
 using Godot;
 
 public partial class ChunkManager<CHUNK> : Node3D where CHUNK : Chunk
