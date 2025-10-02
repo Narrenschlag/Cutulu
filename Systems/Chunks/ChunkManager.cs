@@ -8,6 +8,10 @@ using Godot;
 public partial class ChunkManager<CHUNK> : Node3D where CHUNK : Chunk
 {
     public readonly Dictionary<ChunkPoint, CHUNK> Chunks = [];
+
+    [Export] private bool ReloadSelf { get; set; }
+
+    [ExportGroup("Reload Params")]
     [Export] public float Diameter { get; set; } = 1024.0f;
     [Export] public int ChunkSizeInM { get; set; } = 64;
     public ushort ChunksPerAxis { get; private set; }
@@ -20,19 +24,14 @@ public partial class ChunkManager<CHUNK> : Node3D where CHUNK : Chunk
 
     public override void _EnterTree()
     {
-        if (Chunks.Count < 1) ReloadGrid();
+        if (ReloadSelf && Chunks.Count < 1) ReloadGrid();
     }
 
-    public void ReloadGrid()
+    public virtual void ReloadGrid()
     {
         Chunks.Clear();
-        ChunksPerAxis = (ushort)Mathf.Abs(Mathf.CeilToInt(Diameter / ChunkSizeInM));
-        Start = GlobalPosition.toXY() - Vector2.One * Diameter * 0.5f;
-        End = Start + Vector2.One * ChunkSizeInM * ChunksPerAxis;
-        ChunkSize = Vector2.One * ChunkSizeInM;
-        Size = End - Start;
 
-        ChunkSizeDivisionMultiplier = new Vector2(1.0f / ChunkSize.X, 1.0f / ChunkSize.Y);
+        CalculateParams(Diameter, ChunkSizeInM);
 
         for (short x = 0; x < ChunksPerAxis; x++)
         {
@@ -44,6 +43,17 @@ public partial class ChunkManager<CHUNK> : Node3D where CHUNK : Chunk
         }
 
         Log($"Added [b]{Chunks.Count}[/b] chunks, [b]{ChunksPerAxis}[/b] per axis.");
+    }
+
+    protected void CalculateParams(float diameter, int chunkSizeInM)
+    {
+        ChunksPerAxis = (ushort)Mathf.Abs(Mathf.CeilToInt(diameter / chunkSizeInM));
+        Start = GlobalPosition.toXY() - Vector2.One * diameter * 0.5f;
+        End = Start + Vector2.One * chunkSizeInM * ChunksPerAxis;
+        ChunkSize = Vector2.One * chunkSizeInM;
+        Size = End - Start;
+
+        ChunkSizeDivisionMultiplier = new Vector2(1.0f / ChunkSize.X, 1.0f / ChunkSize.Y);
     }
 
     public ChunkPoint GetChunkPoint(Vector3 globalPosition, out Vector2 localPosition)
