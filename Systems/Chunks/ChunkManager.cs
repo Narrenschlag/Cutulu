@@ -9,7 +9,7 @@ public partial class ChunkManager<CHUNK> : Node3D where CHUNK : Chunk
 {
     public readonly Dictionary<ChunkPoint, CHUNK> Chunks = [];
 
-    [Export] private bool ReloadSelf { get; set; }
+    [Export] private bool ReloadSelf { get; set; } = true;
 
     [ExportGroup("Reload Params")]
     [Export] public float Diameter { get; set; } = 1024.0f;
