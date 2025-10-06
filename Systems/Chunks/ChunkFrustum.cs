@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using Cutulu.Core;
 using Godot;
 
-public class ChunkFrustum<CHUNK>(ChunkManager<CHUNK> manager) where CHUNK : Chunk
+public class ChunkFrustum<MANAGER, CHUNK>(ChunkManager<MANAGER, CHUNK> manager) where MANAGER : ChunkManager<MANAGER, CHUNK> where CHUNK : IChunk<MANAGER, CHUNK>
 {
-    public readonly ChunkManager<CHUNK> Manager = manager;
+    public readonly ChunkManager<MANAGER, CHUNK> Manager = manager;
     public bool EnableAutoRecalc { get; set; } = true;
 
     public readonly Notification Recalculated = new();
@@ -147,7 +147,7 @@ public class ChunkFrustum<CHUNK>(ChunkManager<CHUNK> manager) where CHUNK : Chun
             {
                 var chunk = new ChunkPoint(x, y);
 
-                if (chunk.Length() > radius || Manager.Chunks.ContainsKey(chunk += ChunkPoint) == false) continue;
+                if (chunk.Length() > radius || Manager.HasChunk(chunk += ChunkPoint) == false) continue;
 
                 Precomputed[chunk] = new Vector2(x, y).GetAngleD(Vector2.Up);
                 Circle.Add(chunk);

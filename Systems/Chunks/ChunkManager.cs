@@ -2,53 +2,43 @@ namespace Cutulu.Systems.Chunks;
 
 using System.Collections.Generic;
 using Cutulu.Core;
-using System;
 using Godot;
 
-public partial class ChunkManager<CHUNK> : Node3D where CHUNK : Chunk
+public abstract class ChunkManager<M, C>
+    where M : ChunkManager<M, C>
+    where C : IChunk<M, C>
 {
-    public readonly Dictionary<ChunkPoint, CHUNK> Chunks = [];
+    private readonly Dictionary<ChunkPoint, C> Chunks = [];
 
-    [Export] private bool ReloadSelf { get; set; } = true;
-
-    [ExportGroup("Reload Params")]
-    [Export] public float Diameter { get; set; } = 1024.0f;
-    [Export] public int ChunkSizeInM { get; set; } = 64;
+    public virtual Vector3 Center { get; private set; }
     public ushort ChunksPerAxis { get; private set; }
     public Vector2 ChunkSize { get; private set; }
+    public int ChunkSizeInM { get; private set; }
     public Vector2 Start { get; private set; }
     public Vector2 Size { get; private set; }
     public Vector2 End { get; private set; }
 
     private Vector2 ChunkSizeDivisionMultiplier { get; set; }
 
-    public override void _EnterTree()
-    {
-        if (ReloadSelf && Chunks.Count < 1) ReloadGrid();
-    }
+    public int LoadedChunkCount => Chunks.Count;
 
-    public virtual void ReloadGrid()
+    public virtual void ReloadGrid(Vector3 center, float diameter, int chunkSizeInM, bool enableLogging = true)
     {
         Chunks.Clear();
 
-        CalculateParams(Diameter, ChunkSizeInM);
+        CalculateParams(center, diameter, chunkSizeInM);
 
-        for (short x = 0; x < ChunksPerAxis; x++)
-        {
-            for (short z = 0; z < ChunksPerAxis; z++)
-            {
-                var point = new ChunkPoint(x, z);
-                Chunks[point] = GetChunk(point);
-            }
-        }
-
-        Log($"Added [b]{Chunks.Count}[/b] chunks, [b]{ChunksPerAxis}[/b] per axis.");
+        if (enableLogging)
+            Log($"Created grid of [b]{Chunks.Count}[/b] chunks, [b]{ChunksPerAxis}[/b] per axis.");
     }
 
-    protected void CalculateParams(float diameter, int chunkSizeInM)
+    protected void CalculateParams(Vector3 center, float diameter, int chunkSizeInM)
     {
         ChunksPerAxis = (ushort)Mathf.Abs(Mathf.CeilToInt(diameter / chunkSizeInM));
-        Start = GlobalPosition.toXY() - Vector2.One * diameter * 0.5f;
+        Start = center.toXY() - Vector2.One * diameter * 0.5f;
+        ChunkSizeInM = chunkSizeInM;
+        Center = center;
+
         End = Start + Vector2.One * chunkSizeInM * ChunksPerAxis;
         ChunkSize = Vector2.One * chunkSizeInM;
         Size = End - Start;
@@ -87,58 +77,40 @@ public partial class ChunkManager<CHUNK> : Node3D where CHUNK : Chunk
         );
     }
 
-    protected virtual CHUNK GetChunk(ChunkPoint point) => (CHUNK)new Chunk();
+    public virtual bool HasChunk(ChunkPoint point)
+    {
+        return point.X >= 0 && point.X < ChunksPerAxis && point.Z >= 0 && point.Z < ChunksPerAxis;
+    }
+
+    public bool TryGetChunk(Vector3 position, out C chunk) => TryGetChunk(GetChunkPoint(position, out _), out chunk);
+
+    public bool TryGetChunk(ChunkPoint point, out C chunk)
+    {
+        return (chunk = GetChunk(point)).NotNull();
+    }
+
+    public C GetChunk(Vector3 position) => GetChunk(GetChunkPoint(position, out _));
+
+    public C GetChunk(ChunkPoint point)
+    {
+        if (Chunks.TryGetValue(point, out var chunk) && chunk.NotNull())
+            return chunk;
+
+        else if (HasChunk(point))
+        {
+            chunk = CreateChunk(point).Init(this as M, point);
+
+            if (chunk.NotNull())
+            {
+                Chunks[point] = chunk;
+                return chunk;
+            }
+        }
+
+        return default;
+    }
+
+    protected abstract C CreateChunk(ChunkPoint point);
 
     public void Log(string message) => Debug.LogR($"[color=indianred][b][{GetType().Name}][/b][/color] {message}");
-}
-
-public readonly struct ChunkPoint(short x, short z)
-{
-    public readonly short X = x;
-    public readonly short Z = z;
-
-    public ChunkPoint(int x, int z) : this((short)x, (short)z) { }
-    public ChunkPoint() : this(default, default) { }
-
-    public static implicit operator ChunkPoint(Vector2I vector) => new((short)vector.X, (short)vector.Y);
-    public static implicit operator Vector2I(ChunkPoint chunk) => new(chunk.X, chunk.Z);
-    public static implicit operator Vector2(ChunkPoint chunk) => new(chunk.X, chunk.Z);
-
-    public static ChunkPoint operator +(ChunkPoint a, ChunkPoint b) => new((short)(a.X + b.X), (short)(a.Z + b.Z));
-    public static ChunkPoint operator -(ChunkPoint a, ChunkPoint b) => new((short)(a.X - b.X), (short)(a.Z - b.Z));
-    public static ChunkPoint operator *(ChunkPoint a, ChunkPoint b) => new((short)(a.X * b.X), (short)(a.Z * b.Z));
-    public static ChunkPoint operator *(ChunkPoint a, int b) => new((short)(a.X * b), (short)(a.Z * b));
-
-    public static bool operator ==(ChunkPoint a, ChunkPoint b) => a.X == b.X && a.Z == b.Z;
-    public static bool operator !=(ChunkPoint a, ChunkPoint b) => a == b == false;
-
-    public override bool Equals(object obj) => obj is ChunkPoint other && this == other;
-    public override int GetHashCode() => HashCode.Combine(X, Z);
-
-    public float Length() => ((Vector2)this).Length();
-
-    public float DistanceTo(Vector2 b) => ((Vector2)this).DistanceTo(b);
-
-    public override string ToString() => $"({X}, {Z})";
-}
-
-public class Chunk
-{
-    public ChunkPoint Point { get; }
-
-    public Chunk(ChunkPoint point)
-    {
-        Point = point;
-        Init();
-    }
-
-    public Chunk()
-    {
-
-    }
-
-    protected virtual void Init()
-    {
-
-    }
 }

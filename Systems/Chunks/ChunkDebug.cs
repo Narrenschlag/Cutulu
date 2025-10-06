@@ -5,6 +5,7 @@ using Cutulu.Core;
 using Cutulu.Mesh;
 using Godot;
 
+/*
 public partial class ChunkDebug<CHUNK> : Node3D where CHUNK : Chunk
 {
     [Export] private ChunkManager<CHUNK> Manager { get; set; }
@@ -82,3 +83,4 @@ public partial class ChunkDebug<CHUNK> : Node3D where CHUNK : Chunk
         }
     }
 }
+*/
