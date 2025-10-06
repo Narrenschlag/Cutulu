@@ -91,35 +91,29 @@ namespace Cutulu.Core
 
         public static void SetChild(this Node newParent, Node node)
         {
-            if (node.IsNull() || newParent.IsNull()) return;
-            if (node == newParent) return;
+            if (node.IsNull() || newParent.IsNull() || node == newParent) return;
+
+            // Capture global transform for Node3D
+            Transform3D? globalTransform = null;
+            if (node is Node3D node3D && node3D.IsInsideTree())
+                globalTransform = node3D.GlobalTransform;
 
             var oldParent = node.GetParent();
-            if (oldParent == newParent) return;
-
-            Vector3 position = default, rotation = default;
-            if (node.IsInsideTree() && node is Node3D node3D)
+            if (oldParent != null)
             {
-                position = node3D.GlobalPosition;
-                rotation = node3D.GlobalRotation;
+                // Remove from old parent
+                oldParent.RemoveChild(node);
+
+                // Force immediate processing to fully detach
+                node.Owner = null;
             }
 
-            if (oldParent.NotNull()) lock (oldParent)
-                {
-                    oldParent.RemoveChild(node);
-                }
+            // Add to new parent
+            newParent.AddChild(node);
 
-            if (newParent.NotNull()) lock (newParent)
-                {
-                    node.Owner = null; // -> Reset owner of node before adding to new parent
-                    newParent.AddChild(node);
-                }
-
-            if (node.IsInsideTree() && node is Node3D _node3D)
-            {
-                _node3D.GlobalPosition = position;
-                _node3D.GlobalRotation = rotation;
-            }
+            // Restore transform if Node3D
+            if (globalTransform.HasValue && node is Node3D node3D2)
+                node3D2.GlobalTransform = globalTransform.Value;
         }
 
         public static T Instantiate<T>(this T prefab, Node root) where T : Node
