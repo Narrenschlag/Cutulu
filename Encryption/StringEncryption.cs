@@ -63,12 +63,6 @@ namespace Cutulu.Encryption
             return pbkdf2.GetBytes(KeySize);
         }
 
-        private static byte[] GetRandomBytes(int count)
-        {
-            var buffer = new byte[count];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(buffer);
-            return buffer;
-        }
+        public static byte[] GetRandomBytes(int count) => SmartEncryption.GetRandomBytes(count);
     }
 }
