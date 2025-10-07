@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://b415bvnc5tfik"]
+
+[ext_resource type="Script" uid="uid://g6nknw78tm7k" path="res://Cutulu/UI/FileDrop/FileDrop.cs" id="1_eypq1"]
+
+[node name="FileDrop" type="HBoxContainer" node_paths=PackedStringArray("FileNameButton")]
+script = ExtResource("1_eypq1")
+PlaceholderText = "<no_key_selected>"
+FileNameButton = NodePath("FileName")
+
+[node name="FileName" type="Button" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "<no_key_selected>"
+text_overrun_behavior = 3
