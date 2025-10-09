@@ -1,5 +1,6 @@
 namespace Cutulu.Core;
 
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
@@ -12,12 +13,16 @@ public static class objectExtension
 {
     public static bool NotNull(this object obj) => !IsNull(obj);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNull(this object obj)
     {
 #if GODOT4_0_OR_GREATER
-        return obj == null || (obj is GodotObject gd && (GodotObject.IsInstanceValid(gd) == false || gd.IsQueuedForDeletion()));
+        return obj == null
+        || (obj is Disposable d && d.IsDisposed())
+        || (obj is GodotObject gd && (!GodotObject.IsInstanceValid(gd) || gd.IsQueuedForDeletion()));
 #else
-        return obj == null;
+        return obj == null
+        || (obj is Disposable d && d.IsDisposed())
 #endif
     }
 
