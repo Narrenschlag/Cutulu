@@ -101,7 +101,7 @@ public readonly partial struct Directory
 #endif
     }
 
-    /// <summary>Returns all files inside this directory.</summary>
+    /// <summary>Returns all files inside this directory with full paths.</summary>
     public File[] GetSubFiles()
     {
 #if GODOT4_0_OR_GREATER
@@ -125,7 +125,7 @@ public readonly partial struct Directory
 #endif
     }
 
-    /// <summary>Returns all files inside this directory filtered by extension(s).</summary>
+    /// <summary>Returns all files inside this directory filtered by extension(s) with full paths.</summary>
     public File[] GetSubFiles(params string[] fileTypes)
     {
         if (fileTypes == null || fileTypes.Length == 0)

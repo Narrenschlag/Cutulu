@@ -64,5 +64,17 @@ namespace Cutulu.Encryption
         }
 
         public static byte[] GetRandomBytes(int count) => SmartEncryption.GetRandomBytes(count);
+
+        private readonly static char[] VarChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".ToCharArray();
+
+        public static string GetRandomVarCharString(int length)
+        {
+            var str = string.Empty;
+
+            for (var i = 0; i < length; i++)
+                str += VarChars.RandomElement();
+
+            return str;
+        }
     }
 }
