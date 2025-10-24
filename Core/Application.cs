@@ -65,6 +65,20 @@ namespace Cutulu.Core
         /// <para>Schema: "command-to-start-application" --script-args "arg1 arg2 arg3"</para>
         /// </summary>
         public static string[] GetCmdLineArgs() => TryGetCmdLineArgs(out var args) ? args ?? [] : [];
+
+        /// <summary>
+        /// Returns main executable file ending based on current runtime OS.
+        /// </summary>
+        public static string OSExecFileExtension => OS.GetName() switch
+        {
+            "Windows" => ".exe",
+            "X11" => ".x86_64",
+            "macOS" => ".app",
+            "Android" => ".apk",
+            "iOS" => ".ipa",
+            "Web" => ".html",
+            _ => "",
+        };
 #endif
     }
 }

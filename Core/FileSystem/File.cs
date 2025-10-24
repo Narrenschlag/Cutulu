@@ -190,8 +190,10 @@ public partial class File : IDisposable
 
     public string[] ReadStringLines(bool _include_empty_lines = false)
     {
-        return ReadString().Split('\n', _include_empty_lines ? StringSplitOptions.TrimEntries : CONST.StringSplit) ?? [];
+        return ReadString().Split(['\n', '\r'], _include_empty_lines ? StringSplitOptions.TrimEntries : CONST.StringSplit) ?? [];
     }
+
+    public T ReadJson<T>() => ReadString().json<T>();
 
     #endregion
 
