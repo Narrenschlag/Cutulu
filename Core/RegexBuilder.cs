@@ -16,13 +16,13 @@ namespace Cutulu.Core
 
         public RegexBuilder StartOfLine()
         {
-            _cache.Append("^");
+            _cache.Append('^');
             return this;
         }
 
         public RegexBuilder EndOfLine()
         {
-            _cache.Append("$");
+            _cache.Append('$');
             return this;
         }
 
@@ -81,6 +81,8 @@ namespace Cutulu.Core
             _cache.Append($"[^{Regex.Escape(delimiter.ToString())}]*?");
             return this;
         }
+
+        public RegexBuilder UnilLineBreak() => Until(".*");
 
         /// <summary>
         /// Matches any character (including none) until the given literal string is found (non-greedy).
@@ -210,7 +212,6 @@ namespace Cutulu.Core
 
         private void AddQuantifier(int min, int? max)
         {
-            if (min == 1 && max == null) return;
             if (min == 0 && max == null) _cache.Append("*");
             else if (min == 1 && max == null) _cache.Append("+");
             else if (min == 0 && max == 1) _cache.Append("?");
