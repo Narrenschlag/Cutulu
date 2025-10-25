@@ -15,6 +15,8 @@ public partial class FileDrop : HBoxContainer
     [Export] public string PlaceholderText { get; set; } = "<no_file>";
     [Export] private Button FileNameButton { get; set; }
 
+    public readonly Notification<FileDrop> FileSelected = new();
+
     public File[] Files { get; set; }
 
     public bool HasFile() => Files.NotEmpty();
@@ -43,6 +45,11 @@ public partial class FileDrop : HBoxContainer
     private void OnFilesDropped(string[] files)
     {
         if (this.IsMouseOver()) OnFilesSelected(files);
+    }
+
+    public void Preload(string[] files)
+    {
+        OnFilesSelected(files);
     }
 
     private void OnFilesSelected(string[] files)
@@ -94,6 +101,8 @@ public partial class FileDrop : HBoxContainer
     {
         if (FileNameButton.NotNull())
             FileNameButton.Text = FileNameFormat.Replace("{path}", text);
+
+        FileSelected.Invoke(this);
     }
 
     public void Clear() => SetFiles(null);
