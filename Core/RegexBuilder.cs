@@ -10,9 +10,15 @@ namespace Cutulu.Core
     /// Helper class to build and use readable and beginner-friendly regex patterns.
     /// Supports named groups, repetitions, literals, alternations, and multiline inputs.
     /// </summary>
-    public class RegexBuilder
+    public class RegexBuilder()
     {
+        private static readonly Dictionary<KeyValuePair<string, RegexOptions>, Regex> ExportCache = [];
         private readonly StringBuilder _cache = new();
+
+        public RegexBuilder(string predefinedRegex) : this()
+        {
+            _cache.Append(predefinedRegex);
+        }
 
         public RegexBuilder StartOfLine()
         {
@@ -140,13 +146,13 @@ namespace Cutulu.Core
             for (int i = 0; i < options.Length; i++)
             {
                 if (i > 0)
-                    _cache.Append("|");
+                    _cache.Append('|');
 
                 var optionBuilder = new RegexBuilder();
                 options[i](optionBuilder);
                 _cache.Append(optionBuilder._cache);
             }
-            _cache.Append(")");
+            _cache.Append(')');
             return this;
         }
 
@@ -175,20 +181,20 @@ namespace Cutulu.Core
             _cache.Append("(?:");
             for (int i = 0; i < options.Length; i++)
             {
-                if (i > 0) _cache.Append("|");
+                if (i > 0) _cache.Append('|');
                 _cache.Append(Regex.Escape(options[i]));
             }
-            _cache.Append(")");
+            _cache.Append(')');
             return this;
         }
 
         public RegexBuilder Group(Action<RegexBuilder> content)
         {
-            _cache.Append("(");
+            _cache.Append('(');
             var inner = new RegexBuilder();
             content(inner);
             _cache.Append(inner._cache);
-            _cache.Append(")");
+            _cache.Append(')');
             return this;
         }
 
@@ -198,7 +204,7 @@ namespace Cutulu.Core
             var inner = new RegexBuilder();
             content(inner);
             _cache.Append(inner._cache);
-            _cache.Append(")");
+            _cache.Append(')');
             return this;
         }
 
@@ -212,9 +218,9 @@ namespace Cutulu.Core
 
         private void AddQuantifier(int min, int? max)
         {
-            if (min == 0 && max == null) _cache.Append("*");
-            else if (min == 1 && max == null) _cache.Append("+");
-            else if (min == 0 && max == 1) _cache.Append("?");
+            if (min == 0 && max == null) _cache.Append('*');
+            else if (min == 1 && max == null) _cache.Append('+');
+            else if (min == 0 && max == 1) _cache.Append('?');
             else if (max == null) _cache.Append($"{{{min},}}");
             else _cache.Append($"{{{min},{max}}}");
         }
@@ -223,7 +229,15 @@ namespace Cutulu.Core
         /// Exports the built regex pattern as a Regex object with Multiline enabled by default.
         /// </summary>
         public Regex Export(RegexOptions options = RegexOptions.None)
-            => new(_cache.ToString(), options | RegexOptions.Multiline | RegexOptions.Singleline);
+        {
+            var key = new KeyValuePair<string, RegexOptions>(_cache.ToString(), options);
+            options = options | RegexOptions.Multiline | RegexOptions.Singleline;
+
+            if (ExportCache.TryGetValue(key, out var regex) == false)
+                ExportCache[key] = regex = new(_cache.ToString(), options);
+
+            return regex;
+        }
 
         /// <summary>
         /// Applies the regex to the input string and returns extracted named groups.
@@ -278,5 +292,9 @@ namespace Cutulu.Core
 
             return matchGroups.Count > 0;
         }
+
+        public bool IsMatch(string text) => Export().IsMatch(text);
+
+        public bool IsMatch(char c) => Export().IsMatch(c.ToString());
     }
 }

@@ -5,7 +5,7 @@ namespace Cutulu.Core
     using System.Linq;
     using System;
 
-    public static class Stringf
+    public static partial class Stringf
     {
         public static string RemoveForbiddenDbChars(this string source) => RemoveChar(source, ' ', '#', '\'', '`', '\'', '@', '/', '\\');
 
@@ -330,5 +330,23 @@ namespace Cutulu.Core
 
             return true;
         }
+
+        private static readonly RegexBuilder EuroCharRegex = new(@"^[a-zA-Z0-9À-ÖØ-öø-ÿ '_\-\.,]$");
+
+        /// <summary>
+        /// Checks if a character is allowed in European text.
+        /// Allows:
+        /// - Latin letters (including accents and umlauts)
+        /// - Digits (0–9)
+        /// - Space
+        /// - Apostrophe, dash, underscore, period, and comma
+        /// </summary>
+        public static bool IsValidEuropeanChar(this char c)
+        {
+            return EuroCharRegex.IsMatch(c);
+        }
+
+        [System.Text.RegularExpressions.GeneratedRegex(@"^[a-zA-Z0-9À-ÖØ-öø-ÿ '_\-\.,]$")]
+        private static partial System.Text.RegularExpressions.Regex MyRegex();
     }
 }

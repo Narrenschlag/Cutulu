@@ -50,6 +50,7 @@ namespace Cutulu.Core
             return cached;
         }
 
+        public bool TryGetIndex(string _name, out int _idx) => NameToIdx.TryGetValue(PrepareString(_name), out _idx);
         public int GetIndex(string _name) => NameToIdx[PrepareString(_name)];
         public string GetName(int _idx) => Properties[_idx].Name;
 
