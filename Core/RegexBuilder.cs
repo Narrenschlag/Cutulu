@@ -82,7 +82,7 @@ namespace Cutulu.Core
             return this;
         }
 
-        public RegexBuilder UnilLineBreak() => Until(".*");
+        public RegexBuilder UntilEndOfLine() => Until(r => r.EndOfLine());
 
         /// <summary>
         /// Matches any character (including none) until the given literal string is found (non-greedy).
