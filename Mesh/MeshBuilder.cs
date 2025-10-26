@@ -15,19 +15,19 @@ namespace Cutulu.Mesh
         public readonly MeshType Type;
 
         // Triangles
-        private readonly Dictionary<Vector3, Dictionary<Vector3, int>> VerticeMap = new();
-        private readonly Dictionary<int, Surface> Surfaces = new();
-        private readonly Dictionary<int, Vertex> Vertices = new();
+        private readonly Dictionary<Vector3, Dictionary<Vector3, int>> VerticeMap = [];
+        private readonly Dictionary<int, Surface> Surfaces = [];
+        private readonly Dictionary<int, Vertex> Vertices = [];
 
         // Lines
-        private readonly Dictionary<Vector3, HashSet<int>> LineMap = new();
-        private readonly Dictionary<int, (Vector3 Start, Vector3 End, Color Color)> Lines = new();
+        private readonly Dictionary<Vector3, HashSet<int>> LineMap = [];
+        private readonly Dictionary<int, (Vector3 Start, Vector3 End, Color Color)> Lines = [];
 
         // LineStrip
-        private readonly Dictionary<Vector3, Color> LineStrips = new();
+        private readonly Dictionary<Vector3, Color> LineStrips = [];
 
         // Points
-        private readonly Dictionary<Vector3, Color> Points = new();
+        private readonly Dictionary<Vector3, Color> Points = [];
 
         public Color DefaultColor { get; set; }
         public Vector3 Offset { get; set; }
@@ -246,10 +246,10 @@ namespace Cutulu.Mesh
                         var end = vertices[i];
 
                         if (LineMap.TryGetValue(start, out var lines1) == false)
-                            LineMap[start] = lines1 = new();
+                            LineMap[start] = lines1 = [];
 
                         if (LineMap.TryGetValue(end, out var lines2) == false)
-                            LineMap[end] = lines2 = new();
+                            LineMap[end] = lines2 = [];
 
                         var alreadyRegistered = false;
 
