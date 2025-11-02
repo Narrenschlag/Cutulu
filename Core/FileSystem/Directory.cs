@@ -12,6 +12,7 @@ using System.IO;
 
 /// <summary>
 /// Cross-platform file directory abstraction for both Godot and .NET.
+/// Supports PCK filesystem in exported builds.
 /// </summary>
 public readonly partial struct Directory
 {
@@ -23,13 +24,25 @@ public readonly partial struct Directory
 
     public Directory(string path = "res://", bool createIfMissing = true)
     {
-        path = path.TrimToDirectory();
-
 #if GODOT4_0_OR_GREATER
-        SystemPath = ProjectSettings.GlobalizePath(path);
-        GodotPath = ProjectSettings.LocalizePath(SystemPath);
+        // For Godot virtual paths, use them directly without modification
+        if (path.StartsWith("res://") || path.StartsWith("user://"))
+        {
+            // Ensure trailing slash
+            GodotPath = path.EndsWith('/') ? path : path + "/";
+            SystemPath = ProjectSettings.GlobalizePath(GodotPath);
+        }
+        else
+        {
+            // Only trim non-Godot paths
+            if (!path.EndsWith('/') && !path.EndsWith('\\'))
+                path = path.TrimToDirectory();
+
+            SystemPath = ProjectSettings.GlobalizePath(path);
+            GodotPath = ProjectSettings.LocalizePath(SystemPath);
+        }
 #else
-        SystemPath = Path.GetFullPath(path);
+    SystemPath = Path.GetFullPath(path);
 #endif
 
         if (createIfMissing) MakeDir();
@@ -42,6 +55,13 @@ public readonly partial struct Directory
     public bool Exists()
     {
 #if GODOT4_0_OR_GREATER
+        // Try Godot virtual filesystem first (works in PCK)
+        if (GodotPath.StartsWith("res://"))
+        {
+            using var dir = ACCESS.Open(GodotPath);
+            return dir != null;
+        }
+        // Fall back to system path
         return ACCESS.DirExistsAbsolute(SystemPath);
 #else
         return Directory.Exists(SystemPath);
@@ -65,13 +85,13 @@ public readonly partial struct Directory
 #if GODOT4_0_OR_GREATER
         return !Exists() || ACCESS.RemoveAbsolute(SystemPath) == Error.Ok;
 #else
-            try
-            {
-                if (Exists())
-                    System.IO.Directory.Delete(SystemPath, true);
-                return true;
-            }
-            catch { return false; }
+        try
+        {
+            if (Exists())
+                System.IO.Directory.Delete(SystemPath, true);
+            return true;
+        }
+        catch { return false; }
 #endif
     }
 
@@ -81,6 +101,32 @@ public readonly partial struct Directory
 #if GODOT4_0_OR_GREATER
         if (!Exists()) return [];
 
+        // Use Godot virtual filesystem if it's a res:// path (supports PCK)
+        if (GodotPath.StartsWith("res://") || GodotPath.StartsWith("user://"))
+        {
+            using var dir = ACCESS.Open(GodotPath);
+            if (dir == null) return [];
+
+            var list = new List<Directory>();
+            dir.ListDirBegin();
+            string dirName = dir.GetNext();
+
+            while (!string.IsNullOrEmpty(dirName))
+            {
+                if (dirName != "." && dirName != ".." && dir.CurrentIsDir())
+                {
+                    // Manually construct the full path with trailing slash
+                    string fullPath = GodotPath.TrimEnd('/') + "/" + dirName + "/";
+                    list.Add(new(fullPath, false));
+                }
+                dirName = dir.GetNext();
+            }
+
+            dir.ListDirEnd();
+            return [.. list];
+        }
+
+        // Fall back to system path method
         var subs = ACCESS.GetDirectoriesAt(SystemPath);
         if (subs == null) return [];
 
@@ -90,14 +136,14 @@ public readonly partial struct Directory
 
         return result;
 #else
-            if (!Exists()) return [];
+    if (!Exists()) return [];
 
-            var dirs = System.IO.Directory.GetDirectories(SystemPath);
-            var result = new Directory[dirs.Length];
-            for (int i = 0; i < dirs.Length; i++)
-                result[i] = new(dirs[i]);
+    var dirs = System.IO.Directory.GetDirectories(SystemPath);
+    var result = new Directory[dirs.Length];
+    for (int i = 0; i < dirs.Length; i++)
+        result[i] = new(dirs[i]);
 
-            return result;
+    return result;
 #endif
     }
 
@@ -107,6 +153,38 @@ public readonly partial struct Directory
 #if GODOT4_0_OR_GREATER
         if (!Exists()) return [];
 
+        // Use Godot virtual filesystem if it's a res:// path (supports PCK)
+        if (GodotPath.StartsWith("res://") || GodotPath.StartsWith("user://"))
+        {
+            using var dir = ACCESS.Open(GodotPath);
+            if (dir == null) return [];
+
+            var list = new List<File>();
+            dir.ListDirBegin();
+            string fileName = dir.GetNext();
+
+            while (!string.IsNullOrEmpty(fileName))
+            {
+                if (fileName != "." && fileName != ".." && !dir.CurrentIsDir())
+                {
+                    // Remove .remap suffix if present
+                    string cleanFileName = fileName;
+                    if (cleanFileName.EndsWith(".remap", StringComparison.OrdinalIgnoreCase))
+                    {
+                        cleanFileName = cleanFileName.Substring(0, cleanFileName.Length - 6);
+                    }
+
+                    string fullPath = GodotPath.TrimEnd('/') + "/" + cleanFileName;
+                    list.Add(new File(fullPath));
+                }
+                fileName = dir.GetNext();
+            }
+
+            dir.ListDirEnd();
+            return [.. list];
+        }
+
+        // Fall back to system path method
         var files = ACCESS.GetFilesAt(SystemPath);
         var result = new File[files.Length];
         for (int i = 0; i < files.Length; i++)
@@ -114,14 +192,14 @@ public readonly partial struct Directory
 
         return result;
 #else
-            if (!Exists()) return [];
+    if (!Exists()) return [];
 
-            var files = System.IO.Directory.GetFiles(SystemPath);
-            var result = new File[files.Length];
-            for (int i = 0; i < files.Length; i++)
-                result[i] = new(files[i]);
+    var files = System.IO.Directory.GetFiles(SystemPath);
+    var result = new File[files.Length];
+    for (int i = 0; i < files.Length; i++)
+        result[i] = new(files[i]);
 
-            return result;
+    return result;
 #endif
     }
 
@@ -134,6 +212,47 @@ public readonly partial struct Directory
         var list = new List<File>();
 
 #if GODOT4_0_OR_GREATER
+        if (GodotPath.StartsWith("res://") || GodotPath.StartsWith("user://"))
+        {
+            using var dir = ACCESS.Open(GodotPath);
+            if (dir == null) return [];
+
+            dir.ListDirBegin();
+            string fileName = dir.GetNext();
+
+            while (!string.IsNullOrEmpty(fileName))
+            {
+                if (fileName != "." && fileName != ".." && !dir.CurrentIsDir())
+                {
+                    foreach (var ext in fileTypes)
+                    {
+                        // Check both original extension and .remap version
+                        bool matches = fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase) ||
+                                       fileName.EndsWith(ext + ".remap", StringComparison.OrdinalIgnoreCase);
+
+                        if (matches)
+                        {
+                            // Always use the path WITHOUT .remap - Godot handles this internally
+                            string cleanFileName = fileName;
+                            if (cleanFileName.EndsWith(".remap", StringComparison.OrdinalIgnoreCase))
+                            {
+                                cleanFileName = cleanFileName.Substring(0, cleanFileName.Length - 6);
+                            }
+
+                            string fullPath = GodotPath.TrimEnd('/') + "/" + cleanFileName;
+                            list.Add(new File(fullPath));
+                            break;
+                        }
+                    }
+                }
+                fileName = dir.GetNext();
+            }
+
+            dir.ListDirEnd();
+            return [.. list];
+        }
+
+        // Fall back to system path method
         var subs = ACCESS.GetFilesAt(SystemPath);
         if (subs != null)
         {
@@ -150,18 +269,18 @@ public readonly partial struct Directory
             }
         }
 #else
-            var subs = System.IO.Directory.GetFiles(SystemPath);
-            foreach (var file in subs)
+    var subs = System.IO.Directory.GetFiles(SystemPath);
+    foreach (var file in subs)
+    {
+        foreach (var ext in fileTypes)
+        {
+            if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
             {
-                foreach (var ext in fileTypes)
-                {
-                    if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
-                    {
-                        list.Add(new File(file));
-                        break;
-                    }
-                }
+                list.Add(new File(file));
+                break;
             }
+        }
+    }
 #endif
         return [.. list];
     }
@@ -169,14 +288,52 @@ public readonly partial struct Directory
 
 public static partial class Directoryf
 {
-    public static string TrimToDirectory(this string path) => System.IO.Path.GetDirectoryName(path);
+    public static string TrimToDirectory(this string path)
+    {
+        if (string.IsNullOrEmpty(path)) return path;
+
+        // Don't modify if it already ends with a directory separator
+        if (path.EndsWith('/') || path.EndsWith('\\')) return path;
+
+        // For Godot paths (res://, user://), preserve the protocol
+        if (path.StartsWith("res://") || path.StartsWith("user://"))
+        {
+            // Find last slash
+            int lastSlash = path.LastIndexOf('/');
+            if (lastSlash > 0)
+            {
+                return path[..(lastSlash + 1)];
+            }
+            // If no slash found after protocol, add trailing slash
+            return path + "/";
+        }
+
+        // For system paths, use System.IO but ensure forward slashes for Godot
+        var dir = System.IO.Path.GetDirectoryName(path);
+        if (string.IsNullOrEmpty(dir)) return path;
+        return dir.Replace("\\", "/") + "/";
+    }
 
     public static bool PathExists(this string path)
     {
 #if GODOT4_0_OR_GREATER
-        return ACCESS.DirExistsAbsolute(ProjectSettings.GlobalizePath(path.Trim()));
+        var cleaned = path.Trim();
+
+        // Check virtual filesystem first (PCK support)
+        if (cleaned.StartsWith("res://") || cleaned.StartsWith("user://"))
+        {
+            // Try as directory
+            using var dir = DirAccess.Open(cleaned);
+            if (dir != null) return true;
+
+            // Try as file
+            return FileAccess.FileExists(cleaned);
+        }
+
+        // Fall back to system path
+        return ACCESS.DirExistsAbsolute(ProjectSettings.GlobalizePath(cleaned));
 #else
-            return System.IO.Directory.Exists(path) || System.IO.File.Exists(path);
+        return System.IO.Directory.Exists(path) || System.IO.File.Exists(path);
 #endif
     }
 
@@ -185,11 +342,11 @@ public static partial class Directoryf
 #if GODOT4_0_OR_GREATER
         ACCESS.RemoveAbsolute(ProjectSettings.GlobalizePath(path.Trim()));
 #else
-            var clean = path.Trim();
-            if (System.IO.Directory.Exists(clean))
-                System.IO.Directory.Delete(clean, true);
-            else if (System.IO.File.Exists(clean))
-                System.IO.File.Delete(clean);
+        var clean = path.Trim();
+        if (System.IO.Directory.Exists(clean))
+            System.IO.Directory.Delete(clean, true);
+        else if (System.IO.File.Exists(clean))
+            System.IO.File.Delete(clean);
 #endif
     }
 }
