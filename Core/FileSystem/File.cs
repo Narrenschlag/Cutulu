@@ -28,7 +28,7 @@ public partial class File : IDisposable
         SystemPath = ProjectSettings.GlobalizePath(path.Trim());
         GodotPath = ProjectSettings.LocalizePath(SystemPath);
 #else
-            SystemPath = Path.GetFullPath(path.Trim());
+        SystemPath = Path.GetFullPath(path.Trim());
 #endif
     }
 
@@ -55,10 +55,10 @@ public partial class File : IDisposable
             Access?.Close();
 
             if (flags.HasFlag(FLAGS.Write))
-                _ = new Directory(SystemPath);
+                _ = new Directory(SystemPath.TrimToDirectory());
 
             Access = ACCESS.Open(SystemPath, Flags = flags);
-            if (Access.IsNull()) Debug.LogError($"{ACCESS.GetOpenError()}");
+            if (Access.IsNull()) Debug.LogError($"FileOpen failed: {ACCESS.GetOpenError()}");
         }
         return Access;
     }

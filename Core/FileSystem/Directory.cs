@@ -169,15 +169,7 @@ public readonly partial struct Directory
 
 public static partial class Directoryf
 {
-    public static string TrimToDirectory(this string path) => TrimToDirectory(path, '\\', '/');
-
-    public static string TrimToDirectory(this string path, params char[] chars)
-    {
-        if (string.IsNullOrEmpty(path) || chars.IsEmpty()) return path;
-
-        var index = path.LastIndexOfAny(chars);
-        return index >= 0 ? path[..(index + 1)] : path;
-    }
+    public static string TrimToDirectory(this string path) => System.IO.Path.GetDirectoryName(path);
 
     public static bool PathExists(this string path)
     {
