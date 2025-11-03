@@ -59,14 +59,28 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
         //Debug.LogR($"[color=magenta][b][ConnectHandler][/b][/color] Handed connection: {connection.UserId}");
         wrapper.InvokeConnect(connection);
 
+        var lastServerSend = System.DateTime.UtcNow;
+
         while (active())
         {
+            if ((System.DateTime.UtcNow - lastServerSend).TotalSeconds > 25)
+            {
+                await connection.Socket.SendAsync(1.Encode(), [0xFF]);
+                lastServerSend = System.DateTime.UtcNow;
+            }
+
             var packet = await connection.Socket.Receive(4);
 
             if (packet.Success == false || active() == false) continue;
-            packet = await connection.Socket.Receive(packet.Buffer.Decode<int>());
+
+            var length = packet.Buffer.Decode<int>();
+            packet = await connection.Socket.Receive(length);
 
             if (packet.Success == false || active() == false) continue;
+
+            // Is Heartbeat
+            if (length == 1 && packet.Buffer[0] == 0xFF) continue;
+
             connection.ReceiveBuffer(packet.Buffer);
         }
 

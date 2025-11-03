@@ -57,6 +57,11 @@ namespace Cutulu.Network.Sockets
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             Socket.DualMode = true;
 
+            // Increase udp buffer to better handle packet loss
+            Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 512 * 1024);
+            Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 512 * 1024);
+
+
             Socket.Bind(new IPEndPoint(IPAddress.IPv6Any, Port = port));
         }
 
@@ -81,6 +86,10 @@ namespace Cutulu.Network.Sockets
 
                 Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 Socket.DualMode = true;
+
+                // Increase udp buffer to better handle packet loss
+                Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 512 * 1024);
+                Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 512 * 1024);
             }
 
             // Assign endpoint

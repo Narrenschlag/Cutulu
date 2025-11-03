@@ -241,11 +241,16 @@ namespace Cutulu.Network
 
                 if (packet.Success == false || active() == false) continue;
 
-                packet = await TcpClient.Receive(packet.Buffer.Decode<int>());
+                var length = packet.Buffer.Decode<int>();
+                packet = await TcpClient.Receive(length);
+
                 if (active() == false) continue;
 
                 if (packet.Success)
                 {
+                    // Heartbeat 
+                    if (length == 1 && packet.Buffer[0] == 0xFF) continue;
+
                     lock (this) ReceiveBuffer(packet.Buffer);
                 }
             }

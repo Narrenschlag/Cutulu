@@ -29,6 +29,9 @@ namespace Cutulu.Network.Sockets
         private bool Receiving { get; set; }
         private TcpHost Host { get; set; }
 
+        private DateTime lastTcpSend = DateTime.UtcNow;
+        private Timer heartbeatTimer;
+
         public Action<TcpSocket> Connected, Disconnected;
 
         /// <summary>
@@ -65,6 +68,22 @@ namespace Cutulu.Network.Sockets
 
                 Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 Socket.DualMode = true;
+
+                // Increase buffer for reduced latency on packet loss
+                Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 256 * 1024);
+                Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 256 * 1024);
+
+                // NoDelay for reduced latency (Nagle-Algorith OFF)
+                Socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
+
+                // Activates keep-alive (KeepAlive ON)
+                Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                Socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, 5);
+                Socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, 2);
+                Socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveRetryCount, 3);
+
+                // Linger for clean disconnect (Linger ON)
+                Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, new LingerOption(true, 2));
             }
 
             // Try connecting the client async so we can run the timeout
@@ -121,6 +140,11 @@ namespace Cutulu.Network.Sockets
                 Address = address;
                 Port = port;
 
+                // Start heartbeat timer
+                lastTcpSend = DateTime.UtcNow;
+                heartbeatTimer?.Dispose();
+                heartbeatTimer = new Timer(SendHeartbeatIfNeeded, null, 30000, 30000);
+
                 Connected?.Invoke(this);
 
                 return true;
@@ -152,6 +176,10 @@ namespace Cutulu.Network.Sockets
             Token = CancellationToken.None;
             TokenSource = null;
 
+            // Clean up heartbeat timer
+            heartbeatTimer?.Dispose();
+            heartbeatTimer = null;
+
             // Check if socket still exists
             if (Socket != null)
             {
@@ -174,6 +202,21 @@ namespace Cutulu.Network.Sockets
             Disconnect(3);
         }
 
+        private void SendHeartbeatIfNeeded(object state)
+        {
+            try
+            {
+                if ((DateTime.UtcNow - lastTcpSend).TotalSeconds > 25 && IsConnected)
+                {
+                    Send(1.Encode(), [0xFF]); // Heartbeat-Byte
+                }
+            }
+            catch
+            {
+                // Ignore errors in heartbeat - Disconnect is detected elsewhere! ;P
+            }
+        }
+
         /// <summary>
         /// Sends data to host.
         /// </summary>
@@ -182,6 +225,9 @@ namespace Cutulu.Network.Sockets
             if (IsConnected == false || buffers.IsEmpty() || Client.GetStream() is not NetworkStream stream) return false;
 
             var _token = Token;
+
+            // Track last tcp send
+            lastTcpSend = DateTime.UtcNow;
 
             for (int i = 0; i < buffers.Length && _token.IsCancellationRequested == false; i++)
             {
@@ -201,6 +247,9 @@ namespace Cutulu.Network.Sockets
         public virtual bool Send(params byte[][] buffers)
         {
             if (IsConnected == false || buffers.IsEmpty() || Client.GetStream() is not NetworkStream stream) return false;
+
+            // Track last tcp send
+            lastTcpSend = DateTime.UtcNow;
 
             try
             {
@@ -240,6 +289,10 @@ namespace Cutulu.Network.Sockets
 
             var buffer = new byte[length];
 
+            // Create timeout token (prohibits infinite blocking)
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(Host.NotNull() ? 5 : 2));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(Token, timeoutCts.Token);
+
             try
             {
                 var readTotal = 0;
@@ -248,13 +301,24 @@ namespace Cutulu.Network.Sockets
                 {
                     int read = await stream.ReadAsync(
                         buffer.AsMemory(readTotal, length - readTotal),
-                        Token
+                        linkedCts.Token //Token
                     );
                     if (read == 0) throw new IOException("Remote closed");
                     readTotal += read;
                 }
 
                 return (true, buffer);
+            }
+
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+            {
+                var prefix = Host != null ? "HOST" : "CLIENT";
+                prefix = $"{prefix}_{GetType().Name.ToUpper()}";
+
+                Debug.LogR($"[color=orange]{prefix}_RECEIVE_TIMEOUT(10s)");
+                Disconnect(255);
+
+                return (false, []);
             }
 
             catch (Exception ex)
