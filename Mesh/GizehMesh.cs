@@ -51,12 +51,10 @@ public class GizehMesh
 
         var surfaceTool = new SurfaceTool();
 
-        foreach (var triangles in Surfaces.Values)
+        // FIX: Remove the outer loop - it was duplicating surfaces!
+        foreach (var surface in Surfaces.Values)
         {
-            foreach (var surface in Surfaces.Values)
-            {
-                surface.Commit(surfaceTool, this, Mesh);
-            }
+            surface.Commit(surfaceTool, this, Mesh);
         }
 
         return Mesh;
@@ -374,25 +372,15 @@ public class GizehMesh
 
             var indexes = new Dictionary<int, int>();
 
+            // First pass: Add all unique vertices
             foreach (var triangle in Triangles.Values)
             {
                 addVertex(builder.Vertices[triangle.X]);
                 addVertex(builder.Vertices[triangle.Y]);
                 addVertex(builder.Vertices[triangle.Z]);
-
-                void addVertex(Vertex vertex)
-                {
-                    if (indexes.ContainsKey(vertex.VertexID)) return;
-
-                    indexes[vertex.VertexID] = indexes.Count;
-
-                    surfaceTool.SetNormal(vertex.Normal);
-                    surfaceTool.SetUV(vertex.GetUV());
-
-                    surfaceTool.AddVertex(builder.GetPosition(vertex.PositionID) + builder.Offset);
-                }
             }
 
+            // Second pass: Add triangle indices
             foreach (var triangle in Triangles.Values)
             {
                 surfaceTool.AddIndex(indexes[triangle.X]);
@@ -401,6 +389,18 @@ public class GizehMesh
             }
 
             surfaceTool.Commit(mesh);
+
+            void addVertex(Vertex vertex)
+            {
+                if (indexes.ContainsKey(vertex.VertexID)) return;
+
+                indexes[vertex.VertexID] = indexes.Count;
+
+                surfaceTool.SetNormal(vertex.Normal);
+                surfaceTool.SetUV(vertex.GetUV());
+
+                surfaceTool.AddVertex(builder.GetPosition(vertex.PositionID) + builder.Offset);
+            }
         }
     }
 
