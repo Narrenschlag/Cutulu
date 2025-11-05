@@ -51,7 +51,6 @@ public class GizehMesh
 
         var surfaceTool = new SurfaceTool();
 
-        // FIX: Remove the outer loop - it was duplicating surfaces!
         foreach (var surface in Surfaces.Values)
         {
             surface.Commit(surfaceTool, this, Mesh);
