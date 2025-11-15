@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c14slgmghcg4p"]
+
+[ext_resource type="Script" uid="uid://by07yyl6ygiyu" path="res://Cutulu/GPU/ComputeShaderTest.cs" id="1_a6re0"]
+
+[node name="ComputeShader" type="Node"]
+script = ExtResource("1_a6re0")
+ShaderFilePath = "res://Cutulu/GPU/test_shader_0.glsl"

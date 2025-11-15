@@ -15,6 +15,7 @@ public class FastMeshBuilder
 
     private SwapbackArray<Vector3> Vertices;
     private SwapbackArray<Vector3> Normals;
+    private SwapbackArray<Color> Colors;
     private SwapbackArray<int> Indices;
 
     /// <summary>
@@ -26,6 +27,7 @@ public class FastMeshBuilder
         Vertices = new(capacity);
         Normals = new(capacity);
         Indices = new(capacity);
+        Colors = new(capacity);
 
         SmoothNormals = smoothNormals;
         if (smoothNormals) PositionToIndex = new(capacity);
@@ -67,11 +69,35 @@ public class FastMeshBuilder
         return index;
     }
 
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private int GetOrAddVertexSmooth(Vector3 position, Vector3 normal, Color vertexColor)
+    {
+        int hash = HashPosition(position);
+
+        if (PositionToIndex.TryGetValue(hash, out int index))
+        {
+            if (Vertices[index].DistanceSquaredTo(position) < 0.0001f)
+            {
+                ref var existingNormal = ref Normals[index];
+                existingNormal = (existingNormal + normal).Normalized();
+                return index;
+            }
+        }
+
+        index = Vertices.Count;
+        PositionToIndex[hash] = index;
+        Colors.Add(vertexColor);
+        Vertices.Add(position);
+        Normals.Add(normal);
+        return index;
+    }
+
     public void Clear()
     {
         Vertices = new(Vertices.Capacity);
         Normals = new(Normals.Capacity);
         Indices = new(Indices.Capacity);
+        Colors = new(Colors.Capacity);
         PositionToIndex?.Clear();
     }
 
@@ -102,12 +128,46 @@ public class FastMeshBuilder
         }
     }
 
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public void AddTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal, Color vertexColor)
+    {
+        if (SmoothNormals)
+        {
+            Indices.Add(GetOrAddVertexSmooth(v0, normal, vertexColor));
+            Indices.Add(GetOrAddVertexSmooth(v1, normal, vertexColor));
+            Indices.Add(GetOrAddVertexSmooth(v2, normal, vertexColor));
+        }
+        else
+        {
+            int baseIndex = Vertices.Count;
+
+            Colors.Add(vertexColor);
+            Colors.Add(vertexColor);
+            Colors.Add(vertexColor);
+
+            Vertices.Add(v0);
+            Vertices.Add(v1);
+            Vertices.Add(v2);
+
+            Normals.Add(normal);
+            Normals.Add(normal);
+            Normals.Add(normal);
+
+            Indices.Add(baseIndex);
+            Indices.Add(baseIndex + 1);
+            Indices.Add(baseIndex + 2);
+        }
+    }
+
     public ArrayMesh BuildMesh()
     {
         var arrays = new Godot.Collections.Array();
         arrays.Resize((int)Mesh.ArrayType.Max);
 
         arrays[(int)Mesh.ArrayType.Vertex] = Vertices.AsSpan().ToArray();
+        if (Colors.Count == Vertices.Count) arrays[(int)Mesh.ArrayType.Color] = Colors.AsSpan().ToArray();
+        else Debug.Log($"Colors count mismatch: {Colors.Count} != {Vertices.Count}");
+
         arrays[(int)Mesh.ArrayType.Normal] = Normals.AsSpan().ToArray();
         arrays[(int)Mesh.ArrayType.Index] = Indices.AsSpan().ToArray();
 

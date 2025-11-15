@@ -47,6 +47,29 @@ public sealed class SwapbackArray<T>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddRange(params T[] items)
+    {
+        AddRange(items.AsSpan());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddRange(ReadOnlySpan<T> items)
+    {
+        int newCount = _count + items.Length;
+
+        // Ensure capacity
+        if (newCount > _data.Length)
+        {
+            int newCap = Math.Max(_data.Length * 2, newCount);
+            Array.Resize(ref _data, newCap);
+        }
+
+        // Bulk copy using spans (fastest)
+        items.CopyTo(new Span<T>(_data, _count, items.Length));
+        _count = newCount;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RemoveAt(int index)
     {
         if ((uint)index >= (uint)_count)
