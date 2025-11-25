@@ -82,4 +82,17 @@ public sealed class SwapbackArray<T>
     }
 
     public Span<T> AsSpan() => _data.AsSpan(0, _count);
+
+    class Encoder : BinaryEncoder<SwapbackArray<T>>
+    {
+        public override void Encode(System.IO.BinaryWriter writer, ref object value)
+        {
+            writer.Encode(((SwapbackArray<T>)value)._data);
+        }
+
+        public override object Decode(System.IO.BinaryReader reader)
+        {
+            return new SwapbackArray<T>(reader.Decode<T[]>());
+        }
+    }
 }
