@@ -161,6 +161,14 @@ public class FastMeshBuilder
 
     public ArrayMesh BuildMesh()
     {
+        if (Vertices.Count < 3)
+        {
+            Clear();
+
+            Debug.LogWarning("FastMeshBuilder: Mesh is empty. There are no triangles to build.");
+            return null;
+        }
+
         var arrays = new Godot.Collections.Array();
         arrays.Resize((int)Mesh.ArrayType.Max);
 
