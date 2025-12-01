@@ -13,6 +13,8 @@ namespace Cutulu.Core.UnitTest
             step = 0,
             steps = 5;
 
+            var time = System.Diagnostics.Stopwatch.StartNew();
+
             void stepLog(string hint) => Debug.LogError($"Integration Test ___{hint}___ [{++step}/{steps}]");
 
             try
@@ -119,13 +121,16 @@ namespace Cutulu.Core.UnitTest
 
             catch (Exception ex)
             {
-                Debug.LogError($"Failed [{step}/{steps}] {ex.Message}");
+                time.Stop();
+                Debug.LogError($"Failed in {time.ElapsedMilliseconds} ms [{step}/{steps}] {ex.Message}\n{ex.StackTrace}");
+                Application.Quit();
                 return;
             }
 
-            finally
+            //finally
             {
-                Debug.LogError($"Succeeded.");
+                time.Stop();
+                Debug.LogError($"Succeeded in {time.ElapsedMilliseconds} ms.");
                 Application.Quit();
             }
         }

@@ -1,6 +1,7 @@
 namespace Cutulu.Core
 {
     using System.Collections.Generic;
+    using System.Linq.Expressions;
     using System.Reflection;
     using System.Linq;
     using System.IO;
@@ -13,8 +14,8 @@ namespace Cutulu.Core
     {
         #region Register Encoders
 
-        public static readonly Dictionary<Type, IBinaryEncoder> Encoders = [];
-        public static int EncoderCount => Encoders.Count;
+        public static readonly Dictionary<nint, IBinaryEncoder> Encoders = [];
+        public static int EncoderCount => Encoders?.Count ?? 0;
 
         public static string LastPropertyName { get; set; }
         public static Type LastPropertyType { get; set; }
@@ -27,54 +28,71 @@ namespace Cutulu.Core
             RegisterAllEncoders();
         }
 
+        private static void RegisterEncoders()
+        {
+
+        }
+
         private static void RegisterAllEncoders()
         {
-            // Get the assembly where BinaryEncoder<T> implementations are located
-            var assembly = Assembly.GetExecutingAssembly();
-            var flags = Reflection.TypeFinder.DefaultFlags;
-
-            var finder = new Reflection.TypeFinder();
-            Type type;
-
-            // Instantiate each encoder and add it to the dictionary
-            finder.FindTypes(type = typeof(BinaryEncoder<>), flags, assembly);
-            foreach (var encoderType in finder.Types[type])
+            try
             {
-                // Get the generic type argument from the encoder
-                var encoderGenericType = encoderType.BaseType.GetGenericArguments().FirstOrDefault();
+                // Get the assembly where BinaryEncoder<T> implementations are located
+                var assembly = Assembly.GetExecutingAssembly();
+                var flags = Reflection.TypeFinder.DefaultFlags;
 
-                if (encoderGenericType != null && Activator.CreateInstance(encoderType) is IBinaryEncoder encoderInstance)
+                var finder = new Reflection.TypeFinder();
+                nint handle;
+                Type type;
+
+                // Instantiate each encoder and add it to the dictionary
+                finder.FindTypes(type = typeof(BinaryEncoder<>), flags, assembly);
+                foreach (var encoderType in finder.Types[type])
                 {
-                    // Skip inactive encoders
-                    if (encoderInstance.Active() == false) continue;
+                    // Get the generic type argument from the encoder
+                    var encoderGenericType = encoderType.BaseType.GetGenericArguments().FirstOrDefault();
 
-                    // Assign to the Encoders dictionary
-                    if (Encoders.TryGetValue(encoderGenericType, out var encoder) == false || encoder.Priority() <= encoderInstance.Priority())
-                        Encoders[encoderGenericType] = encoderInstance;
+                    if (encoderGenericType != null && Activator.CreateInstance(encoderType) is IBinaryEncoder encoderInstance)
+                    {
+                        // Skip inactive encoders
+                        if (encoderInstance.Active() == false) continue;
+
+                        handle = encoderGenericType.TypeHandle.Value;
+
+                        // Assign to the Encoders dictionary
+                        if (Encoders.TryGetValue(handle, out var encoder) == false || encoder.Priority() <= encoderInstance.Priority())
+                            Encoders[handle] = encoderInstance;
+                    }
                 }
+
+                // Instantiate each encoder and add it to the dictionary
+                var generics = new Dictionary<Type, GenericBinaryEncoder>();
+
+                finder.FindTypes(type = typeof(GenericBinaryEncoder), flags, assembly);
+                foreach (var genericType in finder.Types[type])
+                {
+                    if (Activator.CreateInstance(genericType) is GenericBinaryEncoder encoderInstance)
+                    {
+                        // Skip inactive encoders
+                        if (encoderInstance.Active() == false) continue;
+
+                        var t = encoderInstance.GetType();
+                        if (generics.TryGetValue(t, out var existing) == false || existing.Priority() < encoderInstance.Priority())
+                            generics[t] = encoderInstance;
+
+                        // Equal priority
+                        else if (existing.Priority() == encoderInstance.Priority())
+                            Debug.LogR($"[color=darkorange][b][Generic Encoder Setup][/b][/color] {genericType.Name}<{t.Name}> has the same priority as {((object)existing).GetType()}<{t.Name}>: [color=gray]Skipping {genericType.Name}");
+                    }
+                }
+
+                GenericEncoders = [.. generics.Values];
             }
 
-            // Instantiate each encoder and add it to the dictionary
-            var generics = new Dictionary<Type, GenericBinaryEncoder>();
-
-            finder.FindTypes(type = typeof(GenericBinaryEncoder), flags, assembly);
-            foreach (var genericType in finder.Types[type])
+            catch (Exception ex)
             {
-                if (Activator.CreateInstance(genericType) is GenericBinaryEncoder encoderInstance)
-                {
-                    // Skip inactive encoders
-                    if (encoderInstance.Active() == false) continue;
-
-                    var t = encoderInstance.GetType();
-                    if (generics.TryGetValue(t, out var existing) == false || existing.Priority() < encoderInstance.Priority())
-                        generics[t] = encoderInstance;
-
-                    // Equal priority
-                    else if (existing.Priority() == encoderInstance.Priority())
-                        Debug.LogR($"[color=darkorange][b][Generic Encoder Setup][/b][/color] {genericType.Name}<{t.Name}> has the same priority as {((object)existing).GetType()}<{t.Name}>: [color=gray]Skipping {genericType.Name}");
-                }
+                Debug.LogError($"Failed to register all encoders: {ex.Message}\n{ex.StackTrace}");
             }
-            GenericEncoders = [.. generics.Values];
         }
 
         public static bool TryGetGenericEncoder(Type type, out GenericBinaryEncoder encoder)
@@ -162,5 +180,28 @@ namespace Cutulu.Core
 
         public virtual bool Active() => true;
         public virtual int Priority() => 0;
+
+        protected static (Type, Type, Func<object, object>, Func<object, object>) CreateMetadata(Type type)
+        {
+            var args = type.GetGenericArguments();
+            var keyProp = type.GetProperty("Key");
+            var valueProp = type.GetProperty("Value");
+
+            return (
+                args[0],
+                args[1],
+                CompileGetter(keyProp, type),
+                CompileGetter(valueProp, type)
+            );
+        }
+
+        protected static Func<object, object> CompileGetter(PropertyInfo prop, Type declaringType)
+        {
+            var objParam = Expression.Parameter(typeof(object), "obj");
+            var cast = Expression.Convert(objParam, declaringType);
+            var access = Expression.Property(cast, prop);
+            var convert = Expression.Convert(access, typeof(object));
+            return Expression.Lambda<Func<object, object>>(convert, objParam).Compile();
+        }
     }
 }
