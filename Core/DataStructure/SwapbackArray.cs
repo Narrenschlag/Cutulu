@@ -1,18 +1,24 @@
 namespace Cutulu.Core;
 
 using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 using System;
+using System.Collections;
 
 /// <summary>
 /// Written by Maximilian Schecklmann on 3th of Nov 2025, inspired by Nic Barker's implementation.
 /// </summary>
-public sealed class SwapbackArray<T>
+public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollection, IEnumerable
 {
     private T[] _data;
     private int _count;
 
     public int Count => _count;
     public int Capacity => _data.Length;
+
+    public bool IsReadOnly => false; // Collections are not read-only by default
+    public bool IsSynchronized => false; // Not thread-safe
+    public object SyncRoot => this; // Use this instance as sync root
 
     public SwapbackArray(int capacity = 4)
     {
@@ -82,4 +88,55 @@ public sealed class SwapbackArray<T>
     }
 
     public Span<T> AsSpan() => _data.AsSpan(0, _count);
+
+    public void Clear()
+    {
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        {
+            Array.Clear(_data, 0, _count); // Only clear if T contains references
+        }
+        _count = 0;
+    }
+
+    public bool Contains(T item)
+    {
+        return Array.IndexOf(_data, item, 0, _count) >= 0; // Only search within Count
+    }
+
+    public void CopyTo(T[] array, int arrayIndex)
+    {
+        Array.Copy(_data, 0, array, arrayIndex, _count);
+    }
+
+    public bool Remove(T item)
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            if (EqualityComparer<T>.Default.Equals(_data[i], item))
+            {
+                RemoveAt(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            yield return _data[i];
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public void CopyTo(Array array, int index)
+    {
+        Array.Copy(_data, 0, array, index, _count);
+    }
 }
