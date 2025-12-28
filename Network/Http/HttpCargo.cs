@@ -37,7 +37,7 @@ public static class HttpCargo
                 var body = await response.Content.ReadAsStringAsync();
                 var buffer = await response.Content.ReadAsByteArrayAsync();
 
-                return new Import(Godot.Error.Ok, body, buffer);
+                return new Import(CARGO_STATE.OK, body, buffer);
             }
 
             catch { }
@@ -64,7 +64,7 @@ public static class HttpCargo
                 var body = await response.Content.ReadAsStringAsync();
                 var buffer = await response.Content.ReadAsByteArrayAsync();
 
-                return new Import(Godot.Error.Ok, body, buffer);
+                return new Import(CARGO_STATE.OK, body, buffer);
             }
 
             catch { }
@@ -87,15 +87,21 @@ public static class HttpCargo
         JSON,
     }
 
-    public class Import(Godot.Error error, string body = default, byte[] buffer = null)
+    public enum CARGO_STATE : byte
     {
-        public Godot.Error Error { get; set; } = error;
+        INVALID = 0,
+        OK = 1,
+    }
+
+    public class Import(CARGO_STATE error, string body = default, byte[] buffer = default)
+    {
+        public CARGO_STATE Error { get; set; } = error;
 
         public string Body { get; set; } = body;
         public byte[] Buffer { get; set; } = buffer;
 
-        public bool IsSuccess() => Error == Godot.Error.Ok;
+        public bool IsSuccess() => Error == CARGO_STATE.OK;
 
-        public static readonly Import Invalid = new(Godot.Error.Timeout);
+        public static readonly Import Invalid = new(CARGO_STATE.INVALID);
     }
 }

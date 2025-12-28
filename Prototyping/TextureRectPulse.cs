@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Prototyping;
 
 using Cutulu.Core;
@@ -28,3 +29,4 @@ public partial class TextureRectPulse : TextureRect
         );
     }
 }
+#endif

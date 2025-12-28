@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Mesh;
 
 using System.Collections.Generic;
@@ -196,3 +197,4 @@ public class FastMeshBuilder
         meshInstance.Mesh = arrayMesh;
     }
 }
+#endif

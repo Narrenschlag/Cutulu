@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.UI;
 
 using System.Collections.Generic;
@@ -107,3 +108,4 @@ public partial class FileDrop : HBoxContainer
 
     public void Clear() => SetFiles(null);
 }
+#endif

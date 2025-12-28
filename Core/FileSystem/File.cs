@@ -90,9 +90,15 @@ public partial class File : IDisposable
         return Open(FLAGS.Read, false)?.GetLength() ?? 0;
     }
 #else
-    public byte[] ReadRaw(long length)
+    public byte[] ReadRaw(ulong length)
     {
-        return System.IO.File.ReadAllBytes(SystemPath);
+        using var stream = System.IO.File.OpenRead(SystemPath);
+        var buffer = new byte[length];
+
+        stream.ReadExactly(buffer, 0, (int)length);
+        stream.Close();
+
+        return buffer;
     }
 
     public void WriteRaw(byte[] buffer)
@@ -100,9 +106,9 @@ public partial class File : IDisposable
         System.IO.File.WriteAllBytes(SystemPath, buffer);
     }
 
-    public long GetFileSizeRaw()
+    public ulong GetFileSizeRaw()
     {
-        return new FileInfo(SystemPath).Length;
+        return (ulong)new FileInfo(SystemPath).Length;
     }
 
     public void Flush() { }
@@ -136,7 +142,10 @@ public partial class File : IDisposable
 
         else
         {
+#if GODOT4_0_OR_GREATER
             Open(FLAGS.Write, true);
+#endif
+
             WriteRaw(_buffer);
             Flush();
             Close();
@@ -181,8 +190,8 @@ public partial class File : IDisposable
 
     public string ReadString()
     {
-        using var _stream = new System.IO.MemoryStream(Read());
-        using var _reader = new System.IO.StreamReader(_stream); // Because of plain text
+        using var _stream = new MemoryStream(Read());
+        using var _reader = new StreamReader(_stream); // Because of plain text
 
         var _string = _reader.ReadToEnd();
         return _string.NotEmpty() ? _string : string.Empty;
@@ -215,7 +224,7 @@ public partial class File : IDisposable
 #if GODOT4_0_OR_GREATER
         return ACCESS.FileExists(SystemPath);
 #else
-            return File.Exists(SystemPath);
+        return System.IO.File.Exists(SystemPath);
 #endif
     }
 
@@ -224,7 +233,7 @@ public partial class File : IDisposable
 #if GODOT4_0_OR_GREATER
         DirAccess.RemoveAbsolute(SystemPath);
 #else
-            System.IO.File.Delete(SystemPath);
+        System.IO.File.Delete(SystemPath);
 #endif
     }
 

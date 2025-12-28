@@ -9,7 +9,7 @@ public partial class Executable : File
 
     public Executable(string path) : base(path)
     {
-        if (SystemPath.EndsWith(Application.OSExecFileExtension) == false)
+        if (SystemPath.IsExecutablePath() == false)
             throw new ArgumentException($"Executable file extension '{SystemPath}' is not supported. Please assign a valid '{Application.OSExecFileExtension}' executable file path.");
     }
 

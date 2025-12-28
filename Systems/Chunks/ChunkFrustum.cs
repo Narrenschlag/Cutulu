@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Systems.Chunks;
 
 using System.Collections.Generic;
@@ -185,3 +186,4 @@ public class ChunkFrustum<MANAGER, CHUNK>(ChunkManager<MANAGER, CHUNK> manager) 
         }
     }
 }
+#endif

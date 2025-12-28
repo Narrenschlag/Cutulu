@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Systems.Chunks;
 
 using System.Collections.Generic;
@@ -84,3 +85,4 @@ public partial class ChunkDebug<CHUNK> : Node3D where CHUNK : Chunk
     }
 }
 */
+#endif

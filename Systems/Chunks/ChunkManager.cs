@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Systems.Chunks;
 
 using System.Collections.Generic;
@@ -114,3 +115,4 @@ public abstract class ChunkManager<M, C>
 
     public void Log(string message) => Debug.LogR($"[color=indianred][b][{GetType().Name}][/b][/color] {message}");
 }
+#endif

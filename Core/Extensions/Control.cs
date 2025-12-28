@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using Godot;
@@ -12,3 +13,4 @@ public static class Controlf
 
     public static bool IsMouseOver(this Control control) => IsPointOver(control.MousePosition(), control);
 }
+#endif

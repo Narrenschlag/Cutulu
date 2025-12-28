@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 using Godot;
 
 namespace Cutulu.NumWord
@@ -36,3 +37,4 @@ namespace Cutulu.NumWord
         }
     }
 }
+#endif

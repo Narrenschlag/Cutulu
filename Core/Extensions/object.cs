@@ -22,7 +22,7 @@ public static class objectExtension
         || (obj is GodotObject gd && (!GodotObject.IsInstanceValid(gd) || gd.IsQueuedForDeletion()));
 #else
         return obj == null
-        || (obj is Disposable d && d.IsDisposed())
+        || (obj is Disposable d && d.IsDisposed());
 #endif
     }
 
@@ -52,7 +52,7 @@ public static class objectExtension
 
     public static async void Destroy(this object obj, float lifeTime, bool forceInstant = false)
     {
-        await Task.Delay(Mathf.RoundToInt(lifeTime * 1000));
+        await Task.Delay((int)Math.Round(lifeTime * 1000));
 
         if (obj == null) return;
 

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Network;
 
 using Cutulu.Core;
@@ -32,3 +33,4 @@ public partial class SharedSplitter3D : Node3D, ISharable
 
     public bool DestroyAfterUnpacking() => false;
 }
+#endif

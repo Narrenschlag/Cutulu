@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using System.IO;
@@ -50,3 +51,4 @@ public partial struct ActionTimeStamp
         }
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Systems.Chunks;
 
 public interface IChunk<M, C>
@@ -6,3 +7,4 @@ public interface IChunk<M, C>
 {
     C Init(M manager, ChunkPoint point);
 }
+#endif

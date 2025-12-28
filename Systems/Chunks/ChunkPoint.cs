@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Systems.Chunks;
 
 using System;
@@ -32,3 +33,4 @@ public struct ChunkPoint(short x, short z)
 
     public readonly override string ToString() => $"({X}, {Z})";
 }
+#endif

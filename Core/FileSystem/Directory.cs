@@ -64,7 +64,7 @@ public readonly partial struct Directory
         // Fall back to system path
         return ACCESS.DirExistsAbsolute(SystemPath);
 #else
-        return Directory.Exists(SystemPath);
+        return System.IO.Directory.Exists(SystemPath);
 #endif
     }
 
