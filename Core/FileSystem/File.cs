@@ -111,9 +111,6 @@ public partial class File : IDisposable
         return (ulong)new FileInfo(SystemPath).Length;
     }
 
-    public void Flush() { }
-
-    public void Close() { }
 #endif
 
     #endregion
@@ -123,7 +120,10 @@ public partial class File : IDisposable
     public byte[] Read()
     {
         var _buffer = ReadRaw(GetFileSizeRaw());
+
+#if GODOT4_0_OR_GREATER
         Close();
+#endif
 
         return _buffer;
     }
@@ -131,7 +131,10 @@ public partial class File : IDisposable
     public byte[] Read(ulong _length)
     {
         var _buffer = ReadRaw(_length);
+
+#if GODOT4_0_OR_GREATER
         Close();
+#endif
 
         return _buffer;
     }
@@ -147,8 +150,11 @@ public partial class File : IDisposable
 #endif
 
             WriteRaw(_buffer);
+
+#if GODOT4_0_OR_GREATER
             Flush();
             Close();
+#endif
         }
     }
 
