@@ -25,7 +25,7 @@ namespace Cutulu.Core
         {
             if (bitIndex > 7) throw new("bitIndex has to be { [0; ]8 }");
 
-            return Bitf.GetBit(ref @byte, ref bitIndex);
+            return Bitf.GetBit(@byte, bitIndex);
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Cutulu.Core
         {
             if (bitIndex > 7) throw new("bitIndex has to be { [0; ]8 }");
 
-            Bitf.SetBit(ref @byte, ref bitIndex, ref newValue);
+            @byte = Bitf.SetBit(@byte, bitIndex, newValue);
             return @byte;
         }
 
@@ -46,7 +46,7 @@ namespace Cutulu.Core
         {
             for (byte i = 0; i < bits.Length && i < 8; i++)
             {
-                Bitf.SetBit(ref @byte, ref i, ref bits[i]);
+                @byte = Bitf.SetBit(@byte, i, bits[i]);
             }
         }
 
@@ -76,11 +76,11 @@ namespace Cutulu.Core
         /// </summary>
         public static void SwapBit(ref byte @byte, ref byte bit1, ref byte bit2)
         {
-            var self = Bitf.GetBit(ref @byte, ref bit1);
-            var next = Bitf.GetBit(ref @byte, ref bit2);
+            var self = Bitf.GetBit(@byte, bit1);
+            var next = Bitf.GetBit(@byte, bit2);
 
-            Bitf.SetBit(ref @byte, ref bit1, ref next);
-            Bitf.SetBit(ref @byte, ref bit2, ref self);
+            @byte = Bitf.SetBit(@byte, bit1, next);
+            @byte = Bitf.SetBit(@byte, bit2, self);
         }
 
         /// <summary>
@@ -88,11 +88,11 @@ namespace Cutulu.Core
         /// </summary>
         public static void SwapBit(ref byte @byte1, ref byte bit1, ref byte @byte2, ref byte bit2)
         {
-            var value1 = Bitf.GetBit(ref @byte1, ref bit1);
-            var value2 = Bitf.GetBit(ref @byte2, ref bit2);
+            var value1 = Bitf.GetBit(@byte1, bit1);
+            var value2 = Bitf.GetBit(@byte2, bit2);
 
-            Bitf.SetBit(ref @byte1, ref bit1, ref value2);
-            Bitf.SetBit(ref @byte2, ref bit2, ref value1);
+            @byte1 = Bitf.SetBit(@byte1, bit1, value2);
+            @byte2 = Bitf.SetBit(@byte2, bit2, value1);
         }
         #endregion
 
@@ -114,7 +114,7 @@ namespace Cutulu.Core
         {
             byte _bitIndex = (byte)(bitIndex % 8);
 
-            return Bitf.GetBit(ref array[bitIndex / 2], ref _bitIndex);
+            return Bitf.GetBit(array[bitIndex / 2], _bitIndex);
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Cutulu.Core
         {
             byte _bitIndex = (byte)(bitIndex % 8);
 
-            Bitf.SetBit(ref array[bitIndex / 8], ref _bitIndex, ref newValue);
+            array[bitIndex / 8] = Bitf.SetBit(array[bitIndex / 8], _bitIndex, newValue);
         }
         #endregion
 
@@ -147,11 +147,11 @@ namespace Cutulu.Core
 
             for (byte i = 0, n = 1; i < 8; i += 2, n += 2)
             {
-                self = Bitf.GetBit(ref @byte, ref i);
-                next = Bitf.GetBit(ref @byte, ref n);
+                self = Bitf.GetBit(@byte, i);
+                next = Bitf.GetBit(@byte, n);
 
-                Bitf.SetBit(ref @byte, ref n, ref self);
-                Bitf.SetBit(ref @byte, ref i, ref next);
+                @byte = Bitf.SetBit(@byte, n, self);
+                @byte = Bitf.SetBit(@byte, i, next);
             }
         }
 
