@@ -196,8 +196,8 @@ public partial class File : IDisposable
 
     public string ReadString()
     {
-        using var _stream = new MemoryStream(Read());
-        using var _reader = new StreamReader(_stream); // Because of plain text
+        using var _stream = new System.IO.MemoryStream(Read());
+        using var _reader = new System.IO.StreamReader(_stream); // Because of plain text
 
         var _string = _reader.ReadToEnd();
         return _string.NotEmpty() ? _string : string.Empty;

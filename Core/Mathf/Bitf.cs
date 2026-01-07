@@ -1,10 +1,10 @@
-namespace Cutulu.Core; ///META_COPY///
+namespace Cutulu.Core;
 
-public static partial class Bitf ///META_COPY///
-{ ///META_COPY///
+public static partial class Bitf
+{
     public static byte GetByte(params bool[] bits)
     {
-        sbyte length = (sbyte)(Math.Min(bits.Length, 8) - 1);
+        sbyte length = (sbyte)(System.Math.Min(bits.Length, 8) - 1);
         byte result = 0;
 
         for (sbyte i = length; i >= 0; i--)
@@ -15,12 +15,11 @@ public static partial class Bitf ///META_COPY///
         return result;
     }
 
-    ///META_COPY_START///
-    public static Span<bool> GetBits(this byte value)
+    public static System.Span<bool> GetBits(this byte value)
     {
         byte length = 8;
 
-        Span<bool> span = new(new bool[length--]);
+        System.Span<bool> span = new(new bool[length--]);
 
         for (byte i = 0; i <= length; i++)
         {
@@ -43,11 +42,10 @@ public static partial class Bitf ///META_COPY///
     /// <summary>
     /// Gets bit.
     /// </summary>
-    public static bool GetBit(byte b, byte i) => (b & (byte)(1 << i)) != 0;
+    public static bool GetBit(this byte b, byte i) => (b & (byte)(1 << i)) != 0;
 
     public static byte SetBit(this byte b, byte i, bool value)
     {
         return (byte)(value ? b | 1 << i : b & ~(1 << i));
     }
-    ///META_COPY_END///
-} ///META_COPY///
+}
