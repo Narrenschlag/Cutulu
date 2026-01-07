@@ -160,6 +160,37 @@ public class FastMeshBuilder
         }
     }
 
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    public void AddTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal0, Vector3 normal1, Vector3 normal2, Color vertexColor0, Color vertexColor1, Color vertexColor2)
+    {
+        if (SmoothNormals)
+        {
+            Indices.Add(GetOrAddVertexSmooth(v0, normal0, vertexColor0));
+            Indices.Add(GetOrAddVertexSmooth(v1, normal1, vertexColor1));
+            Indices.Add(GetOrAddVertexSmooth(v2, normal2, vertexColor2));
+        }
+        else
+        {
+            int baseIndex = Vertices.Count;
+
+            Colors.Add(vertexColor0);
+            Colors.Add(vertexColor1);
+            Colors.Add(vertexColor2);
+
+            Vertices.Add(v0);
+            Vertices.Add(v1);
+            Vertices.Add(v2);
+
+            Normals.Add(normal0);
+            Normals.Add(normal1);
+            Normals.Add(normal2);
+
+            Indices.Add(baseIndex);
+            Indices.Add(baseIndex + 1);
+            Indices.Add(baseIndex + 2);
+        }
+    }
+
     public ArrayMesh BuildMesh()
     {
         if (Vertices.Count < 3)
