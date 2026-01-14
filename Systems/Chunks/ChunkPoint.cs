@@ -16,6 +16,9 @@ public struct ChunkPoint(short x, short z)
     public static implicit operator Vector2I(ChunkPoint chunk) => new(chunk.X, chunk.Z);
     public static implicit operator Vector2(ChunkPoint chunk) => new(chunk.X, chunk.Z);
 
+    public static ChunkPoint operator +(ChunkPoint a, Vector2I b) => new((short)(a.X + b.X), (short)(a.Z + b.Y));
+    public static ChunkPoint operator -(ChunkPoint a, Vector2I b) => new((short)(a.X - b.X), (short)(a.Z - b.Y));
+
     public static ChunkPoint operator +(ChunkPoint a, ChunkPoint b) => new((short)(a.X + b.X), (short)(a.Z + b.Z));
     public static ChunkPoint operator -(ChunkPoint a, ChunkPoint b) => new((short)(a.X - b.X), (short)(a.Z - b.Z));
     public static ChunkPoint operator *(ChunkPoint a, ChunkPoint b) => new((short)(a.X * b.X), (short)(a.Z * b.Z));
