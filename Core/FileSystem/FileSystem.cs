@@ -35,7 +35,7 @@ namespace Cutulu.Core
 
         /// <summary>
         /// Opens file dialogue to save a file.
-        /// Upon saving the function OnFileSaved(string path) is called on the parent node.
+        /// Upon saving the function OnFileSaved(string path) is called on the parent node. [*.txt for example]
         /// </summary>
         public static void SaveFileDialogue(this string directory, Node parent, Action<string> action, params string[] fileEndings)
         {
