@@ -19,6 +19,8 @@ namespace Cutulu.Core
             Handlers.Remove(host);
         }
 
+        public bool HasAnyListeners() => Handlers.Count > 0;
+
         protected void Invoke(T value)
         {
             var nullHosts = new List<object>();
