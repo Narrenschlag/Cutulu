@@ -21,7 +21,7 @@ namespace Cutulu.Core
         /// <summary>
         /// Sets value to bit at byte.
         /// </summary>
-        public static bool GetBit(this byte @byte, byte bitIndex)
+        public static bool GetBit(byte @byte, byte bitIndex)
         {
             if (bitIndex > 7) throw new("bitIndex has to be { [0; ]8 }");
 
