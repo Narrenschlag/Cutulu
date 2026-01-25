@@ -2,10 +2,12 @@ namespace Cutulu.Core
 {
     public static class Random
     {
+        private static System.Random Source = new((int)System.Random.Shared.NextSingle());
+
         /// <summary>
 		///	Random value: [0 ]1
         /// </summary>
-        public static float Value => System.Random.Shared.NextSingle();
+        public static float Value => Source.NextSingle();
 
         /// <summary>
 		///	Random value: [min max]
@@ -36,5 +38,7 @@ namespace Cutulu.Core
         public static short RandomShort() => (short)RangeIncluded(short.MinValue, short.MaxValue);
         public static int RandomInt() => RangeIncluded(int.MinValue, int.MaxValue);
         public static long RandomLong() => (long)RandomInt() + RandomInt();
+
+        public static void Seed(int seed) => Source = new(seed);
     }
 }
