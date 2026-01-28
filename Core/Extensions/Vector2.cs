@@ -132,6 +132,9 @@ namespace Cutulu.Core
             return sum / corners.Length;
         }
 
+        /// <summary>
+        /// Clamps the vector to a normalized vector. Works a little like Vector3.MoveTowards.
+        /// </summary>
         public static Vector2 ClampNormalized(this Vector2 value)
         {
             var normalized = value.Normalized();

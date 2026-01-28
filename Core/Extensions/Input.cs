@@ -20,6 +20,8 @@ namespace Cutulu.Core
             return screen;
         }
 
+        public static Vector2I MousePosition() => DisplayServer.MouseGetPosition();
+
         public static bool GetMousePosition(this Camera3D camera, out Vector3 globalPosition, uint mask = 4294967295)
         {
             if (RaycastFromCamera(camera, out RaycastHit hit, mask))
