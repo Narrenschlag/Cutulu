@@ -8,6 +8,11 @@ public static class Application
 {
 #if GODOT4_0_OR_GREATER
     /// <summary>
+    /// Returns true if current thread is main thread
+    /// </summary>
+    public static bool IsOnMainThread() => (int)OS.GetMainThreadId() == System.Environment.CurrentManagedThreadId;
+
+    /// <summary>
     /// Close the application
     /// </summary>
     public static void Quit()
