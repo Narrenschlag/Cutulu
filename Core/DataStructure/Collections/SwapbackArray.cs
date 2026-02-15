@@ -92,6 +92,10 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
 
     public Span<T> AsSpan() => _data.AsSpan(0, _count);
 
+    public Span<T> AsSpan(int count) => _data.AsSpan(0, int.Min(_count, count));
+
+    public Span<T> AsSpan(int start, int count) => _data.AsSpan(int.Min(int.Max(start, 0), int.Min(_count, count)), int.Min(_count, count));
+
     public void Clear()
     {
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
