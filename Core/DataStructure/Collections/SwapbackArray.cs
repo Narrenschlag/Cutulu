@@ -8,7 +8,7 @@ using System.Collections;
 /// <summary>
 /// Written by Maximilian Schecklmann on 3th of Nov 2025, inspired by Nic Barker's implementation.
 /// </summary>
-public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollection, IEnumerable
+public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollection, IEnumerable, IReadOnlyCollection<T>
 {
     private T[] _data;
     private int _count;
@@ -44,11 +44,14 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(T item)
     {
+        if (item.IsNull()) return;
+
         if (_count == _data.Length)
         {
             var newCap = Math.Max(4, _data.Length * 2);
             Array.Resize(ref _data, newCap);
         }
+
         _data[_count++] = item;
     }
 
@@ -110,6 +113,8 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
 
     public bool Remove(T item)
     {
+        if (item.IsNull()) return false;
+
         for (int i = 0; i < _count; i++)
         {
             if (EqualityComparer<T>.Default.Equals(_data[i], item))
@@ -138,5 +143,39 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
     public void CopyTo(Array array, int index)
     {
         Array.Copy(_data, 0, array, index, _count);
+    }
+
+    /// <summary>
+    /// Adds item to the array if it is not null and not already in it.
+    /// </summary>
+    public bool TryAdd(T item)
+    {
+        if (item.IsNull() || Contains(item)) return false;
+
+        Add(item);
+        return true;
+    }
+
+    /// <summary>
+    /// Adds items to the array if they are not null and not already in it.
+    /// </summary>
+    public void TryAddRange(params T[] items)
+    {
+        if (items.IsEmpty()) return;
+
+        T[] array = new T[items.Length];
+        int i = 0;
+
+        Span<T> span = array.AsSpan();
+        foreach (ref var item in span)
+        {
+            if (item.IsNull() || Contains(item)) continue;
+
+            array[i++] = item;
+        }
+
+        if (i < 1) return;
+
+        AddRange(array.AsSpan(0, i));
     }
 }
