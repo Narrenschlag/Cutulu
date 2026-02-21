@@ -136,6 +136,24 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
         return false;
     }
 
+    public bool Remove(T item, out int index)
+    {
+        index = 0;
+
+        if (item.IsNull()) return false;
+
+        for (int i = 0; i < _count; i++)
+        {
+            if (EqualityComparer<T>.Default.Equals(_data[i], item))
+            {
+                RemoveAt(index = i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public IEnumerator<T> GetEnumerator()
     {
         for (int i = 0; i < _count; i++)
