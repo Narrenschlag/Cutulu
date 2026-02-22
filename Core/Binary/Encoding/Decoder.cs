@@ -193,17 +193,15 @@ namespace Cutulu.Core
                 else
                 {
                     var _output = Activator.CreateInstance(_type);
-                    var _manager = PropertyManager.Open(_type);
 
-                    for (ushort i = 0; i < _manager.Properties.Length; i++)
+                    var _manager = ParameterManager.Open(_type, null, BinaryEncoding.IncludeAttributes, BinaryEncoding.ExcludeAttributes);
+
+                    var infos = _manager.GetInfos();
+                    foreach (ref var info in infos)
                     {
-                        // Skip properties that have [DontEncode] attribute
-                        if (((DontEncode[])_manager.GetInfo(i).GetCustomAttributes(typeof(DontEncode))).Length > 0)
-                            continue;
+                        BinaryEncoding.LastPropertyName = info.GetName();
 
-                        BinaryEncoding.LastPropertyName = _manager.GetInfo(i).Name;
-
-                        _manager.SetValue(_output, i, Decode(_reader, _manager.GetType(i), false));
+                        info.SetValue(_output, Decode(_reader, info.GetType(), false));
                     }
 
                     return _output;

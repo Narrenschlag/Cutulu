@@ -8,4 +8,13 @@ namespace Cutulu.Core
 
         }
     }
+
+    [System.AttributeUsage(System.AttributeTargets.Field, AllowMultiple = false)]
+    public class Encodable : System.Attribute
+    {
+        public Encodable()
+        {
+
+        }
+    }
 }

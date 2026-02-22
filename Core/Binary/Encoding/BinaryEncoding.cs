@@ -12,6 +12,9 @@ namespace Cutulu.Core
     /// </summary>
     public static class BinaryEncoding
     {
+        public static readonly Attribute[] IncludeAttributes = [new Encodable()];
+        public static readonly Attribute[] ExcludeAttributes = [new DontEncode()];
+
         #region Register Encoders
 
         public static readonly Dictionary<nint, IBinaryEncoder> Encoders = [];

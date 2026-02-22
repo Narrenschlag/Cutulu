@@ -11,7 +11,7 @@ namespace Cutulu.Core
         {
             try
             {
-                Construct(ref _ref, PropertyManager.Open(_ref.GetType()), _idx);
+                Construct(ref _ref, ParameterManager.Open(_ref.GetType()), _idx);
             }
             catch (System.Exception _ex)
             {
@@ -23,7 +23,7 @@ namespace Cutulu.Core
         {
             try
             {
-                var _manager = PropertyManager.Open(_ref.GetType());
+                var _manager = ParameterManager.Open(_ref.GetType());
 
                 Construct(ref _ref, _manager, _manager.GetIndex(_name));
             }
@@ -33,7 +33,7 @@ namespace Cutulu.Core
             }
         }
 
-        private void Construct(ref object _ref, PropertyManager _manager, int _idx)
+        private void Construct(ref object _ref, ParameterManager _manager, int _idx)
         {
             Buffer = _manager.GetValue(_ref, Idx = _idx).Encode();
         }
@@ -42,7 +42,7 @@ namespace Cutulu.Core
         {
             try
             {
-                var _manager = PropertyManager.Open(_ref.GetType());
+                var _manager = ParameterManager.Open(_ref.GetType());
 
                 _manager.SetValue(_ref, Idx, Buffer.Decode(_manager.GetType(Idx)));
                 return true;

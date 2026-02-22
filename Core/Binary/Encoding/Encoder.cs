@@ -152,6 +152,7 @@ namespace Cutulu.Core
             {
                 //if (_obj == null) return false; -> _obj is already null-checked
                 var _type = _obj.GetType();
+                object _value;
 
                 // Encode enum
                 if (_type.IsEnum)
@@ -167,7 +168,7 @@ namespace Cutulu.Core
 
                     for (int i = 0; i < array.Length; i++)
                     {
-                        var _value = array.GetValue(i);
+                        _value = array.GetValue(i);
 
                         // Write null array as empty array
                         if (_value == null && _type.IsArray) _writer.Write(new UNumber());
@@ -180,16 +181,13 @@ namespace Cutulu.Core
                 // Classes and structs
                 else
                 {
-                    var _manager = PropertyManager.Open(_type);
+                    var _manager = ParameterManager.Open(_type, null, BinaryEncoding.IncludeAttributes, BinaryEncoding.ExcludeAttributes);
 
-                    for (ushort i = 0; i < _manager.Properties.Length; i++)
+                    var infos = _manager.GetInfos();
+                    foreach (ref var info in infos)
                     {
-                        // Skip properties that have [DontEncode] attribute
-                        if (((DontEncode[])_manager.GetInfo(i).GetCustomAttributes(typeof(DontEncode))).Length > 0)
-                            continue;
-
-                        var _value = _manager.GetValue(_obj, i);
-                        _type = _manager.GetType(i);
+                        _value = info.GetValue(_obj);
+                        _type = info.GetType();
 
                         // Write value
                         if (_value == null) _writer.Write(

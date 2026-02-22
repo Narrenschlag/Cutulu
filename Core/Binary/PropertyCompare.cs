@@ -150,20 +150,16 @@ namespace Cutulu.Core
         /// </summary>
         private static bool ArePropertiesAndFieldsEqual(object a, object b, Type type, TYPE settings, HashSet<(object, object)> visited)
         {
-            var props = PropertyManager.Open(type).Properties;
-            foreach (var prop in props)
-            {
-                if (prop.GetIndexParameters().Length > 0) continue; // skip indexers
-                var valA = prop.GetValue(a);
-                var valB = prop.GetValue(b);
-                if (!IsEqualTo(valA, valB, settings, visited)) return false;
-            }
+            object valA, valB;
 
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var field in fields)
+            var infos = ParameterManager.Open(type).GetInfos();
+            foreach (ref var info in infos)
             {
-                var valA = field.GetValue(a);
-                var valB = field.GetValue(b);
+                if (info.HasIndexParameters()) continue; // skip indexers
+
+                valA = info.GetValue(a);
+                valB = info.GetValue(b);
+
                 if (!IsEqualTo(valA, valB, settings, visited)) return false;
             }
 

@@ -31,7 +31,7 @@ namespace Cutulu.Core
                     Index[_k] = _idx[_k];
                 }
 
-                var _manager = PropertyManager.Open<VALUE>();
+                var _manager = ParameterManager.Open<VALUE>();
                 Keys = [.. _keys];
 
                 foreach (var _key in Keys)
@@ -60,7 +60,7 @@ namespace Cutulu.Core
                 using var _memory = new MemoryStream(Buffer);
                 using var _reader = new BinaryReader(_memory);
 
-                var _manager = PropertyManager.Open<VALUE>();
+                var _manager = ParameterManager.Open<VALUE>();
                 var _ignore_any = _ignore_idx.NotEmpty();
 
                 foreach (var _key in Keys)

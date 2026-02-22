@@ -15,9 +15,10 @@ namespace Cutulu.Core
         {
             // Get properties that have both getter and setter
             if (Cache.TryGetValue(_type, out var _cached) == false)
-                Cache[_type] = _cached = _type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                                        .Where(p => p.CanRead && p.CanWrite)
-                                        .ToArray();
+                Cache[_type] = _cached = [..
+                    _type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        .Where(p => p.CanRead && p.CanWrite)
+                ];
 
             return _cached;
         }

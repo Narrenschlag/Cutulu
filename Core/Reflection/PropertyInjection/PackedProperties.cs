@@ -49,7 +49,7 @@ namespace Cutulu.Core
 
             if (_idx.Length > 0)
             {
-                var _manager = PropertyManager.Open(_type);
+                var _manager = ParameterManager.Open(_type);
 
                 for (int i = 0; i < _idx.Length; i++)
                 {
