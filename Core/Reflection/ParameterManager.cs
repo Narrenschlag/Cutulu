@@ -1,7 +1,9 @@
 namespace Cutulu.Core;
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Linq;
 using System;
 
 public partial class ParameterManager
@@ -17,13 +19,22 @@ public partial class ParameterManager
     private readonly ParameterInfo[] Parameters;
     private readonly string[] NameToIdx;
 
+    public static bool EnableLogging { get; set; } = false;
+
     private ParameterManager(Type type, Type baseType, Attribute[] include, Attribute[] exclude)
     {
+        Stopwatch stopwatch = EnableLogging ? Stopwatch.StartNew() : null;
+
         BaseType = baseType;
         Type = type;
 
         PropertyInfo[] properties = type.GetSetProperties();
         FieldInfo[] fields = type.GetFields();
+
+        var includeForProperties = FilterByTarget(include, AttributeTargets.Property);
+        var excludeForProperties = FilterByTarget(exclude, AttributeTargets.Property);
+        var includeForFields = FilterByTarget(include, AttributeTargets.Field);
+        var excludeForFields = FilterByTarget(exclude, AttributeTargets.Field);
 
         SwapbackArray<(string Name, ParameterInfo Param)> parameters = [];
 
@@ -38,13 +49,10 @@ public partial class ParameterManager
         FieldCount = 0;
 
         // Setup NameToIdx
-        var includeSpan = include.AsSpan();
-        var excludeSpan = exclude.AsSpan();
-
         var propertySpan = properties.AsSpan();
         foreach (ref var property in propertySpan)
         {
-            if (PassesFilter(property.GetCustomAttributes(), includeSpan, excludeSpan))
+            if (PassesFilter(property.GetCustomAttributes(), includeForProperties.AsSpan(), excludeForProperties.AsSpan()))
             {
                 parameters.Add((PrepareString(property.Name), new ParameterInfo(property)));
 
@@ -55,7 +63,7 @@ public partial class ParameterManager
         var fieldSpan = fields.AsSpan();
         foreach (ref var field in fieldSpan)
         {
-            if (PassesFilter(field.GetCustomAttributes(), include.AsSpan(), exclude.AsSpan()))
+            if (PassesFilter(field.GetCustomAttributes(), includeForFields.AsSpan(), excludeForFields.AsSpan()))
             {
                 parameters.Add((PrepareString(field.Name), new ParameterInfo(field)));
 
@@ -81,6 +89,12 @@ public partial class ParameterManager
         {
             i = NameToIdx.BinarySearch(param.Name);
             Parameters[i] = param.Param;
+        }
+
+        if (EnableLogging)
+        {
+            stopwatch.Stop();
+            Debug.LogR($"Found [b]{Parameters.Length} parameters[/b] in [b][color=aqua]{Type.Name}[/color]<[color=gold]{stopwatch.ElapsedMilliseconds} ms[/color]>[/b] [{FieldCount} fields, {PropertyCount} properties] [color=seagreen][{string.Join(", ", include.Select(a => a.GetType().Name))}][/color] [color=indianred][{string.Join(", ", exclude.Select(a => a.GetType().Name))}][/color]");
         }
     }
 
@@ -111,6 +125,22 @@ public partial class ParameterManager
         }
 
         return included && !excluded;
+    }
+
+    private static Attribute[] FilterByTarget(Attribute[] attributes, AttributeTargets target)
+    {
+        if (attributes == null || attributes.Length == 0) return [];
+
+        var result = new List<Attribute>();
+        foreach (var attr in attributes)
+        {
+            var usage = attr.GetType().GetCustomAttribute<AttributeUsageAttribute>();
+            // If no AttributeUsage is defined, assume it applies to everything
+            if (usage == null || (usage.ValidOn & target) != 0)
+                result.Add(attr);
+        }
+
+        return [.. result];
     }
 
     public static ParameterManager Open<T, B>() where B : T => Open(typeof(T), typeof(B));
