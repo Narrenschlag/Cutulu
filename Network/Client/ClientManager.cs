@@ -2,6 +2,7 @@ namespace Cutulu.Network
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using System.Net;
     using System;
 
     using Protocols;
@@ -97,6 +98,7 @@ namespace Cutulu.Network
                 return false;
             }
 
+            Debug.Log($"Connected client to ip:{Address} tcp:{TcpPort}:{((IPEndPoint)TcpClient.Socket.LocalEndPoint).Port} udp:{UdpPort}:{((IPEndPoint)UdpClient.Socket.LocalEndPoint).Port}");
             return true;
         }
 

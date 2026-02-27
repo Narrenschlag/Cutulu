@@ -85,10 +85,8 @@ namespace Cutulu.Network
         /// </summary>
         public virtual void Start()
         {
-            Debug.Log("A001");
             Stop();
 
-            Debug.Log("A002");
             ConnectionsByUdp.Clear();
             Connections.Clear();
 
