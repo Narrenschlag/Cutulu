@@ -171,7 +171,7 @@ public readonly partial struct Directory
                     string cleanFileName = fileName;
                     if (cleanFileName.EndsWith(".remap", StringComparison.OrdinalIgnoreCase))
                     {
-                        cleanFileName = cleanFileName.Substring(0, cleanFileName.Length - 6);
+                        cleanFileName = cleanFileName[..^6];
                     }
 
                     string fullPath = GodotPath.TrimEnd('/') + "/" + cleanFileName;
@@ -236,7 +236,7 @@ public readonly partial struct Directory
                             string cleanFileName = fileName;
                             if (cleanFileName.EndsWith(".remap", StringComparison.OrdinalIgnoreCase))
                             {
-                                cleanFileName = cleanFileName.Substring(0, cleanFileName.Length - 6);
+                                cleanFileName = cleanFileName[..^6];
                             }
 
                             string fullPath = GodotPath.TrimEnd('/') + "/" + cleanFileName;

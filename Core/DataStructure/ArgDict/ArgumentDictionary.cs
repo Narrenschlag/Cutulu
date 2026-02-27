@@ -4,7 +4,7 @@ namespace Cutulu.Core
 
     public static class ArgumentDictionary
     {
-        public static Dictionary<string, string> GetDictionary(this string[] _args, char _seperator = ':')
+        public static Dictionary<string, string> GetDictionary(this string[] _args, char _seperator = ':', bool includeEmpty = true)
         {
             var _dictionary = new Dictionary<string, string>();
 
@@ -19,7 +19,7 @@ namespace Cutulu.Core
                         _dictionary[_split[0].ToLower()] = _split[1].ToLower();
                     }
 
-                    else
+                    else if (includeEmpty)
                     {
                         var key = _plain.ToLower().Trim();
 

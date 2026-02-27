@@ -7,12 +7,14 @@ using Core;
 
 public class ConnectHandler(byte key) : ConnectionHandler(key)
 {
+    // Receives ClientManager's SEND_CONNECT
     public override async Task<(bool Status, object Data)> Validate(HostManager.Wrapper wrapper, TcpSocket socket)
     {
-        var packet = await socket.Receive(4);
-        Debug.Log($"Received connection type [{packet.Success}].");
+        var (Success, Buffer) = await socket.Receive(4);
 
-        if (packet.Success == false) return (false, null);
+        //Debug.Log($"Received connection type [{Success}].");
+
+        if (Success == false) return (false, null);
 
         await socket.SendAsync(true.Encode());
 
@@ -20,7 +22,7 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
             wrapper.NextUID(),
             wrapper.Manager,
             socket,
-            new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, packet.Buffer.Decode<int>())
+            new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, Buffer.Decode<int>())
         );
 
         // Check if the client is still connected
@@ -57,9 +59,12 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
     {
         if (data.IsNull() || data is not Connection connection) return;
         //Debug.LogR($"[color=magenta][b][ConnectHandler][/b][/color] Handed connection: {connection.UserId}");
+
         wrapper.InvokeConnect(connection);
 
         var lastServerSend = System.DateTime.UtcNow;
+
+        Debug.LogR($"[b][color=seagreen]Connection established and validated[/color]: client@{connection.UserId}");
 
         while (active())
         {

@@ -17,26 +17,20 @@ namespace Cutulu.Network
 
         public readonly Dictionary<IPEndPoint, Connection> ConnectionsByUdp = [];
         public readonly Dictionary<TcpSocket, Connection> Connections = [];
-
         public readonly TcpHost TcpHost;
         public readonly UdpHost UdpHost;
 
-        public byte[] PingBuffer { get; set; }
-        private long LastUID { get; set; }
+        public byte[] PingBuffer;
+        private long NextUID;
 
-        public bool UseRouterPortForwarding { get; set; } = false;
-        public int MaxClients { get; set; } = 0;
-        public int TcpPort { get; set; }
-        public int UdpPort { get; set; }
+        public bool UseRouterPortForwarding = false;
+        public int MaxClients = 0, TcpPort, UdpPort;
 
         public bool IsListening => TcpHost?.IsListening ?? false;
 
         public Action<Connection, short, byte[]> Received;
         public Action<Connection> Connected, Disconnected;
         public Action Started, Stopped;
-
-        private Wrapper wrapper { get; set; }
-        public Wrapper GetWrapper() => wrapper ??= new(this);
 
         public HostManager()
         {
@@ -61,6 +55,11 @@ namespace Cutulu.Network
             UdpPort = udpPort;
         }
 
+        ~HostManager() => Stop();
+
+        public Wrapper GetWrapper() => wrapper ??= new(this);
+        private Wrapper wrapper;
+
         #region Validators
 
         public bool TryGetHandler(byte key, out ConnectionHandler validator) => ConnectionHandlers.TryGetValue(key, out validator);
@@ -84,10 +83,12 @@ namespace Cutulu.Network
         /// <summary>
         /// Starts host
         /// </summary>
-        public virtual async Task Start()
+        public virtual void Start()
         {
-            await Stop();
+            Debug.Log("A001");
+            Stop();
 
+            Debug.Log("A002");
             ConnectionsByUdp.Clear();
             Connections.Clear();
 
@@ -96,26 +97,24 @@ namespace Cutulu.Network
 
             UdpHost.UseRouterPortForwarding = UseRouterPortForwarding;
             UdpHost.Start(UdpPort);
+
+            Debug.Log($"Started host on port tcp:{TcpPort} udp:{UdpPort}");
         }
 
         /// <summary>
         /// Stops host
         /// </summary>
-        public virtual async Task Stop()
+        public virtual void Stop()
         {
-            // Kick all connections before stopping the server
-            foreach (var _connection in Connections.Values) _connection?.Kick();
+            foreach (var connection in Connections.Values)
+                connection?.Kick();
 
             TcpHost.Stop();
             UdpHost.Stop();
 
             ConnectionsByUdp.Clear();
             Connections.Clear();
-
-            LastUID = 0;
-
-            while (TcpHost.IsListening || UdpHost.IsListening) await Task.Delay(1);
-            await Task.Delay(1);
+            NextUID = 0;
         }
 
         /// <summary>
@@ -181,13 +180,11 @@ namespace Cutulu.Network
 
         protected virtual void ConnectedEvent(Connection _connection)
         {
-            Debug.Log($"New stream connected0: {_connection.UserId}");
             lock (this) Connected?.Invoke(_connection);
         }
 
         private async void HandleNewClient(TcpSocket socket)
         {
-            Debug.Log($"New socket connected-1: {socket.Port}");
             var packet = await socket.Receive(1);
 
             if (packet.Success == false)
@@ -243,7 +240,7 @@ namespace Cutulu.Network
 
             public void InvokeConnect(Connection connection) => Manager.ConnectedEvent(connection);
 
-            public long NextUID() => ++Manager.LastUID;
+            public long NextUID() => Manager.NextUID++;
         }
     }
 }
