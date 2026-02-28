@@ -26,7 +26,7 @@ namespace Cutulu.Core
         /// </summary>
         public static void Encode<T>(this BinaryWriter _writer, T _obj)
         {
-            Encode(_writer, _obj, typeof(T));
+            if (_obj.NotNull()) Encode(_writer, _obj, _obj.GetType());
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Cutulu.Core
         /// </summary>
         public static byte[] Encode<T>(this T obj)
         {
-            return Encode(obj, typeof(T));
+            return obj.NotNull() ? Encode(obj, obj.GetType()) : [];
         }
 
         /// <summary>
