@@ -205,4 +205,33 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
 
         AddRange(array.AsSpan(0, i));
     }
+
+    class Encoder : BinaryEncoder<SwapbackArray<T>>
+    {
+        public override void Encode(System.IO.BinaryWriter writer, ref object value)
+        {
+            if (value is SwapbackArray<T> array)
+            {
+                writer.Write(array.Count);
+                var span = array.AsSpan();
+
+                for (int i = 0; i < span.Length; i++)
+                {
+                    writer.Encode(span[i]);
+                }
+            }
+        }
+
+        public override object Decode(System.IO.BinaryReader reader)
+        {
+            var array = new SwapbackArray<T>(reader.ReadInt32());
+
+            for (int i = 0; i < array.Count; i++)
+            {
+                array[i] = reader.Decode<T>();
+            }
+
+            return array;
+        }
+    }
 }
