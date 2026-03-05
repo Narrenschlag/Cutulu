@@ -90,6 +90,13 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
         _data[_count] = default!;
     }
 
+    public T[] ToArray()
+    {
+        T[] array = new T[_count];
+        Array.Copy(_data, 0, array, 0, _count);
+        return array;
+    }
+
     public Span<T> AsSpan() => _data.AsSpan(0, _count);
 
     public Span<T> AsSpan(int count) => _data.AsSpan(0, int.Min(_count, count));

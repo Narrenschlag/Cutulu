@@ -104,6 +104,17 @@ public class BufferPool : IDisposable
             OrderedStartIndexArray.Add(length0);
     }
 
+    public byte[] GetBuffer(int entryIdx)
+    {
+        var length = GetLength(entryIdx);
+        var start = GetStart(entryIdx);
+
+        byte[] buffer = new byte[length];
+        Stream.Read(buffer, start, length);
+
+        return buffer;
+    }
+
     /// <summary>
     /// Returns the number of encoded segments. Always at least 1, even for an
     /// empty pool. Check <see cref="GetLength()"/> to distinguish a truly empty pool.
