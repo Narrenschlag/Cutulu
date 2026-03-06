@@ -14,7 +14,7 @@ using System;
 /// </summary>
 public abstract class BinaryEncoder
 {
-    public readonly int GenericCount;
+    public readonly byte GenericCount;
 
     public readonly nint SourceHandle;
     public readonly Type SourceType;
@@ -22,7 +22,7 @@ public abstract class BinaryEncoder
     public BinaryEncoder(Type sourceType)
     {
         SourceHandle = (SourceType = sourceType).TypeHandle.Value;
-        GenericCount = SourceType.GenericTypeArguments.Size();
+        GenericCount = (byte)SourceType.GenericTypeArguments.Size();
     }
 
     public bool IsGeneric() => GenericCount > 0;
