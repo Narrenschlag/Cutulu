@@ -185,9 +185,9 @@ namespace Cutulu.Core
         public static implicit operator int(Number value) => value.GetInt();
         public static implicit operator long(Number value) => value.GetLong();
 
-        class Encoder : BinaryEncoder<Number>
+        class Encoder() : BinaryEncoder(typeof(Number))
         {
-            public override void Encode(System.IO.BinaryWriter writer, ref object value)
+            public override void Encode(System.IO.BinaryWriter writer, System.Type type, object value)
             {
                 var number = (Number)value;
 
@@ -195,7 +195,7 @@ namespace Cutulu.Core
                 writer.Write(number.Buffer);
             }
 
-            public override object Decode(System.IO.BinaryReader reader)
+            public override object Decode(System.IO.BinaryReader reader, System.Type type)
             {
                 var _length = reader.ReadByte();
                 return new Number() { Buffer = reader.ReadBytes(_length), };

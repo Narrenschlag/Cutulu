@@ -58,9 +58,9 @@ namespace Cutulu.Core
             return vector;
         }
 
-        class Encoder : BinaryEncoder<NumberXI>
+        class Encoder() : BinaryEncoder(typeof(NumberXI))
         {
-            public override void Encode(System.IO.BinaryWriter writer, ref object value)
+            public override void Encode(System.IO.BinaryWriter writer, System.Type type, object value)
             {
                 var numbers = ((NumberXI)value).Numbers;
 
@@ -73,7 +73,7 @@ namespace Cutulu.Core
                 }
             }
 
-            public override object Decode(System.IO.BinaryReader reader)
+            public override object Decode(System.IO.BinaryReader reader, System.Type type)
             {
                 var bytes = reader.ReadByte();
                 var count = reader.ReadByte();

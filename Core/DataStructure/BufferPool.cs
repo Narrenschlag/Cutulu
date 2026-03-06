@@ -163,9 +163,9 @@ public class BufferPool : IDisposable
     /// Handles binary serialisation and deserialisation of <see cref="BufferPool"/>.
     /// Wire format: [int totalLength][bytes][int startIndexCount][int… startIndices]
     /// </summary>
-    class Encoder : BinaryEncoder<BufferPool>
+    class Encoder() : BinaryEncoder(typeof(BufferPool))
     {
-        public override void Encode(BinaryWriter writer, ref object value)
+        public override void Encode(BinaryWriter writer, Type type, object value)
         {
             if (value is BufferPool pool)
             {
@@ -181,7 +181,7 @@ public class BufferPool : IDisposable
             }
         }
 
-        public override object Decode(BinaryReader reader)
+        public override object Decode(BinaryReader reader, Type type)
         {
             var pool = new BufferPool(reader, reader.ReadInt32());
 

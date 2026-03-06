@@ -61,11 +61,11 @@ namespace Cutulu.Core
         public static implicit operator ulong(UNumber value) => value.Value;
         public static implicit operator long(UNumber value) => (long)value.Value;
 
-        class Encoder : BinaryEncoder<UNumber>
+        class Encoder() : BinaryEncoder(typeof(UNumber))
         {
             private const byte DIV = 252;
 
-            public override void Encode(System.IO.BinaryWriter writer, ref object value)
+            public override void Encode(System.IO.BinaryWriter writer, System.Type type, object value)
             {
                 var _number = (UNumber)value;
 
@@ -80,7 +80,7 @@ namespace Cutulu.Core
                 }
             }
 
-            public override object Decode(System.IO.BinaryReader reader)
+            public override object Decode(System.IO.BinaryReader reader, System.Type type)
             {
                 var _byte = reader.ReadByte();
 

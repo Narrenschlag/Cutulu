@@ -15,16 +15,11 @@ namespace Cutulu.Core
     /// </summary>
     public static class AdvancedEncoders
     {
-        class KeyValuePairEncoder : GenericBinaryEncoder
+        class KeyValuePairEncoder() : BinaryEncoder(typeof(KeyValuePair<,>))
         {
             private static readonly ConcurrentDictionary<Type, (Type KeyType, Type ValueType, Func<object, object> GetKey, Func<object, object> GetValue)> Cache = new();
 
-            public override bool ApplysTo(Type type) =>
-                type.IsGenericType && type.GetGenericTypeDefinition() == GetType();
-
-            public override Type GetType() => typeof(KeyValuePair<,>);
-
-            public override void Encode(BinaryWriter writer, ref object value, Type type)
+            public override void Encode(BinaryWriter writer, Type type, object value)
             {
                 var meta = Cache.GetOrAdd(type, CreateMetadata);
 
@@ -66,16 +61,11 @@ namespace Cutulu.Core
             }
         }
 
-        class ICollectionEncoder : GenericBinaryEncoder
+        class ICollectionEncoder() : BinaryEncoder(typeof(ICollection<>))
         {
-            private static readonly ConcurrentDictionary<Type, Type> ItemTypeCache = new();
+            private static readonly ConcurrentDictionary<Type, Type> ItemTypeCache = [];
 
-            public override bool ApplysTo(Type type) =>
-                type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == GetType());
-
-            public override Type GetType() => typeof(ICollection<>);
-
-            public override void Encode(BinaryWriter writer, ref object value, Type type)
+            public override void Encode(BinaryWriter writer, Type type, object value)
             {
                 var itemType = ItemTypeCache.GetOrAdd(type, t =>
                 {
@@ -117,14 +107,9 @@ namespace Cutulu.Core
             }
         }
 
-        class TupleEncoder : GenericBinaryEncoder
+        class TupleEncoder() : BinaryEncoder(typeof(ITuple))
         {
-            public override bool ApplysTo(Type type) =>
-                type.IsGenericType && GetType().IsAssignableFrom(type);
-
-            public override Type GetType() => typeof(ITuple);
-
-            public override void Encode(BinaryWriter writer, ref object value, Type type)
+            public override void Encode(BinaryWriter writer, Type type, object value)
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value), "Tuple value is null.");

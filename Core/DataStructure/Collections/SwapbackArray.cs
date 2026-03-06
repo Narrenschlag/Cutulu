@@ -1,9 +1,12 @@
 namespace Cutulu.Core;
 
 using System.Runtime.CompilerServices;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System;
 using System.Collections;
+using System.Linq;
+using System;
+using System.IO;
 
 /// <summary>
 /// Written by Maximilian Schecklmann on 3th of Nov 2025, inspired by Nic Barker's implementation.
@@ -29,6 +32,16 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
     {
         _data = data ?? [];
         _count = _data.Length;
+    }
+
+    public SwapbackArray(IList data)
+    {
+        _data = new T[data.Count]; // <-- was never initialized
+        _count = data.Count;       // <-- was _data.Length which threw NullRef
+        int i = 0;
+
+        foreach (var item in data)
+            _data[i++] = (T)item;
     }
 
     public ref T this[int index]
@@ -212,33 +225,47 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
 
         AddRange(array.AsSpan(0, i));
     }
+}
 
-    class Encoder : BinaryEncoder<SwapbackArray<T>>
+class SwapbackArrayEncoder() : BinaryEncoder(typeof(SwapbackArray<>))
+{
+    private static readonly ConcurrentDictionary<Type, Type> ItemTypeCache = [];
+
+    public override void Encode(BinaryWriter writer, Type type, object value)
     {
-        public override void Encode(System.IO.BinaryWriter writer, ref object value)
+        var itemType = ItemTypeCache.GetOrAdd(type, t =>
         {
-            if (value is SwapbackArray<T> array)
-            {
-                writer.Write(array.Count);
-                var span = array.AsSpan();
+            return t.GetInterfaces()
+                    .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>))
+                    .GetGenericArguments()[0];
+        });
 
-                for (int i = 0; i < span.Length; i++)
-                {
-                    writer.Encode(span[i]);
-                }
-            }
-        }
+        var count = (UNumber)(value == null ? 0 : ((ICollection)value).Count);
+        writer.Encode(count);
 
-        public override object Decode(System.IO.BinaryReader reader)
+        if (count > 0)
         {
-            var array = new SwapbackArray<T>(reader.ReadInt32());
-
-            for (int i = 0; i < array.Count; i++)
-            {
-                array[i] = reader.Decode<T>();
-            }
-
-            return array;
+            foreach (var item in (IEnumerable)value)
+                writer.Encode(item, itemType);
         }
+    }
+
+    public override object Decode(BinaryReader reader, Type type)
+    {
+        var itemType = ItemTypeCache.GetOrAdd(type, t =>
+        {
+            return t.GetInterfaces()
+                    .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>))
+                    .GetGenericArguments()[0];
+        });
+
+        var count = reader.Decode<UNumber>();
+        var arrayType = itemType.MakeArrayType(); // T[]
+        var array = (Array)Activator.CreateInstance(arrayType, (int)count);
+
+        for (int i = 0; i < count; i++)
+            array.SetValue(reader.Decode(itemType), i);
+
+        return Activator.CreateInstance(type, array); // matches SwapbackArray(params T[] data)
     }
 }

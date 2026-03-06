@@ -155,8 +155,7 @@ namespace Cutulu.Core
                 var t when t == typeof(double) => reader.ReadDouble(),
                 var t when t == typeof(float) => reader.ReadSingle(),
 
-                _ => BinaryEncoding.Encoders.TryGetValue(type.TypeHandle.Value, out var decoder) ? decoder.Decode(reader) :
-                    BinaryEncoding.TryGetGenericEncoder(type, out var genericDecoder) ? genericDecoder.Decode(reader, type) :
+                _ => BinaryEncoding.TryGetEncoder(type, out var decoder) ? decoder.Decode(reader, type) :
                     DecodeUnknown(reader, type)
             };
 

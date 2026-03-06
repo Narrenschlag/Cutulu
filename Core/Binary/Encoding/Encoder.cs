@@ -135,10 +135,7 @@ namespace Cutulu.Core
                     var type = obj.GetType();
 
                     // Encode using custom encoder
-                    if (BinaryEncoding.Encoders.TryGetValue(type.TypeHandle.Value, out var encoder)) encoder.Encode(writer, ref obj);
-
-                    // Encode using custom generic encoder
-                    else if (BinaryEncoding.TryGetGenericEncoder(type, out var genericEncoder)) genericEncoder.Encode(writer, ref obj, type);
+                    if (BinaryEncoding.TryGetEncoder(type, out var encoder)) encoder.Encode(writer, type, obj);
 
                     // Encode types without serializer
                     else if (EncodeUnknown(writer, ref obj) == false) return false;

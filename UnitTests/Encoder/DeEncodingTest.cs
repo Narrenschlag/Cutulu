@@ -11,13 +11,17 @@ namespace Cutulu.Core.UnitTest
         {
             int
             step = 0,
-            steps = 5;
+            steps = 6;
 
             var time = System.Diagnostics.Stopwatch.StartNew();
 
             void stepLog(string hint) => Debug.LogError($"Integration Test ___{hint}___ [{++step}/{steps}]");
 
-            for (int i = 0; i < 10; i++)
+            int iterationSum = 0;
+            int iterationCount = 10;
+            int[] iterationDurations = new int[iterationCount];
+
+            for (int i = 0; i < iterationCount; i++)
             {
                 try
                 {
@@ -26,7 +30,7 @@ namespace Cutulu.Core.UnitTest
                     #region Step 1
                     stepLog("MsgString");
 
-                    Debug.Log($"Encoder Count: {BinaryEncoding.EncoderCount}");
+                    Debug.Log($"Encoder Count: {BinaryEncoding.GetEncoderCount()}");
 
                     var str0 = "Hello World!";
                     var buff = str0.Encode();
@@ -74,11 +78,12 @@ namespace Cutulu.Core.UnitTest
                     stepLog("DictionaryEncoder");
 
                     var dict = new System.Collections.Generic.Dictionary<string, int>()
-                {
-                    { "entry0", -1 },
-                    { "last", 9997 },
-                };
+                    {
+                        { "entry0", -1 },
+                        { "last", 9997 },
+                    };
 
+                    Debug.Log($"{dict.GetType()} == {typeof(System.Collections.Generic.Dictionary<,>)}: {dict.GetType() == typeof(System.Collections.Generic.Dictionary<,>)}");
                     buff = dict.Encode();
 
                     Debug.Log($"Encoded {dict.GetType().Name}[{dict.Count} entries] into {buff.Length} bytes");
@@ -120,7 +125,22 @@ namespace Cutulu.Core.UnitTest
 
                     Debug.Log($"Decoded into {ghi.Item1}={jkl.UID}, {ghi.Item2}={jkl.Char}, {ghi.Item3}={jkl.V2}, {ghi.Item4}={jkl.Name}");
 
+                    stepLog("SwapbackArray-Ecoder");
+
+                    var swapbackArray = new SwapbackArray<int>([1, 2, 7, 4, 5]);
+
+                    buff = swapbackArray.Encode();
+                    Debug.LogR($"[b]Before:[/b] [color=magenta]{string.Join(", ", swapbackArray)}[/color]");
+
+                    swapbackArray = buff.Decode<SwapbackArray<int>>();
+                    Debug.LogR($"[b]After:[/b] [color=seagreen]{string.Join(", ", swapbackArray)}[/color]");
+
                     #endregion
+
+                    iterationDurations[i] = (int)time.ElapsedMilliseconds;
+                    time.Restart();
+
+                    iterationSum += iterationDurations[i];
                 }
 
                 catch (Exception ex)
@@ -135,7 +155,7 @@ namespace Cutulu.Core.UnitTest
             //finally
             {
                 time.Stop();
-                Debug.LogError($"Succeeded in {time.ElapsedMilliseconds} ms.");
+                Debug.LogR($"[color=seagreen][b][pulse]Succeeded in {iterationSum} ms.[/pulse][/b][/color]\n-> Cold Start: [color=magenta]{iterationDurations[0]} ms[/color]\n-> Warm: [color=gold]{(iterationSum - iterationDurations[0]) / (iterationCount - 1)} ms[/color]");
                 Application.Quit();
             }
         }
@@ -146,9 +166,9 @@ namespace Cutulu.Core.UnitTest
             public int HealthPoints { get; set; }
         }
 
-        private class Vector3Encoder : BinaryEncoder<Vector3>
+        private class Vector3Encoder() : BinaryEncoder(typeof(Vector3))
         {
-            public override void Encode(BinaryWriter writer, ref object value)
+            public override void Encode(BinaryWriter writer, Type type, object value)
             {
                 var obj = (Vector3)value;
 
@@ -157,7 +177,7 @@ namespace Cutulu.Core.UnitTest
                 writer.Write(obj.Z);
             }
 
-            public override object Decode(BinaryReader reader)
+            public override object Decode(BinaryReader reader, Type type)
             {
                 return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
             }

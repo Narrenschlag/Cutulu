@@ -2,6 +2,7 @@
 namespace Cutulu.Core;
 
 using System.IO;
+using System;
 
 public partial struct ActionTimeStamp
 {
@@ -29,9 +30,9 @@ public partial struct ActionTimeStamp
         };
     }
 
-    class Encoder : BinaryEncoder<ActionTimeStamp>
+    class Encoder() : BinaryEncoder(typeof(ActionTimeStamp))
     {
-        public override void Encode(BinaryWriter writer, ref object value)
+        public override void Encode(BinaryWriter writer, Type type, object value)
         {
             if (value is not ActionTimeStamp t) return;
 
@@ -40,7 +41,7 @@ public partial struct ActionTimeStamp
             writer.Write(t.Minute);
         }
 
-        public override object Decode(BinaryReader reader)
+        public override object Decode(BinaryReader reader, Type type)
         {
             return new ActionTimeStamp()
             {

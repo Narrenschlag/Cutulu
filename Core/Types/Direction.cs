@@ -27,10 +27,10 @@ namespace Cutulu.Core
             Vector = new Vector3(bytes[0].ByteToFloat(), bytes[1].ByteToFloat(), bytes[2].ByteToFloat()).Round(0.01f).Normalized();
         }
 
-        class directionModifier : BinaryEncoder<Direction>
+        class Encoder() : BinaryEncoder(typeof(Direction))
         {
-            public override void Encode(BinaryWriter writer, ref object value) => writer.Write(((Direction)value).Values);
-            public override object Decode(BinaryReader reader) => new Direction(reader.ReadBytes(3));
+            public override void Encode(BinaryWriter writer, System.Type type, object value) => writer.Write(((Direction)value).Values);
+            public override object Decode(BinaryReader reader, System.Type type) => new Direction(reader.ReadBytes(3));
         }
     }
 }

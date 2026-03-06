@@ -24,9 +24,9 @@ namespace Cutulu.Core
         public static implicit operator Godot.Vector2I(Number2I value) => value.Godot;
         public static implicit operator Number2I(Godot.Vector2I value) => new(value);
 
-        class VectorI2Encoder : BinaryEncoder<Number2I>
+        class VectorI2Encoder() : BinaryEncoder(typeof(Number2I))
         {
-            public override void Encode(System.IO.BinaryWriter writer, ref object value)
+            public override void Encode(System.IO.BinaryWriter writer, System.Type type, object value)
             {
                 var numbers = ((Number2I)value).Vector.Numbers;
                 writer.Write(Number.GetNumberId(numbers));
@@ -41,7 +41,7 @@ namespace Cutulu.Core
                 }
             }
 
-            public override object Decode(System.IO.BinaryReader reader)
+            public override object Decode(System.IO.BinaryReader reader, System.Type type)
             {
                 var vector = new Number2I() { Vector = new() { Numbers = new Number[2] } };
                 var byteCount = Number.ReadNumberId(reader.ReadByte());
