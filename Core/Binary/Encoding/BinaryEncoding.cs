@@ -80,14 +80,13 @@ public static class BinaryEncoding
 
     public static bool TryGetEncoder(Type type, out BinaryEncoder encoder)
     {
-        if (type.IsNull())
+        if (type.IsNull() || type.IsArray) // Skip nulls and arrays, which are a special case
         {
             encoder = null;
             return false;
         }
 
         // Water down type to generic definition if generic
-        if (type.IsGenericType) type = type.GetGenericTypeDefinition();
         if (type.IsGenericType) type = type.GetGenericTypeDefinition();
 
         nint baseHandle = type.TypeHandle.Value;
