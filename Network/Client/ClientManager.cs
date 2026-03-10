@@ -160,9 +160,15 @@ namespace Cutulu.Network
                 // First let the client read the packet
                 if (ReadPacket(_key, _buffer)) return;
 
+                using LocalDecoder localDecoder = new(_buffer);
+
                 // Host didn't consume the packet, let the listeners read it
                 foreach (var _listener in Listeners)
-                    if (_listener._Receive(_key, _buffer)) return;
+                {
+                    localDecoder.Reset();
+
+                    if (_listener._Receive(_key, localDecoder)) return;
+                }
 
                 // No one consumed the packet, let the events read it
                 Received?.Invoke(_key, _buffer);

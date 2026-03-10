@@ -10,6 +10,6 @@ namespace Cutulu.Network
         /// Called when a packet is received
         /// <para>Returns true if the packet should be blocked</para>
         /// </summary>
-        public bool _Receive(short _key, byte[] _buffer);
+        public bool _Receive(short key, Core.LocalDecoder decoder);
     }
 }
