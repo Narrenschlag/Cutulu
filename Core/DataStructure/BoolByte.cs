@@ -1,6 +1,8 @@
 namespace Cutulu.Core;
 
 using System.Runtime.CompilerServices;
+using System.IO;
+using System;
 
 public struct BoolByte
 {
@@ -102,7 +104,7 @@ public struct BoolByte
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int PopCount() => System.Numerics.BitOperations.PopCount(_bits);
 
-    public byte RawByte => _bits;
+    public readonly byte RawByte => _bits;
 
     // Implicit conversions so you can treat it as a byte directly
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -112,4 +114,17 @@ public struct BoolByte
     public static implicit operator BoolByte(byte b) => new(b);
 
     public override string ToString() => $"[{_bits:B8}]"; // binary string e.g. [00000101]
+
+    class Encoder() : BinaryEncoder(typeof(BoolByte))
+    {
+        public override void Encode(BinaryWriter writer, Type type, object value)
+        {
+            writer.Write(((BoolByte)value).RawByte);
+        }
+
+        public override object Decode(BinaryReader reader, Type type)
+        {
+            return new BoolByte(reader.ReadByte());
+        }
+    }
 }
