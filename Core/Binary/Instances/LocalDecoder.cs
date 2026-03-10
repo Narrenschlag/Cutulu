@@ -12,6 +12,12 @@ public sealed class LocalDecoder : IDisposable
     public long Length => _memory.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long GetPosition() => _memory.Position;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetPosition(long position) => _memory.Position = position;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte[] GetBuffer() => _memory.GetBuffer();
 
     public LocalDecoder() { _reader = new(_memory = new()); }
