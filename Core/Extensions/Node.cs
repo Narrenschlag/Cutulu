@@ -239,8 +239,7 @@ namespace Cutulu.Core
             {
                 if (result != null) return;
 
-                if (includeSelf && set(node))
-                    return;
+                if (includeSelf && set(node)) return;
 
                 foreach (Node n in node.GetChildren())
                 {
@@ -250,9 +249,9 @@ namespace Cutulu.Core
 
             bool set(Node node)
             {
-                if (node is not T) return false;
+                if (node is not T t || t.IsNull()) return false;
 
-                result = node as T;
+                result = t;
                 return true;
             }
         }

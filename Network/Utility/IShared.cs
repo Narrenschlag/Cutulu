@@ -71,19 +71,18 @@ namespace Cutulu.Network
         {
             if (packed.IsNull()) return default;
 
-            var _node = packed.Instantiate<Node>(parent);
+            var _node = packed.Instantiate<Node>(null);
 
             if (_node is ISharable shared && _node.NotNull())
             {
-                var unpacked = shared.Unpack<N>(parent, asClient);
-
                 //Debug.LogError($"Unpacking asset as typeof({typeof(N)}): {unpacked.NotNull()}"); //@{unpacked.GetParent().Name}");
-                return unpacked;
+                return shared.Unpack<N>(parent, asClient);
             }
 
             else if (_node is N n && _node.NotNull())
             {
                 //Debug.LogError($"Load asset typeof({n.GetType().Name}) as typeof({typeof(N)})");
+                if (n is Node _n) parent.AddChild(_n);
                 return n;
             }
 
