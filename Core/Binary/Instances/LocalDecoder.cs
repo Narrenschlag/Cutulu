@@ -18,37 +18,52 @@ public sealed class LocalDecoder : IDisposable
     public void SetPosition(long position) => _memory.Position = position;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public byte[] GetBuffer() => _memory.GetBuffer();
+    public byte[] GetBuffer() => _memory.ToArray();
 
     public LocalDecoder() { _reader = new(_memory = new()); }
-    public LocalDecoder(byte[] buffer) { _reader = new(_memory = new(buffer)); }
-    // Position = 0 is implicit for buffer ctor — MemoryStream starts at 0
+
+    //public LocalDecoder(byte[] buffer) => _reader = new(_memory = new(buffer)); 
+
+    public LocalDecoder(byte[] buffer)
+    {
+        _memory = new MemoryStream();
+        _memory.Write(buffer, 0, buffer.Length);
+        _memory.Position = 0;
+        _reader = new BinaryReader(_memory);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Append(byte[] buffer) => Append(buffer.AsSpan());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Append(Span<byte> buffer) => _memory.Write(buffer);
+    public void Append(Span<byte> buffer)
+    {
+        long position = _memory.Position;
 
-    /// Call once after all Appends, before any reads
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Flush() => Reset();
+        _memory.Write(buffer);
+
+        _memory.Position = position; // Keep old position
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear() => _memory.SetLength(0); // Position = 0 implicit
+    public void Clear()
+    {
+        _memory.SetLength(0);
+        _memory.Position = 0;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Reset(byte[] buffer) => Reset(buffer.AsSpan());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Reset() => _memory.Position = 0;
+    public void ResetPosition() => _memory.Position = 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Reset(Span<byte> buffer)
     {
         Clear();
+
         Append(buffer);
-        Flush();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,7 +88,7 @@ public sealed class LocalDecoder : IDisposable
 
     public void Dispose()
     {
-        _memory?.Dispose();
         _reader?.Dispose();
+        _memory?.Dispose();
     }
 }

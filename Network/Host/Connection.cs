@@ -86,7 +86,7 @@ namespace Cutulu.Network
 
                     foreach (var _listener in Listeners)
                     {
-                        decoder.Reset();
+                        decoder.ResetPosition();
 
                         if ((bool)(_listener?._Receive(key, decoder))) return;
                     }

@@ -109,9 +109,13 @@ public class BufferPool : IDisposable
         var length = GetLength(entryIdx);
         var start = GetStart(entryIdx);
 
-        byte[] buffer = new byte[length];
-        Stream.Read(buffer, start, length);
+        long position = Stream.Position;
 
+        byte[] buffer = new byte[length];
+        Stream.Position = start;
+        Stream.Read(buffer, 0, length);
+
+        Stream.Position = position;
         return buffer;
     }
 

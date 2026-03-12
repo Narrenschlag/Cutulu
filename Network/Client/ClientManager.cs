@@ -165,7 +165,7 @@ namespace Cutulu.Network
                 // Host didn't consume the packet, let the listeners read it
                 foreach (var _listener in Listeners)
                 {
-                    localDecoder.Reset();
+                    localDecoder.ResetPosition();
 
                     if (_listener._Receive(_key, localDecoder)) return;
                 }
