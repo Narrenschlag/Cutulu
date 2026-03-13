@@ -29,6 +29,7 @@ public static class BinaryEncoding
         RegisterAllEncoders();
     }
 
+    /*
     private static void RegisterAllEncoders()
     {
         // Get the assembly where BinaryEncoder<T> implementations are located
@@ -40,6 +41,26 @@ public static class BinaryEncoding
         finder.FindTypes(type, flags, assembly);
 
         // Instantiate each encoder and add it to the dictionary
+        foreach (var classType in finder.Types[type])
+            RegisterEncoder(classType);
+    }
+    */
+
+    private static void RegisterAllEncoders()
+    {
+        var flags = Reflection.TypeFinder.DefaultFlags;
+        var finder = new Reflection.TypeFinder();
+        Type type = typeof(BinaryEncoder);
+
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                finder.FindTypes(type, flags, assembly);
+            }
+            catch { /* Skip assemblies that can't be reflected */ }
+        }
+
         foreach (var classType in finder.Types[type])
             RegisterEncoder(classType);
     }

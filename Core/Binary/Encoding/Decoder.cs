@@ -51,7 +51,7 @@ public static class Decoder
     {
         try
         {
-            return (_value = Decode(_reader, _type)) != null;
+            return (_value = Decode(_reader, _type)).NotNull();
         }
 
         catch (Exception ex)
@@ -81,10 +81,14 @@ public static class Decoder
     /// </summary>
     public static bool TryDecode<T>(this BinaryReader _reader, out T _value, bool _enable_logging = true)
     {
-        var _decoded = TryDecode(_reader, typeof(T), out object _obj, _enable_logging);
+        if (TryDecode(_reader, typeof(T), out object _obj, _enable_logging) && _obj is T _t)
+        {
+            _value = _t;
+            return true;
+        }
 
-        _value = (T)_obj;
-        return _decoded;
+        _value = default;
+        return false;
     }
 
     /// <summary>
@@ -94,7 +98,7 @@ public static class Decoder
     {
         try
         {
-            return (_value = _buffer.NotEmpty() ? Decode(_buffer, _type) : null) != null;
+            return (_value = _buffer.NotEmpty() ? Decode(_buffer, _type) : null).NotNull();
         }
 
         catch (Exception ex)

@@ -14,18 +14,13 @@ using System;
 /// </summary>
 public abstract class BinaryEncoder
 {
-    public readonly byte GenericCount;
-
     public readonly nint SourceHandle;
     public readonly Type SourceType;
 
     public BinaryEncoder(Type sourceType)
     {
         SourceHandle = (SourceType = sourceType).TypeHandle.Value;
-        GenericCount = (byte)SourceType.GenericTypeArguments.Size();
     }
-
-    public bool IsGeneric() => GenericCount > 0;
 
     public virtual int GetPriority() => 0;
 
