@@ -45,9 +45,9 @@ public class BufferPool : IDisposable
     /// Initialises a pool with a single encoded object. Equivalent to constructing
     /// an empty pool and calling <see cref="Encode(object, bool)"/> once.
     /// </summary>
-    public BufferPool(object obj) : this()
+    public BufferPool(object obj, bool iAmAwareThisIsNotCapacity) : this()
     {
-        Writer.Encode(obj);
+        if (iAmAwareThisIsNotCapacity) Writer.Encode(obj);
     }
 
     /// <summary>Returns a copy of the underlying buffer as a byte array.</summary>
