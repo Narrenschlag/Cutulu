@@ -17,6 +17,7 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
     private int _count;
 
     public int Count => _count;
+    public int Length => _count;
     public int Capacity => _data.Length;
 
     public bool IsReadOnly => false; // Collections are not read-only by default
