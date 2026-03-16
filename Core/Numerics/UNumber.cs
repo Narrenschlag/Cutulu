@@ -1,116 +1,126 @@
-namespace Cutulu.Core
+namespace Cutulu.Core;
+
+using System;
+using System.Numerics;
+
+/// <summary>
+/// Represents a number. Dynamic in it's byte size.
+/// </summary>
+public readonly struct UNumber : IIncrementOperators<UNumber>, IDecrementOperators<UNumber>
 {
-    using System;
+    public static readonly UNumber Zero = new(0);
 
-    /// <summary>
-    /// Represents a number. Dynamic in it's byte size.
-    /// </summary>
-    public readonly struct UNumber
+    public readonly ulong Value;
+
+    public readonly TypeEnum GetTypeEnum() =>
+        Value > uint.MaxValue ? TypeEnum.ULong :
+        Value > ushort.MaxValue ? TypeEnum.UInt :
+        Value > byte.MaxValue ? TypeEnum.UShort :
+        TypeEnum.Byte;
+
+    public static byte GetLength(TypeEnum _type)
     {
-        public static readonly UNumber Zero = new(0);
-
-        public readonly ulong Value;
-
-        public readonly TypeEnum GetTypeEnum() =>
-            Value > uint.MaxValue ? TypeEnum.ULong :
-            Value > ushort.MaxValue ? TypeEnum.UInt :
-            Value > byte.MaxValue ? TypeEnum.UShort :
-            TypeEnum.Byte;
-
-        public static byte GetLength(TypeEnum _type)
+        return _type switch
         {
-            return _type switch
-            {
-                TypeEnum.UShort => 2,
-                TypeEnum.UInt => 4,
-                TypeEnum.ULong => 8,
-                _ => 1,
-            };
-        }
+            TypeEnum.UShort => 2,
+            TypeEnum.UInt => 4,
+            TypeEnum.ULong => 8,
+            _ => 1,
+        };
+    }
 
-        public override readonly string ToString() => Value.ToString();
+    public override readonly string ToString() => Value.ToString();
 
-        public UNumber(ulong value) => Value = value;
-        public UNumber() => Value = default;
+    public UNumber(ulong value) => Value = value;
+    public UNumber() => Value = default;
 
-        private byte[] GetBuffer()
+    private byte[] GetBuffer()
+    {
+        return GetTypeEnum() switch
         {
-            return GetTypeEnum() switch
-            {
-                TypeEnum.Byte => [(byte)Value],
-                TypeEnum.UShort => BitConverter.GetBytes((ushort)Value),
-                TypeEnum.UInt => BitConverter.GetBytes((uint)Value),
-                TypeEnum.ULong => BitConverter.GetBytes(Value),
-                _ => [],
-            };
-        }
+            TypeEnum.Byte => [(byte)Value],
+            TypeEnum.UShort => BitConverter.GetBytes((ushort)Value),
+            TypeEnum.UInt => BitConverter.GetBytes((uint)Value),
+            TypeEnum.ULong => BitConverter.GetBytes(Value),
+            _ => [],
+        };
+    }
 
-        public static implicit operator UNumber(byte value) => new(value);
-        public static implicit operator UNumber(short value) => new(value < 0 ? default : (ushort)value);
-        public static implicit operator UNumber(ushort value) => new(value);
-        public static implicit operator UNumber(int value) => new(value < 0 ? default : (uint)value);
-        public static implicit operator UNumber(uint value) => new(value);
-        public static implicit operator UNumber(long value) => new(value < 0 ? default : (ulong)value);
-        public static implicit operator UNumber(ulong value) => new(value);
+    public static implicit operator UNumber(byte value) => new(value);
+    public static implicit operator UNumber(short value) => new(value < 0 ? default : (ushort)value);
+    public static implicit operator UNumber(ushort value) => new(value);
+    public static implicit operator UNumber(int value) => new(value < 0 ? default : (uint)value);
+    public static implicit operator UNumber(uint value) => new(value);
+    public static implicit operator UNumber(long value) => new(value < 0 ? default : (ulong)value);
+    public static implicit operator UNumber(ulong value) => new(value);
 
-        public static implicit operator byte(UNumber value) => (byte)value.Value;
-        public static implicit operator ushort(UNumber value) => (ushort)value.Value;
-        public static implicit operator short(UNumber value) => (short)value.Value;
-        public static implicit operator uint(UNumber value) => (uint)value.Value;
-        public static implicit operator int(UNumber value) => (int)value.Value;
-        public static implicit operator ulong(UNumber value) => value.Value;
-        public static implicit operator long(UNumber value) => (long)value.Value;
+    public static implicit operator byte(UNumber value) => (byte)value.Value;
+    public static implicit operator ushort(UNumber value) => (ushort)value.Value;
+    public static implicit operator short(UNumber value) => (short)value.Value;
+    public static implicit operator uint(UNumber value) => (uint)value.Value;
+    public static implicit operator int(UNumber value) => (int)value.Value;
+    public static implicit operator ulong(UNumber value) => value.Value;
+    public static implicit operator long(UNumber value) => (long)value.Value;
 
-        class Encoder() : BinaryEncoder(typeof(UNumber))
+    public static UNumber operator ++(UNumber value)
+    {
+        return new UNumber(value.Value + 1);
+    }
+
+    public static UNumber operator --(UNumber value)
+    {
+        return new UNumber(value.Value - 1);
+    }
+
+    class Encoder() : BinaryEncoder(typeof(UNumber))
+    {
+        private const byte DIV = 252;
+
+        public override void Encode(System.IO.BinaryWriter writer, System.Type type, object value)
         {
-            private const byte DIV = 252;
+            var _number = (UNumber)value;
 
-            public override void Encode(System.IO.BinaryWriter writer, System.Type type, object value)
+            var _buffer = _number.GetBuffer();
+
+            if (_buffer.Length < 1 || _buffer.Length > 8) writer.Write((byte)0);
+            else if (_number < DIV && _buffer.Length == 1) writer.Write((byte)_number);
+            else
             {
-                var _number = (UNumber)value;
-
-                var _buffer = _number.GetBuffer();
-
-                if (_buffer.Length < 1 || _buffer.Length > 8) writer.Write((byte)0);
-                else if (_number < DIV && _buffer.Length == 1) writer.Write((byte)_number);
-                else
-                {
-                    writer.Write((byte)(_number.GetTypeEnum() + DIV - 1));
-                    writer.Write(_buffer);
-                }
-            }
-
-            public override object Decode(System.IO.BinaryReader reader, System.Type type)
-            {
-                var _byte = reader.ReadByte();
-
-                if (_byte < DIV) return new UNumber(_byte);
-                else
-                {
-                    var _type = (TypeEnum)(_byte - DIV + 1);
-                    var _buffer = reader.ReadBytes(GetLength(_type));
-
-                    switch (_type)
-                    {
-                        case TypeEnum.Byte: return (UNumber)_buffer.Decode<byte>();
-                        case TypeEnum.UShort: return (UNumber)_buffer.Decode<ushort>();
-                        case TypeEnum.UInt: return (UNumber)_buffer.Decode<uint>();
-                        case TypeEnum.ULong: return (UNumber)_buffer.Decode<ulong>();
-                    }
-                }
-
-                return default;
+                writer.Write((byte)(_number.GetTypeEnum() + DIV - 1));
+                writer.Write(_buffer);
             }
         }
 
-        public enum TypeEnum : byte
+        public override object Decode(System.IO.BinaryReader reader, System.Type type)
         {
-            Invalid,
+            var _byte = reader.ReadByte();
 
-            Byte,
-            UShort,
-            UInt,
-            ULong,
+            if (_byte < DIV) return new UNumber(_byte);
+            else
+            {
+                var _type = (TypeEnum)(_byte - DIV + 1);
+                var _buffer = reader.ReadBytes(GetLength(_type));
+
+                switch (_type)
+                {
+                    case TypeEnum.Byte: return (UNumber)_buffer.Decode<byte>();
+                    case TypeEnum.UShort: return (UNumber)_buffer.Decode<ushort>();
+                    case TypeEnum.UInt: return (UNumber)_buffer.Decode<uint>();
+                    case TypeEnum.ULong: return (UNumber)_buffer.Decode<ulong>();
+                }
+            }
+
+            return default;
         }
+    }
+
+    public enum TypeEnum : byte
+    {
+        Invalid,
+
+        Byte,
+        UShort,
+        UInt,
+        ULong,
     }
 }
