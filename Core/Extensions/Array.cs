@@ -89,15 +89,23 @@ public static class Arrayf
         return false;
     }
 
-    public static void Shuffle<T>(this T[] list)
+    /// <summary>
+    /// Shuffles all elements to random positions using the Fisher-Yates algorithm.
+    /// </summary>
+    public static T[] Shuffle<T>(this T[] array)
     {
-        if (list.IsEmpty()) return;
-        
-        for (int i = list.Length - 1; i > 0; i--)
+        if (array == null || array.Length < 2) return array;
+
+        int i, j;
+
+        for (i = array.Length - 1; i > 0; i--)
         {
-            int k = Random.RangeIncluded(0, i);
-            (list[k], list[i]) = (list[i], list[k]);
+            j = Random.Range(array.Length);
+
+            (array[i], array[j]) = (array[j], array[i]);
         }
+
+        return array;
     }
 
     public static T ModulatedElement<T>(this T[] array, int i)
