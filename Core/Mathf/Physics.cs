@@ -138,10 +138,10 @@ namespace Cutulu.Core
     #region RaycastHit                      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public struct RaycastHit
     {
-        public GodotObject Collider { get; set; }
-        public float Distance { get; set; }
-        public Vector3 Normal { get; set; }
-        public Vector3 Point { get; set; }
+        public GodotObject Collider;
+        public float Distance;
+        public Vector3 Normal;
+        public Vector3 Point;
 
         public Dictionary Result;
 
