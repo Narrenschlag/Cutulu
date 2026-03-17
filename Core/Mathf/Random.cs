@@ -2,7 +2,7 @@ namespace Cutulu.Core
 {
     public static class Random
     {
-        private static System.Random Source = new((int)System.Random.Shared.NextSingle());
+        private static System.Random Source = new(System.Random.Shared.Next());
 
         /// <summary>
 		///	Random value: [0 ]1
