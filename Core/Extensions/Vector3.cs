@@ -1,6 +1,7 @@
 #if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.Runtime.CompilerServices;
     using System.Collections.Generic;
     using Godot;
 
@@ -70,6 +71,32 @@ namespace Cutulu.Core
 
             // Convert the angle to degrees if needed
             return useRadians ? angle : angle.toDegrees();
+        }
+
+        /// <summary>
+        /// Get the forward vector from a global radian rotation Y.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 GetForward(this float globalRadianRotationY)
+        {
+            return new Vector3(
+                -Mathf.Sin(globalRadianRotationY),
+                0f,
+                -Mathf.Cos(globalRadianRotationY)
+            );
+        }
+
+        /// <summary>
+        /// Get the right vector from a global radian rotation Y.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 GetRight(this float globalRadianRotationY)
+        {
+            return new Vector3(
+                Mathf.Cos(globalRadianRotationY),
+                0f,
+                -Mathf.Sin(globalRadianRotationY)
+            );
         }
 
         public static Vector3 GetDirectionFromYRotation(this float angle, bool useRadians = false)
