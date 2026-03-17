@@ -90,14 +90,15 @@ public static class Arrayf
     }
 
     public static void Shuffle<T>(this T[] list)
-{
-    if (list.IsEmpty()) return;
-    for (int i = list.Length - 1; i > 0; i--)
     {
-        int k = Random.RangeIncluded(0, i);
-        (list[k], list[i]) = (list[i], list[k]);
+        if (list.IsEmpty()) return;
+        
+        for (int i = list.Length - 1; i > 0; i--)
+        {
+            int k = Random.RangeIncluded(0, i);
+            (list[k], list[i]) = (list[i], list[k]);
+        }
     }
-}
 
     public static T ModulatedElement<T>(this T[] array, int i)
     {
