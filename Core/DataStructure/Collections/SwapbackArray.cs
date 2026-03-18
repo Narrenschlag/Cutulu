@@ -241,7 +241,7 @@ class SwapbackArrayEncoder() : BinaryEncoder(typeof(SwapbackArray<>))
                     .GetGenericArguments()[0];
         });
 
-        var count = (UNumber)(value == null ? 0 : ((ICollection)value).Count);
+        var count = (UNumber64)(value == null ? 0 : ((ICollection)value).Count);
         writer.Encode(count);
 
         if (count > 0)
@@ -260,7 +260,7 @@ class SwapbackArrayEncoder() : BinaryEncoder(typeof(SwapbackArray<>))
                     .GetGenericArguments()[0];
         });
 
-        var count = reader.Decode<UNumber>();
+        var count = reader.Decode<UNumber64>();
         var arrayType = itemType.MakeArrayType(); // T[]
         var array = (Array)Activator.CreateInstance(arrayType, (int)count);
 

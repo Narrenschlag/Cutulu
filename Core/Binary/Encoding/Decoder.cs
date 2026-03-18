@@ -140,7 +140,7 @@ public static class Decoder
 
         return type switch
         {
-            var t when t == typeof(byte[]) => _first_iteration ? reader.ReadRemainingBytes() : reader.ReadBytes(Decode<UNumber>(reader)),
+            var t when t == typeof(byte[]) => _first_iteration ? reader.ReadRemainingBytes() : reader.ReadBytes(Decode<UNumber64>(reader)),
             var t when t == typeof(string) => reader.ReadString(),
             var t when t == typeof(bool) => reader.ReadBoolean(),
             var t when t == typeof(char) => reader.ReadChar(),
@@ -180,7 +180,7 @@ public static class Decoder
                     throw new EndOfStreamException($"Unable to read array. Reached end of stream. {_reader.RemainingByteLength()}");
                 }
 
-                var _array = Array.CreateInstance(_type, Decode<UNumber>(_reader));
+                var _array = Array.CreateInstance(_type, Decode<UNumber64>(_reader));
 
                 for (ushort i = 0; i < _array.Length; i++)
                 {

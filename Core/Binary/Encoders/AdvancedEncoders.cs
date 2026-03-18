@@ -74,7 +74,7 @@ namespace Cutulu.Core
                             .GetGenericArguments()[0];
                 });
 
-                var count = (UNumber)(value == null ? 0 : ((ICollection)value).Count);
+                var count = (UNumber64)(value == null ? 0 : ((ICollection)value).Count);
                 writer.Encode(count);
 
                 if (count > 0)
@@ -93,7 +93,7 @@ namespace Cutulu.Core
                             .GetGenericArguments()[0];
                 });
 
-                var count = reader.Decode<UNumber>();
+                var count = reader.Decode<UNumber64>();
                 var listType = typeof(List<>).MakeGenericType(itemType);
                 var list = (IList)Activator.CreateInstance(listType);
 

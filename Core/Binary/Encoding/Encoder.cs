@@ -14,7 +14,7 @@ public static class Encoder
     public static void Encode(this BinaryWriter _writer, object _obj, Type _type)
     {
         // Write empty array
-        if (_obj.IsNull() && _type.IsArray) _writer.Write(new UNumber());
+        if (_obj.IsNull() && _type.IsArray) _writer.Write(new UNumber64());
 
         // Write object
         else Encode(_writer, _obj, true);
@@ -108,7 +108,7 @@ public static class Encoder
         switch (obj)
         {
             case byte[] v:
-                if (_first_iteration == false) Encode(writer, (UNumber)v.Length, false);
+                if (_first_iteration == false) Encode(writer, (UNumber64)v.Length, false);
                 writer.Write(v); break;
 
             case string v: writer.Write(v); break;
@@ -159,7 +159,7 @@ public static class Encoder
             // Arrays
             else if (_type.IsArray && _obj is Array array)
             {
-                Encode(_writer, (UNumber)array.Length, false);
+                Encode(_writer, (UNumber64)array.Length, false);
                 _type = _type.GetElementType();
 
                 for (int i = 0; i < array.Length; i++)
@@ -167,7 +167,7 @@ public static class Encoder
                     _value = array.GetValue(i);
 
                     // Write null array as empty array
-                    if (_value == null && _type.IsArray) _writer.Write(new UNumber());
+                    if (_value == null && _type.IsArray) _writer.Write(new UNumber64());
 
                     // Write array value
                     else Encode(_writer, _value, false);
