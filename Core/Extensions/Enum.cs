@@ -11,5 +11,10 @@ namespace Cutulu.Core
         public static int EnumLength<T>() where T : Enum => EnumArray<T>().Length;
 
         public static Type GetEnumType(this Enum Enum) => Enum.GetType().GetEnumUnderlyingType();
+
+        public static bool HasAnyOverlap<E>(this E a, E b) where E : Enum
+        {
+            return (Convert.ToInt64(a) & Convert.ToInt64(b)) != 0;
+        }
     }
 }
