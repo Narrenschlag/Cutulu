@@ -14,11 +14,12 @@ public readonly struct UNumber<MAX_VALUE_TYPE> :
     ISubtractionOperators<UNumber<MAX_VALUE_TYPE>, UNumber<MAX_VALUE_TYPE>, UNumber<MAX_VALUE_TYPE>>,
     IMultiplyOperators<UNumber<MAX_VALUE_TYPE>, UNumber<MAX_VALUE_TYPE>, UNumber<MAX_VALUE_TYPE>>,
     IDivisionOperators<UNumber<MAX_VALUE_TYPE>, UNumber<MAX_VALUE_TYPE>, UNumber<MAX_VALUE_TYPE>>
-    where MAX_VALUE_TYPE : unmanaged,
+    where MAX_VALUE_TYPE : unmanaged, IMinMaxValue<MAX_VALUE_TYPE>,
     IBinaryInteger<MAX_VALUE_TYPE>, IUnsignedNumber<MAX_VALUE_TYPE>,
     IIncrementOperators<MAX_VALUE_TYPE>, IDecrementOperators<MAX_VALUE_TYPE>
 {
     public static readonly UNumber<MAX_VALUE_TYPE> Zero = new(MAX_VALUE_TYPE.Zero);
+    public static readonly UNumber<MAX_VALUE_TYPE> MaxValue = new(MAX_VALUE_TYPE.MaxValue);
 
     [Encodable] public readonly MAX_VALUE_TYPE Value;
 

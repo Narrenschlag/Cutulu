@@ -1,7 +1,7 @@
 #if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
-    using System;
+    using System.Runtime.CompilerServices;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Godot;
@@ -182,6 +182,12 @@ namespace Cutulu.Core
             return list;
         }
 
+        public static bool TryGetNodeInParents<T>(this Node node, out T result, bool includeSelf = true, byte layerDepth = 0)
+        {
+            result = GetNodeInParents<T>(node, includeSelf, layerDepth);
+            return result.NotNull();
+        }
+
         public static T GetNodeInParents<T>(this Node node, bool includeSelf = true, byte layerDepth = 0)
         {
             var depth = layerDepth > 0;
@@ -227,6 +233,13 @@ namespace Cutulu.Core
                 if (node is T t && (t is not Node n || n.NotNull()))
                     list.Add(t);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetNodeInChildren<T>(this Node node, out T result, bool includeSelf = true) where T : Node
+        {
+            result = GetNodeInChildren<T>(node, includeSelf);
+            return result.NotNull();
         }
 
         public static T GetNodeInChildren<T>(this Node node, bool includeSelf = true) where T : Node
