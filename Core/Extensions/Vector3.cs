@@ -246,15 +246,9 @@ namespace Cutulu.Core
 
         public static Vector3 IntersectAt(this Vector3 origin, Vector3 direction, float y)
         {
-            var origin0 = origin.setY(y);
-            var dir0 = direction.setY(y);
-
-            if (origin.TryIntersect(direction, origin0, dir0, out var intersection))
-            {
-                return intersection;
-            }
-
-            return default;
+            if (Mathf.IsZeroApprox(direction.Y)) return origin;
+            float t = (y - origin.Y) / direction.Y;
+            return origin + direction * t;
         }
 
         public static bool TryIntersect(this Vector3 origin1, Vector3 direction1, Vector3 origin2, Vector3 direction2, out Vector3 intersection)
