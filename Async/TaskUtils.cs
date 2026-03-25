@@ -1,10 +1,13 @@
 namespace Cutulu.Async;
 
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Core;
 
 public static class TaskUtils
 {
 #if GODOT4_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async Task NextFrame()
     {
         var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
@@ -17,5 +20,33 @@ public static class TaskUtils
         for (int i = 0; i < frames; i++)
             await tree.ToSignal(tree, Godot.SceneTree.SignalName.ProcessFrame);
     }
+
+    public static async Task WaitAnimation(Godot.AnimationPlayer animationPlayer, string animationName)
+    {
+        if (animationPlayer.IsNull() || animationName.IsEmpty() || animationPlayer.HasAnimation(animationName) == false) return;
+
+        animationPlayer.Play(animationName);
+
+        if (animationPlayer.IsPlaying())
+            await WaitSeconds(animationPlayer.GetCurrentAnimationLength(), true);
+    }
 #endif
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static async Task WaitSeconds(double seconds, bool waitForMainThread = true)
+    => await WaitSeconds((float)seconds, waitForMainThread);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static async Task WaitSeconds(float seconds, bool waitForMainThread = true)
+    => await WaitMilliseconds((int)(seconds * 1000), waitForMainThread);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static async Task WaitMilliseconds(int milliseconds, bool waitForMainThread = true)
+    {
+        await Task.Delay(milliseconds);
+
+#if GODOT4_0_OR_GREATER
+        if (waitForMainThread) await NextFrame();
+#endif
+    }
 }
