@@ -23,12 +23,14 @@ namespace Cutulu.Core
             => Raycast(node, fromGlobal, toGlobal - fromGlobal, out hit, fromGlobal.DistanceTo(toGlobal), mask);
 
         public static bool Raycast(this Camera3D camera, out RaycastHit hit, float maxDistance, uint mask = 4294967295)
-        {
-            Vector3 origin = camera.ProjectRayOrigin(camera.MousePosition());
-            Vector3 dir = camera.ProjectRayNormal(camera.MousePosition());
-
-            return Raycast(camera, origin, dir, out hit, maxDistance, mask);
-        }
+            => Raycast(
+                camera,
+                camera.ProjectRayOrigin(camera.MousePosition()),
+                camera.ProjectRayNormal(camera.MousePosition()),
+                out hit,
+                maxDistance,
+                mask
+            );
 
         public static bool Raycast(this Node3D node, Vector3 globalOrigin, Vector3 direction, out RaycastHit hit, float maxDistance, uint mask = 4294967295)
         {
