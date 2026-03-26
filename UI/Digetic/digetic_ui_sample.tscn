@@ -1,0 +1,115 @@
+[gd_scene format=3 uid="uid://dkq4yxjel6w6n"]
+
+[ext_resource type="Script" uid="uid://wl78ah1tct51" path="res://Cutulu/UI/Digetic/DigeticSlate.cs" id="1_auxm6"]
+[ext_resource type="Texture2D" uid="uid://bcwgrdjbr3fe5" path="res://Resources/LODSprites/lod.forest.tree.default.png" id="5_y8p3s"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ooegx"]
+transparency = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qvgwe"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.32536215, 0, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3gqwt"]
+size = Vector3(0.428, 0.6, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_auxm6"]
+size = Vector3(0.4, 0.6, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_auxm6"]
+albedo_color = Color(0.75374556, 0.8539461, 0.88143784, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_auxm6"]
+size = Vector2(0.4, 0.6)
+
+[sub_resource type="Environment" id="Environment_auxm6"]
+background_mode = 1
+background_color = Color(1, 0.90637153, 0.73675454, 1)
+
+[node name="DigeticSlateSample" type="Node3D" unique_id=423609471 node_paths=PackedStringArray("UIContainer", "SlateShape", "MouseArea", "RenderTarget")]
+script = ExtResource("1_auxm6")
+UIContainer = NodePath("Viewport")
+SlateShape = NodePath("Area/ColliderA")
+MouseArea = NodePath("Area")
+RenderTarget = NodePath("Block/RenderTarget")
+DefaultSubviewportMaterial = SubResource("StandardMaterial3D_ooegx")
+
+[node name="Viewport" type="SubViewport" parent="." unique_id=1341193789]
+disable_3d = true
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(768, 1080)
+render_target_update_mode = 4
+
+[node name="MarginContainer" type="MarginContainer" parent="Viewport" unique_id=1913538108]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 352.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Viewport/MarginContainer" unique_id=1733305809]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="PanelContainer" type="PanelContainer" parent="Viewport/MarginContainer/HBoxContainer" unique_id=1407613716]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_qvgwe")
+
+[node name="TextureRect" type="TextureRect" parent="Viewport/MarginContainer/HBoxContainer/PanelContainer" unique_id=73494079]
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 2
+texture = ExtResource("5_y8p3s")
+expand_mode = 1
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Viewport/MarginContainer/HBoxContainer" unique_id=350862287]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/default_color = Color(0.23693943, 0.18472429, 0.16210032, 1)
+theme_override_font_sizes/bold_font_size = 64
+bbcode_enabled = true
+text = "[shake][b]Look, a tree!"
+fit_content = true
+
+[node name="Button" type="Button" parent="Viewport" unique_id=1261491330]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -246.5
+offset_top = -48.0
+offset_right = 246.5
+offset_bottom = 48.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 64
+text = "Check Up, mate"
+
+[node name="Area" type="Area3D" parent="." unique_id=761461579]
+
+[node name="ColliderA" type="CollisionShape3D" parent="Area" unique_id=990316746]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("BoxShape3D_3gqwt")
+
+[node name="Block" type="MeshInstance3D" parent="." unique_id=947927615]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -0.05)
+mesh = SubResource("BoxMesh_auxm6")
+surface_material_override/0 = SubResource("StandardMaterial3D_auxm6")
+
+[node name="RenderTarget" type="MeshInstance3D" parent="Block" unique_id=1536240011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.051)
+mesh = SubResource("QuadMesh_auxm6")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=346502783]
+transform = Transform3D(0.8660254, -0.13697961, 0.48087066, 0, 0.9617413, 0.27395922, -0.5, -0.23725563, 0.8328924, 0.45512134, 0.49081832, 0.5407456)
+environment = SubResource("Environment_auxm6")
