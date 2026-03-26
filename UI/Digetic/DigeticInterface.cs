@@ -24,6 +24,8 @@ public abstract partial class DigeticInterface : Node3D
 
         area.InputEvent += (camera, inputEvent, globalPos, normal, shapeIdx) =>
             OnAreaInput(area, inputEvent, globalPos);
+
+        area.Visible = area.Monitorable = area.Monitoring = true;
     }
 
     #endregion
@@ -98,6 +100,8 @@ public abstract partial class DigeticInterface : Node3D
         viewport.PushInput(inputEvent);
 
         cacheMap[viewport] = (pos2D, now);
+
+        Debug.Log($"MapTo01: {pos2D / viewport.Size} => {pos2D}");
     }
 
     public virtual Vector2 MapTo01(Vector3 globalPos, Node3D center, Vector2 mapSize)
@@ -121,7 +125,18 @@ public abstract partial class DigeticInterface : Node3D
     {
         if (shape.NotNull() && shape.Shape is BoxShape3D box)
         {
-            pos01 = MapTo01(globalPos, shape, new(box.Size.X, box.Size.Y));
+            // Use global scale to map to 0-1 space
+            var basis = shape.GlobalTransform.Basis;
+            Debug.Log($"Global scale: {basis.X.Length()} x:y {basis.Y.Length()}");
+
+            pos01 = MapTo01(
+                globalPos,
+                shape,
+                new(
+                    box.Size.X * basis.X.Length(),
+                    box.Size.Y * basis.Y.Length()
+                )
+            );
 
             return pos01.X >= 0.0f && pos01.Y >= 0.0f && pos01.X <= 1.0f && pos01.Y <= 1.0f;
         }
