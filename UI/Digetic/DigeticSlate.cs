@@ -28,4 +28,18 @@ public partial class DigeticSlate : DigeticInterface
 
         ApplyMaterial(RenderTarget, RenderTargetMaterialIdx, UIContainer);
     }
+
+    public virtual void ClearContainer()
+    {
+        if (UIContainer.IsNull()) return;
+
+        UIContainer.Clear();
+    }
+
+    public virtual T Instantiate<T>(PackedScene content) where T : Node
+    {
+        if (UIContainer.IsNull() || content.IsNull()) return default;
+
+        return content.Instantiate<T>(UIContainer);
+    }
 }

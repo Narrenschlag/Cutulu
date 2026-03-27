@@ -56,9 +56,10 @@ namespace Cutulu.Core
             parent.GetNodesInChildren<T>(false).Destroy(forceInstant);
         }
 
-        public static Vector3 Forward(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Forward : -(global ? node.GlobalTransform : node.Transform).Basis.Z;
-        public static Vector3 Right(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X;
-        public static Vector3 Up(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y;
+        // It is very important to normalize the vectors to prevent the scale affecting the vector scale
+        public static Vector3 Forward(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Forward : -(global ? node.GlobalTransform : node.Transform).Basis.Z.Normalized();
+        public static Vector3 Right(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Right : (global ? node.GlobalTransform : node.Transform).Basis.X.Normalized();
+        public static Vector3 Up(this Node3D node, bool global = true) => node.IsNull() ? Vector3.Up : (global ? node.GlobalTransform : node.Transform).Basis.Y.Normalized();
 
         public static bool TryInstantiate<T>(this PackedScene prefab, Node parent, out T instance, int waitMilliseconds = 0)
         => (instance = Instantiate<T>(prefab, parent, waitMilliseconds)) != null;

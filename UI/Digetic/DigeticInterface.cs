@@ -100,8 +100,6 @@ public abstract partial class DigeticInterface : Node3D
         viewport.PushInput(inputEvent);
 
         cacheMap[viewport] = (pos2D, now);
-
-        Debug.Log($"MapTo01: {pos2D / viewport.Size} => {pos2D}");
     }
 
     public virtual Vector2 MapTo01(Vector3 globalPos, Node3D center, Vector2 mapSize)
@@ -127,7 +125,6 @@ public abstract partial class DigeticInterface : Node3D
         {
             // Use global scale to map to 0-1 space
             var basis = shape.GlobalTransform.Basis;
-            Debug.Log($"Global scale: {basis.X.Length()} x:y {basis.Y.Length()}");
 
             pos01 = MapTo01(
                 globalPos,
