@@ -82,7 +82,7 @@ namespace Cutulu.Network
             else if (_node is N n && _node.NotNull())
             {
                 //Debug.LogError($"Load asset typeof({n.GetType().Name}) as typeof({typeof(N)})");
-                if (n is Node _n) parent.AddChild(_n);
+                if (parent.NotNull() && n is Node _n) parent.AddChild(_n);
                 return n;
             }
 
