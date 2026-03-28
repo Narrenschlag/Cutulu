@@ -317,9 +317,9 @@ public static class Nodef
 
     public static Aabb GetNodeAabb(this Node node, bool excludeTopLevelTransform = true)
     {
-        var bounds = new Aabb();
+        Aabb bounds = new();
 
-        if (node.IsQueuedForDeletion()) return bounds;
+        if (node.IsNull()) return bounds;
 
         if (node is VisualInstance3D visual)
             bounds = visual.GetAabb();
