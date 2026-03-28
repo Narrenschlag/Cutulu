@@ -21,7 +21,7 @@ public static class TaskUtils
             await tree.ToSignal(tree, Godot.SceneTree.SignalName.ProcessFrame);
     }
 
-    public static async Task WaitAnimation(Godot.AnimationPlayer animationPlayer, string animationName)
+    public static async Task WaitAnimation(this Godot.AnimationPlayer animationPlayer, string animationName)
     {
         if (animationPlayer.IsNull() || animationName.IsEmpty() || animationPlayer.HasAnimation(animationName) == false) return;
 
