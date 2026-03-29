@@ -335,5 +335,16 @@ public static class Nodef
 
         return bounds;
     }
+
+    public static Aabb GetPackedSceneAabb(this PackedScene packedScene)
+    {
+        if (packedScene.IsNull()) return default;
+
+        Node instance = packedScene.Instantiate();
+        Aabb bounds = GetNodeAabb(instance);
+        instance.QueueFree();
+
+        return bounds;
+    }
 }
 #endif
