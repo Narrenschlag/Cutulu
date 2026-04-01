@@ -5,8 +5,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
-using System;
 using System.IO;
+using System;
+using Godot;
 
 /// <summary>
 /// Written by Maximilian Schecklmann on 3th of Nov 2025, inspired by Nic Barker's implementation.
@@ -205,27 +206,45 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
     }
 
     /// <summary>
-    /// Adds items to the array if they are not null and not already in it.
+    /// Removes all duplicate items and null instances from the array.
     /// </summary>
-    public void TryAddRange(params T[] items)
+    public SwapbackArray<T> ClearDuplicates()
     {
-        if (items.IsEmpty()) return;
+        HashSet<T> seen = new(Mathf.Max(4, _count / 2));
 
-        T[] array = new T[items.Length];
-        int i = 0;
-
-        Span<T> span = array.AsSpan();
-        foreach (ref var item in span)
+        for (int i = _count - 1; i >= 0; i--)
         {
-            if (item.IsNull() || Contains(item)) continue;
-
-            array[i++] = item;
+            if (_data[i].IsNull() || seen.Add(_data[i]) == false)
+                RemoveAt(i);
         }
 
-        if (i < 1) return;
-
-        AddRange(array.AsSpan(0, i));
+        return this;
     }
+
+    /// <summary>
+    /// Adds items to the array if they are not null and not already in it.
+    /// </summary>
+    public void TryAddRange(ReadOnlySpan<T> items)
+    {
+        if (items.IsEmpty) return;
+
+        HashSet<T> seen = [];
+        int i;
+
+        for (i = 0; i < _count; i++)
+        {
+            if (_data[i].NotNull())
+                seen.Add(_data[i]);
+        }
+
+        for (i = 0; i < items.Length; i++)
+        {
+            if (items[i].NotNull() && seen.Add(items[i]))
+                Add(items[i]);
+        }
+    }
+
+    public void TryAddRange(params T[] items) => TryAddRange(items.AsSpan());
 }
 
 class SwapbackArrayEncoder() : BinaryEncoder(typeof(SwapbackArray<>))

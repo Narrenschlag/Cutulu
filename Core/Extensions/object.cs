@@ -11,6 +11,7 @@ using Godot;
 
 public static class objectExtension
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool NotNull(this object obj) => !IsNull(obj);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
