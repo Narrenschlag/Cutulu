@@ -315,9 +315,9 @@ public static class Nodef
         else Debug.Log($"[{node.Name}] {message}");
     }
 
-    public static Aabb GetNodeAabb(this Node node, bool excludeTopLevelTransform = true)
+    /*public static Aabb GetNodeAabb(this Node node, bool excludeTopLevelTransform = true)
     {
-        Aabb bounds = new();
+        Aabb bounds = new(node is Node3D n3d ? n3d.GlobalPosition : Vector3.Zero, Vector3.Zero);
 
         if (node.IsNull()) return bounds;
 
@@ -334,6 +334,35 @@ public static class Nodef
             bounds = node3D.Transform * bounds;
 
         return bounds;
+    }*/
+
+    public static Aabb GetNodeAabb(this Node node)
+    {
+        Aabb bounds = new();
+
+        if (node.IsNull()) return bounds;
+
+        if (node is VisualInstance3D visual)
+            bounds = visual.GlobalTransform * visual.GetAabb();
+
+        foreach (Node child in node.GetChildren())
+        {
+            Aabb childBounds = GetNodeAabb(child);
+            if (childBounds.Size == Vector3.Zero) continue;
+            bounds = bounds.Size == Vector3.Zero ? childBounds : bounds.Merge(childBounds);
+        }
+
+        return bounds;
+    }
+
+    public static Obb GetNodeObb(this Node node)
+    {
+        var aabb = node.GetNodeAabb();
+
+        if (node is Node3D node3D)
+            return new Obb(aabb.GetCenter(), aabb.Size * 0.5f, node3D.GlobalTransform.Basis.Orthonormalized());
+
+        return Obb.FromAabb(aabb);
     }
 
     public static Aabb GetPackedSceneAabb(this PackedScene packedScene)
