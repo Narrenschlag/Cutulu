@@ -6,6 +6,17 @@ using System;
 
 public struct BoolByte
 {
+    public static readonly BoolByte True = new()
+    {
+        _bits = byte.MaxValue
+    };
+
+    public static readonly BoolByte False = new()
+    {
+        _bits = 0
+    };
+
+    public const byte BoolCountCapacity = 8;
     private byte _bits;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -22,6 +33,14 @@ public struct BoolByte
             (i7 ? 0x40 : 0) | (i8 ? 0x80 : 0));
     }
 
+    public bool this[int index]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        readonly get => (_bits & (1 << index)) != 0;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => _bits = (byte)(value ? _bits | (1 << index) : _bits & ~(1 << index));
+    }
+
     public bool Item1
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -32,49 +51,49 @@ public struct BoolByte
     public bool Item2
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (_bits & 0x02) != 0;
+        readonly get => (_bits & 0x02) != 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _bits = (byte)(value ? _bits | 0x02 : _bits & ~0x02);
     }
     public bool Item3
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (_bits & 0x04) != 0;
+        readonly get => (_bits & 0x04) != 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _bits = (byte)(value ? _bits | 0x04 : _bits & ~0x04);
     }
     public bool Item4
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (_bits & 0x08) != 0;
+        readonly get => (_bits & 0x08) != 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _bits = (byte)(value ? _bits | 0x08 : _bits & ~0x08);
     }
     public bool Item5
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (_bits & 0x10) != 0;
+        readonly get => (_bits & 0x10) != 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _bits = (byte)(value ? _bits | 0x10 : _bits & ~0x10);
     }
     public bool Item6
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (_bits & 0x20) != 0;
+        readonly get => (_bits & 0x20) != 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _bits = (byte)(value ? _bits | 0x20 : _bits & ~0x20);
     }
     public bool Item7
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (_bits & 0x40) != 0;
+        readonly get => (_bits & 0x40) != 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _bits = (byte)(value ? _bits | 0x40 : _bits & ~0x40);
     }
     public bool Item8
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (_bits & 0x80) != 0;
+        readonly get => (_bits & 0x80) != 0;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _bits = (byte)(value ? _bits | 0x80 : _bits & ~0x80);
     }

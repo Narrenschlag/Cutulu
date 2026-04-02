@@ -38,8 +38,8 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
 
     public SwapbackArray(IList data)
     {
-        _data = new T[data.Count]; // <-- was never initialized
-        _count = data.Count;       // <-- was _data.Length which threw NullRef
+        _data = new T[data.Count];
+        _count = data.Count;
         int i = 0;
 
         foreach (var item in data)
