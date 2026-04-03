@@ -355,16 +355,6 @@ public static class Nodef
         return bounds;
     }
 
-    public static Obb GetNodeObb(this Node node)
-    {
-        var aabb = node.GetNodeAabb();
-
-        if (node is Node3D node3D)
-            return new Obb(aabb.GetCenter(), aabb.Size * 0.5f, node3D.GlobalTransform.Basis.Orthonormalized());
-
-        return Obb.FromAabb(aabb);
-    }
-
     public static Aabb GetPackedSceneAabb(this PackedScene packedScene)
     {
         if (packedScene.IsNull()) return default;
@@ -372,6 +362,44 @@ public static class Nodef
         Node instance = packedScene.Instantiate();
         Aabb bounds = GetNodeAabb(instance);
         instance.QueueFree();
+
+        return bounds;
+    }
+
+    public static Obb GetNodeObb(this Node node)
+    {
+        if (node is Node3D root)
+        {
+            // Get bounds in the node's own local space
+            var localAabb = GetLocalAabb(node);
+            return Obb.FromTransformedAabb(root.GlobalTransform, localAabb);
+        }
+
+        return Obb.FromAabb(node.GetNodeAabb());
+    }
+
+    private static Aabb GetLocalAabb(Node node, bool isRoot = true)
+    {
+        Aabb bounds = new();
+
+        if (node is VisualInstance3D visual)
+        {
+            var local = visual.GetAabb();
+            if (!isRoot && node is Node3D n)
+                local = n.Transform * local; // local transform relative to root
+            bounds = local;
+        }
+
+        foreach (Node child in node.GetChildren())
+        {
+            var childBounds = GetLocalAabb(child, false);
+            if (childBounds.Size == Vector3.Zero) continue;
+
+            if (!isRoot && node is Node3D n3d)
+                childBounds = n3d.Transform * childBounds;
+
+            bounds = bounds.Size == Vector3.Zero ? childBounds : bounds.Merge(childBounds);
+        }
 
         return bounds;
     }
