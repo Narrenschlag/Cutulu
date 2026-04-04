@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ public class NavObstacle32
                 if (first)
                 {
                     first = false;
-                    bounds = Cutulu.Core.Obb.FromAabb(a);
+                    bounds = Core.Obb.FromAabb(a);
                 }
                 else bounds = bounds.Merge(a);
 
@@ -58,3 +59,4 @@ public class NavObstacle32
 
     public void Invalidate() => Validator = null;
 }
+#endif

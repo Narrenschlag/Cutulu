@@ -1,11 +1,11 @@
-namespace Warlords.Test;
+#if GODOT4_0_OR_GREATER
+namespace Cutulu.Core.UnitTest;
 
 using System.Collections.Generic;
 using Cutulu.Network;
 using Cutulu.Core;
 using Cutulu.Mesh;
 using Godot;
-using Host;
 
 public partial class NavTest : Node3D
 {
@@ -248,3 +248,4 @@ public partial class NavTest : Node3D
         CellPathGizmo = GizmoParent.DrawLine(Colors.Yellow, line);
     }
 }
+#endif

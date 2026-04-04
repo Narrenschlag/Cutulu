@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using System;
@@ -358,3 +359,4 @@ public class NavChunk32
 
     #endregion
 }
+#endif

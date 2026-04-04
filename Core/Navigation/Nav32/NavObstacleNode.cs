@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using Godot;
@@ -64,3 +65,4 @@ public partial class NavObstacleNode : Node3D
         return false;
     }
 }
+#endif

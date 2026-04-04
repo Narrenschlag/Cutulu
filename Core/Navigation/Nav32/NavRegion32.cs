@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using System.Runtime.CompilerServices;
@@ -231,3 +232,4 @@ public class NavRegion32
 
     #endregion
 }
+#endif

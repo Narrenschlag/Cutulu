@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using Godot;
@@ -45,3 +46,4 @@ public readonly ref struct NavMarshal32(NavMap32 map)
         return Map.TryFindCellPath(from, to, out path);
     }
 }
+#endif
