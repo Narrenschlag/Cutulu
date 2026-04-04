@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://b3xmplhd8ayx3"]
+
+[ext_resource type="Script" uid="uid://bjmjinr4hmcmb" path="res://Cutulu/UnitTests/Nav32/NavTest.cs" id="1_h3ss5"]
+[ext_resource type="PackedScene" uid="uid://dwkbgho0qlgih" path="res://Scenes/Shared/Buildings/warehouse.tscn" id="2_0241g"]
+[ext_resource type="Script" uid="uid://b7gi1u0edcbrq" path="res://Cutulu/Core/Navigation/Nav32/NavMap32.cs" id="3_vurub"]
+[ext_resource type="Script" uid="uid://dy0pcmytiv1jf" path="res://Cutulu/Core/Navigation/Nav32/NavObstacleNode.cs" id="4_vurub"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_h1wp2"]
+size = Vector3(25, 1, 16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h1wp2"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 0.12156863)
+
+[sub_resource type="BoxMesh" id="BoxMesh_vurub"]
+size = Vector3(256, 1, 16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0241g"]
+size = Vector3(60, 1, 16)
+
+[node name="NavTest" type="Node3D" unique_id=111524024 node_paths=PackedStringArray("Map", "ObstacleParent", "GizmoParent", "Camera")]
+script = ExtResource("1_h3ss5")
+Map = NodePath("NavMap")
+ObstacleParent = NodePath("Obstacles")
+GizmoParent = NodePath("Gizmos")
+Camera = NodePath("Camera3D")
+TestBuilding = ExtResource("2_0241g")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1402535017]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 100, 0)
+projection = 1
+size = 128.0
+far = 100.0
+
+[node name="NavMap" type="Node" parent="." unique_id=1627392708]
+script = ExtResource("3_vurub")
+
+[node name="Obstacles" type="Node3D" parent="." unique_id=1207422515]
+script = ExtResource("4_vurub")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Obstacles" unique_id=995476069]
+transform = Transform3D(0.75559074, 0, -0.65504426, 0, 1, 0, 0.65504426, 0, 0.75559074, -0.5482359, 9.536743e-07, -2.4148097)
+mesh = SubResource("BoxMesh_h1wp2")
+surface_material_override/0 = SubResource("StandardMaterial3D_h1wp2")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="Obstacles" unique_id=1109600250]
+transform = Transform3D(-0.1894896, 0, -0.98188287, 0, 1, 0, 0.98188287, 0, -0.1894896, -37.661507, 9.536743e-07, -47.43508)
+mesh = SubResource("BoxMesh_vurub")
+surface_material_override/0 = SubResource("StandardMaterial3D_h1wp2")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Obstacles" unique_id=1957681887]
+transform = Transform3D(-0.1894896, 0, -0.98188287, 0, 1, 0, 0.98188287, 0, -0.1894896, 2.9865007, 9.536743e-07, 24.273254)
+mesh = SubResource("BoxMesh_0241g")
+surface_material_override/0 = SubResource("StandardMaterial3D_h1wp2")
+
+[node name="Gizmos" type="Node3D" parent="." unique_id=900798733]
