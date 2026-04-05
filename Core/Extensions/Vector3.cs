@@ -13,11 +13,18 @@ namespace Cutulu.Core
         public static Vector3I FloorToInt(this Vector3 v3) => new(Mathf.FloorToInt(v3.X), Mathf.FloorToInt(v3.Y), Mathf.FloorToInt(v3.Z));
         public static Vector3I CeilToInt(this Vector3 v3) => new(Mathf.CeilToInt(v3.X), Mathf.CeilToInt(v3.Y), Mathf.CeilToInt(v3.Z));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 setX(this Vector3 v3, float value) => new(value, v3.Y, v3.Z);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 setY(this Vector3 v3, float value) => new(v3.X, value, v3.Z);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 setZ(this Vector3 v3, float value) => new(v3.X, v3.Y, value);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 multX(this Vector3 v3, float value) => new(v3.X * value, v3.Y, v3.Z);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 multY(this Vector3 v3, float value) => new(v3.X, v3.Y * value, v3.Z);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 multZ(this Vector3 v3, float value) => new(v3.X, v3.Y, v3.Z * value);
 
         public static void pasteX(this float value, ref Vector3 v3) => v3.X = value;
