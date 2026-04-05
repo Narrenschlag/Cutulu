@@ -186,9 +186,7 @@ public static class Encoder
                     _type = info.GetType();
 
                     // Write value
-                    if (_value == null) _writer.Write(
-                            _type.IsArray ? new byte[2] : // Write null array as empty array
-                            new byte[1]); // Write null string as empty byte
+                    if (_value == null) _writer.Write(default(byte)); // Write null string/array as empty string/array
                     else Encode(_writer, _value, false); // Encode value as usual
                 }
             }
