@@ -1,29 +1,42 @@
 #if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
+    using System.Runtime.CompilerServices;
     using System.Collections.Generic;
     using Godot;
 
     public static class Vector2f
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Lerp(this Vector2 a, Vector2 b, float lerp) => new(Mathf.Lerp(a.X, b.X, lerp), Mathf.Lerp(a.Y, b.Y, lerp));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 setX(this Vector2 v2, float value) => new(value, v2.Y);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 setY(this Vector2 v2, float value) => new(v2.X, value);
 
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void pasteX(this float value, ref Vector2 v2) => v2.X = value;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void pasteY(this float value, ref Vector2 v2) => v2.Y = value;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2I RoundToInt(this Vector2 v2) => new(Mathf.RoundToInt(v2.X), Mathf.RoundToInt(v2.Y));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2I FloorToInt(this Vector2 v2) => new(Mathf.FloorToInt(v2.X), Mathf.FloorToInt(v2.Y));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2I CeilToInt(this Vector2 v2) => new(Mathf.CeilToInt(v2.X), Mathf.CeilToInt(v2.Y));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Abs(this Vector2 v2) => new(Mathf.Abs(v2.X), Mathf.Abs(v2.Y));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Max(this Vector2 o, Vector2 a, Vector2 b) => o.DistanceTo(a) > o.DistanceTo(b) ? a : b;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Min(this Vector2 o, Vector2 a, Vector2 b) => o.DistanceTo(a) < o.DistanceTo(b) ? a : b;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 NoNaN(this Vector2 v2) => new(float.IsNaN(v2.X) ? 0 : v2.X, float.IsNaN(v2.Y) ? 0 : v2.Y);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 toXY(this Vector3 value) => new(value.X, value.Z);
 
         public static Vector2 RotatedD(this Vector2 v2, float degrees) => v2.Rotated(degrees.toRadians());
