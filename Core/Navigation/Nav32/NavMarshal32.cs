@@ -42,8 +42,6 @@ public readonly ref struct NavMarshal32(NavMap32 map)
         => Map.RemoveObstacle(obstacle, true);
 
     public readonly bool TryFindPath(Vector3 from, Vector3 to, out Vector3[] path)
-    {
-        return Map.TryFindCellPath(from, to, out path);
-    }
+        => Map.TryFindCellPath(from, to, out path);
 }
 #endif
