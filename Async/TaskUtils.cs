@@ -2,6 +2,7 @@ namespace Cutulu.Async;
 
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System;
 using Core;
 
 public static class TaskUtils
@@ -31,6 +32,16 @@ public static class TaskUtils
             await WaitSeconds(animationPlayer.GetCurrentAnimationLength(), true);
     }
 #endif
+
+    public static async Task WaitUntil(Func<bool> condition, bool waitForMainThread = true)
+    {
+        while (condition() == false)
+            await Task.Delay(1);
+
+#if GODOT4_0_OR_GREATER
+        if (waitForMainThread) await NextFrame();
+#endif
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async Task WaitSeconds(double seconds, bool waitForMainThread = true)
