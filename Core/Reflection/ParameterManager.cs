@@ -296,6 +296,9 @@ public readonly struct ParameterInfo
     private readonly FieldInfo Field;
     private readonly bool IsProperty;
 
+    public string Name => IsProperty ? Property.Name : Field.Name;
+    public Type Type => IsProperty ? Property.PropertyType : Field.FieldType;
+
     public ParameterInfo(PropertyInfo property)
     {
         Property = property;
