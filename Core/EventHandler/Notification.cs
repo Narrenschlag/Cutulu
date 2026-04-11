@@ -24,19 +24,34 @@ namespace Cutulu.Core
         protected void Invoke(T value)
         {
             var nullHosts = new List<object>();
-            var invoke = new List<Action<T>>();
+            var invoke = new List<(object key, Action<T> action)>(); // store key+action together
 
             foreach (var kvp in Handlers)
                 if (kvp.Key.IsNull() || kvp.Value.IsNull()) nullHosts.Add(kvp.Key);
-                else invoke.Add(kvp.Value);
+                else invoke.Add((kvp.Key, kvp.Value));
 
-            // Remove null hosts after iteration
             foreach (var nullHost in nullHosts)
                 Handlers.Remove(nullHost);
 
-            // Invoke actions
-            foreach (var action in invoke)
-                action.Invoke(value);
+            foreach (var (key, action) in invoke)
+            {
+                // Re-check validity right before invoking — node may have died since collection
+                if (key.IsNull())
+                {
+                    Handlers.Remove(key);
+                    continue;
+                }
+
+                try
+                {
+                    action.Invoke(value);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Node was disposed between the validity check and invocation
+                    Handlers.Remove(key);
+                }
+            }
         }
 
         public void Clear()
