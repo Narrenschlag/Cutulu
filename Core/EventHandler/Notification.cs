@@ -27,10 +27,8 @@ namespace Cutulu.Core
             var invoke = new List<Action<T>>();
 
             foreach (var kvp in Handlers)
-                if (kvp.Key == null || kvp.Value == null)
-                    nullHosts.Add(kvp.Key);
-                else
-                    invoke.Add(kvp.Value);
+                if (kvp.Key.IsNull() || kvp.Value.IsNull()) nullHosts.Add(kvp.Key);
+                else invoke.Add(kvp.Value);
 
             // Remove null hosts after iteration
             foreach (var nullHost in nullHosts)
