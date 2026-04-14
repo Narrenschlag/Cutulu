@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.UI;
 
 using Godot;
@@ -43,3 +44,4 @@ public partial class DigeticSlate : DigeticInterface
         return content.Instantiate<T>(UIContainer);
     }
 }
+#endif

@@ -7,7 +7,6 @@ using System.Collections;
 using System.Linq;
 using System.IO;
 using System;
-using Godot;
 
 /// <summary>
 /// Written by Maximilian Schecklmann on 3th of Nov 2025, inspired by Nic Barker's implementation.
@@ -210,7 +209,7 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
     /// </summary>
     public SwapbackArray<T> ClearDuplicates()
     {
-        HashSet<T> seen = new(Mathf.Max(4, _count / 2));
+        HashSet<T> seen = new(int.Max(4, _count / 2));
 
         for (int i = _count - 1; i >= 0; i--)
         {

@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using Godot;
@@ -202,3 +203,4 @@ public struct Obb
     public override string ToString()
         => $"Obb(center={Center}, half={HalfExtents}, rot={Rotation})";
 }
+#endif
