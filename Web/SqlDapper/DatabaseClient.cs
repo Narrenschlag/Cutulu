@@ -10,7 +10,7 @@ using Dapper;
 /// Covers: single fetch, list fetch, paged fetch, insert, update, delete,
 /// bulk insert, upsert, scalar queries, raw SQL, and transactions.
 /// </summary>
-public class DatabaseClient : IAsyncDisposable
+public partial class DatabaseClient : IAsyncDisposable
 {
     private readonly string ConnectString,
         Host, Database, User, Password;

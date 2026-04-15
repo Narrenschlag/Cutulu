@@ -32,6 +32,13 @@ public sealed class LocalDecoder : IDisposable
         _reader = new BinaryReader(_memory);
     }
 
+    public LocalDecoder(MemoryStream stream)
+    {
+        _memory = stream;
+        _memory.Position = 0;
+        _reader = new BinaryReader(_memory);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Append(byte[] buffer) => Append(buffer.AsSpan());
 
@@ -85,6 +92,31 @@ public sealed class LocalDecoder : IDisposable
     {
         return _reader.Decode<T>();
     }
+
+#if WEB_APP
+    public static async Task<LocalDecoder> Create(HttpContext http, bool _enable_logging = true)
+    {
+        if ((http?.Request?.Body ?? null) is Stream stream && stream.CanRead)
+        {
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+
+            if (memoryStream.Length > 0)
+            {
+                using var reader = new BinaryReader(memoryStream);
+                return new LocalDecoder(memoryStream);
+            }
+
+            else if (_enable_logging)
+                Debug.LogError($"Http.Request.Body is empty.");
+        }
+
+        else if (_enable_logging)
+            Debug.LogError($"Http.Request.Body is either null or not readable.");
+
+        return null;
+    }
+#endif
 
     public void Dispose()
     {

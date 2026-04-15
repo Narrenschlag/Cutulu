@@ -91,6 +91,34 @@ public static class Decoder
         return false;
     }
 
+#if WEB_APP
+    public static async Task<(bool Success, T Value)> TryDecode<T>(this HttpContext http, bool _enable_logging = true)
+    {
+        if ((http?.Request?.Body ?? null) is Stream stream && stream.CanRead)
+        {
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            if (ms.Length > 0)
+            {
+                using var reader = new BinaryReader(ms);
+
+                if (reader.TryDecode(out T value, _enable_logging))
+                    return (true, value);
+                else return default;
+            }
+
+            else if (_enable_logging)
+                Debug.LogError($"Http.Request.Body is empty.");
+        }
+
+        else if (_enable_logging)
+            Debug.LogError($"Http.Request.Body is either null or not readable.");
+
+        return default;
+    }
+#endif
+
     /// <summary>
     /// Safely decodes a buffer into an object
     /// </summary>
