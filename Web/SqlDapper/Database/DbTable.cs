@@ -9,7 +9,7 @@ public partial class DatabaseClient
 {
     #region Get
 
-    public async Task<List<string>> GetTablesAsync()
+    public async Task<List<string>> GetTables()
     {
         const string sql = @"
             SELECT TABLE_NAME
@@ -22,7 +22,7 @@ public partial class DatabaseClient
         return result.ToList();
     }
 
-    public async Task<bool> TableExistsAsync(string table)
+    public async Task<bool> TableExists(string table)
     {
         const string sql = @"
             SELECT COUNT(*)
@@ -35,7 +35,7 @@ public partial class DatabaseClient
         return await conn.ExecuteScalarAsync<int>(sql, new { table }) > 0;
     }
 
-    public async Task<DbTable?> GetTableAsync(string table)
+    public async Task<DbTable?> GetTable(string table)
     {
         const string sql = @"
             SELECT TABLE_NAME AS Name
@@ -52,7 +52,7 @@ public partial class DatabaseClient
 
     #region Create
 
-    public async Task CreateTableAsync(
+    public async Task CreateTable(
     string table,
     IEnumerable<ColumnDef> columns,
     string? primaryKey = null)
@@ -84,10 +84,10 @@ public partial class DatabaseClient
 
         var sql = string.Join("\n", sqlBuilder);
 
-        await ExecuteAsync(sql);
+        await Query(sql);
     }
 
-    public async Task EnsureTableAsync(
+    public async Task EnsureTable(
     string table,
     IEnumerable<ColumnDef> columns,
     string? primaryKey = null
@@ -96,9 +96,9 @@ public partial class DatabaseClient
         // ─────────────────────────────────────────────
         // 1. Create table if it doesn't exist
         // ─────────────────────────────────────────────
-        if (!await TableExistsAsync(table))
+        if (!await TableExists(table))
         {
-            await CreateTableAsync(table, columns, primaryKey);
+            await CreateTable(table, columns, primaryKey);
             return;
         }
 
@@ -165,10 +165,10 @@ public partial class DatabaseClient
 
     #region Drop
 
-    public async Task DropTableAsync(string table)
+    public async Task DropTable(string table)
     {
         var sql = $"DROP TABLE IF EXISTS `{table}`;";
-        await ExecuteAsync(sql);
+        await Query(sql);
     }
 
     #endregion

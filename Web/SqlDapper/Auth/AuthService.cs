@@ -18,7 +18,7 @@ public class AuthService
     public async Task EnsureTableAsync()
     {
         // Users table
-        await _db.EnsureTableAsync(
+        await _db.EnsureTable(
             "users",
             [
                 new ColumnDef("id", "BIGINT", false, true),
@@ -30,7 +30,7 @@ public class AuthService
         );
 
         // Tokens table
-        await _db.EnsureTableAsync(
+        await _db.EnsureTable(
             "tokens",
             [
                 new ColumnDef("id", "BIGINT", false, true),
@@ -47,7 +47,7 @@ public class AuthService
     public async Task<bool> RegisterAsync(string username, string password)
     {
         await EnsureTableAsync();
-        var existing = await _db.fetchOne<long?>(
+        var existing = await _db.FetchSingleRow<long?>(
             "SELECT id FROM users WHERE name = @n",
             new { n = username }
         );
@@ -57,7 +57,7 @@ public class AuthService
 
         var hash = SecureHash.HashPassword(password);
 
-        await _db.insert(
+        await _db.Query(
             "INSERT INTO users (name, password_hash) VALUES (@n, @p)",
             new { n = username, p = hash }
         );
@@ -69,7 +69,7 @@ public class AuthService
     public async Task<string?> LoginAsync(string username, string password)
     {
         await EnsureTableAsync();
-        var user = await _db.fetchOne<(long Id, string PasswordHash)>(
+        var user = await _db.FetchSingleRow<(long Id, string PasswordHash)>(
             "SELECT id, password_hash FROM users WHERE name = @n",
             new { n = username }
         );
@@ -83,7 +83,7 @@ public class AuthService
         var token = CreateToken();
         var tokenHash = SecureHash.HashToken(token); // store hash
         var expires = DateTime.UtcNow.AddDays(7);
-        await _db.insert(
+        await _db.Query(
             @"INSERT INTO tokens (token, user_id, created_at, expires_at) VALUES (@t, @u, NOW(), @e)",
             new { t = tokenHash, u = user.Id, e = expires }
         );
@@ -105,7 +105,7 @@ public class AuthService
         }
 
         var tokenHash = SecureHash.HashToken(token);
-        var session = await _db.fetchOne<(long UserId, DateTime ExpiresAt)>(
+        var session = await _db.FetchSingleRow<(long UserId, DateTime ExpiresAt)>(
             @"SELECT user_id, expires_at 
             FROM tokens 
             WHERE token = @t",
@@ -125,7 +125,7 @@ public class AuthService
     {
         _cache.TryRemove(token, out _);
         var tokenHash = SecureHash.HashToken(token);
-        await _db.delete(
+        await _db.Query(
             "DELETE FROM tokens WHERE token = @t",
             new { t = tokenHash }
         );
@@ -143,7 +143,7 @@ public class AuthService
             _cache.TryRemove(key, out _);
         }
 
-        await _db.delete(
+        await _db.Query(
             "DELETE FROM tokens WHERE user_id = @u",
             new { u = userId }
         );
@@ -152,7 +152,7 @@ public class AuthService
     // Cleanup expired tokens
     public async Task CleanupAsync()
     {
-        await _db.delete(
+        await _db.Query(
             "DELETE FROM tokens WHERE expires_at <= NOW()"
         );
 

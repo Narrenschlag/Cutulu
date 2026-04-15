@@ -17,8 +17,10 @@ public record ColumnDef(
     string Type,
     bool Nullable = true,
     bool AutoIncrement = false,
-    string? Default = null
-);
+    string? Default = null)
+{
+    public static readonly ColumnDef Id64 = new("id", "BIGINT", false, true);
+}
 
 public partial class DatabaseClient
 {
@@ -122,7 +124,7 @@ public partial class DatabaseClient
             {(column.Default != null ? $"DEFAULT {column.Default}" : "")};
         ";
 
-        await ExecuteAsync(sql);
+        await Query(sql);
     }
 
     public async Task EnsureColumnAsync(string table, ColumnDef column)
@@ -142,7 +144,7 @@ public partial class DatabaseClient
             {(column.Default != null ? $"DEFAULT {column.Default}" : "")};
         ";
 
-        await ExecuteAsync(sql);
+        await Query(sql);
     }
 
     public async Task DropColumnAsync(string table, string column)
@@ -152,7 +154,7 @@ public partial class DatabaseClient
             DROP COLUMN `{column}`;
         ";
 
-        await ExecuteAsync(sql);
+        await Query(sql);
     }
 
     public async Task AddIndexAsync(string table, string indexName, params string[] columns)
@@ -164,7 +166,7 @@ public partial class DatabaseClient
             ADD INDEX `{indexName}` ({cols});
         ";
 
-        await ExecuteAsync(sql);
+        await Query(sql);
     }
 
     public async Task AddPrimaryKeyAsync(string table, params string[] columns)
@@ -176,7 +178,7 @@ public partial class DatabaseClient
             ADD PRIMARY KEY ({cols});
         ";
 
-        await ExecuteAsync(sql);
+        await Query(sql);
     }
 
     #endregion

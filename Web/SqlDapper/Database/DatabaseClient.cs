@@ -1,6 +1,7 @@
 #if SQL_DAPPER
 namespace Cutulu.Web;
 
+using System.Runtime.CompilerServices;
 using MySqlConnector;
 using System.Data;
 using Dapper;
@@ -42,106 +43,6 @@ public partial class DatabaseClient : IAsyncDisposable
         var conn = new MySqlConnection(ConnectString);
         await conn.OpenAsync();
         return conn;
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // PHP-style simple API
-    // ─────────────────────────────────────────────────────────────────────────
-    // Short names, anonymous objects for params, predictable return types.
-    //
-    //   var user  = await db.fetchOne<User>("SELECT * FROM users WHERE id = @id", new { id = 5 });
-    //   var users = await db.fetchAll<User>("SELECT * FROM users WHERE active = @active", new { active = true });
-    //   var count = await db.fetchValue<int>("SELECT COUNT(*) FROM users");
-    //   long id   = await db.insert("INSERT INTO users (name, email) VALUES (@name, @email)", new { name, email });
-    //   int  rows = await db.update("UPDATE users SET name = @name WHERE id = @id", new { name, id });
-    //   int  rows = await db.delete("DELETE FROM users WHERE id = @id", new { id });
-    //   int  rows = await db.query("ALTER TABLE users ADD COLUMN bio TEXT");
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /// <summary>Fetch the first matching row, or null if not found.</summary>
-    public async Task<T?> fetchOne<T>(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.QueryFirstOrDefaultAsync<T>(sql, param);
-    }
-
-    /// <summary>Fetch all matching rows as a list.</summary>
-    public async Task<List<T>> fetchAll<T>(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return (await conn.QueryAsync<T>(sql, param)).ToList();
-    }
-
-    /// <summary>Fetch a single scalar value (COUNT, MAX, a name, etc.).</summary>
-    public async Task<T?> fetchValue<T>(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.ExecuteScalarAsync<T>(sql, param);
-    }
-
-    /// <summary>Run an INSERT. Returns the new auto-increment ID.</summary>
-    public async Task<long> insert(string sql, object param)
-    {
-        await using var conn = await OpenAsync();
-        await conn.ExecuteAsync(sql, param);
-        return await conn.ExecuteScalarAsync<long>("SELECT LAST_INSERT_ID()");
-    }
-
-    /// <summary>Run an UPDATE. Returns the number of affected rows.</summary>
-    public async Task<int> update(string sql, object param)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.ExecuteAsync(sql, param);
-    }
-
-    /// <summary>Run a DELETE. Returns the number of affected rows.</summary>
-    public async Task<int> delete(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.ExecuteAsync(sql, param);
-    }
-
-    /// <summary>Run any SQL that doesn't return rows (DDL, stored procs, etc.). Returns affected-row count.</summary>
-    public async Task<int> query(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.ExecuteAsync(sql, param);
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // Full async API
-    // ═════════════════════════════════════════════════════════════════════════
-
-    // ── Fetch: single row ─────────────────────────────────────────────────────
-
-    /// <summary>Returns a single T or null. Throws if more than one row is found.</summary>
-    public async Task<T?> FetchOneAsync<T>(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.QuerySingleOrDefaultAsync<T>(sql, param);
-    }
-
-    /// <summary>Returns the first row or null (ignores extras).</summary>
-    public async Task<T?> FetchFirstAsync<T>(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.QueryFirstOrDefaultAsync<T>(sql, param);
-    }
-
-    // ── Fetch: multiple rows ──────────────────────────────────────────────────
-
-    /// <summary>Returns all matching rows as an IEnumerable.</summary>
-    public async Task<IEnumerable<T>> FetchManyAsync<T>(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.QueryAsync<T>(sql, param);
-    }
-
-    /// <summary>Returns all matching rows as a List.</summary>
-    public async Task<List<T>> FetchListAsync<T>(string sql, object? param = null)
-    {
-        var result = await FetchManyAsync<T>(sql, param);
-        return result.ToList();
     }
 
     // ── Fetch: paged ──────────────────────────────────────────────────────────
@@ -232,24 +133,6 @@ public partial class DatabaseClient : IAsyncDisposable
         return await conn.ExecuteAsync(sql, values);
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
-
-    /// <summary>Executes an UPDATE and returns the number of affected rows.</summary>
-    public async Task<int> UpdateAsync(string sql, object param)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.ExecuteAsync(sql, param);
-    }
-
-    // ── Delete ────────────────────────────────────────────────────────────────
-
-    /// <summary>Executes a DELETE and returns the number of affected rows.</summary>
-    public async Task<int> DeleteAsync(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.ExecuteAsync(sql, param);
-    }
-
     // ── Bulk insert ───────────────────────────────────────────────────────────
 
     /// <summary>
@@ -328,15 +211,6 @@ public partial class DatabaseClient : IAsyncDisposable
             await tx.RollbackAsync();
             throw;
         }
-    }
-
-    // ── Raw execute (DDL, stored procs, etc.) ─────────────────────────────────
-
-    /// <summary>Executes any SQL that doesn't return rows. Returns affected-row count.</summary>
-    public async Task<int> ExecuteAsync(string sql, object? param = null)
-    {
-        await using var conn = await OpenAsync();
-        return await conn.ExecuteAsync(sql, param);
     }
 
     // ── Health check ──────────────────────────────────────────────────────────
