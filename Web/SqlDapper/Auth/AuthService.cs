@@ -23,6 +23,7 @@ public class AuthService
             [
                 new ColumnDef("id", "BIGINT", false, true),
                 new ColumnDef("name", "VARCHAR(100)", false),
+                new ColumnDef("email", "VARCHAR(100)", false),
                 new ColumnDef("password_hash", "TEXT", false)
             ],
             "id"
