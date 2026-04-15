@@ -190,4 +190,45 @@ public class WebRequestClient
             "application/json"
         );
     }
+
+    // ─────────────────────────────────────────────
+    // Send LocalEncoder, receive raw bytes
+    // ─────────────────────────────────────────────
+
+    public async Task<byte[]?> PostAsync(string path, LocalEncoder encoder)
+    {
+        return await PostBytesAsync(path, encoder.GetBuffer());
+    }
+
+    // ─────────────────────────────────────────────
+    // Send LocalEncoder, receive LocalDecoder
+    // ─────────────────────────────────────────────
+
+    public async Task<LocalDecoder?> PostDecoderAsync(string path, LocalEncoder encoder)
+    {
+        var bytes = await PostBytesAsync(path, encoder.GetBuffer());
+        return bytes == null || bytes.Length == 0 ? null : new LocalDecoder(bytes);
+    }
+
+    // ─────────────────────────────────────────────
+    // Send LocalEncoder, receive decoded T
+    // ─────────────────────────────────────────────
+
+    public async Task<T?> PostDecodedAsync<T>(string path, LocalEncoder encoder)
+    {
+        var bytes = await PostBytesAsync(path, encoder.GetBuffer());
+        if (bytes == null || bytes.Length == 0) return default;
+
+        return bytes.TryDecode(out T value) ? value : default;
+    }
+
+    // ─────────────────────────────────────────────
+    // GET → LocalDecoder
+    // ─────────────────────────────────────────────
+
+    public async Task<LocalDecoder?> GetDecoderAsync(string path)
+    {
+        var bytes = await GetBytesAsync(path);
+        return bytes == null || bytes.Length == 0 ? null : new LocalDecoder(bytes);
+    }
 }

@@ -7,17 +7,14 @@ public class WebApp : IAsyncDisposable
 {
     public readonly WebApplication App;
 
-    public WebApp(string host, int port, Delegate? defaultRouting = null, DatabaseClient? enableAuth = null)
+    public WebApp(string host, int port, Delegate? defaultRouting = null, Func<HttpContext, Task<bool>>? authHandler = null)
     {
         App = WebApplication.Create();
 
         if (defaultRouting != null)
             App.MapGet("/", defaultRouting);
 
-        if (enableAuth != null)
-            new AuthService(enableAuth).Apply(App);
-
-        RouteHttpFetcher.RegisterRoutes(App);
+        RouteHttpFetcher.RegisterRoutes(App, authHandler);
 
         Debug.Log($"Starting web server on {host}:{port}");
         App.Run($"{host}:{port}");

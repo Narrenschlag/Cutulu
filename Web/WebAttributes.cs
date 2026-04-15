@@ -1,17 +1,16 @@
 #if WEB_APP
 namespace Cutulu.Web;
 
-[System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = false)]
-public class RouteHttp : System.Attribute
-{
-    public readonly string Route;
+using System;
 
-    /// <summary>
-    /// The path's {arg_name}s have to match the method's parameters. Mapping is done by system on application startup.
-    /// </summary>
-    public RouteHttp(string route = "/install/{name}:{age}")
-    {
-        Route = route;
-    }
+[AttributeUsage(AttributeTargets.Method)]
+public class RouteHttp(string route, bool requireAuth = false, bool allowRemoteAccess = true, RouteHttpMethod method = RouteHttpMethod.Get) : Attribute
+{
+    public readonly string Route = route;
+    public readonly RouteHttpMethod Method = method;
+    public readonly bool RequireAuth = requireAuth;
+    public readonly bool AllowRemoteAccess = allowRemoteAccess;
 }
+
+public enum RouteHttpMethod { Get, Post, Put, Patch, Delete }
 #endif
