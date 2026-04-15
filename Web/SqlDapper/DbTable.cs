@@ -88,14 +88,76 @@ public partial class DatabaseClient
     }
 
     public async Task EnsureTableAsync(
-        string table,
-        IEnumerable<ColumnDef> columns,
-        string? primaryKey = null
-    )
+    string table,
+    IEnumerable<ColumnDef> columns,
+    string? primaryKey = null
+)
     {
+        // ─────────────────────────────────────────────
+        // 1. Create table if it doesn't exist
+        // ─────────────────────────────────────────────
         if (!await TableExistsAsync(table))
         {
             await CreateTableAsync(table, columns, primaryKey);
+            return;
+        }
+
+        // ─────────────────────────────────────────────
+        // 2. Get existing columns
+        // ─────────────────────────────────────────────
+        const string colSql = @"
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = @table;
+        ";
+
+        await using var conn = await OpenAsync();
+        var existingCols = (await conn.QueryAsync<string>(colSql, new { table }))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // ─────────────────────────────────────────────
+        // 3. Add missing columns
+        // ─────────────────────────────────────────────
+        foreach (var col in columns)
+        {
+            if (existingCols.Contains(col.Name))
+                continue;
+
+            var sql = $"ALTER TABLE `{table}` ADD COLUMN `{col.Name}` {col.Type}";
+
+            if (!col.Nullable)
+                sql += " NOT NULL";
+
+            if (col.AutoIncrement)
+                sql += " AUTO_INCREMENT";
+
+            if (col.Default != null)
+                sql += $" DEFAULT {col.Default}";
+
+            await conn.ExecuteAsync(sql);
+        }
+
+        // ─────────────────────────────────────────────
+        // 4. Ensure primary key exists (safe check)
+        // ─────────────────────────────────────────────
+        if (!string.IsNullOrEmpty(primaryKey))
+        {
+            const string pkSql = @"
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = @table
+                AND CONSTRAINT_TYPE = 'PRIMARY KEY';
+            ";
+
+            var hasPk = await conn.ExecuteScalarAsync<int>(pkSql, new { table });
+
+            if (hasPk == 0)
+            {
+                var sql = $"ALTER TABLE `{table}` ADD PRIMARY KEY (`{primaryKey}`)";
+                await conn.ExecuteAsync(sql);
+            }
         }
     }
 

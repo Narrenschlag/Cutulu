@@ -1,5 +1,6 @@
 namespace Cutulu.Core
 {
+    using System.Runtime.CompilerServices;
     using System;
 
     /// <summary>
@@ -363,17 +364,20 @@ namespace Cutulu.Core
             return bytes;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToHex(this byte[] bytes)
         {
-            if (bytes.IsEmpty()) return null;
+            return bytes.NotEmpty() ? Convert.ToHexString(bytes) : string.Empty;
 
+            /*if (bytes.IsEmpty()) return string.Empty; 
+            
             var hex = new System.Text.StringBuilder(bytes.Length * 2);
             foreach (var b in bytes)
             {
                 hex.AppendFormat("{0:X2}", b);
             }
 
-            return hex.ToString();
+            return hex.ToString();*/
         }
 
         /// <summary>

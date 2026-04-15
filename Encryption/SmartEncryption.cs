@@ -2,6 +2,7 @@ namespace Cutulu.Encryption;
 
 using System.Security.Cryptography;
 using System;
+using Core;
 
 public static class SmartEncryption
 {
@@ -10,12 +11,15 @@ public static class SmartEncryption
     public const int KeySize = 32;    // 256-bit key
 
     // Generates a random 256-bit key
-    public static byte[] GenerateKey()
+    public static byte[] GenerateKey(int? length = null)
     {
-        var key = new byte[KeySize];
+        var key = new byte[length ?? KeySize];
         RandomNumberGenerator.Fill(key);
         return key;
     }
+
+    public static byte[] Encrypt(this string text, string key)
+    => Encrypt(text.Encode(), key.Encode());
 
     // Encrypts a plaintext buffer
     public static byte[] Encrypt(this byte[] buffer, byte[] key)
