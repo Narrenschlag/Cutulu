@@ -55,12 +55,11 @@ namespace Cutulu.Network.Sockets
             Client = new(AddressFamily.InterNetworkV6);
 
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            Socket.DualMode = true; 
+            Socket.DualMode = true;
 
             // Increase udp buffer to better handle packet loss
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 512 * 1024);
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 512 * 1024);
-
 
             Socket.Bind(new IPEndPoint(IPAddress.IPv6Any, Port = port));
         }
@@ -75,9 +74,28 @@ namespace Cutulu.Network.Sockets
             // Wait until disconnected
             while (IsConnected) await Task.Delay(1);
 
-            if (IPAddress.TryParse(Address = address, out var ipAddress) == false)
-                return;
+            // Resolve hostname or IP
+            IPAddress ipAddress;
+            try
+            {
+                var addresses = await Dns.GetHostAddressesAsync(address);
+                ipAddress = Array.Find(addresses, a => a.AddressFamily == AddressFamily.InterNetworkV6)
+                         ?? Array.Find(addresses, a => a.AddressFamily == AddressFamily.InterNetwork);
 
+                if (ipAddress == null) return;
+
+                // Map IPv4 to IPv6 for dual-mode
+                if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+                    ipAddress = ipAddress.MapToIPv6();
+            }
+            
+            catch
+            {
+                Debug.LogError($"[{GetType().Name}] Failed to resolve hostname or IP: {address}");
+                return;
+            }
+
+            Address = address;
             Token = (TokenSource = new()).Token;
 
             if (Client == null)
