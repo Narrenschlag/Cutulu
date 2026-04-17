@@ -13,9 +13,9 @@ public class WebRequestClient
     private readonly HttpClient http;
     private string? _token;
 
-    public WebRequestClient(string path)
+    public WebRequestClient()
     {
-        http = new() { BaseAddress = new Uri(path) };
+        http = new();
     }
 
     // ─────────────────────────────────────────────
