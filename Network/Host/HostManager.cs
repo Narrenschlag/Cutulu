@@ -183,12 +183,13 @@ namespace Cutulu.Network
 
         private async void HandleNewClient(TcpSocket socket)
         {
+            var remoteEndPoint = socket?.Socket?.RemoteEndPoint;
             var packet = await socket.Receive(1);
 
             if (packet.Success == false)
             {
-                Debug.LogError($"Failed to receive connection type length from {socket.Socket.RemoteEndPoint}. Closing connection.");
-                socket.Close();
+                Debug.LogError($"Failed to receive connection type from {remoteEndPoint}. Closing connection.");
+                socket?.Close();
                 return;
             }
 
@@ -202,7 +203,7 @@ namespace Cutulu.Network
 
             else
             {
-                Debug.LogError($"Unknown connection type({packet.Buffer[0]}) received from {socket.Socket.RemoteEndPoint}. No handler has been assigned. Closing connection.");
+                Debug.LogError($"Unknown connection type({packet.Buffer[0]}) received from {remoteEndPoint}. No handler has been assigned. Closing connection.");
             }
 
             socket?.Close();
