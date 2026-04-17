@@ -55,7 +55,7 @@ namespace Cutulu.Network.Sockets
             Client = new(AddressFamily.InterNetworkV6);
 
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            Socket.DualMode = true;
+            Socket.DualMode = true; 
 
             // Increase udp buffer to better handle packet loss
             Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 512 * 1024);

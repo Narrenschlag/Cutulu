@@ -24,7 +24,7 @@ namespace Cutulu.Network.Sockets
 
         public string Address { get; private set; }
         public int Port { get; private set; }
-        public long UID { get; set; }
+        public long UID { get; set; } 
 
         private bool Receiving { get; set; }
         private TcpHost Host { get; set; }
