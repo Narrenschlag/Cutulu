@@ -1,7 +1,11 @@
 namespace Cutulu.Web;
 
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Text.Json;
+using System.Net.Http;
 using System.Text;
+using System;
 using Core;
 
 public class WebRequestClient
@@ -22,7 +26,7 @@ public class WebRequestClient
     {
         _token = token;
         http.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            new AuthenticationHeaderValue("Bearer", token);
     }
 
     public void ClearToken()

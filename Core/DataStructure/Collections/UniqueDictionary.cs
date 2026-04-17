@@ -1,5 +1,8 @@
 namespace Cutulu.Core;
 
+using System.Collections.Generic;
+using System.Linq;
+
 public class UniqueDictionary<Key, Value>
 {
     public readonly Dictionary<Value, Key> Reverse = [];
