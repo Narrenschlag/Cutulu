@@ -53,7 +53,7 @@ namespace Cutulu.Network
         /// <summary>
         /// Starts client.
         /// </summary>
-        public virtual async Task<bool> Start()
+        public virtual async Task<bool> Start(int retryCount = 5, int retryDelay = 2000)
         {
             Stop(11);
 
@@ -94,8 +94,19 @@ namespace Cutulu.Network
 
             if (IsConnected == false)
             {
-                Stop(12);
-                return false;
+                // Retry connection
+                if (retryCount-- > 0)
+                {
+                    await Task.Delay(retryDelay);
+                    return await Start(retryCount, retryDelay);
+                }
+
+                // Failed to connect
+                else
+                {
+                    Stop(12);
+                    return false;
+                }
             }
 
             Debug.Log($"Connected client to ip:{Address} tcp:{TcpPort}:{((IPEndPoint)TcpClient.Socket.LocalEndPoint).Port} udp:{UdpPort}:{((IPEndPoint)UdpClient.Socket.LocalEndPoint).Port}");

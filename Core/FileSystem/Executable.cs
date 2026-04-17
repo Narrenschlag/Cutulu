@@ -15,14 +15,14 @@ public partial class Executable : File
 
     #endregion
 
-    public Process Execute(string args = "", bool shell = false, bool newWindow = true)
+    public Process Execute(string args = "", string name = null, bool shell = false, bool newWindow = true)
     {
-        if (this.Exists() == false) throw new System.IO.FileNotFoundException($"Executable '{SystemPath}' not found.");
+        if (Exists() == false) throw new System.IO.FileNotFoundException($"Executable '{SystemPath}' not found.");
 
         // Example: launch "myapp" with arguments
         return StartProcess(new ProcessStartInfo
         {
-            FileName = SystemPath,
+            FileName = name.NotEmpty() ? name : SystemPath,
             Arguments = args,
             UseShellExecute = shell,
             CreateNoWindow = newWindow == false,
@@ -31,7 +31,7 @@ public partial class Executable : File
 
     public Process ExecuteGodot(string args = "", bool fullscreen = false)
     {
-        if (this.Exists() == false) throw new System.IO.FileNotFoundException($"Executable '{SystemPath}' not found.");
+        if (Exists() == false) throw new System.IO.FileNotFoundException($"Executable '{SystemPath}' not found.");
 
         args ??= "";
 

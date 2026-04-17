@@ -230,7 +230,7 @@ namespace Cutulu.Network
 
         #endregion
 
-        public class Wrapper(HostManager manager)
+        public class Wrapper(HostManager manager) : IConnectionWrapper, IConnectWrapper, IPingWrapper
         {
             public readonly HostManager Manager = manager;
 
@@ -238,7 +238,32 @@ namespace Cutulu.Network
 
             public void InvokeConnect(Connection connection) => Manager.ConnectedEvent(connection);
 
+            public int GetMaxClientCount() => Manager.MaxClients;
+            public int GetClientCount() => Manager.Connections.Count;
+
             public long NextUID() => Manager.NextUID++;
+
+            public byte[] GetPingBuffer() => Manager.PingBuffer;
+
+            public void AssignConnection(Connection connection, TcpSocket socket)
+            {
+                // Remove already connected connections with same address
+                if (Manager.ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))
+                    InvokeDisconnect(existingConnection.Socket);
+
+                Manager.ConnectionsByUdp[connection.EndPoint] = connection;
+                Manager.Connections[socket] = connection;
+            }
+
+            public Connection CreateConnection(TcpSocket socket, byte[] buffer)
+            {
+                return new(
+                    NextUID(),
+                    Manager,
+                    socket,
+                    new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, buffer.Decode<int>())
+                );
+            }
         }
     }
 }

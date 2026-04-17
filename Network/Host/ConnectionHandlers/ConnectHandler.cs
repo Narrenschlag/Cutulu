@@ -8,8 +8,10 @@ using Core;
 public class ConnectHandler(byte key) : ConnectionHandler(key)
 {
     // Receives ClientManager's SEND_CONNECT
-    public override async Task<(bool Status, object Data)> Validate(HostManager.Wrapper wrapper, TcpSocket socket)
+    public override async Task<(bool Status, object Data)> Validate(IConnectionWrapper _wrapper, TcpSocket socket)
     {
+        if (_wrapper is not IConnectWrapper wrapper) return (false, null);
+
         var (Success, Buffer) = await socket.Receive(4);
 
         //Debug.Log($"Received connection type [{Success}].");
@@ -18,12 +20,7 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
 
         await socket.SendAsync(true.Encode());
 
-        var connection = new Connection(
-            wrapper.NextUID(),
-            wrapper.Manager,
-            socket,
-            new(((IPEndPoint)socket.Socket.RemoteEndPoint).Address, Buffer.Decode<int>())
-        );
+        var connection = wrapper.CreateConnection(socket, Buffer);
 
         // Check if the client is still connected
         try
@@ -36,26 +33,26 @@ public class ConnectHandler(byte key) : ConnectionHandler(key)
             return (false, null);
         }
 
+        // -> Moved to wrapper.AssignConnection()
         // Remove already connected connections with same address
-        if (wrapper.Manager.ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))
-            wrapper.InvokeDisconnect(existingConnection.Socket);
+        //if (wrapper.Manager.ConnectionsByUdp.TryGetValue(connection.EndPoint, out var existingConnection))
+        //    wrapper.InvokeDisconnect(existingConnection.Socket);
 
         // Stop connection if max client limit has been reached
-        if (wrapper.Manager.MaxClients > 0 && wrapper.Manager.Connections.Count >= wrapper.Manager.MaxClients)
+        if (wrapper.GetMaxClientCount() > 0 && wrapper.GetClientCount() >= wrapper.GetMaxClientCount())
         {
             Debug.LogError($"Maximum client capacity has been reached. Cancelling connection.");
             return (false, null);
         }
 
-        wrapper.Manager.ConnectionsByUdp[connection.EndPoint] = connection;
-        wrapper.Manager.Connections[socket] = connection;
+        wrapper.AssignConnection(connection, socket);
 
         //Debug.LogR($"[color=magenta][b][ConnectHandler][/b][/color] New connection: {connection.UserId}");
         await socket.ClearBuffer();
         return (true, connection);
     }
 
-    public override async Task Handle(HostManager.Wrapper wrapper, TcpSocket socket, object data)
+    public override async Task Handle(IConnectionWrapper wrapper, TcpSocket socket, object data)
     {
         if (data.IsNull() || data is not Connection connection) return;
         //Debug.LogR($"[color=magenta][b][ConnectHandler][/b][/color] Handed connection: {connection.UserId}");

@@ -6,14 +6,17 @@ using Core;
 
 public class PingHandler(byte key) : ConnectionHandler(key)
 {
-    public override async Task<(bool Status, object Data)> Validate(HostManager.Wrapper wrapper, TcpSocket socket)
+    public override async Task<(bool Status, object Data)> Validate(IConnectionWrapper _wrapper, TcpSocket socket)
     {
-        if (wrapper.Manager.PingBuffer.NotEmpty())
+        if (_wrapper is IPingWrapper wrapper)
         {
-            var buffer = wrapper.Manager.PingBuffer;
+            var buffer = wrapper.GetPingBuffer();
 
-            await socket.SendAsync(buffer.Length.Encode(), buffer);
-            Debug.LogError($"Ping response sent to {socket.Socket.RemoteEndPoint}. Closing connection.");
+            if (buffer.NotEmpty())
+            {
+                await socket.SendAsync(buffer.Length.Encode(), buffer);
+                Debug.LogError($"Ping response sent to {socket.Socket.RemoteEndPoint}. Closing connection.");
+            }
         }
 
         return (false, null);
