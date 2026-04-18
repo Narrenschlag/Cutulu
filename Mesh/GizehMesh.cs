@@ -403,7 +403,7 @@ public class GizehMesh
         }
     }
 
-    private static Vector2 GetAreaWeightedCentroid(Vector2[] vertices)
+    public static Vector2 GetAreaWeightedCentroid(Vector2[] vertices)
     {
         if (vertices == null || vertices.Length < 3)
             throw new System.ArgumentException($"[{nameof(GizehMesh)}] A polygon must have at least 3 vertices. ({vertices?.Length ?? 0})");
