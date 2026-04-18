@@ -10,6 +10,7 @@ public sealed class LocalDecoder : IDisposable
     private readonly BinaryReader _reader;
 
     public long Length => _memory.Length;
+    public long RemainingLength => _memory.Length - _memory.Position;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public long GetPosition() => _memory.Position;
