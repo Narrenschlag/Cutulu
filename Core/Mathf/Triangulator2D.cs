@@ -1,3 +1,4 @@
+#if GODOT_4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using System.Collections.Generic;
@@ -532,3 +533,4 @@ public static class Triangulator2D
         }
     }
 }
+#endif
