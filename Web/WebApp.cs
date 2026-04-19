@@ -7,14 +7,20 @@ public class WebApp : IAsyncDisposable
 {
     public readonly WebApplication App;
 
-    public WebApp(string host, int port, Delegate? defaultRouting = null, Func<HttpContext, Task<bool>>? authHandler = null)
+    // onAuthFailed example: ctx => Results.RedirectToRoute(ROUTE_LOGIN)
+    public WebApp(
+        string host, int port,
+        Delegate? defaultRouting = null,
+        Func<HttpContext, Task<bool>>? authHandler = null,
+        Func<HttpContext, IResult>? onAuthFailed = null
+    )
     {
         App = WebApplication.Create();
 
         if (defaultRouting != null)
             App.MapGet("/", defaultRouting);
 
-        RouteHttpFetcher.RegisterRoutes(App, authHandler);
+        RouteHttpFetcher.RegisterRoutes(App, authHandler, onAuthFailed);
 
         Debug.Log($"Starting web server on {host}:{port}");
         App.Run($"{host}:{port}");

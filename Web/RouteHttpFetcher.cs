@@ -33,21 +33,26 @@ public static class RouteHttpFetcher
         }
     }
 
-    public static void RegisterRoutes(WebApplication app, Func<HttpContext, Task<bool>>? authHandler = null)
+    public static void RegisterRoutes(
+        WebApplication app,
+        Func<HttpContext, Task<bool>>? authHandler = null,
+        Func<HttpContext, IResult>? onAuthFailed = null
+    )
     {
         foreach (var route in GetAllRoutes())
         {
             if (!route.Method.IsStatic) continue;
 
-            // Wrap method in a RequestDelegate to handle any signature
             RequestDelegate requestDelegate = async (HttpContext ctx) =>
             {
-                // Auth check
                 if (route.Attribute.RequireAuth && authHandler != null)
                 {
                     if (!await authHandler(ctx))
                     {
-                        ctx.Response.StatusCode = 401;
+                        await (
+                            onAuthFailed?.Invoke(ctx) ??
+                            Results.Unauthorized()
+                        ).ExecuteAsync(ctx);
                         return;
                     }
                 }
@@ -107,12 +112,12 @@ public static class RouteHttpFetcher
             // Map by HTTP method
             var builder = route.Attribute.Method switch
             {
-                RouteHttpMethod.Get    => app.MapGet(route.Attribute.Route, requestDelegate),
-                RouteHttpMethod.Post   => app.MapPost(route.Attribute.Route, requestDelegate),
-                RouteHttpMethod.Put    => app.MapPut(route.Attribute.Route, requestDelegate),
-                RouteHttpMethod.Patch  => app.MapPatch(route.Attribute.Route, requestDelegate),
+                RouteHttpMethod.Get => app.MapGet(route.Attribute.Route, requestDelegate),
+                RouteHttpMethod.Post => app.MapPost(route.Attribute.Route, requestDelegate),
+                RouteHttpMethod.Put => app.MapPut(route.Attribute.Route, requestDelegate),
+                RouteHttpMethod.Patch => app.MapPatch(route.Attribute.Route, requestDelegate),
                 RouteHttpMethod.Delete => app.MapDelete(route.Attribute.Route, requestDelegate),
-                _                 => app.MapGet(route.Attribute.Route, requestDelegate)
+                _ => app.MapGet(route.Attribute.Route, requestDelegate)
             };
 
             // Restrict to loopback if remote access not allowed
