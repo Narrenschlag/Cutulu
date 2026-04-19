@@ -42,7 +42,7 @@ public readonly partial struct Directory
             GodotPath = ProjectSettings.LocalizePath(SystemPath);
         }
 #else
-    SystemPath = Path.GetFullPath(path);
+        SystemPath = Path.GetFullPath(path);
 #endif
 
         if (createIfMissing) MakeDir();
@@ -136,14 +136,14 @@ public readonly partial struct Directory
 
         return result;
 #else
-    if (!Exists()) return [];
+        if (!Exists()) return [];
 
-    var dirs = System.IO.Directory.GetDirectories(SystemPath);
-    var result = new Directory[dirs.Length];
-    for (int i = 0; i < dirs.Length; i++)
-        result[i] = new(dirs[i]);
+        var dirs = System.IO.Directory.GetDirectories(SystemPath);
+        var result = new Directory[dirs.Length];
+        for (int i = 0; i < dirs.Length; i++)
+            result[i] = new(dirs[i]);
 
-    return result;
+        return result;
 #endif
     }
 
@@ -192,14 +192,14 @@ public readonly partial struct Directory
 
         return result;
 #else
-    if (!Exists()) return [];
+        if (!Exists()) return [];
 
-    var files = System.IO.Directory.GetFiles(SystemPath);
-    var result = new File[files.Length];
-    for (int i = 0; i < files.Length; i++)
-        result[i] = new(files[i]);
+        var files = System.IO.Directory.GetFiles(SystemPath);
+        var result = new File[files.Length];
+        for (int i = 0; i < files.Length; i++)
+            result[i] = new(files[i]);
 
-    return result;
+        return result;
 #endif
     }
 
@@ -269,18 +269,18 @@ public readonly partial struct Directory
             }
         }
 #else
-    var subs = System.IO.Directory.GetFiles(SystemPath);
-    foreach (var file in subs)
-    {
-        foreach (var ext in fileTypes)
+        var subs = System.IO.Directory.GetFiles(SystemPath);
+        foreach (var file in subs)
         {
-            if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+            foreach (var ext in fileTypes)
             {
-                list.Add(new File(file));
-                break;
+                if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                {
+                    list.Add(new File(file));
+                    break;
+                }
             }
         }
-    }
 #endif
         return [.. list];
     }
@@ -349,4 +349,7 @@ public static partial class Directoryf
             System.IO.File.Delete(clean);
 #endif
     }
+
+    public static DateTime GetLastWriteTimeUtc(this Directory dir)
+    => System.IO.Directory.GetLastWriteTimeUtc(dir.SystemPath);
 }
