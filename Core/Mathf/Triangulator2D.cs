@@ -720,7 +720,7 @@ public static class Triangulator2D
     /// Triangles that only touch at a single vertex will be treated as separate islands.
     /// Slightly more precise for certain mesh topologies.
     /// </param>
-    public static Vector2[][][] GetIslands(Vector2[][] triangles, bool edgeDetectionOnly = false)
+    public static Vector2[][][] GetIslands(this Vector2[][] triangles, bool edgeDetectionOnly = false)
     {
         if (triangles == null || triangles.Length < 1)
             return [];
@@ -795,14 +795,14 @@ public static class Triangulator2D
     /// Returns the centroid of the largest outline per island.
     /// Correctly handles donuts by ignoring hole outlines.
     /// </summary>
-    public static Vector2[] GetIslandCentroids(Vector2[][] triangles, bool edgeDetectionOnly = false)
+    public static Vector2[] GetIslandCentroids(this Vector2[][] triangles, bool edgeDetectionOnly = false)
     => GetIslandCentroids(GetIslands(triangles, edgeDetectionOnly));
 
     /// <summary>
     /// Returns the centroid of the largest outline per island.
     /// Correctly handles donuts by ignoring hole outlines.
     /// </summary>
-    public static Vector2[] GetIslandCentroids(Vector2[][][] islands)
+    public static Vector2[] GetIslandCentroids(this Vector2[][][] islands)
     {
         var centroids = new Vector2[islands.Length];
 
@@ -887,60 +887,184 @@ public static class Triangulator2D
         return [.. outline];
     }
 
-    /*/// <summary>
-    /// Groups triangles into disconnected islands based on shared edges or vertices.
-    /// Returns one Vector2[][] per island, each containing that island's triangles.
+    public static Vector2 GetRandomPositionInPolygon(this Vector2[][] triangles)
+    => GetPositionInPolygon(triangles, Random.Value, Random.Value);
+
+    /// <summary>
+    /// Returns a uniformly distributed random point inside the triangle set,
+    /// with triangles weighted by area so larger triangles are picked more often.
     /// </summary>
-    public static Vector2[][][] GetIslands(Vector2[][] triangles)
+    public static Vector2 GetPositionInPolygon(this Vector2[][] triangles, float r1, float r2)
     {
         if (triangles == null || triangles.Length < 1)
-            return [];
+            return Vector2.Zero;
 
-        // Union-Find to group triangles by shared vertices.
-        var parent = new int[triangles.Length];
-        for (var i = 0; i < parent.Length; i++)
-            parent[i] = i;
+        // Compute cumulative area array for weighted selection.
+        var areas = new float[triangles.Length];
+        var total = 0f;
 
-        int Find(int x)
-        {
-            while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; }
-            return x;
-        }
-
-        void Union(int a, int b)
-        {
-            a = Find(a); b = Find(b);
-            if (a != b) parent[a] = b;
-        }
-
-        // Build a vertex → triangle index map.
-        var vertexToTris = new Dictionary<Vector2, List<int>>();
         for (var i = 0; i < triangles.Length; i++)
         {
-            foreach (var v in triangles[i])
+            var tri = triangles[i];
+            var value = Mathf.Abs(ComputeSignedArea(tri));
+            total += value;
+            areas[i] = value;
+        }
+
+        // Pick a triangle weighted by area.
+        var threshold = Random.Value * total;
+        var accumulated = 0f;
+        var chosen = triangles[^1];
+
+        for (var i = 0; i < areas.Length; i++)
+        {
+            accumulated += areas[i];
+            if (threshold <= accumulated)
             {
-                if (!vertexToTris.TryGetValue(v, out var list))
-                    vertexToTris[v] = list = [];
-                list.Add(i);
+                chosen = triangles[i];
+                break;
             }
         }
 
-        // Union all triangles that share at least one vertex.
-        foreach (var list in vertexToTris.Values)
-            for (var i = 1; i < list.Count; i++)
-                Union(list[0], list[i]);
+        // Pick a uniform random point inside the chosen triangle.
+        // The sqrt trick ensures uniform distribution (not biased toward one vertex).
+        r1 = Mathf.Sqrt(r1);
 
-        // Group triangles by their root.
-        var groups = new Dictionary<int, List<Vector2[]>>();
+        var a = chosen[0];
+        var b = chosen[1];
+        var c = chosen[2];
+
+        return (1 - r1) * a + r1 * (1 - r2) * b + r1 * r2 * c;
+    }
+
+    public static float GetAreaOfPolygon(this Vector2[][] triangles)
+    {
+        float area = 0f;
+
         for (var i = 0; i < triangles.Length; i++)
         {
-            var root = Find(i);
-            if (!groups.TryGetValue(root, out var group))
-                groups[root] = group = [];
-            group.Add(triangles[i]);
+            var tri = triangles[i];
+            area += Mathf.Abs(ComputeSignedArea(tri));
         }
 
-        return [.. groups.Values.Select(g => g.ToArray())];
-    }*/
+        return area;
+    }
+
+    /// <summary>
+    /// Returns <paramref name="count"/> evenly distributed points inside the polygon.
+    /// Uses R2 low-discrepancy sequence (Roberts, 2018) which has better 2D uniformity
+    /// than Halton — no clustering, no empty regions. Deterministic via seed.
+    /// </summary>
+    public static Vector2[] GetDistributedPositionsInPolygon(this Vector2[][] triangles, int count, int seed = 0)
+    {
+        if (triangles == null || triangles.Length < 1 || count < 1)
+            return [];
+
+        // Sort triangles spatially by centroid using a Z-order (Morton) curve
+        // so adjacent indices in the array are spatially close.
+        var sorted = triangles
+            .OrderBy(t =>
+            {
+                var c = (t[0] + t[1] + t[2]) / 3f;
+                return MortonCode(c);
+            })
+            .ToArray();
+
+        // Build cumulative area table on sorted triangles.
+        var areas = new float[sorted.Length];
+        var cumulative = new float[sorted.Length];
+        var total = 0f;
+
+        for (var i = 0; i < sorted.Length; i++)
+        {
+            var value = Mathf.Abs(ComputeSignedArea(sorted[i]));
+            areas[i] = value;
+            total += value;
+            cumulative[i] = total;
+        }
+
+        // Distribute exact point counts per triangle proportionally by area.
+        var counts = new int[sorted.Length];
+        var remainder = 0f;
+        var assigned = 0;
+        var areasCopy = (float[])areas.Clone();
+
+        for (var i = 0; i < sorted.Length; i++)
+        {
+            var exact = areas[i] / total * count + remainder;
+            var floor = (int)exact;
+            remainder = exact - floor;
+            counts[i] = floor;
+            assigned += floor;
+        }
+
+        // Assign remainders to largest triangles.
+        while (assigned < count)
+        {
+            var best = 0;
+            for (var i = 1; i < sorted.Length; i++)
+                if (areasCopy[i] > areasCopy[best]) best = i;
+            counts[best]++;
+            areasCopy[best] = 0f;
+            assigned++;
+        }
+
+        // R2 sequence constants.
+        const float A1 = 0.7548776662f;
+        const float A2 = 0.5698402910f;
+
+        // Seed phases via Wang hash.
+        var s = (uint)seed;
+        s = (s ^ 61u) ^ (s >> 16); s *= 9u; s ^= s >> 4; s *= 0x27d4eb2du; s ^= s >> 15;
+        var phase1 = (s & 0xFFFFu) / 65536f;
+        s = (s ^ 61u) ^ (s >> 16); s *= 9u; s ^= s >> 4; s *= 0x27d4eb2du; s ^= s >> 15;
+        var phase2 = (s & 0xFFFFu) / 65536f;
+
+        var result = new Vector2[count];
+        var idx = 0;
+
+        for (var t = 0; t < sorted.Length; t++)
+        {
+            var tri = sorted[t];
+            var n = counts[t];
+
+            for (var i = 0; i < n; i++)
+            {
+                // R2 sequence — globally indexed so it never resets between triangles.
+                var v = (phase1 + A1 * (idx + 1)) % 1f;
+                var w = (phase2 + A2 * (idx + 1)) % 1f;
+
+                var r1 = Mathf.Sqrt(v);
+                var r2 = w;
+
+                result[idx++] = (1 - r1) * tri[0] + r1 * (1 - r2) * tri[1] + r1 * r2 * tri[2];
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Interleaves the bits of two floats mapped to integers — gives a Z-order curve
+    /// that preserves 2D spatial locality as a 1D sort key.
+    /// </summary>
+    private static ulong MortonCode(Vector2 p)
+    {
+        // Normalize to positive integer space.
+        var x = (uint)Mathf.Clamp(p.X * 1024f, 0f, uint.MaxValue / 2f);
+        var y = (uint)Mathf.Clamp(p.Y * 1024f, 0f, uint.MaxValue / 2f);
+        return Interleave(x) | (Interleave(y) << 1);
+    }
+
+    private static ulong Interleave(uint v)
+    {
+        ulong x = v;
+        x = (x | x << 16) & 0x0000FFFF0000FFFFul;
+        x = (x | x << 8) & 0x00FF00FF00FF00FFul;
+        x = (x | x << 4) & 0x0F0F0F0F0F0F0F0Ful;
+        x = (x | x << 2) & 0x3333333333333333ul;
+        x = (x | x << 1) & 0x5555555555555555ul;
+        return x;
+    }
 }
 #endif
