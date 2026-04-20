@@ -2,6 +2,7 @@
 namespace Cutulu.Core;
 
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 /// <summary>
@@ -532,5 +533,414 @@ public static class Triangulator2D
             return (center, radiusSq);
         }
     }
+
+    /// <summary>
+    /// Computes the outline of a region defined by a set of triangles.
+    /// Boundary edges are those belonging to exactly one triangle.
+    /// Returns an ordered CCW polygon, or an empty array if none found.
+    /// </summary>
+    /// <param name="edgeDetectionOnly">
+    /// If true, skips the chain-walking step and returns boundary edge vertices
+    /// as an unordered flat array. Faster when you only need to know which
+    /// vertices are on the border, not their polygon order.
+    /// </param>
+    public static Vector2[] GenerateOutline(this Vector2[][] triangles, bool edgeDetectionOnly = false)
+    {
+        if (triangles == null || triangles.Length < 1)
+            return [];
+
+        var edgeCount = new Dictionary<(Vector2, Vector2), int>(triangles.Length * 3);
+
+        foreach (var tri in triangles)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                var a = tri[i];
+                var b = tri[(i + 1) % 3];
+                var edge = a.X < b.X || (a.X == b.X && a.Y < b.Y) ? (a, b) : (b, a);
+                edgeCount[edge] = edgeCount.TryGetValue(edge, out var count) ? count + 1 : 1;
+            }
+        }
+
+        if (edgeDetectionOnly)
+        {
+            // Return unique boundary vertices, unordered.
+            var verts = new HashSet<Vector2>();
+            foreach (var (edge, count) in edgeCount)
+            {
+                if (count != 1) continue;
+                verts.Add(edge.Item1);
+                verts.Add(edge.Item2);
+            }
+            return [.. verts];
+        }
+
+        var boundary = new Dictionary<Vector2, Vector2>();
+        foreach (var (edge, count) in edgeCount)
+        {
+            if (count != 1) continue;
+            boundary[edge.Item1] = edge.Item2;
+        }
+
+        if (boundary.Count < 3)
+            return [];
+
+        var outline = new List<Vector2>(boundary.Count);
+        var current = boundary.Keys.First();
+        var start = current;
+
+        while (true)
+        {
+            outline.Add(current);
+            if (!boundary.TryGetValue(current, out var next)) break;
+            boundary.Remove(current);
+            current = next;
+            if (current == start) break;
+        }
+
+        if (ComputeSignedArea([.. outline]) < 0f)
+            outline.Reverse();
+
+        return [.. outline];
+    }
+
+    /// <summary>
+    /// Like GenerateOutline but supports disconnected triangle islands.
+    /// Returns one outline polygon per connected region.
+    /// </summary>
+    /// <param name="edgeDetectionOnly">
+    /// If true, returns one unordered boundary vertex array per outline loop
+    /// instead of walking the chain into a proper polygon. Faster when polygon
+    /// order is not needed.
+    /// </param>
+
+
+    /// <summary>
+    /// Like GenerateOutline but supports disconnected triangle islands.
+    /// Returns one outline polygon per connected region.
+    /// </summary>
+    public static Vector2[][] GenerateOutlines(this Vector2[][] triangles)
+    {
+        if (triangles == null || triangles.Length < 1)
+            return [];
+
+        // Same edge-counting logic as GenerateOutline.
+        var edgeCount = new Dictionary<(Vector2, Vector2), int>(triangles.Length * 3);
+
+        foreach (var tri in triangles)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                var a = tri[i];
+                var b = tri[(i + 1) % 3];
+                var edge = a.X < b.X || (a.X == b.X && a.Y < b.Y) ? (a, b) : (b, a);
+                edgeCount[edge] = edgeCount.TryGetValue(edge, out var count) ? count + 1 : 1;
+            }
+        }
+
+        // Collect all boundary edges into a adjacency map.
+        // Unlike GenerateOutline we keep ALL of them and walk until exhausted.
+        var boundary = new Dictionary<Vector2, List<Vector2>>();
+
+        foreach (var (edge, count) in edgeCount)
+        {
+            if (count != 1) continue;
+
+            if (!boundary.TryGetValue(edge.Item1, out var listA))
+                boundary[edge.Item1] = listA = [];
+            listA.Add(edge.Item2);
+
+            if (!boundary.TryGetValue(edge.Item2, out var listB))
+                boundary[edge.Item2] = listB = [];
+            listB.Add(edge.Item1);
+        }
+
+        if (boundary.Count < 3)
+            return [];
+
+        var outlines = new List<Vector2[]>();
+        var visited = new HashSet<(Vector2, Vector2)>();
+
+        // Keep picking an unvisited start vertex until all edges are consumed.
+        foreach (var startVertex in boundary.Keys.ToArray())
+        {
+            foreach (var firstNeighbor in boundary[startVertex].ToArray())
+            {
+                if (visited.Contains((startVertex, firstNeighbor)))
+                    continue;
+
+                // Walk this loop.
+                var outline = new List<Vector2>();
+                var prev = startVertex;
+                var current = firstNeighbor;
+
+                outline.Add(prev);
+
+                while (current != startVertex)
+                {
+                    outline.Add(current);
+                    visited.Add((prev, current));
+                    visited.Add((current, prev));
+
+                    // Pick the next neighbor that isn't where we came from.
+                    var neighbors = boundary[current];
+                    var next = neighbors.FirstOrDefault(n => n != prev && !visited.Contains((current, n)));
+
+                    if (next == default)
+                        break; // dead end — malformed input
+
+                    prev = current;
+                    current = next;
+                }
+
+                visited.Add((prev, current));
+                visited.Add((current, prev));
+
+                if (outline.Count < 3)
+                    continue;
+
+                // Normalize to CCW.
+                if (Triangulator2D.ComputeSignedArea([.. outline]) < 0f)
+                    outline.Reverse();
+
+                outlines.Add([.. outline]);
+                break; // one loop per startVertex pass
+            }
+        }
+
+        return [.. outlines];
+    }
+
+    /// <summary>
+    /// Groups triangles into disconnected islands based on shared edges or vertices.
+    /// Returns one Vector2[][] per island, each containing that island's triangles.
+    /// </summary>
+    /// <param name="edgeDetectionOnly">
+    /// If true, uses shared edges only (not shared vertices) to determine connectivity.
+    /// Triangles that only touch at a single vertex will be treated as separate islands.
+    /// Slightly more precise for certain mesh topologies.
+    /// </param>
+    public static Vector2[][][] GetIslands(Vector2[][] triangles, bool edgeDetectionOnly = false)
+    {
+        if (triangles == null || triangles.Length < 1)
+            return [];
+
+        var parent = new int[triangles.Length];
+        for (var i = 0; i < parent.Length; i++)
+            parent[i] = i;
+
+        int Find(int x)
+        {
+            while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+            return x;
+        }
+
+        void Union(int a, int b)
+        {
+            a = Find(a); b = Find(b);
+            if (a != b) parent[a] = b;
+        }
+
+        if (edgeDetectionOnly)
+        {
+            // Connect triangles only when they share a full edge (2 vertices), not just a vertex.
+            var edgeToTri = new Dictionary<(Vector2, Vector2), int>();
+
+            for (var i = 0; i < triangles.Length; i++)
+            {
+                var tri = triangles[i];
+                for (int e = 0; e < 3; e++)
+                {
+                    var a = tri[e];
+                    var b = tri[(e + 1) % 3];
+                    var edge = a.X < b.X || (a.X == b.X && a.Y < b.Y) ? (a, b) : (b, a);
+
+                    if (edgeToTri.TryGetValue(edge, out var other))
+                        Union(i, other);
+                    else
+                        edgeToTri[edge] = i;
+                }
+            }
+        }
+        else
+        {
+            // Connect triangles that share any vertex.
+            var vertexToTris = new Dictionary<Vector2, List<int>>();
+            for (var i = 0; i < triangles.Length; i++)
+                foreach (var v in triangles[i])
+                {
+                    if (!vertexToTris.TryGetValue(v, out var list))
+                        vertexToTris[v] = list = [];
+                    list.Add(i);
+                }
+
+            foreach (var list in vertexToTris.Values)
+                for (var i = 1; i < list.Count; i++)
+                    Union(list[0], list[i]);
+        }
+
+        var groups = new Dictionary<int, List<Vector2[]>>();
+        for (var i = 0; i < triangles.Length; i++)
+        {
+            var root = Find(i);
+            if (!groups.TryGetValue(root, out var group))
+                groups[root] = group = [];
+            group.Add(triangles[i]);
+        }
+
+        return [.. groups.Values.Select(g => g.ToArray())];
+    }
+
+    /// <summary>
+    /// Returns the centroid of the largest outline per island.
+    /// Correctly handles donuts by ignoring hole outlines.
+    /// </summary>
+    public static Vector2[] GetIslandCentroids(Vector2[][] triangles, bool edgeDetectionOnly = false)
+    => GetIslandCentroids(GetIslands(triangles, edgeDetectionOnly));
+
+    /// <summary>
+    /// Returns the centroid of the largest outline per island.
+    /// Correctly handles donuts by ignoring hole outlines.
+    /// </summary>
+    public static Vector2[] GetIslandCentroids(Vector2[][][] islands)
+    {
+        var centroids = new Vector2[islands.Length];
+
+        for (var i = 0; i < islands.Length; i++)
+        {
+            var outlines = GenerateOutlines(islands[i]);
+
+            // Outer border always has the largest absolute area.
+            // Hole outlines are smaller and get ignored.
+            var outer = outlines
+                .OrderByDescending(o => Mathf.Abs(ComputeSignedArea(o)))
+                .First();
+
+            centroids[i] = ComputeCentroid(outer);
+        }
+
+        return centroids;
+    }
+
+    /// <summary>
+    /// Computes the outline of a region defined by a set of triangles.
+    /// Boundary edges are those belonging to exactly one triangle.
+    /// Returns an ordered CCW polygon, or an empty array if none found.
+    /// </summary>
+    public static Vector2[] GenerateOutline(this Vector2[][] triangles)
+    {
+        if (triangles == null || triangles.Length < 1)
+            return [];
+
+        // Count how many triangles share each edge.
+        // Edges are stored as (min, max) so direction doesn't matter.
+        var edgeCount = new Dictionary<(Vector2, Vector2), int>(triangles.Length * 3);
+
+        foreach (var tri in triangles)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                var a = tri[i];
+                var b = tri[(i + 1) % 3];
+
+                // Normalize edge direction so (a,b) and (b,a) are the same key.
+                var edge = a.X < b.X || (a.X == b.X && a.Y < b.Y) ? (a, b) : (b, a);
+                edgeCount[edge] = edgeCount.TryGetValue(edge, out var count) ? count + 1 : 1;
+            }
+        }
+
+        // Collect boundary edges — those appearing exactly once.
+        var boundary = new Dictionary<Vector2, Vector2>(); // start → end
+
+        foreach (var (edge, count) in edgeCount)
+        {
+            if (count != 1) continue;
+            boundary[edge.Item1] = edge.Item2;
+        }
+
+        if (boundary.Count < 3)
+            return [];
+
+        // Walk the chain to produce an ordered polygon.
+        var outline = new List<Vector2>(boundary.Count);
+        var current = boundary.Keys.First();
+        var start = current;
+
+        while (true)
+        {
+            outline.Add(current);
+
+            if (!boundary.TryGetValue(current, out var next))
+                break; // open chain — shouldn't happen with valid triangles
+
+            boundary.Remove(current); // prevent revisiting
+            current = next;
+
+            if (current == start)
+                break;
+        }
+
+        // Normalize to CCW winding.
+        if (Triangulator2D.ComputeSignedArea([.. outline]) < 0f)
+            outline.Reverse();
+
+        return [.. outline];
+    }
+
+    /*/// <summary>
+    /// Groups triangles into disconnected islands based on shared edges or vertices.
+    /// Returns one Vector2[][] per island, each containing that island's triangles.
+    /// </summary>
+    public static Vector2[][][] GetIslands(Vector2[][] triangles)
+    {
+        if (triangles == null || triangles.Length < 1)
+            return [];
+
+        // Union-Find to group triangles by shared vertices.
+        var parent = new int[triangles.Length];
+        for (var i = 0; i < parent.Length; i++)
+            parent[i] = i;
+
+        int Find(int x)
+        {
+            while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+            return x;
+        }
+
+        void Union(int a, int b)
+        {
+            a = Find(a); b = Find(b);
+            if (a != b) parent[a] = b;
+        }
+
+        // Build a vertex → triangle index map.
+        var vertexToTris = new Dictionary<Vector2, List<int>>();
+        for (var i = 0; i < triangles.Length; i++)
+        {
+            foreach (var v in triangles[i])
+            {
+                if (!vertexToTris.TryGetValue(v, out var list))
+                    vertexToTris[v] = list = [];
+                list.Add(i);
+            }
+        }
+
+        // Union all triangles that share at least one vertex.
+        foreach (var list in vertexToTris.Values)
+            for (var i = 1; i < list.Count; i++)
+                Union(list[0], list[i]);
+
+        // Group triangles by their root.
+        var groups = new Dictionary<int, List<Vector2[]>>();
+        for (var i = 0; i < triangles.Length; i++)
+        {
+            var root = Find(i);
+            if (!groups.TryGetValue(root, out var group))
+                groups[root] = group = [];
+            group.Add(triangles[i]);
+        }
+
+        return [.. groups.Values.Select(g => g.ToArray())];
+    }*/
 }
 #endif
