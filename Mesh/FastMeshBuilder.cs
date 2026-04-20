@@ -206,7 +206,7 @@ public class FastMeshBuilder
 
         arrays[(int)Mesh.ArrayType.Vertex] = Vertices.AsSpan().ToArray();
         if (Colors.Count == Vertices.Count) arrays[(int)Mesh.ArrayType.Color] = Colors.AsSpan().ToArray();
-        else Debug.Log($"Colors count mismatch: {Colors.Count} != {Vertices.Count}");
+        //else Debug.Log($"Colors count mismatch: {Colors.Count} != {Vertices.Count}");
 
         arrays[(int)Mesh.ArrayType.Normal] = Normals.AsSpan().ToArray();
         arrays[(int)Mesh.ArrayType.Index] = Indices.AsSpan().ToArray();

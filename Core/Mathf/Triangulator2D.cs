@@ -369,7 +369,7 @@ public static class Triangulator2D
     public static Vector2[][] ClusterToDelaunayTriangles(params Vector2[] points)
     {
         if (points == null || points.Length < 3)
-            return System.Array.Empty<Vector2[]>();
+            return [];
 
         return BowyerWatson(points);
     }
