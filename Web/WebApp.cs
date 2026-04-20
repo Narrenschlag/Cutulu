@@ -12,10 +12,18 @@ public class WebApp : IAsyncDisposable
         string host, int port,
         Delegate? defaultRouting = null,
         Func<HttpContext, Task<bool>>? authHandler = null,
-        Func<HttpContext, IResult>? onAuthFailed = null
+        Func<HttpContext, IResult>? onAuthFailed = null,
+        int maxRequestBodySize = 1_073_741_824
     )
     {
-        App = WebApplication.Create();
+        var builder = WebApplication.CreateBuilder();
+
+        builder.WebHost.ConfigureKestrel(k =>
+        {
+            k.Limits.MaxRequestBodySize = maxRequestBodySize;
+        });
+
+        App = builder.Build();
 
         if (defaultRouting != null)
             App.MapGet("/", defaultRouting);
