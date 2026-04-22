@@ -39,10 +39,14 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
     {
         _data = new T[data.Count];
         _count = data.Count;
-        int i = 0;
+        data.CopyTo(_data, 0);
+    }
 
-        foreach (var item in data)
-            _data[i++] = (T)item;
+    public SwapbackArray(Span<T> span)
+    {
+        _data = new T[span.Length];
+        _count = span.Length;
+        span.CopyTo(_data);
     }
 
     public ref T this[int index]
