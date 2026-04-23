@@ -183,7 +183,7 @@ public static class Encoder
                 foreach (ref var info in infos)
                 {
                     _value = info.GetValue(_obj);
-                    _type = info.GetType();
+                    _type = info.GetValueType();
 
                     // Write value
                     if (_value == null) _writer.Write(default(byte)); // Write null string/array as empty string/array

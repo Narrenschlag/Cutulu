@@ -214,7 +214,7 @@ public partial class ParameterManager
 
     public ParameterInfo GetInfo(string _name) => GetInfo(GetIndex(_name));
 
-    public Type GetType(int _idx) => GetInfo(_idx).GetType();
+    public Type GetType(int _idx) => GetInfo(_idx).GetValueType();
 
     public Type GetType(string _name)
     {
@@ -315,7 +315,10 @@ public readonly struct ParameterInfo
 
     public readonly string GetName() => IsProperty ? Property.Name : Field.Name;
 
-    public readonly new Type GetType() => IsProperty ? Property.PropertyType : Field.FieldType;
+    public readonly Type GetValueType() => IsProperty ? Property.PropertyType : Field.FieldType;
+
+    [Obsolete("Use GetValueType() instead")]
+    public readonly new Type GetType() => base.GetType();
 
     public readonly object GetValue(object _ref) => IsProperty ? Property.GetValue(_ref) : Field.GetValue(_ref);
 

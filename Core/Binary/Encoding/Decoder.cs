@@ -230,7 +230,7 @@ public static class Decoder
                 {
                     BinaryEncoding.LastPropertyName = info.GetName();
 
-                    info.SetValue(_output, Decode(_reader, info.GetType(), false));
+                    info.SetValue(_output, Decode(_reader, info.GetValueType(), false));
                 }
 
                 return _output;

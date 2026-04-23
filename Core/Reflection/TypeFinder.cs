@@ -22,42 +22,42 @@ namespace Cutulu.Core.Reflection
 
         public void FindTypes(Type refType, FLAGS flags = DefaultFlags, Assembly assembly = null)
         {
-            // Type has already been added to Types
             if (Types.TryAdd(refType, []) == false) return;
 
-            assembly ??= Assembly.GetExecutingAssembly();
-            var types = GetCachedTypes(assembly);
+            var assemblies = assembly != null
+                ? [assembly]
+                : AppDomain.CurrentDomain.GetAssemblies();
 
             var abstractAllowed = flags.HasFlag(FLAGS.ABSTRACT_ALLOWED);
             var genericOnly = flags.HasFlag(FLAGS.GENERIC_ONLY);
             var classOnly = flags.HasFlag(FLAGS.CLASS_ONLY);
 
-            foreach (var curType in types)
+            foreach (var asm in assemblies)
             {
-                if (ProcessedTypes.Contains(curType)) continue;
-
-                if ((classOnly && curType.IsClass == false) || (abstractAllowed == false && curType.IsAbstract)) continue;
-
-                if (!genericOnly && refType.IsAssignableFrom(curType))
+                foreach (var curType in GetCachedTypes(asm))
                 {
-                    Types[refType].Add(curType);
-                    continue;
-                }
+                    if (ProcessedTypes.Contains(curType)) continue;
+                    if ((classOnly && !curType.IsClass) || (!abstractAllowed && curType.IsAbstract)) continue;
 
-                var baseType = curType.BaseType;
-                while (baseType != null)
-                {
-                    if (baseType.IsGenericType)
+                    if (!genericOnly && refType.IsAssignableFrom(curType))
                     {
-                        var genericDef = baseType.GetGenericTypeDefinition();
-                        if (refType.IsAssignableFrom(genericDef))
+                        Types[refType].Add(curType);
+                    }
+                    else
+                    {
+                        var baseType = curType.BaseType;
+                        while (baseType != null)
                         {
-                            Types[refType].Add(curType);
-                            break;
+                            if (baseType.IsGenericType && refType.IsAssignableFrom(baseType.GetGenericTypeDefinition()))
+                            {
+                                Types[refType].Add(curType);
+                                break;
+                            }
+                            baseType = baseType.BaseType;
                         }
                     }
 
-                    baseType = baseType.BaseType;
+                    ProcessedTypes.Add(curType);
                 }
             }
         }
