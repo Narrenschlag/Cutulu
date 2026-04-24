@@ -149,6 +149,14 @@ public static class Triangulator2D
         return area * 0.5f;
     }
 
+    public static float GetSignedTriangleArea(Vector2 a, Vector2 b, Vector2 c)
+    {
+        return 0.5f * (
+            (b.X - a.X) * (c.Y - a.Y) -
+            (b.Y - a.Y) * (c.X - a.X)
+        );
+    }
+
     /// <summary>True when the turn prev → curr → next is counter-clockwise (left turn).</summary>
     public static bool IsConvex(Vector2 prev, Vector2 curr, Vector2 next)
     {
