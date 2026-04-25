@@ -1,5 +1,6 @@
 namespace Cutulu.Core;
 
+using System.Runtime.CompilerServices;
 using System.IO;
 using System;
 
@@ -11,10 +12,11 @@ public static class Encoder
     /// <summary>
     /// Writes encoded buffer of an object to given BinaryWriter
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Encode(this BinaryWriter _writer, object _obj, Type _type)
     {
         // Write empty array
-        if (_obj.IsNull() && _type.IsArray) _writer.Write(new UNumber64());
+        if (_obj.IsNull() && _type.IsArray) _writer.Write(new UNumber8());
 
         // Write object
         else Encode(_writer, _obj, true);
@@ -23,6 +25,7 @@ public static class Encoder
     /// <summary>
     /// Writes encoded buffer of an object to given BinaryWriter
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Encode<T>(this BinaryWriter _writer, T _obj)
     {
         if (_obj.NotNull()) Encode(_writer, _obj, _obj.GetType());
@@ -44,6 +47,7 @@ public static class Encoder
     /// <summary>
     /// Encodes an object into a buffer
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] Encode<T>(this T obj)
     {
         return obj.NotNull() ? Encode(obj, obj.GetType()) : [];
@@ -52,6 +56,7 @@ public static class Encoder
     /// <summary>
     /// Safely encodes an object into a buffer
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryEncode(this BinaryWriter _writer, object _obj, Type _type, bool _enable_logging = true)
     {
         try
@@ -70,6 +75,7 @@ public static class Encoder
     /// <summary>
     /// Safely encodes an object into a buffer
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryEncode<T>(this BinaryWriter _writer, T _obj, bool _enable_logging = true)
     {
         return TryEncode(_writer, _obj, typeof(T), _enable_logging);
@@ -78,6 +84,7 @@ public static class Encoder
     /// <summary>
     /// Safely encodes an object into a buffer
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryEncode(object _obj, Type _type, out byte[] _buffer, bool _enable_logging = true)
     {
         try
@@ -96,6 +103,7 @@ public static class Encoder
     /// <summary>
     /// Safely encodes an object into a buffer
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryEncode<T>(T _obj, out byte[] _buffer, bool _enable_logging = true)
     {
         return TryEncode(_obj, typeof(T), out _buffer, _enable_logging);
@@ -148,7 +156,6 @@ public static class Encoder
         {
             //if (_obj == null) return false; -> _obj is already null-checked
             var _type = _obj.GetType();
-            object _value;
 
             // Encode enum
             if (_type.IsEnum)
@@ -161,6 +168,7 @@ public static class Encoder
             {
                 Encode(_writer, (UNumber64)array.Length, false);
                 _type = _type.GetElementType();
+                object _value;
 
                 for (int i = 0; i < array.Length; i++)
                 {
@@ -175,23 +183,37 @@ public static class Encoder
             }
 
             // Classes and structs
-            else
-            {
-                var _manager = ParameterManager.Open(_type, null, BinaryEncoding.IncludeAttributes, BinaryEncoding.ExcludeAttributes);
-
-                var infos = _manager.GetInfos();
-                foreach (ref var info in infos)
-                {
-                    _value = info.GetValue(_obj);
-                    _type = info.GetValueType();
-
-                    // Write value
-                    if (_value == null) _writer.Write(default(byte)); // Write null string/array as empty string/array
-                    else Encode(_writer, _value, false); // Encode value as usual
-                }
-            }
+            else AutoEncode(_writer, _type, _obj);
 
             return true;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void AutoEncode<T>(this BinaryWriter _writer, T _obj) => AutoEncode(_writer, typeof(T), _obj);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void AutoEncode(this BinaryWriter _writer, Type _type, object _obj)
+    {
+        if (_obj.IsNull())
+        {
+            if (_type != null && _type.IsArray)
+                _writer.Write(new UNumber8());
+
+            return;
+        }
+
+        var _manager = ParameterManager.Open(_type, null, BinaryEncoding.IncludeAttributes, BinaryEncoding.ExcludeAttributes);
+        object _value;
+
+        var infos = _manager.GetInfos();
+        foreach (ref var info in infos)
+        {
+            _value = info.GetValue(_obj);
+
+            // Write value
+            if (_value == null) _writer.Write(default(byte)); // Write null string/array as empty string/array
+            else Encode(_writer, _value, false); // Encode value as usual
         }
     }
 }

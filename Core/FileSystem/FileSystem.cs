@@ -25,6 +25,10 @@ namespace Cutulu.Core
             };
             parent.AddChild(fileDialog);
 
+            // Make sure it works on any OS
+            fileDialog.CurrentDir = directory;
+            fileDialog.CurrentPath = directory;
+
             // Connect the file_selected signal to a method in your class
             fileDialog.FileSelected += (string path) => action?.Invoke(new[] { path });
             fileDialog.FilesSelected += (string[] paths) => action?.Invoke(paths);
@@ -51,6 +55,10 @@ namespace Cutulu.Core
                 UseNativeDialog = true,
             };
             parent.AddChild(fileDialog);
+
+            // Make sure it works on any OS
+            fileDialog.CurrentDir = directory;
+            fileDialog.CurrentPath = directory;
 
             // Connect the file_selected signal to a method in your class
             fileDialog.FileSelected += (string path) => action?.Invoke(path);

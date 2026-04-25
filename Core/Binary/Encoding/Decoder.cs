@@ -1,5 +1,6 @@
 namespace Cutulu.Core;
 
+using System.Runtime.CompilerServices;
 using System.IO;
 using System;
 
@@ -11,6 +12,7 @@ public static class Decoder
     /// <summary>
     /// Decodes a buffer from given BinaryReader into an object
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static object Decode(this BinaryReader _reader, Type _type)
     {
         return Decode(_reader, _type, true);
@@ -19,6 +21,7 @@ public static class Decoder
     /// <summary>
     /// Decodes a buffer from given BinaryReader into an object
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Decode<T>(this BinaryReader reader)
     {
         return (T)Decode(reader, typeof(T));
@@ -38,6 +41,7 @@ public static class Decoder
     /// <summary>
     /// Decodes a buffer into an object
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Decode<T>(this byte[] _buffer)
     {
         var _obj = Decode(_buffer, typeof(T));
@@ -219,22 +223,28 @@ public static class Decoder
             }
 
             // Classes and structs
-            else
-            {
-                var _output = Activator.CreateInstance(_type);
-
-                var _manager = ParameterManager.Open(_type, null, BinaryEncoding.IncludeAttributes, BinaryEncoding.ExcludeAttributes);
-
-                var infos = _manager.GetInfos();
-                foreach (ref var info in infos)
-                {
-                    BinaryEncoding.LastPropertyName = info.GetName();
-
-                    info.SetValue(_output, Decode(_reader, info.GetValueType(), false));
-                }
-
-                return _output;
-            }
+            else return AutoDecode(_reader, _type);
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T AutoDecode<T>(this BinaryReader _reader) => AutoDecode(_reader, typeof(T)) is T _t ? _t : default;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static object AutoDecode(this BinaryReader _reader, Type _type)
+    {
+        var _output = Activator.CreateInstance(_type);
+
+        var _manager = ParameterManager.Open(_type, null, BinaryEncoding.IncludeAttributes, BinaryEncoding.ExcludeAttributes);
+
+        var infos = _manager.GetInfos();
+        foreach (ref var info in infos)
+        {
+            BinaryEncoding.LastPropertyName = info.GetName();
+
+            info.SetValue(_output, Decode(_reader, info.GetValueType(), false));
+        }
+
+        return _output;
     }
 }

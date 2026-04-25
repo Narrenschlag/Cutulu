@@ -8,6 +8,7 @@ using Godot;
 using System.IO;
 #endif
 
+using System.Runtime.CompilerServices;
 using System;
 
 public partial class File : IDisposable
@@ -54,8 +55,8 @@ public partial class File : IDisposable
         {
             Access?.Close();
 
-            if (flags.HasFlag(FLAGS.Write))
-                _ = new Directory(SystemPath.TrimToDirectory());
+            // MkDir
+            if (flags.HasFlag(FLAGS.Write)) GetParentDirectory().MakeDir();
 
             Access = ACCESS.Open(SystemPath, Flags = flags);
             if (Access.IsNull()) Debug.LogError($"FileOpen failed: {ACCESS.GetOpenError()}");
@@ -63,28 +64,33 @@ public partial class File : IDisposable
         return Access;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Flush()
     {
         Access?.Flush();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Close()
     {
         Access?.Close();
         Access = null;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte[] ReadRaw(ulong length)
     {
         return Open(FLAGS.Read, false)?.GetBuffer((long)length) ?? [];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteRaw(byte[] buffer)
     {
         if (buffer?.Length > 0)
             Open(FLAGS.Write, false)?.StoreBuffer(buffer);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong GetFileSizeRaw()
     {
         return Open(FLAGS.Read, false)?.GetLength() ?? 0;
@@ -101,11 +107,13 @@ public partial class File : IDisposable
         return buffer;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteRaw(byte[] buffer)
     {
         System.IO.File.WriteAllBytes(SystemPath, buffer);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong GetFileSizeRaw()
     {
         return (ulong)new FileInfo(SystemPath).Length;
@@ -162,16 +170,19 @@ public partial class File : IDisposable
 
     #region Encoder functions
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryRead<T>(out T _output)
     {
         return Read().TryDecode(out _output);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Read<T>()
     {
         return TryRead(out T _output) ? _output : default;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write(object _input)
     {
         Write(_input.Encode());
@@ -203,6 +214,7 @@ public partial class File : IDisposable
         return _string.NotEmpty() ? _string : string.Empty;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string[] ReadStringLines(bool _include_empty_lines = false)
     {
         return ReadString().Split(['\n', '\r'], _include_empty_lines ? StringSplitOptions.TrimEntries : CONST.StringSplit) ?? [];
@@ -225,6 +237,7 @@ public partial class File : IDisposable
 
     #region File System
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Exists()
     {
 #if GODOT4_0_OR_GREATER
@@ -234,6 +247,7 @@ public partial class File : IDisposable
 #endif
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Delete()
     {
 #if GODOT4_0_OR_GREATER
@@ -243,9 +257,19 @@ public partial class File : IDisposable
 #endif
     }
 
+    /// <summary>
+    /// Returns parent directory. Won't create if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Directory GetParentDirectory()
+    {
+        return new Directory(SystemPath.TrimToDirectory(), false);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Directory[] GetSiblingDirectories()
     {
-        return new Directory(SystemPath).GetSubDirectories();
+        return GetParentDirectory().GetSubDirectories();
     }
 
     public File[] GetSiblingFiles()
