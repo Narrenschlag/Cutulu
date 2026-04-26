@@ -35,5 +35,20 @@ public struct ChunkPoint(short x, short z)
     public readonly float DistanceTo(Vector2 b) => ((Vector2)this).DistanceTo(b);
 
     public readonly override string ToString() => $"({X}, {Z})";
+
+    class Encoder() : Core.BinaryEncoder(typeof(ChunkPoint))
+    {
+        public override void Encode(System.IO.BinaryWriter writer, Type type, object value)
+        {
+            var chunk = (ChunkPoint)value;
+            writer.Write(chunk.X);
+            writer.Write(chunk.Z);
+        }
+
+        public override object Decode(System.IO.BinaryReader reader, Type type)
+        {
+            return new ChunkPoint(reader.ReadInt16(), reader.ReadInt16());
+        }
+    }
 }
 #endif
