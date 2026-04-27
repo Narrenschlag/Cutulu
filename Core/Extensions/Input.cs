@@ -47,8 +47,21 @@ namespace Cutulu.Core
             return Trianglef.RayToY(origin, direction, y);
         }
 
-        public static bool RaycastFromCamera(this Camera3D camera, out RaycastHit hit, uint mask = 4294967295)
-        => Physics.Raycast(camera, out hit, camera.Far, mask);
+        public static Vector3 Project(this Camera3D camera, Vector3 pointOnPlane, Vector3 normal)
+        {
+            GetRayAt(camera, MousePosition(camera), out var origin, out var direction);
+
+            // Ray-plane intersection: t = dot(planePoint - rayOrigin, normal) / dot(rayDir, normal)
+            float denom = direction.Dot(normal);
+            if (Mathf.Abs(denom) < 1e-6f)
+                return pointOnPlane; // Ray is parallel to plane, return plane point as fallback
+
+            float t = (pointOnPlane - origin).Dot(normal) / denom;
+            return origin + direction * t;
+        }
+
+        public static bool RaycastFromCamera(this Camera3D camera, out RaycastHit hit, uint mask = 4294967295, System.Action<PhysicsRayQueryParameters3D> interceptionCallback = null)
+        => Physics.Raycast(camera, out hit, camera.Far, mask, interceptionCallback);
 
         public static bool Down(this string name, ref bool valueStore, float threshold = .5f)
         {

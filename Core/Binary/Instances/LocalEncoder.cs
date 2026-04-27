@@ -10,6 +10,7 @@ public sealed class LocalEncoder : IDisposable
     private readonly BinaryWriter _writer;
 
     public long Length => _memory.Length;
+    public long Position => _memory.Position;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public long GetPosition() => _memory.Position;

@@ -22,22 +22,24 @@ namespace Cutulu.Core
         public static bool Linecast(this Node3D node, Vector3 fromGlobal, Vector3 toGlobal, out RaycastHit hit, uint mask = 4294967295)
             => Raycast(node, fromGlobal, toGlobal - fromGlobal, out hit, fromGlobal.DistanceTo(toGlobal), mask);
 
-        public static bool Raycast(this Camera3D camera, out RaycastHit hit, float maxDistance, uint mask = 4294967295)
+        public static bool Raycast(this Camera3D camera, out RaycastHit hit, float maxDistance, uint mask = 4294967295, System.Action<PhysicsRayQueryParameters3D> interceptionCallback = null)
             => Raycast(
                 camera,
                 camera.ProjectRayOrigin(camera.MousePosition()),
                 camera.ProjectRayNormal(camera.MousePosition()),
                 out hit,
                 maxDistance,
-                mask
+                mask,
+                interceptionCallback
             );
 
-        public static bool Raycast(this Node3D node, Vector3 globalOrigin, Vector3 direction, out RaycastHit hit, float maxDistance, uint mask = 4294967295)
+        public static bool Raycast(this Node3D node, Vector3 globalOrigin, Vector3 direction, out RaycastHit hit, float maxDistance, uint mask = 4294967295, System.Action<PhysicsRayQueryParameters3D> interceptionCallback = null)
         {
             direction = direction.Normalized();
 
             var query = PhysicsRayQueryParameters3D.Create(globalOrigin, globalOrigin + direction * maxDistance, mask);
             var state = node.GetWorld3D().DirectSpaceState;
+            interceptionCallback?.Invoke(query);
 
             var result = state.IntersectRay(query);
 
