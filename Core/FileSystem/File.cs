@@ -9,6 +9,8 @@ using System.IO;
 #endif
 
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using System.Threading;
 using System;
 
 public partial class File : IDisposable
@@ -120,6 +122,36 @@ public partial class File : IDisposable
     }
 
 #endif
+
+    #endregion
+
+    #region Async File Functions
+
+    public async Task<byte[]> ReadAsync(CancellationToken token = default)
+    {
+        if (Exists() == false) return null;
+        return await System.IO.File.ReadAllBytesAsync(SystemPath, token);
+    }
+
+    public async Task WriteAsync(byte[] _buffer, CancellationToken token = default)
+    {
+        if (_buffer.IsEmpty()) return;
+
+        await System.IO.File.WriteAllBytesAsync(SystemPath, _buffer, token);
+    }
+
+    public async Task WriteTextAsync(string _string, CancellationToken token = default)
+    {
+        if (_string.IsEmpty() && Exists() == false) return;
+
+        if (_string.IsEmpty())
+        {
+            Delete();
+            return;
+        }
+
+        await System.IO.File.WriteAllTextAsync(SystemPath, _string, token);
+    }
 
     #endregion
 
@@ -261,13 +293,13 @@ public partial class File : IDisposable
     /// Returns parent directory. Won't create if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Directory GetParentDirectory()
+    public Directory GetParentDirectory(bool createIfMissing = false)
     {
-        return new Directory(SystemPath.TrimToDirectory(), false);
+        return new Directory(SystemPath.TrimToDirectory(), createIfMissing);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Directory[] GetSiblingDirectories()
+    public Span<Directory> GetSiblingDirectories()
     {
         return GetParentDirectory().GetSubDirectories();
     }

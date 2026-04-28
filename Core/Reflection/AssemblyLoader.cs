@@ -4,7 +4,6 @@ namespace Cutulu.Core
     using System.Runtime.Loader;
     using System.Reflection;
     using System.Linq;
-    using System.IO;
     using System;
 
     public static class AssemblyLoader

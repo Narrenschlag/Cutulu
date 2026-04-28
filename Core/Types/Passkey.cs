@@ -1,7 +1,7 @@
 #if GODOT4_0_OR_GREATER
 namespace Cutulu.Core
 {
-using System.Collections.Generic;
+    using System.Collections.Generic;
 
     public struct Passkey
     {
@@ -63,7 +63,7 @@ using System.Collections.Generic;
             var _sets = new HashSet<KeyValuePair<string, Passkey>>();
             var _files = new Directory(path).GetSubFiles();
 
-            if (_files.NotEmpty())
+            if (_files.IsEmpty == false)
             {
                 for (ushort i = 0; i < _files.Length; i++)
                 {

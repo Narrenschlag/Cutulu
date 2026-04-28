@@ -54,7 +54,7 @@ namespace Cutulu.Lattice
                 var _directory = new Directory(_directory_path);
 
                 var _files = _directory.GetSubFiles();
-                if (_files.NotEmpty())
+                if (_files.IsEmpty == false)
                 {
                     foreach (var _file in _files)
                     {
@@ -77,7 +77,7 @@ namespace Cutulu.Lattice
                 }
 
                 var _directories = _directory.GetSubDirectories();
-                if (_directories.NotEmpty())
+                if (_directories.IsEmpty == false)
                 {
                     foreach (var _dir in _directories)
                     {

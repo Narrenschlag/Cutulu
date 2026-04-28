@@ -21,7 +21,7 @@ namespace Cutulu.Core
             var _directory = new Directory(rootFolder);
 
             var files = _directory.GetSubFiles();
-            if (files.NotEmpty())
+            if (files.IsEmpty == false)
             {
                 for (int i = 0; i < files.Length; i++)
                 {
@@ -50,7 +50,7 @@ namespace Cutulu.Core
             }
 
             var directories = _directory.GetSubDirectories();
-            if (directories.NotEmpty())
+            if (directories.IsEmpty == false)
             {
                 for (int i = 0; i < directories.Length; i++)
                 {

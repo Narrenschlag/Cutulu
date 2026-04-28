@@ -95,8 +95,29 @@ public readonly partial struct Directory
 #endif
     }
 
-    /// <summary>Returns all subdirectories inside this directory.</summary>
-    public Directory[] GetSubDirectories()
+    /// <summary>Returns all directories inside this directory. Equals SearchOption.AllDirectories.</summary>
+    public Span<Directory> GetAllDirectories()
+    {
+        if (Exists() == false) return [];
+
+        var list = new SwapbackArray<Directory>();
+
+        Add(this, list);
+        static void Add(Directory dir, SwapbackArray<Directory> list)
+        {
+            foreach (var subDir in dir.GetSubDirectories())
+            {
+                list.Add(subDir);
+
+                Add(subDir, list);
+            }
+        }
+
+        return list.AsSpan();
+    }
+
+    /// <summary>Returns all directories inside this directory. Equals SearchOption.TopDirectoryOnly.</summary>
+    public Span<Directory> GetSubDirectories()
     {
 #if GODOT4_0_OR_GREATER
         if (!Exists()) return [];
@@ -107,7 +128,7 @@ public readonly partial struct Directory
             using var dir = ACCESS.Open(GodotPath);
             if (dir == null) return [];
 
-            var list = new List<Directory>();
+            var list = new SwapbackArray<Directory>();
             dir.ListDirBegin();
             string dirName = dir.GetNext();
 
@@ -123,7 +144,7 @@ public readonly partial struct Directory
             }
 
             dir.ListDirEnd();
-            return [.. list];
+            return list.AsSpan();
         }
 
         // Fall back to system path method
@@ -147,69 +168,31 @@ public readonly partial struct Directory
 #endif
     }
 
-    /// <summary>Returns all files inside this directory with full paths.</summary>
-    public File[] GetSubFiles()
+    /// <summary>Returns all files inside this directory filtered by extension(s) with full paths. Equals SearchOption.AllDirectories.</summary>
+    public Span<File> GetAllFiles(params string[] fileTypes)
     {
-#if GODOT4_0_OR_GREATER
-        if (!Exists()) return [];
+        if (Exists() == false) return [];
 
-        // Use Godot virtual filesystem if it's a res:// path (supports PCK)
-        if (GodotPath.StartsWith("res://") || GodotPath.StartsWith("user://"))
+        var list = new SwapbackArray<File>();
+
+        Add(this, list, fileTypes);
+        static void Add(Directory dir, SwapbackArray<File> list, string[] _fileTypes)
         {
-            using var dir = ACCESS.Open(GodotPath);
-            if (dir == null) return [];
+            foreach (var file in dir.GetSubFiles(_fileTypes))
+                list.Add(file);
 
-            var list = new List<File>();
-            dir.ListDirBegin();
-            string fileName = dir.GetNext();
-
-            while (!string.IsNullOrEmpty(fileName))
-            {
-                if (fileName != "." && fileName != ".." && !dir.CurrentIsDir())
-                {
-                    // Remove .remap suffix if present
-                    string cleanFileName = fileName;
-                    if (cleanFileName.EndsWith(".remap", StringComparison.OrdinalIgnoreCase))
-                    {
-                        cleanFileName = cleanFileName[..^6];
-                    }
-
-                    string fullPath = GodotPath.TrimEnd('/') + "/" + cleanFileName;
-                    list.Add(new File(fullPath));
-                }
-                fileName = dir.GetNext();
-            }
-
-            dir.ListDirEnd();
-            return [.. list];
+            foreach (var subDir in dir.GetSubDirectories())
+                Add(subDir, list, _fileTypes);
         }
 
-        // Fall back to system path method
-        var files = ACCESS.GetFilesAt(SystemPath);
-        var result = new File[files.Length];
-        for (int i = 0; i < files.Length; i++)
-            result[i] = new(SystemPath + "/" + files[i]);
-
-        return result;
-#else
-        if (!Exists()) return [];
-
-        var files = System.IO.Directory.GetFiles(SystemPath);
-        var result = new File[files.Length];
-        for (int i = 0; i < files.Length; i++)
-            result[i] = new(files[i]);
-
-        return result;
-#endif
+        return list.AsSpan();
     }
 
-    /// <summary>Returns all files inside this directory filtered by extension(s) with full paths.</summary>
-    public File[] GetSubFiles(params string[] fileTypes)
+    /// <summary>Returns all files inside this directory filtered by extension(s) with full paths. Equals SearchOption.TopDirectoryOnly.</summary>
+    public Span<File> GetSubFiles(params string[] fileTypes)
     {
-        if (fileTypes == null || fileTypes.Length == 0)
-            return GetSubFiles();
-
-        var list = new List<File>();
+        bool restrictExtensions = fileTypes.NotEmpty();
+        var list = new SwapbackArray<File>();
 
 #if GODOT4_0_OR_GREATER
         if (GodotPath.StartsWith("res://") || GodotPath.StartsWith("user://"))
@@ -224,32 +207,42 @@ public readonly partial struct Directory
             {
                 if (fileName != "." && fileName != ".." && !dir.CurrentIsDir())
                 {
-                    foreach (var ext in fileTypes)
+                    if (restrictExtensions == false)
                     {
-                        // Check both original extension and .remap version
-                        bool matches = fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase) ||
-                                       fileName.EndsWith(ext + ".remap", StringComparison.OrdinalIgnoreCase);
+                        list.Add(new File(SystemPath + "/" + fileName));
+                    }
 
-                        if (matches)
+                    else
+                    {
+                        foreach (var ext in fileTypes)
                         {
-                            // Always use the path WITHOUT .remap - Godot handles this internally
-                            string cleanFileName = fileName;
-                            if (cleanFileName.EndsWith(".remap", StringComparison.OrdinalIgnoreCase))
-                            {
-                                cleanFileName = cleanFileName[..^6];
-                            }
+                            // Check both original extension and .remap version
+                            bool matches =
+                                fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase) ||
+                                fileName.EndsWith(ext + ".remap", StringComparison.OrdinalIgnoreCase);
 
-                            string fullPath = GodotPath.TrimEnd('/') + "/" + cleanFileName;
-                            list.Add(new File(fullPath));
-                            break;
+                            if (matches)
+                            {
+                                // Always use the path WITHOUT .remap - Godot handles this internally
+                                string cleanFileName = fileName;
+                                if (cleanFileName.EndsWith(".remap", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    cleanFileName = cleanFileName[..^6];
+                                }
+
+                                string fullPath = GodotPath.TrimEnd('/') + "/" + cleanFileName;
+                                list.Add(new File(fullPath));
+                                break;
+                            }
                         }
                     }
                 }
+
                 fileName = dir.GetNext();
             }
 
             dir.ListDirEnd();
-            return [.. list];
+            return list.AsSpan();
         }
 
         // Fall back to system path method
@@ -258,12 +251,20 @@ public readonly partial struct Directory
         {
             foreach (var file in subs)
             {
-                foreach (var ext in fileTypes)
+                if (restrictExtensions == false)
                 {
-                    if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                    list.Add(new File(SystemPath + "/" + file));
+                }
+
+                else
+                {
+                    foreach (var ext in fileTypes)
                     {
-                        list.Add(new File(SystemPath + "/" + file));
-                        break;
+                        if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                        {
+                            list.Add(new File(SystemPath + "/" + file));
+                            break;
+                        }
                     }
                 }
             }
@@ -272,17 +273,25 @@ public readonly partial struct Directory
         var subs = System.IO.Directory.GetFiles(SystemPath);
         foreach (var file in subs)
         {
-            foreach (var ext in fileTypes)
+            if (restrictExtensions == false)
             {
-                if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                list.Add(new File(file));
+            }
+
+            else
+            {
+                foreach (var ext in fileTypes)
                 {
-                    list.Add(new File(file));
-                    break;
+                    if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                    {
+                        list.Add(new File(file));
+                        break;
+                    }
                 }
             }
         }
 #endif
-        return [.. list];
+        return list.AsSpan();
     }
 }
 

@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://bk5eo7lpolkoy"]
+
+[ext_resource type="Script" uid="uid://ccipgpkala7j7" path="res://Cutulu/UnitTests/Patching/PatchingTestScene.cs" id="1_u6ahf"]
+
+[node name="PatchingTest" type="Node" unique_id=1084117195]
+script = ExtResource("1_u6ahf")
+HostFileDirectory = "/home/narrenschlag/.godot/Builds/Warlords/MapEdit/lin/"
+HostPatchDataDirectory = "/home/narrenschlag/.godot/Builds/Warlords/MapEdit/lin_patch/"
+ClientDirectory = "/home/narrenschlag/.godot/Builds/Warlords/MapEdit/lin_output/"
