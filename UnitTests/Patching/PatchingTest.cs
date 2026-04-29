@@ -48,7 +48,6 @@ public partial class PatchingTest
         CancellationToken token = default
     )
     {
-        var gameDir = Path.Combine(directory, "Game/");
         var updater = new Updater();
 
         // Wire up a simple progress callback — replace with your UI update logic
@@ -57,7 +56,7 @@ public partial class PatchingTest
 
         Debug.Log(">>> CLIENT START");
         await updater.UpdateAsync(
-            gameDir,
+            directory,
             manifest,
             async hash =>
             {
@@ -90,7 +89,6 @@ public partial class PatchingTest
             return await response.Content.ReadAsByteArrayAsync(token);
         }
 
-        var gameDir = Path.Combine(directory, "Game/");
         var updater = new Updater();
 
         // Wire up a simple progress callback — replace with your UI update logic
@@ -99,7 +97,7 @@ public partial class PatchingTest
 
         Debug.Log(">>> CLIENT START");
         await updater.UpdateAsync(
-            gameDir,
+            directory,
             manifest,
             DownloadChunk,
             progress,

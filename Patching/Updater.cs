@@ -58,7 +58,7 @@ public class Updater
 
         // Build chunk cache once, avoids thousands of filesystem Exists() calls
         var chunkDir = Path.Combine(localDir, "chunks");
-        System.IO.Directory.CreateDirectory(chunkDir);
+        //System.IO.Directory.CreateDirectory(chunkDir); // No more chunk caching
         var cachedChunks = BuildChunkCache(chunkDir);
 
         Debug.Log("=== PATCH START ===");
@@ -180,7 +180,8 @@ public class Updater
                     {
                         byte[] data = await downloadFunc.Invoke(hash);
 
-                        var localChunkPath = Path.Combine(chunkDir, hash);
+                        // No more chunk caching
+                        /*var localChunkPath = Path.Combine(chunkDir, hash);
 
                         try
                         {
@@ -195,7 +196,7 @@ public class Updater
                         catch (System.IO.IOException)
                         {
                             // already exists
-                        }
+                        }*/
 
                         cachedChunks.TryAdd(hash, 0);
 
