@@ -56,7 +56,7 @@ public class Updater
 
         var _localDir = new Directory(localDir, true);
 
-        // Build chunk cache once — avoids thousands of filesystem Exists() calls
+        // Build chunk cache once, avoids thousands of filesystem Exists() calls
         var chunkDir = Path.Combine(localDir, "chunks");
         System.IO.Directory.CreateDirectory(chunkDir);
         var cachedChunks = BuildChunkCache(chunkDir);
@@ -127,7 +127,7 @@ public class Updater
             }
             catch
             {
-                // Clean up temp on any failure — don't leave partial file
+                // Clean up temp on any failure, don't leave partial file
                 if (System.IO.File.Exists(tmpPath))
                     System.IO.File.Delete(tmpPath);
                 throw;
