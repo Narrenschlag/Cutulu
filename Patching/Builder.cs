@@ -1,64 +1,76 @@
 namespace Cutulu.Patching;
 
-using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Text.Json;
 using System;
 using Core;
 
 public class Builder
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-    private const int ChunkSize = 1024 * 1024;
+    public const int DefaultChunkSize = 1024 * 1024; // 1 MB
 
-    public async Task<Manifest> BuildAsync(string sourceDir, string outputDir)
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
+    /// <summary>
+    /// Scans <paramref name="sourceDir"/>, chunks every file, writes chunks to
+    /// <paramref name="outputDir"/>/chunks/, and writes manifest.json.
+    /// </summary>
+    public async Task<Manifest> BuildAsync(
+        string sourceDir,
+        string outputDir,
+        int chunkSize = DefaultChunkSize,
+        CancellationToken token = default)
     {
         var _sourceDir = new Directory(sourceDir, false);
+        var manifest = new Manifest { ChunkSize = chunkSize };
 
-        var manifest = new Manifest();
-        if (_sourceDir.Exists() == false) return manifest;
+        if (!_sourceDir.Exists()) return manifest;
 
         var chunkDir = Path.Combine(outputDir, "chunks/");
         _ = new Directory(chunkDir, true);
 
-        File[] _files = [.. _sourceDir.GetAllFiles()];
+        File[] files = [.. _sourceDir.GetAllFiles()];
 
-        foreach (var file in _files)
-        {
-            var relativePath = Path.GetRelativePath(sourceDir, file.SystemPath);
+        // Lock for manifest.Files — parallel writes need coordination
+        var dictLock = new object();
 
-            var bytes = await file.ReadAsync();
-
-            var chunkHashes = new List<string>();
-
-            for (int i = 0; i < bytes.Length; i += ChunkSize)
+        await Parallel.ForEachAsync(
+            files,
+            new ParallelOptions
             {
-                var size = Math.Min(ChunkSize, bytes.Length - i);
-                var chunk = new byte[size];
-                Array.Copy(bytes, i, chunk, 0, size);
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                CancellationToken = token
+            },
+            async (file, ct) =>
+            {
+                var relativePath = Path.GetRelativePath(sourceDir, file.SystemPath);
+                var bytes = await file.ReadAsync(ct);
+                var chunkHashes = new List<string>();
 
-                var hash = Hash(chunk);
-                var chunkFile = new File(Path.Combine(chunkDir, hash));
+                for (int i = 0; i < bytes.Length; i += chunkSize)
+                {
+                    ct.ThrowIfCancellationRequested();
 
-                if (chunkFile.Exists() == false)
-                    await chunkFile.WriteAsync(chunk);
+                    var size = Math.Min(chunkSize, bytes.Length - i);
+                    var chunk = bytes.AsSpan(i, size);
+                    var hash = ChunkHash.Compute(chunk);
 
-                chunkHashes.Add(hash);
-            }
+                    var chunkFile = new File(Path.Combine(chunkDir, hash));
+                    if (!chunkFile.Exists())
+                        await chunkFile.WriteAsync(chunk.ToArray(), ct);
 
-            manifest.Files[relativePath] = chunkHashes;
-        }
+                    chunkHashes.Add(hash);
+                }
+
+                lock (dictLock)
+                    manifest.Files[relativePath] = chunkHashes;
+            });
 
         var json = JsonSerializer.Serialize(manifest, JsonOptions);
-        await new File(Path.Combine(outputDir, "manifest.json"))
-        .WriteTextAsync(json);
+        await new File(Path.Combine(outputDir, "manifest.json")).WriteTextAsync(json, token);
 
         return manifest;
-    }
-
-    private string Hash(byte[] data)
-    {
-        return Convert.ToHexString(SHA256.HashData(data));
     }
 }
