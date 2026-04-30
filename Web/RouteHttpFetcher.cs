@@ -13,7 +13,7 @@ public static class RouteHttpFetcher
     /// <summary>
     /// Scans all loaded assemblies and returns every method decorated with [RouteHttp].
     /// </summary>
-    public static IEnumerable<RouteEntry> GetAllRoutes()
+    public static IEnumerable<RouteEntry> GetAllRoutes(uint mask = uint.MaxValue)
     {
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
@@ -26,7 +26,7 @@ public static class RouteHttpFetcher
                     BindingFlags.NonPublic))
                 {
                     var attr = method.GetCustomAttribute<RouteHttp>();
-                    if (attr is not null)
+                    if (attr is not null && (attr.Mask & mask) != 0)
                         yield return new RouteEntry(method, attr, type);
                 }
             }
@@ -36,10 +36,11 @@ public static class RouteHttpFetcher
     public static void RegisterRoutes(
         WebApplication app,
         Func<HttpContext, Task<bool>>? authHandler = null,
-        Func<HttpContext, IResult>? onAuthFailed = null
+        Func<HttpContext, IResult>? onAuthFailed = null,
+        uint mask = uint.MaxValue
     )
     {
-        foreach (var route in GetAllRoutes())
+        foreach (var route in GetAllRoutes(mask))
         {
             if (!route.Method.IsStatic) continue;
 

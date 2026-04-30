@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using Godot;
@@ -97,3 +98,4 @@ public readonly struct Triangle
         return result;
     }
 }
+#endif

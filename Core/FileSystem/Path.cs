@@ -2,6 +2,8 @@ namespace Cutulu.Core;
 
 public static class Path
 {
+    public static readonly char DirectorySeparatorChar = System.IO.Path.DirectorySeparatorChar;
+
     public static string Combine(params string[] paths)
     => System.IO.Path.Combine(paths);
 
@@ -13,4 +15,10 @@ public static class Path
 
     public static string GetFullPath(string path)
     => System.IO.Path.GetFullPath(path);
+
+    public static string GetFileName(string path)
+    => System.IO.Path.GetFileName(path);
+
+    public static string GetExtension(string path)
+    => System.IO.Path.GetExtension(path);
 }

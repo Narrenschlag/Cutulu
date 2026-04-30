@@ -1,3 +1,4 @@
+#if GODOT4_0_OR_GREATER
 namespace Cutulu.Core;
 
 using Godot;
@@ -12,4 +13,4 @@ public readonly struct Edge
     public bool Equals(Edge other)
         => (A == other.A && B == other.B) || (A == other.B && B == other.A);
 }
-
+#endif

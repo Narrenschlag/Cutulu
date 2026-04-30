@@ -13,6 +13,7 @@ public class WebApp : IAsyncDisposable
         Delegate? defaultRouting = null,
         Func<HttpContext, Task<bool>>? authHandler = null,
         Func<HttpContext, IResult>? onAuthFailed = null,
+        uint routeMask = uint.MaxValue,
         int maxRequestBodySize = 1_073_741_824
     )
     {
@@ -28,7 +29,7 @@ public class WebApp : IAsyncDisposable
         if (defaultRouting != null)
             App.MapGet("/", defaultRouting);
 
-        RouteHttpFetcher.RegisterRoutes(App, authHandler, onAuthFailed);
+        RouteHttpFetcher.RegisterRoutes(App, authHandler, onAuthFailed, routeMask);
 
         Debug.Log($"Starting web server on {host}:{port}");
         App.Run($"{host}:{port}");
