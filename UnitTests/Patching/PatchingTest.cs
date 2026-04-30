@@ -50,7 +50,8 @@ public partial class PatchingTest
     {
         var updater = new Updater();
 
-        // Wire up a simple progress callback — replace with your UI update logic
+        // Wire up a simple progress callback
+        // TODO: replace with your UI update logic
         var progress = new Progress<PatchProgress>(p =>
             Debug.Log($"  {p.FileName} [{p.ChunksWritten}/{p.TotalChunks}] {p.Fraction * 100:0}%"));
 

@@ -16,6 +16,11 @@ namespace Cutulu.Core
             return TryGetAppData(key, out T output) ? output : defaultValue;
         }
 
+        public static bool HasAppData(this string key)
+        {
+            return new File(GetPath(key)).Exists();
+        }
+
         public static bool TryGetAppData<T>(this string key, out T output)
         {
             if (Bin.TryGetValue(key, out var obj) && obj is T t)
