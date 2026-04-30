@@ -67,12 +67,41 @@ public class Updater
         var fileSemaphore = new SemaphoreSlim(MaxConcurrentFiles, MaxConcurrentFiles);
 
         var tasks = new List<Task>(manifest.Files.Count);
+
+        int totalChunks = 0;
+        foreach (var file in manifest.Files)
+            totalChunks += file.Value.Count;
+        int globalWritten = 0;
+
+        var globalProgress = new Progress<PatchProgress>(p =>
+        {
+            var written = Interlocked.Increment(ref globalWritten);
+
+            progress?.Report(new PatchProgress(
+                p.FileName,
+                written,
+                totalChunks,
+                p.BytesWritten
+            ));
+        });
+
         foreach (var file in manifest.Files)
         {
             var fileKey = file.Key;
             var fileHashes = file.Value;
-            tasks.Add(PatchFileAsync(fileKey, fileHashes, localDir, chunkDir, cachedChunks,
-                                     manifest.ChunkSize, downloadFunc, progress, fileSemaphore, token));
+
+            tasks.Add(PatchFileAsync(
+                fileKey,
+                fileHashes,
+                localDir,
+                chunkDir,
+                cachedChunks,
+                manifest.ChunkSize,
+                downloadFunc,
+                globalProgress,
+                fileSemaphore,
+                token
+            ));
         }
 
         await Task.WhenAll(tasks);
@@ -97,6 +126,12 @@ public class Updater
         await fileSemaphore.WaitAsync(token);
         try
         {
+            relativePath = relativePath.TrimStart('/', '\\');
+            /*relativePath = relativePath
+                .Replace('\\', '/')
+                .TrimStart('/')
+                .Replace("..", "");*/
+
             var outPath = Path.Combine(localDir, relativePath);
 
             if (await IsUpToDate(outPath, hashes, chunkSize, token))
@@ -262,6 +297,8 @@ public class Updater
         // --- Consumer: write in order ---
         var consumer = Task.Run(async () =>
         {
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(tmpPath)!);
+
             await using var stream = new System.IO.FileStream(
                 tmpPath,
                 System.IO.FileMode.Create,
@@ -289,8 +326,7 @@ public class Updater
                     chunksWritten++;
                     nextExpected++;
 
-                    progress?.Report(new PatchProgress(
-                        relativePath, chunksWritten, hashes.Count, bytesWritten));
+                    progress?.Report(new PatchProgress(relativePath, chunksWritten, hashes.Count, bytesWritten));
                 }
             }
 

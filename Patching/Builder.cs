@@ -54,12 +54,15 @@ public class Builder
                     ct.ThrowIfCancellationRequested();
 
                     var size = Math.Min(chunkSize, bytes.Length - i);
-                    var chunk = bytes.AsSpan(i, size);
+
+                    var chunk = new byte[size];
+                    Buffer.BlockCopy(bytes, i, chunk, 0, size);
+
                     var hash = ChunkHash.Compute(chunk);
 
                     var chunkFile = new File(Path.Combine(chunkDir, hash));
                     if (!chunkFile.Exists())
-                        await chunkFile.WriteAsync(chunk.ToArray(), ct);
+                        await chunkFile.WriteAsync(chunk, ct);
 
                     chunkHashes.Add(hash);
                 }
