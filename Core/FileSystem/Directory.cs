@@ -68,6 +68,11 @@ public readonly partial struct Directory
 #endif
     }
 
+    public string GetDirectoryName()
+    {
+        return Path.GetFileName(SystemPath);
+    }
+
     /// <summary>Creates the directory if it doesn't exist.</summary>
     public bool MakeDir()
     {

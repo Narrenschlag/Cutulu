@@ -114,20 +114,7 @@ public static class Application
     /// <summary>
     /// Returns main executable file ending based on current runtime OS.
     /// </summary>
-    public static readonly string OSExecFileExtension =
-#if GODOT4_0_OR_GREATER
-    OS.GetName() switch
-    {
-        "Windows" => ".exe",
-        "X11" => ".x86_64",
-        "macOS" => ".app",
-        "Android" => ".apk",
-        "iOS" => ".ipa",
-        "Web" => ".html",
-        _ => "",
-    };
-#else
-    OperatingSystemType switch
+    public static readonly string OSExecFileExtension = OperatingSystemType switch
     {
         OS_TYPE.MAC_CATALYST => ".dmg",
         OS_TYPE.WINDOWS => ".exe",
@@ -138,7 +125,6 @@ public static class Application
         OS_TYPE.WEB => ".html",
         _ => "",
     };
-#endif
 }
 
 public enum OS_CATEGORY : byte
