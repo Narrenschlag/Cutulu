@@ -1,7 +1,6 @@
 namespace Cutulu.Patching;
 
 using System.Collections.Generic;
-using Core;
 
 public class Manifest
 {

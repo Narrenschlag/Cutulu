@@ -12,5 +12,11 @@ internal static class ChunkHash
         => Convert.ToHexString(SHA256.HashData(data)).ToUpperInvariant();
 
     public static bool Verify(byte[] data, string expected)
-        => string.Equals(Compute(data), expected, StringComparison.OrdinalIgnoreCase);
+        => data != null
+        && expected != null
+        && string.Equals(Compute(data), expected, StringComparison.OrdinalIgnoreCase);
+
+    public static bool Verify(ReadOnlySpan<byte> data, string expected)
+        => expected != null
+        && string.Equals(Compute(data), expected, StringComparison.OrdinalIgnoreCase);
 }

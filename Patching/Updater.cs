@@ -1,6 +1,5 @@
 namespace Cutulu.Patching;
 
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -38,10 +37,10 @@ public class Updater
     public int MaxConcurrentDownloads { get; set; } = 4;
 
     /// <summary>
-    /// Downloads and applies all out-of-date files in <paramref name="manifest"/>.
-    /// Files are patched in parallel; each file uses a download/write pipeline so
-    /// downloads and disk writes overlap.
-    /// Writes are atomic: a .patch.tmp file is verified then renamed into place.
+    /// Downloads and applies all out-of-date files described in <paramref name="manifest"/>.
+    /// Files are patched in parallel; each file uses a producer/consumer pipeline so
+    /// downloads and disk writes overlap. Writes are atomic: a .patch.tmp file is
+    /// verified chunk-by-chunk then renamed into place.
     /// </summary>
     public async Task UpdateAsync(
         string localDir,
@@ -50,58 +49,48 @@ public class Updater
         IProgress<PatchProgress> progress = null,
         CancellationToken token = default)
     {
+        if (manifest == null) throw new ArgumentNullException(nameof(manifest));
+        if (downloadFunc == null) throw new ArgumentNullException(nameof(downloadFunc));
+
         if (manifest.Version != Manifest.CurrentVersion)
             throw new InvalidOperationException(
-                $"Manifest version {manifest.Version} != expected {Manifest.CurrentVersion}. Update your client.");
+                $"Manifest version {manifest.Version} != expected {Manifest.CurrentVersion}.");
 
-        var _localDir = new Directory(localDir, true);
-
-        // Build chunk cache once, avoids thousands of filesystem Exists() calls
-        var chunkDir = Path.Combine(localDir, "chunks");
-        //System.IO.Directory.CreateDirectory(chunkDir); // No more chunk caching
-        var cachedChunks = BuildChunkCache(chunkDir);
+        _ = new Directory(localDir, true);
 
         Debug.Log("=== PATCH START ===");
         Debug.Log($"Files: {manifest.Files.Count}");
 
-        var fileSemaphore = new SemaphoreSlim(MaxConcurrentFiles, MaxConcurrentFiles);
+        int totalChunks = 0;
+        foreach (var f in manifest.Files)
+            totalChunks += f.Value?.Count ?? 0;
+
+        int globalWritten = 0;
+
+        // Wrap the caller's progress so we report a global running total.
+        IProgress<PatchProgress> globalProgress = progress == null ? null : new Progress<PatchProgress>(p =>
+        {
+            int written = Interlocked.Increment(ref globalWritten);
+            progress.Report(new PatchProgress(p.FileName, written, totalChunks, p.BytesWritten));
+        });
+
+        using var fileSemaphore = new SemaphoreSlim(MaxConcurrentFiles, MaxConcurrentFiles);
 
         var tasks = new List<Task>(manifest.Files.Count);
 
-        int totalChunks = 0;
-        foreach (var file in manifest.Files)
-            totalChunks += file.Value.Count;
-        int globalWritten = 0;
-
-        var globalProgress = new Progress<PatchProgress>(p =>
+        foreach (var (key, hashes) in manifest.Files)
         {
-            var written = Interlocked.Increment(ref globalWritten);
-
-            progress?.Report(new PatchProgress(
-                p.FileName,
-                written,
-                totalChunks,
-                p.BytesWritten
-            ));
-        });
-
-        foreach (var file in manifest.Files)
-        {
-            var fileKey = file.Key;
-            var fileHashes = file.Value;
+            if (hashes == null || hashes.Count == 0) continue;
 
             tasks.Add(PatchFileAsync(
-                fileKey,
-                fileHashes,
+                key,
+                hashes,
                 localDir,
-                chunkDir,
-                cachedChunks,
                 manifest.ChunkSize,
                 downloadFunc,
                 globalProgress,
                 fileSemaphore,
-                token
-            ));
+                token));
         }
 
         await Task.WhenAll(tasks);
@@ -115,8 +104,6 @@ public class Updater
         string relativePath,
         List<string> hashes,
         string localDir,
-        string chunkDir,
-        ConcurrentDictionary<string, byte> cachedChunks,
         int chunkSize,
         Func<string, Task<byte[]>> downloadFunc,
         IProgress<PatchProgress> progress,
@@ -126,45 +113,49 @@ public class Updater
         await fileSemaphore.WaitAsync(token);
         try
         {
-            relativePath = relativePath.TrimStart('/', '\\');
-            /*relativePath = relativePath
+            // Normalise to forward-slash, strip leading separators, forbid traversal.
+            relativePath = relativePath
                 .Replace('\\', '/')
                 .TrimStart('/')
-                .Replace("..", "");*/
+                .Replace("..", string.Empty);
+
+            if (string.IsNullOrWhiteSpace(relativePath))
+                throw new InvalidOperationException("Manifest contains an empty or invalid file path.");
 
             var outPath = Path.Combine(localDir, relativePath);
 
             if (await IsUpToDate(outPath, hashes, chunkSize, token))
             {
                 Debug.Log($"Skipping {relativePath} (up to date)");
+                // Still advance the global progress counter for all chunks.
+                if (progress != null)
+                    foreach (var _ in hashes)
+                        progress.Report(new PatchProgress(relativePath, 0, hashes.Count, 0));
                 return;
             }
 
-            new File(outPath).GetParentDirectory(true); // mkdir
+            // Ensure parent directory exists.
+            var parentDir = System.IO.Path.GetDirectoryName(outPath);
+            if (!string.IsNullOrEmpty(parentDir))
+                System.IO.Directory.CreateDirectory(parentDir);
 
             var tmpPath = outPath + ".patch.tmp";
 
             try
             {
                 await DownloadAndWriteAsync(
-                    relativePath, hashes, chunkDir, cachedChunks,
-                    tmpPath, chunkSize, downloadFunc, progress, token);
+                    relativePath, hashes, tmpPath, chunkSize, downloadFunc, progress, token);
 
-                // Verify assembled file before replacing the real one
                 await VerifyAssembledFile(tmpPath, hashes, chunkSize, token);
 
-                // Atomic rename
-                if (System.IO.File.Exists(outPath))
-                    System.IO.File.Delete(outPath);
-                System.IO.File.Move(tmpPath, outPath);
+                // Atomic replace.
+                System.IO.File.Move(tmpPath, outPath, overwrite: true);
 
                 Debug.Log($"Patched {relativePath}");
             }
             catch
             {
-                // Clean up temp on any failure, don't leave partial file
-                if (System.IO.File.Exists(tmpPath))
-                    System.IO.File.Delete(tmpPath);
+                SafeDelete(tmpPath);
                 throw;
             }
         }
@@ -176,28 +167,27 @@ public class Updater
 
     /// <summary>
     /// Producer/consumer pipeline:
-    /// - Producer: downloads chunks concurrently (bounded by MaxConcurrentDownloads).
-    /// - Consumer: writes chunks to disk in order, buffering out-of-order arrivals.
+    ///   Producer  — downloads chunks concurrently (bounded by MaxConcurrentDownloads).
+    ///   Consumer  — writes chunks to disk in strict order, buffering out-of-order arrivals.
+    /// The channel backpressure prevents the producer from racing too far ahead of the consumer.
     /// </summary>
     private async Task DownloadAndWriteAsync(
         string relativePath,
         List<string> hashes,
-        string chunkDir,
-        ConcurrentDictionary<string, byte> cachedChunks,
         string tmpPath,
         int chunkSize,
         Func<string, Task<byte[]>> downloadFunc,
         IProgress<PatchProgress> progress,
         CancellationToken token)
     {
-        // Unbounded channel: producer is already bounded by the semaphore
-        var channel = Channel.CreateBounded<(int index, byte[] data)>(new BoundedChannelOptions(32)
+        // Bounded channel keeps memory usage proportional to MaxConcurrentDownloads.
+        var channel = Channel.CreateBounded<(int index, byte[] data)>(new BoundedChannelOptions(MaxConcurrentDownloads * 2)
         {
             SingleReader = true,
             FullMode = BoundedChannelFullMode.Wait
         });
 
-        var downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads, MaxConcurrentDownloads);
+        using var downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads, MaxConcurrentDownloads);
         long bytesWritten = 0;
 
         // --- Producer ---
@@ -205,77 +195,28 @@ public class Updater
         {
             try
             {
-                var downloadTasks = new List<Task>(hashes.Count);
+                var downloadTasks = new Task[hashes.Count];
+
                 for (int i = 0; i < hashes.Count; i++)
                 {
-                    var index = i;
-                    var hash = hashes[i];
+                    token.ThrowIfCancellationRequested();
 
-                    async Task<byte[]> DownloadAndStore(string hash)
-                    {
-                        byte[] data = await downloadFunc.Invoke(hash);
-
-                        // No more chunk caching
-                        /*var localChunkPath = Path.Combine(chunkDir, hash);
-
-                        try
-                        {
-                            using var fs = new System.IO.FileStream(
-                                localChunkPath,
-                                System.IO.FileMode.CreateNew,
-                                System.IO.FileAccess.Write,
-                                System.IO.FileShare.None);
-
-                            await fs.WriteAsync(data, token);
-                        }
-                        catch (System.IO.IOException)
-                        {
-                            // already exists
-                        }*/
-
-                        cachedChunks.TryAdd(hash, 0);
-
-                        return data;
-                    }
+                    int index = i;
+                    string hash = hashes[i];
 
                     await downloadSemaphore.WaitAsync(token);
-                    downloadTasks.Add(Task.Run(async () =>
+
+                    downloadTasks[index] = Task.Run(async () =>
                     {
                         try
                         {
-                            byte[] data;
-
-                            if (cachedChunks.TryGetValue(hash, out _))
-                            {
-                                var path = Path.Combine(chunkDir, hash);
-
-                                try
-                                {
-                                    data = await new File(path).ReadAsync(token);
-
-                                    if (!ChunkHash.Verify(data, hash))
-                                    {
-                                        System.IO.File.Delete(path);
-                                        cachedChunks.TryRemove(hash, out _);
-                                        data = await DownloadAndStore(hash);
-                                    }
-                                }
-                                catch
-                                {
-                                    cachedChunks.TryRemove(hash, out _);
-                                    data = await DownloadAndStore(hash);
-                                }
-                            }
-                            else
-                            {
-                                data = await DownloadAndStore(hash);
-                            }
+                            byte[] data = await DownloadChunkWithRetry(hash, downloadFunc, token);
 
                             if (data == null || data.Length == 0)
-                                throw new Exception($"Empty chunk: {hash}");
+                                throw new InvalidOperationException($"Server returned empty chunk: {hash}");
 
                             if (!ChunkHash.Verify(data, hash))
-                                throw new Exception($"Hash mismatch on chunk: {hash}");
+                                throw new InvalidOperationException($"Hash mismatch on downloaded chunk: {hash}");
 
                             await channel.Writer.WriteAsync((index, data), token);
                         }
@@ -283,32 +224,30 @@ public class Updater
                         {
                             downloadSemaphore.Release();
                         }
-                    }, token));
+                    }, token);
                 }
 
                 await Task.WhenAll(downloadTasks);
             }
             finally
             {
+                // Always complete the writer so the consumer can finish.
                 channel.Writer.Complete();
             }
         }, token);
 
-        // --- Consumer: write in order ---
+        // --- Consumer ---
         var consumer = Task.Run(async () =>
         {
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(tmpPath)!);
-
             await using var stream = new System.IO.FileStream(
                 tmpPath,
                 System.IO.FileMode.Create,
                 System.IO.FileAccess.Write,
                 System.IO.FileShare.None,
-                bufferSize: chunkSize,
+                bufferSize: Math.Max(chunkSize, 4096),
                 useAsync: true);
 
-            // Reorder buffer for chunks that arrive out of order
-            var reorderBuffer = new Dictionary<int, byte[]>(16);
+            var reorderBuffer = new Dictionary<int, byte[]>();
             int nextExpected = 0;
             int chunksWritten = 0;
 
@@ -316,7 +255,6 @@ public class Updater
             {
                 reorderBuffer[index] = data;
 
-                // Flush all consecutive chunks we now have
                 while (reorderBuffer.TryGetValue(nextExpected, out var chunk))
                 {
                     reorderBuffer.Remove(nextExpected);
@@ -330,17 +268,58 @@ public class Updater
                 }
             }
 
+            // Guard against a manifest that lists more chunks than we received.
+            if (nextExpected != hashes.Count)
+                throw new InvalidOperationException(
+                    $"Expected {hashes.Count} chunks for '{relativePath}' but received {nextExpected}.");
+
             await stream.FlushAsync(token);
         }, token);
 
+        // Propagate exceptions from both sides cleanly.
         await Task.WhenAll(producer, consumer);
     }
 
     // -------------------------------------------------------------------------
 
     /// <summary>
-    /// Verifies an assembled file by stream-hashing it in chunk-sized windows.
-    /// Never loads the full file into memory.
+    /// Retries a chunk download up to 3 times with an exponential back-off.
+    /// </summary>
+    private static async Task<byte[]> DownloadChunkWithRetry(
+        string hash,
+        Func<string, Task<byte[]>> downloadFunc,
+        CancellationToken token,
+        int maxAttempts = 3)
+    {
+        int delay = 500; // ms
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            token.ThrowIfCancellationRequested();
+
+            try
+            {
+                return await downloadFunc(hash);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex) when (attempt < maxAttempts)
+            {
+                Debug.LogError($"Chunk {hash} download attempt {attempt} failed: {ex.Message}. Retrying in {delay} ms…");
+                await Task.Delay(delay, token);
+                delay *= 2;
+            }
+        }
+
+        // Final attempt — let any exception propagate.
+        return await downloadFunc(hash);
+    }
+
+    /// <summary>
+    /// Stream-hashes the assembled temp file in chunk-sized windows and compares
+    /// against the manifest. Never loads the full file into memory.
     /// </summary>
     private static async Task VerifyAssembledFile(
         string path,
@@ -352,32 +331,42 @@ public class Updater
             path,
             System.IO.FileMode.Open,
             System.IO.FileAccess.Read,
-            System.IO.FileShare.Read,
-            bufferSize: chunkSize,
+            System.IO.FileShare.None,
+            bufferSize: Math.Max(chunkSize, 4096),
             useAsync: true);
 
         var buffer = new byte[chunkSize];
+
         for (int i = 0; i < expectedHashes.Count; i++)
         {
             token.ThrowIfCancellationRequested();
 
-            int read = 0, offset = 0;
+            int offset = 0;
             while (offset < chunkSize)
             {
-                read = await stream.ReadAsync(buffer.AsMemory(offset, chunkSize - offset), token);
+                int read = await stream.ReadAsync(buffer.AsMemory(offset, chunkSize - offset), token);
                 if (read == 0) break;
                 offset += read;
             }
 
-            var hash = ChunkHash.Compute(buffer.AsSpan(0, offset));
-            if (!string.Equals(hash, expectedHashes[i], StringComparison.OrdinalIgnoreCase))
-                throw new Exception($"Post-write verification failed on chunk {i} of assembled file.");
+            if (offset == 0 && i < expectedHashes.Count)
+                throw new InvalidOperationException(
+                    $"File truncated: expected chunk {i} but stream ended.");
+
+            if (!ChunkHash.Verify(buffer.AsSpan(0, offset), expectedHashes[i]))
+                throw new InvalidOperationException(
+                    $"Post-write verification failed on chunk {i}.");
         }
+
+        // Ensure there is no extra data beyond what the manifest describes.
+        int trailing = await stream.ReadAsync(buffer.AsMemory(0, 1), token);
+        if (trailing != 0)
+            throw new InvalidOperationException("Assembled file is larger than the manifest describes.");
     }
 
     /// <summary>
-    /// Stream-hashes the existing file in chunk-sized windows and compares against manifest.
-    /// Never loads the full file into memory.
+    /// Stream-hashes the on-disk file and compares against the manifest.
+    /// Returns false on any I/O error so the file gets re-patched rather than crash.
     /// </summary>
     private static async Task<bool> IsUpToDate(
         string path,
@@ -394,7 +383,7 @@ public class Updater
                 System.IO.FileMode.Open,
                 System.IO.FileAccess.Read,
                 System.IO.FileShare.Read,
-                bufferSize: chunkSize,
+                bufferSize: Math.Max(chunkSize, 4096),
                 useAsync: true);
 
             var buffer = new byte[chunkSize];
@@ -405,20 +394,18 @@ public class Updater
                 token.ThrowIfCancellationRequested();
 
                 int offset = 0;
-                int read;
                 while (offset < chunkSize)
                 {
-                    read = await stream.ReadAsync(buffer.AsMemory(offset, chunkSize - offset), token);
+                    int read = await stream.ReadAsync(buffer.AsMemory(offset, chunkSize - offset), token);
                     if (read == 0) break;
                     offset += read;
                 }
 
-                if (offset == 0) break; // EOF
+                if (offset == 0) break; // clean EOF
 
-                if (chunkIndex >= manifestHashes.Count) return false; // more chunks than expected
+                if (chunkIndex >= manifestHashes.Count) return false; // file is larger than expected
 
-                var hash = ChunkHash.Compute(buffer.AsSpan(0, offset));
-                if (!string.Equals(hash, manifestHashes[chunkIndex], StringComparison.OrdinalIgnoreCase))
+                if (!ChunkHash.Verify(buffer.AsSpan(0, offset), manifestHashes[chunkIndex]))
                     return false;
 
                 chunkIndex++;
@@ -426,24 +413,19 @@ public class Updater
 
             return chunkIndex == manifestHashes.Count;
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch
         {
-            return false; // Unreadable = not up to date
+            return false; // Unreadable file → re-patch.
         }
     }
 
-    /// <summary>
-    /// Loads existing chunk filenames into a HashSet for O(1) lookups.
-    /// </summary>
-    private static ConcurrentDictionary<string, byte> BuildChunkCache(string chunkDir)
+    private static void SafeDelete(string path)
     {
-        var set = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
-
-        if (!System.IO.Directory.Exists(chunkDir)) return set;
-
-        foreach (var file in System.IO.Directory.GetFiles(chunkDir))
-            set.TryAdd(System.IO.Path.GetFileName(file), 0);
-
-        return set;
+        try { if (System.IO.File.Exists(path)) System.IO.File.Delete(path); }
+        catch { /* best-effort, don't mask the original exception */ }
     }
 }
