@@ -1,6 +1,7 @@
 #if SQL_DAPPER
 namespace Cutulu.Web;
 
+using Cutulu.Core;
 using Dapper;
 
 public record DbTable(string Name);
@@ -55,21 +56,16 @@ public partial class DatabaseClient
     public async Task CreateTable(
     string table,
     IEnumerable<ColumnDef> columns,
-    string? primaryKey = null)
+    string? primaryKey = null,
+    params string[] indexes          // ← add
+)
     {
         var cols = columns.Select(c =>
         {
             var sql = $"`{c.Name}` {c.Type}";
-
-            if (!c.Nullable)
-                sql += " NOT NULL";
-
-            if (c.AutoIncrement)
-                sql += " AUTO_INCREMENT";
-
-            if (c.Default != null)
-                sql += $" DEFAULT {c.Default}";
-
+            if (!c.Nullable) sql += " NOT NULL";
+            if (c.AutoIncrement) sql += " AUTO_INCREMENT";
+            if (c.Default != null) sql += $" DEFAULT {c.Default}";
             return sql;
         });
 
@@ -82,29 +78,25 @@ public partial class DatabaseClient
 
         sqlBuilder.Add(") ENGINE=InnoDB;");
 
-        var sql = string.Join("\n", sqlBuilder);
+        await Query(string.Join("\n", sqlBuilder));
 
-        await Query(sql);
+        // Apply indexes after table creation
+        await EnsureIndexes(table, indexes);
     }
 
     public async Task EnsureTable(
-    string table,
-    IEnumerable<ColumnDef> columns,
-    string? primaryKey = null
-)
+        string table,
+        IEnumerable<ColumnDef> columns,
+        string? primaryKey = null,
+        params string[] indexes
+    )
     {
-        // ─────────────────────────────────────────────
-        // 1. Create table if it doesn't exist
-        // ─────────────────────────────────────────────
         if (!await TableExists(table))
         {
-            await CreateTable(table, columns, primaryKey);
+            await CreateTable(table, columns, primaryKey, indexes); // ← pass indexes
             return;
         }
 
-        // ─────────────────────────────────────────────
-        // 2. Get existing columns
-        // ─────────────────────────────────────────────
         const string colSql = @"
             SELECT COLUMN_NAME
             FROM INFORMATION_SCHEMA.COLUMNS
@@ -116,31 +108,18 @@ public partial class DatabaseClient
         var existingCols = (await conn.QueryAsync<string>(colSql, new { table }))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        // ─────────────────────────────────────────────
-        // 3. Add missing columns
-        // ─────────────────────────────────────────────
         foreach (var col in columns)
         {
-            if (existingCols.Contains(col.Name))
-                continue;
+            if (existingCols.Contains(col.Name)) continue;
 
             var sql = $"ALTER TABLE `{table}` ADD COLUMN `{col.Name}` {col.Type}";
-
-            if (!col.Nullable)
-                sql += " NOT NULL";
-
-            if (col.AutoIncrement)
-                sql += " AUTO_INCREMENT";
-
-            if (col.Default != null)
-                sql += $" DEFAULT {col.Default}";
+            if (!col.Nullable) sql += " NOT NULL";
+            if (col.AutoIncrement) sql += " AUTO_INCREMENT";
+            if (col.Default != null) sql += $" DEFAULT {col.Default}";
 
             await conn.ExecuteAsync(sql);
         }
 
-        // ─────────────────────────────────────────────
-        // 4. Ensure primary key exists (safe check)
-        // ─────────────────────────────────────────────
         if (!string.IsNullOrEmpty(primaryKey))
         {
             const string pkSql = @"
@@ -152,12 +131,44 @@ public partial class DatabaseClient
             ";
 
             var hasPk = await conn.ExecuteScalarAsync<int>(pkSql, new { table });
-
             if (hasPk == 0)
-            {
-                var sql = $"ALTER TABLE `{table}` ADD PRIMARY KEY (`{primaryKey}`)";
-                await conn.ExecuteAsync(sql);
-            }
+                await conn.ExecuteAsync(
+                    $"ALTER TABLE `{table}` ADD PRIMARY KEY (`{primaryKey}`)"
+                );
+        }
+
+        await EnsureIndexes(table, indexes);   // ← extracted, shared with CreateTable
+    }
+
+    // ─────────────────────────────────────────────
+    // Shared index logic
+    // ─────────────────────────────────────────────
+    private async Task EnsureIndexes(string table, string[] indexes)
+    {
+        if (indexes.Length == 0) return;
+
+        await using var conn = await OpenAsync();
+
+        foreach (var index in indexes)
+        {
+            // Case-insensitive split on INDEX keyword
+            var parts = index.Split("INDEX", CONST.StringSplit);
+            if (parts.Length < 2) continue;
+
+            var indexName = parts[1].Trim().Split(' ')[0];
+            if (string.IsNullOrWhiteSpace(indexName)) continue;
+
+            const string idxSql = @"
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = @table
+                AND INDEX_NAME = @indexName;
+            ";
+
+            var exists = await conn.ExecuteScalarAsync<int>(idxSql, new { table, indexName });
+            if (exists == 0)
+                await conn.ExecuteAsync($"ALTER TABLE `{table}` ADD {index};");
         }
     }
 

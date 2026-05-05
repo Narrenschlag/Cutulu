@@ -40,5 +40,11 @@ namespace Cutulu.Core
         public static long RandomLong() => (long)RandomInt() + RandomInt();
 
         public static void Seed(int seed) => Source = new(seed);
+
+        public static void Fill(byte[] buffer)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+                buffer[i] = RandomByte();
+        }
     }
 }
