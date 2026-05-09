@@ -19,6 +19,9 @@ public static class Path
     public static string GetFileName(string path)
     => System.IO.Path.GetFileName(path);
 
+    public static string GetFileNameWithoutExtension(string path)
+    => System.IO.Path.GetFileNameWithoutExtension(path);
+
     public static string GetExtension(string path)
     => System.IO.Path.GetExtension(path);
 }

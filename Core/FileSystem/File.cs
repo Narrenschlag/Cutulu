@@ -48,6 +48,10 @@ public partial class File : IDisposable
 
     #endregion
 
+    public string GetExtension() => Path.GetExtension(SystemPath);
+
+    public string GetFileName(bool includeExtension = false) => includeExtension ? Path.GetFileName(SystemPath) : Path.GetFileNameWithoutExtension(SystemPath);
+
     #region Raw Functions
 
 #if GODOT4_0_OR_GREATER

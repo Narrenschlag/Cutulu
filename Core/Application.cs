@@ -70,6 +70,15 @@ public static class Application
     /// <para>Schema: "command-to-start-application" --script-args "arg1 arg2 arg3"</para>
     /// </summary>
     public static string[] GetCmdLineArgs() => TryGetCmdLineArgs(out var args) ? args ?? [] : [];
+#else
+    public static void OpenUrl(this string url)
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = url,
+            UseShellExecute = true
+        });
+    }
 #endif
 
     public static bool IsExecutablePath(this string path)
