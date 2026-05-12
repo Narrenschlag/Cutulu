@@ -69,7 +69,15 @@ public static class SecureHash
     /// </summary>
     public static string GenerateToken(int bytes = 32)
     {
-        return Convert.ToHexString(RandomNumberGenerator.GetBytes(bytes));
+        return Convert.ToHexString(GenerateTokenBuffer(bytes));
+    }
+
+    /// <summary>
+    /// Creates a secure random token (for sessions, auth, etc.)
+    /// </summary>
+    public static byte[] GenerateTokenBuffer(int bytes = 32)
+    {
+        return RandomNumberGenerator.GetBytes(bytes);
     }
 
     /// <summary>

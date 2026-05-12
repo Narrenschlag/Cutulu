@@ -71,6 +71,18 @@ public static class Application
     /// </summary>
     public static string[] GetCmdLineArgs() => TryGetCmdLineArgs(out var args) ? args ?? [] : [];
 #else
+    /// <summary>
+    /// Close the application
+    /// </summary>
+    public static void Quit()
+    {
+        // Notify logger
+        Logging.Logging.OnCloseOrCrash();
+
+        // Close the application
+        System.Environment.Exit(69);
+    }
+
     public static void OpenUrl(this string url)
     {
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo

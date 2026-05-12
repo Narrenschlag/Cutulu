@@ -40,7 +40,7 @@ public static class Arrayf
         {
             for (var i = 0; i < array.Length; i++)
             {
-                if (ignoreOrder == false && array[i].Equals(b[i]) == false)
+                if (ignoreOrder == false && array![i].Equals(b[i]) == false)
                     return false;
 
                 else if (ignoreOrder && b.Contains(array[i]) == false)
