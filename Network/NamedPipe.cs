@@ -1,6 +1,7 @@
 namespace Cutulu.Network;
 
 using System.Threading.Tasks;
+using System.Threading;
 using System.IO.Pipes;
 using Cutulu.Core;
 using System.IO;
@@ -9,7 +10,7 @@ using System;
 public static class NamedPipe
 {
     // Server
-    public static async Task<Socket> StartHost(string name, CancellationToken token = default, bool startListening = true)
+    public static async Task<Socket> StartHost(string name, Action<UNumber32, LocalDecoder> receive, CancellationToken token = default, bool startListening = true)
     {
         var server = new NamedPipeServerStream(
             name,
@@ -29,12 +30,13 @@ public static class NamedPipe
         }
 
         var pipe = new Socket(server);
+        if (receive is not null) pipe.Received.Bind(pipe, receive);
         if (startListening) pipe.StartListening();
         return pipe;
     }
 
     // Client
-    public static async Task<Socket> Connect(string name, string serverName = ".", CancellationToken token = default, bool startListening = true)
+    public static async Task<Socket> Connect(string name, Action<UNumber32, LocalDecoder> receive, string serverName = ".", CancellationToken token = default, bool startListening = true)
     {
         var client = new NamedPipeClientStream(
             serverName, // "." = local machine
@@ -46,6 +48,7 @@ public static class NamedPipe
         await client.ConnectAsync(token);
 
         var pipe = new Socket(client);
+        if (receive is not null) pipe.Received.Bind(pipe, receive);
         if (startListening) pipe.StartListening();
 
         return pipe;
