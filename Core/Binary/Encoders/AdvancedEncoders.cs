@@ -15,6 +15,35 @@ namespace Cutulu.Core
     /// </summary>
     public static class AdvancedEncoders
     {
+        class DateTimeEncoder() : BinaryEncoder(typeof(System.DateTime))
+        {
+            public override void Encode(System.IO.BinaryWriter writer, System.Type type, object value)
+            {
+                var dateTime = (System.DateTime)value;
+
+                writer.Encode((UNumber16)dateTime.Year);
+                writer.Encode((UNumber8)dateTime.Month);
+                writer.Encode((UNumber8)dateTime.Day);
+
+                writer.Encode((UNumber8)dateTime.Hour);
+                writer.Encode((UNumber8)dateTime.Minute);
+                writer.Encode((UNumber8)dateTime.Second);
+            }
+
+            public override object Decode(System.IO.BinaryReader reader, System.Type type)
+            {
+                return new System.DateTime(
+                    reader.Decode<UNumber16>(),
+                    reader.Decode<UNumber8>(),
+                    reader.Decode<UNumber8>(),
+
+                    reader.Decode<UNumber8>(),
+                    reader.Decode<UNumber8>(),
+                    reader.Decode<UNumber8>()
+                );
+            }
+        }
+
         class KeyValuePairEncoder() : BinaryEncoder(typeof(KeyValuePair<,>))
         {
             private static readonly ConcurrentDictionary<Type, (Type KeyType, Type ValueType, Func<object, object> GetKey, Func<object, object> GetValue)> Cache = new();
