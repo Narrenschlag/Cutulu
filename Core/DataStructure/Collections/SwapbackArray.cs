@@ -35,6 +35,13 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
         _count = _data.Length;
     }
 
+    public SwapbackArray(ICollection<T> data)
+    {
+        _data = new T[data.Count];
+        _count = data.Count;
+        data.CopyTo(_data, 0);
+    }
+
     public SwapbackArray(IList data)
     {
         _data = new T[data.Count];
