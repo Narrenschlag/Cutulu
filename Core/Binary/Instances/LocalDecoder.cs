@@ -94,6 +94,8 @@ public sealed class LocalDecoder : IDisposable
         return _reader.Decode<T>();
     }
 
+    public byte[] ReadBytes(int count) => _reader.ReadBytes(count);
+
 #if WEB_APP
     public static async Task<LocalDecoder> Create(HttpContext http, bool _enable_logging = true)
     {

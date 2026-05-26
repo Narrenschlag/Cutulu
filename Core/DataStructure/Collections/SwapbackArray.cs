@@ -37,9 +37,12 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
 
     public SwapbackArray(ICollection<T> data)
     {
-        _data = new T[data.Count];
-        _count = data.Count;
-        data.CopyTo(_data, 0);
+        lock (data)
+        {
+            _data = new T[data.Count];
+            _count = data.Count;
+            data.CopyTo(_data, 0);
+        }
     }
 
     public SwapbackArray(IList data)
@@ -100,6 +103,23 @@ public sealed class SwapbackArray<T> : ICollection<T>, IEnumerable<T>, ICollecti
 
         // Bulk copy using spans (fastest)
         items.CopyTo(new Span<T>(_data, _count, items.Length));
+        _count = newCount;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddRange(ICollection<T> items)
+    {
+        int newCount = _count + items.Count;
+
+        // Ensure capacity
+        if (newCount > _data.Length)
+        {
+            int newCap = Math.Max(_data.Length * 2, newCount);
+            Array.Resize(ref _data, newCap);
+        }
+
+        // Bulk copy using spans (fastest)
+        items.CopyTo(_data, _count);
         _count = newCount;
     }
 

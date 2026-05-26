@@ -233,18 +233,31 @@ public static class Decoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static object AutoDecode(this BinaryReader _reader, Type _type)
     {
-        var _output = Activator.CreateInstance(_type);
-
-        var _manager = ParameterManager.Open(_type, null, BinaryEncoding.IncludeAttributes, BinaryEncoding.ExcludeAttributes);
-
-        var infos = _manager.GetInfos();
-        foreach (ref var info in infos)
+        try
         {
-            BinaryEncoding.LastPropertyName = info.GetName();
+            var _output = Activator.CreateInstance(_type);
 
-            info.SetValue(_output, Decode(_reader, info.GetValueType(), false));
+            var _manager = ParameterManager.Open(_type, null, BinaryEncoding.IncludeAttributes, BinaryEncoding.ExcludeAttributes);
+
+            var infos = _manager.GetInfos();
+            foreach (ref var info in infos)
+            {
+                BinaryEncoding.LastPropertyName = info.GetName();
+
+                info.SetValue(_output, Decode(_reader, info.GetValueType(), false));
+            }
+
+            return _output;
         }
 
-        return _output;
+        catch (System.Reflection.TargetInvocationException ex)
+        {
+            throw new System.Reflection.TargetInvocationException(
+                $"Cannot call Activator.CreateInstance. Check if there are problems with references in constructors.",
+                ex.InnerException
+            );
+        }
+
+        catch { throw; }
     }
 }
