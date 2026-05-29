@@ -45,6 +45,12 @@ public static class objectExtension
                 break;
 #endif
 
+            // Custom Cutulu Disposable
+            case Disposable d:
+                d.Dispose();
+                break;
+
+            // Native .Net Disposable
             case IDisposable d:
                 d.Dispose();
                 break;
