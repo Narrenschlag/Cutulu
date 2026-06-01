@@ -33,7 +33,7 @@ public partial class PipeTest : Node
         {
             NamedPipe.Socket socket = ClientPipeSocket = await NamedPipe.Connect(PipeName, _ReceivePipe);
 
-            if (socket?.Stream?.IsConnected != true)
+            if (socket?.IsConnected != true)
             {
                 Crash("ClientPipe could not connect after retries");
                 return;

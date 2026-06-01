@@ -70,6 +70,8 @@ public static class NamedPipe
         private CancellationTokenSource? TokenSource;
         private Task? Listener;
 
+        public bool IsConnected => Stream?.IsConnected ?? false;
+
         public void Send(UNumber32 key, object obj)
         {
             var encoder = new LocalEncoder();
