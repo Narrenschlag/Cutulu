@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dttu00ihcgfrn"]
+
+[ext_resource type="Script" uid="uid://dj4fjy3vfhty7" path="res://Cutulu/UnitTests/Pipes/PipeTest.cs" id="1_18700"]
+
+[node name="PipeTest" type="Node" unique_id=1077166528]
+script = ExtResource("1_18700")
+PipeName = "Test.Pipe"

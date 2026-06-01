@@ -36,22 +36,28 @@ public static class NamedPipe
     }
 
     // Client
-    public static async Task<Socket> Connect(string name, Action<UNumber32, LocalDecoder> receive, string serverName = ".", CancellationToken token = default, bool startListening = true)
+    public static async Task<Socket> Connect(string name, Action<UNumber32, LocalDecoder> receive, string serverName = ".", CancellationToken token = default, bool startListening = true, int maxRetries = 20, int retryDelayMs = 500)
     {
-        var client = new NamedPipeClientStream(
+        NamedPipeClientStream client = new(
             serverName, // "." = local machine
             name,
             PipeDirection.InOut,
             PipeOptions.Asynchronous
         );
 
-        await client.ConnectAsync(token);
+        for (int i = 0; i < maxRetries; i++)
+        {
+            await client.ConnectAsync(token);
 
-        var pipe = new Socket(client);
-        if (receive is not null) pipe.Received.Bind(pipe, receive);
-        if (startListening) pipe.StartListening();
+            var pipe = new Socket(client);
+            if (receive is not null) pipe.Received.Bind(pipe, receive);
+            if (startListening) pipe.StartListening();
 
-        return pipe;
+            if (pipe?.Stream?.IsConnected == true) return pipe;
+            else await Task.Delay(retryDelayMs);
+        }
+
+        return null;
     }
 
     public class Socket(PipeStream stream)
