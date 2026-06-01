@@ -10,7 +10,7 @@ using System;
 public static class NamedPipe
 {
     // Server
-    public static async Task<Socket> StartHost(string name, Action<UNumber32, LocalDecoder> receive, CancellationToken token = default, bool startListening = true)
+    public static async Task<Socket> StartHost(string name, Action<Socket, UNumber32, LocalDecoder> receive, CancellationToken token = default, bool startListening = true)
     {
         var server = new NamedPipeServerStream(
             name,
@@ -36,7 +36,7 @@ public static class NamedPipe
     }
 
     // Client
-    public static async Task<Socket> Connect(string name, Action<UNumber32, LocalDecoder> receive, string serverName = ".", CancellationToken token = default, bool startListening = true, int maxRetries = 20, int retryDelayMs = 500)
+    public static async Task<Socket> Connect(string name, Action<Socket, UNumber32, LocalDecoder> receive, string serverName = ".", CancellationToken token = default, bool startListening = true, int maxRetries = 20, int retryDelayMs = 500)
     {
         NamedPipeClientStream client = new(
             serverName, // "." = local machine
@@ -65,7 +65,7 @@ public static class NamedPipe
         public readonly PipeStream Stream = stream;
         private readonly BinaryWriter Writer = new(stream);
 
-        public readonly Notification<UNumber32, LocalDecoder> Received = new();
+        public readonly Notification<Socket, UNumber32, LocalDecoder> Received = new();
         public readonly Notification Disconnected = new();
         private CancellationTokenSource? TokenSource;
         private Task? Listener;
@@ -118,7 +118,7 @@ public static class NamedPipe
                     if (token.IsCancellationRequested) break;
 
                     var decoder = new LocalDecoder(dataBuffer);
-                    Received.Invoke(decoder.Decode<UNumber32>(), decoder);
+                    Received.Invoke(this, decoder.Decode<UNumber32>(), decoder);
                 }
             }
             catch (OperationCanceledException) { /* clean shutdown */ }
