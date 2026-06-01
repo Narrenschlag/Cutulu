@@ -11,8 +11,6 @@ public partial class PipeTest : Node
 
     private const string TestMessage = "Hello World!";
 
-    private NamedPipe.Socket ClientPipeSocket;
-
     public override void _Ready()
     {
         _ = StartHostPipe();
@@ -31,7 +29,7 @@ public partial class PipeTest : Node
         // Pipe to matchmaking
         if (PipeName.NotEmpty())
         {
-            NamedPipe.Socket socket = ClientPipeSocket = await NamedPipe.Connect(PipeName, _ReceivePipe);
+            NamedPipe.Socket socket = await NamedPipe.Connect(PipeName, _ReceivePipe);
 
             if (socket?.IsConnected != true)
             {
@@ -41,13 +39,13 @@ public partial class PipeTest : Node
         }
     }
 
-    private void _ReceivePipe(UNumber32 key, LocalDecoder decoder)
+    private void _ReceivePipe(NamedPipe.Socket socket, UNumber32 key, LocalDecoder decoder)
     {
         switch ((uint)key)
         {
             case 1 when decoder.TryDecode(out string str) && str == TestMessage:
                 Debug.Log($"Client received message '{str}'. Sending back message. (1/2)");
-                ClientPipeSocket.Send(2, TestMessage);
+                socket.Send(2, TestMessage);
                 return;
 
             case 2 when decoder.TryDecode(out string str) && str == TestMessage:
