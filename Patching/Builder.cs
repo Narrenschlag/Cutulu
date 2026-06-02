@@ -31,6 +31,7 @@ public class Builder
         var _sourceDir = new Directory(sourceDir, false);
         if (!_sourceDir.Exists()) return new Manifest { ChunkSize = chunkSize };
 
+        _ = new Directory(outputDir, true);
         var chunkDir = Path.Combine(outputDir, "chunks/");
         _ = new Directory(chunkDir, true);
 
