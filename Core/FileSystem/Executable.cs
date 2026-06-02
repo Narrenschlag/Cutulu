@@ -15,7 +15,7 @@ public partial class Executable : File
 
     #endregion
 
-    public Process Execute(string args = "", string name = null, bool shell = false, bool newWindow = true)
+    public Process Execute(string args = "", string name = null, bool shell = false, bool newWindow = true, bool redirectOutput = false)
     {
         if (Exists() == false) throw new System.IO.FileNotFoundException($"Executable '{SystemPath}' not found.");
 
@@ -26,6 +26,8 @@ public partial class Executable : File
             Arguments = args,
             UseShellExecute = shell,
             CreateNoWindow = newWindow == false,
+            RedirectStandardOutput = redirectOutput,
+            RedirectStandardError = redirectOutput,
         });
     }
 
