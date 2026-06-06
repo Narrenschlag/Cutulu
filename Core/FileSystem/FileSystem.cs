@@ -67,6 +67,33 @@ namespace Cutulu.Core
             fileDialog.PopupCentered();
         }
 
+        /// <summary>
+        /// Opens file dialogue to save a file.
+        /// Upon saving the function OnFileSaved(string path) is called on the parent node. [*.txt for example]
+        /// </summary>
+        public static void ChooseDirectoryDialogue(this Directory directory, Node parent, Action<Directory> action)
+        {
+            // Create a new FileDialog instance
+            FileDialog fileDialog = new()
+            {
+                FileMode = FileDialog.FileModeEnum.OpenDir,
+                Access = FileDialog.AccessEnum.Filesystem,
+                CurrentDir = directory.SystemPath,
+                UseNativeDialog = true,
+            };
+            parent.AddChild(fileDialog);
+
+            // Make sure it works on any OS
+            fileDialog.CurrentDir = directory.SystemPath;
+            fileDialog.CurrentPath = directory.SystemPath;
+
+            // Connect the file_selected signal to a method in your class
+            fileDialog.DirSelected += (path) => action?.Invoke(new Directory(path.EndsWith('/') || path.EndsWith('\\') ? path : $"{path}/", true));
+
+            // Show the file dialog
+            fileDialog.PopupCentered();
+        }
+
         private static void FixFilters(string[] filters)
         {
             if (filters.IsEmpty()) return;
