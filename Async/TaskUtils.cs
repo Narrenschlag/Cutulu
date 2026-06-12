@@ -15,6 +15,13 @@ public static class TaskUtils
         await tree.ToSignal(tree, Godot.SceneTree.SignalName.ProcessFrame);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static async Task NextPhysicsFrame()
+    {
+        var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
+        await tree.ToSignal(tree, Godot.SceneTree.SignalName.PhysicsFrame);
+    }
+
     public static async Task WaitFrames(int frames)
     {
         var tree = (Godot.SceneTree)Godot.Engine.GetMainLoop();
