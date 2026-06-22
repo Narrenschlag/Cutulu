@@ -70,11 +70,12 @@ namespace Cutulu.Mesh
             if (points.Size() < 2) return default;
 
             var tool = Mesh.PrimitiveType.LineStrip.Open();
+            var p0 = points[0];
 
             for (int i = 0; i < points.Length; i++)
             {
                 tool.SetColor(color);
-                tool.AddVertex(points[i] - points[0]);
+                tool.AddVertex(points[i] - p0);
             }
 
             var mesh = new MeshInstance3D()
@@ -85,7 +86,7 @@ namespace Cutulu.Mesh
             };
 
             parent.AddChild(mesh);
-            mesh.GlobalPosition = points[0];
+            mesh.GlobalPosition = p0;
 
             return mesh;
         }
