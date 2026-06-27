@@ -41,6 +41,9 @@ public static class Physics
         var state = node.GetWorld3D().DirectSpaceState;
         interceptionCallback?.Invoke(query);
 
+        query.CollideWithBodies = true;
+        query.CollideWithAreas = true;
+
         var result = state.IntersectRay(query);
 
         if (result.Count < 1)

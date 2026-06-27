@@ -255,6 +255,8 @@ public static class Nodef
 
     public static T GetNodeInChildren<T>(this Node node, bool includeSelf = true) where T : Node
     {
+        if (node.IsNull()) return null;
+
         T result = null;
         loop(node, includeSelf);
         return result;
