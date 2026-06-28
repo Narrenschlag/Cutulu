@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
 
-public static class Nodef
+public static partial class Nodef
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasNoParent(this Node node) => node.IsNull() || node.GetParent().IsNull();

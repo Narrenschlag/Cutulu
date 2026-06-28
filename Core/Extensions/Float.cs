@@ -19,6 +19,22 @@ namespace Cutulu.Core
         public static float toDegrees(this float radians) => radians / Pi * 180;
         public static float toRadians(this float degree) => degree / 180 * Pi;
 
+        public static float Round(this float value, byte decimalSpaces)
+        => (float)System.Math.Round(value * (float)Math.Pow(10, decimalSpaces)) / (float)Math.Pow(10, decimalSpaces);
+
+        public static float Round(this float value, float step = 1f)
+        {
+            if (step <= 0) throw new System.ArgumentException("Step must be greater than zero.");
+
+            float remainder = (value = (float)Math.Ceiling(value / 0.001f) * 0.001f) % step;
+            float halfStep = step / 2f;
+
+            return
+                remainder >= halfStep ? value + step - remainder :
+                remainder < -halfStep ? value - step - remainder :
+                value - remainder;
+        }
+
         public static float GetAngleToFront180(this float fromAngle, float toAngle, bool useRadians = false)
         {
             // Convert angles to radians if needed

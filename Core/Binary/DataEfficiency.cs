@@ -84,7 +84,7 @@ namespace Cutulu.Core
 
             public Money(float amount, string currency)
             {
-                Amount = amount.Round(2);
+                Amount = amount.Round(2f);
                 Currency = currency;
             }
 

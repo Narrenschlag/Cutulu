@@ -33,4 +33,26 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
+
+  <!-- Include GodotSharp.dll if IsGodotProject is true -->
+  <ItemGroup Condition="'$(IsGodotProject)' == 'true'">
+    <Reference Include="GodotSharp">
+      <HintPath>$(GodotSharp)/Api/Debug/GodotSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Include Godot if IsGodotProject is true -->
+  <PropertyGroup Condition="'$(IsGodotProject)' == 'true'">
+    <DefineConstants>$(DefineConstants);GODOT;GODOT4_0_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Configuration for Godot 4+, add it to the csproj file to use
+  <ItemGroup>
+    <ProjectReference Include="../.Net/Cutulu.Net/Cutulu.Net.csproj">   <<< Your Cutulu.Net project
+      <AdditionalProperties>
+        IsGodotProject=true;                                            <<< Property that will enable Godot in Cutulu.Net
+        GodotSharp=D:\Godot\GodotSharp                                  <<< Path to your GodotSharp directory
+      </AdditionalProperties>
+    </ProjectReference>
+  </ItemGroup> -->
 </Project>
