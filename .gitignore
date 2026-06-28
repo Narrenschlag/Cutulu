@@ -24,3 +24,4 @@ mono_crash.*.json
 *.uid
 Cutulu.SDK.sln
 /obj
+/bin
