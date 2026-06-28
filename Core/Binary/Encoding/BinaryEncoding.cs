@@ -31,16 +31,15 @@ public static class BinaryEncoding
 
     private static void RegisterAllEncoders()
     {
-        // Get the assembly where BinaryEncoder<T> implementations are located
-        var assembly = Assembly.GetExecutingAssembly();
-        var flags = Reflection.TypeFinder.DefaultFlags;
+        var finder = new Reflection.TypeFinder(typeof(BinaryEncoder), Reflection.TypeFinder.DefaultFlags);
+        // assembly = null → TypeFinder scans all assemblies itself
 
-        var finder = new Reflection.TypeFinder();
-        Type type = typeof(BinaryEncoder);
-        finder.FindTypes(type, flags, assembly);
+        if (finder.Types.TryGetValue(typeof(BinaryEncoder), out var found) == false)
+            return;
 
-        // Instantiate each encoder and add it to the dictionary
-        foreach (var classType in finder.Types[type])
+        Debug.Log($"[{nameof(BinaryEncoding)}] Found {found.Count} encoder(s) across all assemblies.");
+
+        foreach (var classType in found)
             RegisterEncoder(classType);
     }
 

@@ -209,11 +209,19 @@ public static class Encoder
         var infos = _manager.GetInfos();
         foreach (ref var info in infos)
         {
-            _value = info.GetValue(_obj);
+            try
+            {
+                _value = info.GetValue(_obj);
 
-            // Write value
-            if (_value == null) _writer.Write(default(byte)); // Write null string/array as empty string/array
-            else Encode(_writer, _value, false); // Encode value as usual
+                // Write value
+                if (_value == null) _writer.Write(default(byte)); // Write null string/array as empty string/array
+                else Encode(_writer, _value, false); // Encode value as usual
+            }
+
+            catch (Exception ex)
+            {
+                throw new Exception($"Could not encode value of type {info.Type} for object of type {_obj.GetType()}: {ex.Message}\n{ex.StackTrace}", ex);
+            }
         }
     }
 }
