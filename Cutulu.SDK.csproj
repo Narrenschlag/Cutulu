@@ -1,0 +1,36 @@
+<Project Sdk="Godot.NET.Sdk/4.7.0">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>
+      net8.0;
+      net9.0;
+      net10.0
+    </TargetFrameworks>
+
+    <LangVersion>latest</LangVersion>
+
+    <EnableDynamicLoading>true</EnableDynamicLoading>    
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <DebugType>portable</DebugType>
+    <Optimize>true</Optimize>
+
+    <PackageId>Cutulu.Core</PackageId>
+    <Authors>Narrenschlag</Authors>
+    <Company>Narrenschlag</Company>
+    <Description>General purpose utility library.</Description>
+    <RepositoryUrl>https://github.com/Narrenschlag/Cutulu</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <PackageTags>godot;gamedev;utilities</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+</Project>
