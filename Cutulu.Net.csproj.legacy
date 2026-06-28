@@ -34,6 +34,20 @@
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
 
+  <!-- Enable #if WEB_APP -->
+  <PropertyGroup Condition="'$(IS_WEB)' == 'true'">
+    <DefineConstants>$(DefineConstants);WEB_APP</DefineConstants>
+  </PropertyGroup>
+  
+  <!-- Enable #if SQL_DAPPER -->
+  <PropertyGroup Condition="'$(IS_SQL)' == 'true'">
+    <DefineConstants>$(DefineConstants);SQL_DAPPER</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IS_SQL)' == 'true'">
+    <PackageReference Include="Dapper" PrivateAssets="all" />
+    <PackageReference Include="MySqlConnector" PrivateAssets="all" />
+  </ItemGroup>
+
   <!-- Include GodotSharp.dll if IsGodotProject is true -->
   <ItemGroup Condition="'$(IsGodotProject)' == 'true'">
     <Reference Include="GodotSharp">
