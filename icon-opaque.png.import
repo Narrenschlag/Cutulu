@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qtek473hdr3j"
-path.s3tc="res://.godot/imported/icon-opaque.png-382eb58f08e0eb4b34f6db0783024d9c.s3tc.ctex"
+path.s3tc="res://.godot/imported/icon-opaque.png-1b6171008e8c1a54b681554b72c7c422.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://Cutulu/icon-opaque.png"
-dest_files=["res://.godot/imported/icon-opaque.png-382eb58f08e0eb4b34f6db0783024d9c.s3tc.ctex"]
+source_file="res://icon-opaque.png"
+dest_files=["res://.godot/imported/icon-opaque.png-1b6171008e8c1a54b681554b72c7c422.s3tc.ctex"]
 
 [params]
 
