@@ -1,7 +1,7 @@
 ![cutulu_icon](github-logo.png)
 
 # The Cutulu SDK
-Inherting its name from the lovecraftian being Cthulhu, this SDK serves as foundation for software projects powered by godot.
+Inherting its name from the lovecraftian being Cthulhu, this SDK serves as foundation for software projects powered by .Net.
 
 # Where to Start
 The `Core.cs` file provides you with the essential utility known from other engines like unity. Fast debugging processes, static raycasting, simple mod support and save file managment, just to name a few of the utility tools provided in this SDK. Further you can investigate in the Modules folder to find awesome inventions and code adventures near and dear to me.
