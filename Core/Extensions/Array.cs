@@ -240,11 +240,11 @@ public static class Arrayf
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Contains(this string[] array, string key)
-        => Array.BinarySearch(array, key, StringComparer.Ordinal) >= 0;
+        => Array.IndexOf(array, key) >= 0; //Array.BinarySearch(array, key, StringComparer.Ordinal) >= 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int IndexOf(this string[] array, string key)
-        => Array.BinarySearch(array, key, StringComparer.Ordinal);
+        => Array.IndexOf(array, key);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int BinarySearch(this string[] array, string key)
